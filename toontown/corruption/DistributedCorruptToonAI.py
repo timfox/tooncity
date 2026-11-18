@@ -961,14 +961,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 continue
             if dist > hitRange:
                 continue
-            try:
-                target.takeDamage(dmg)
+            if self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='stain_burst'):
                 anyHit = True
                 self.__shoveTargetFromOswald(target)
-            except Exception:
-                self.notify.debug(
-                    'stain_burst takeDamage failed on av %s' % getattr(
-                        target, 'doId', '?'))
         if anyHit:
             self.sendUpdate('announceAttackHit', [])
         elif anyDodge:
