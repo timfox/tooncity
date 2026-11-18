@@ -414,6 +414,30 @@ STREET_WASH_OVERLAY_BIN = 28
 STREET_WASH_LERP_SEC = 0.32
 STREET_WASH_ADVANCE_SEC = 0.42
 STREET_WASH_CLEAR_SEC = 0.55
+# Cream aftershock after progressive street cream wash (#69) — residual flecks
+# settle downward + soft halo when purity advances (pack clear). Same grammar
+# as entry wash aftershock (#132), wave-clear aftershock (#127), purity-complete
+# aftershock (#136). Quieter than entry residual; not a second wash pulse.
+# Above progressive wash (28); below entry wash pulse (32). Sunny pastel only;
+# no KH blue. Toggle STREET_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
+STREET_WASH_AFTERSHOCK_ENABLED = True
+STREET_WASH_AFTERSHOCK_DELAY_SEC = 0.22
+STREET_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.10)
+STREET_WASH_AFTERSHOCK_COUNT = 5
+STREET_WASH_AFTERSHOCK_SIZE = 0.014
+STREET_WASH_AFTERSHOCK_DRIFT = 0.26
+STREET_WASH_AFTERSHOCK_FALL = 0.20
+STREET_WASH_AFTERSHOCK_SEC = 0.32
+STREET_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.76)
+STREET_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+STREET_WASH_AFTERSHOCK_BIN = 30
+STREET_WASH_AFTERSHOCK_HALO_ENABLED = True
+STREET_WASH_AFTERSHOCK_HALO_HALF = 0.46
+STREET_WASH_AFTERSHOCK_HALO_START = 0.24
+STREET_WASH_AFTERSHOCK_HALO_PEAK = 1.12
+STREET_WASH_AFTERSHOCK_HALO_SEC = 0.26
+STREET_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.11
+STREET_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Purity-complete cream wash pulse (StreetColorWash veil grammar).
 # Full-screen soft cream pop on purityRestoreFx, layered under StreetSparkleFx
