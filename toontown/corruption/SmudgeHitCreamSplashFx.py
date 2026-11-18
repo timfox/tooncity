@@ -2,16 +2,16 @@
 
 World-space CardMaker juice that fires on Smudge melee hit beside
 SmudgeInkSplashFx (#75) purple ink — sunny cream / pastel contrast so basic
-corrupt packs read juicier. Deepened mid-body hit juice: juicier splat/flecks,
-radial cream hose smears (SmudgeInkSplashFx punch-smear cousin), then a wider
-settling aftershock (halo + residual flecks) — distinct from Snare counter
-cream deepen (#245, horizontal whip), Brute spit cream deepen (#249, vertical
-drip), and Gunk puddle cream deepen (#238, flat ground bloom). Same residual
-grammar as telegraph cream warn aftershock (#121). Soft under purple splash;
-cream / pastel only (not ink). Wired from DistributedCorruptToon hit reaction
-beside SmudgeInkSplash + SmudgeHitCreamWashFx (hit path only — death keeps
-splash + death cream wash). Client only. Toontown spiritual sequel — no
-keyblades / no KH branding.
+corrupt packs read juicier. Deepened mid-body hit juice beyond #259: juicier
+splat/flecks, thicker radial cream hose smears (SmudgeInkSplashFx punch-smear
+cousin), then a wider settling aftershock (halo + residual flecks) — distinct
+from Snare counter cream deepen (#269, horizontal whip), Brute spit cream
+deepen (#264, vertical drip), and Gunk puddle cream deepen (#276, flat ground
+bloom). Same residual grammar as telegraph cream warn aftershock (#121). Soft
+under purple splash; cream / pastel only (not ink). Wired from
+DistributedCorruptToon hit reaction beside SmudgeInkSplash +
+SmudgeHitCreamWashFx (hit path only — death keeps splash + death cream wash).
+Client only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -158,7 +158,7 @@ class SmudgeHitCreamSplash(object):
     def _spawnSplat(self, parentNP, origin, look):
         """Tiny billboard cream blob — Smudge hit pack-scan cream core."""
         try:
-            half = float(look.get('splatHalf', 0.24))
+            half = float(look.get('splatHalf', 0.34))
             cm = CardMaker('smudge-hit-cream-splash-core')
             cm.setFrame(-half, half, -half * 0.92, half * 0.92)
             splat = parentNP.attachNewNode(cm.generate())
@@ -170,15 +170,15 @@ class SmudgeHitCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'SMUDGE_HIT_CREAM_SPLASH_COLOR',
-                    (1.0, 0.97, 0.82, 0.94)))
+                    (1.0, 0.97, 0.82, 0.98)))
             splat.setColor(color[0], color[1], color[2], color[3])
             splat.setColorScale(1, 1, 1, 0)
-            splat.setScale(0.32)
+            splat.setScale(0.3)
             splat.setBin('fixed', int(look.get('binSort', 46)))
             splat.setDepthWrite(False)
             self._nodes.append(splat)
 
-            rimHalf = half * float(look.get('rimScale', 1.28))
+            rimHalf = half * float(look.get('rimScale', 1.42))
             cmRim = CardMaker('smudge-hit-cream-splash-rim')
             cmRim.setFrame(-rimHalf, rimHalf, -rimHalf * 0.9, rimHalf * 0.9)
             rim = parentNP.attachNewNode(cmRim.generate())
@@ -190,37 +190,37 @@ class SmudgeHitCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'SMUDGE_HIT_CREAM_SPLASH_RIM_COLOR',
-                    (1.0, 0.98, 0.88, 0.7)))
+                    (1.0, 0.98, 0.88, 0.8)))
             rim.setColor(rimColor[0], rimColor[1], rimColor[2], rimColor[3])
             rim.setColorScale(1, 1, 1, 0)
-            rim.setScale(0.28)
+            rim.setScale(0.26)
             rim.setBin('fixed', int(look.get('binSort', 46)) - 1)
             rim.setDepthWrite(False)
             self._nodes.append(rim)
 
-            peak = float(look.get('splatPeak', 1.5))
-            sec = float(look.get('splatSec', 0.15))
-            peakA = float(look.get('peakAlpha', 0.94))
+            peak = float(look.get('splatPeak', 1.88))
+            sec = float(look.get('splatSec', 0.19))
+            peakA = float(look.get('peakAlpha', 0.98))
             return Parallel(
                 Sequence(
                     LerpColorScaleInterval(
-                        splat, sec * 0.25, Vec4(1, 1, 1, peakA),
+                        splat, sec * 0.22, Vec4(1, 1, 1, peakA),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        splat, sec * 0.75, Vec4(1, 1, 1, 0),
+                        splat, sec * 0.78, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(splat, sec, peak, blendType='easeOut'),
                 Sequence(
                     LerpColorScaleInterval(
-                        rim, sec * 0.2, Vec4(1, 1, 1, 0.65),
+                        rim, sec * 0.18, Vec4(1, 1, 1, 0.7),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        rim, sec * 0.8, Vec4(1, 1, 1, 0),
+                        rim, sec * 0.82, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(
-                    rim, sec, peak * 1.14, blendType='easeOut'),
+                    rim, sec, peak * 1.18, blendType='easeOut'),
             )
         except Exception:
             return None
@@ -228,40 +228,40 @@ class SmudgeHitCreamSplash(object):
     def _spawnHoseSmear(self, parentNP, origin, look, index):
         """Radial cream hose smear — mid-body punch-smear cue.
 
-        Distinct from Snare horizontal whip filaments (#245), Brute vertical
-        drip filaments (#249), and Gunk flat puddle-plane bloom (#238):
+        Distinct from Snare horizontal whip filaments (#269), Brute vertical
+        drip filaments (#264), and Gunk flat puddle-plane bloom (#276):
         outward cream smear matching purple SmudgeInkSplashFx punch-smear
         grammar so pack hits read as rubber-hose cream against ink.
         """
         try:
             side = -1.0 if (index % 2) == 0 else 1.0
-            t = 0.42 + 0.22 * (index // 2)
+            t = 0.45 + 0.24 * (index // 2)
             # Radial mid-body bias — punch-smear cousin, not sideways whip.
-            angle = (pi * 0.4) + side * (0.32 + 0.18 * index)
+            angle = (pi * 0.38) + side * (0.3 + 0.16 * index)
             spread = float(look.get(
                 'smearSpread',
                 getattr(
                     CorruptionGlobals,
-                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_SPREAD', 0.95)))
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_SPREAD', 1.12)))
             end = Point3(
                 origin[0] + cos(angle) * spread * t,
-                origin[1] + sin(angle) * spread * 0.5,
-                origin[2] + 0.06 + sin(pi * 0.22 * index) * 0.22,
+                origin[1] + sin(angle) * spread * 0.55,
+                origin[2] + 0.08 + sin(pi * 0.2 * index) * 0.26,
             )
             half = float(look.get(
                 'smearHalf',
                 getattr(
                     CorruptionGlobals,
-                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_HALF', 0.1)))
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_HALF', 0.12)))
             cm = CardMaker(
                 'smudge-hit-cream-splash-smear-%s' % index)
             # Soft elongated frame — cream hose smear, not whip / drip / bloom.
-            cm.setFrame(-half, half, -half * 1.1, half * 1.1)
+            cm.setFrame(-half * 0.95, half * 0.95, -half * 1.25, half * 1.25)
             smear = parentNP.attachNewNode(cm.generate())
             start = Point3(
-                origin[0] + side * 0.05,
-                origin[1] + 0.04,
-                origin[2] + 0.04 * ((index % 3) - 1),
+                origin[0] + side * 0.06,
+                origin[1] + 0.05,
+                origin[2] + 0.05 * ((index % 3) - 1),
             )
             smear.setPos(start)
             smear.setBillboardPointEye()
@@ -271,7 +271,7 @@ class SmudgeHitCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'SMUDGE_HIT_CREAM_SPLASH_SMEAR_COLOR',
-                    (1.0, 0.97, 0.84, 0.92)))
+                    (1.0, 0.97, 0.84, 0.94)))
             tint = 0.9 + 0.08 * (index % 3)
             smear.setColor(
                 min(1.4, color[0] * tint),
@@ -279,7 +279,7 @@ class SmudgeHitCreamSplash(object):
                 min(1.4, color[2] * tint),
                 color[3])
             smear.setColorScale(1, 1, 1, 0)
-            smear.setScale(Point3(0.5, 0.5, 0.65))
+            smear.setScale(Point3(0.48, 0.48, 0.72))
             smear.setBin('fixed', int(look.get('binSort', 46)) + 1)
             smear.setDepthWrite(False)
             self._nodes.append(smear)
@@ -287,32 +287,32 @@ class SmudgeHitCreamSplash(object):
                 'smearSec',
                 getattr(
                     CorruptionGlobals,
-                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_SEC', 0.22)))
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_SEC', 0.25)))
             peakA = float(look.get(
                 'smearPeakAlpha',
                 getattr(
                     CorruptionGlobals,
                     'SMUDGE_HIT_CREAM_SPLASH_SMEAR_PEAK_ALPHA',
-                    0.9)))
-            delay = 0.012 * index
+                    0.94)))
+            delay = 0.01 * index
             return Sequence(
                 Wait(delay),
                 Parallel(
                     LerpPosInterval(smear, travel, end, blendType='easeOut'),
                     Sequence(
                         LerpScaleInterval(
-                            smear, travel * 0.4, Point3(1.2, 0.7, 1.3),
+                            smear, travel * 0.38, Point3(1.3, 0.75, 1.4),
                             blendType='easeOut'),
                         LerpScaleInterval(
-                            smear, travel * 0.6, Point3(0.35, 0.25, 1.55),
+                            smear, travel * 0.62, Point3(0.32, 0.22, 1.7),
                             blendType='easeIn'),
                     ),
                     Sequence(
                         LerpColorScaleInterval(
-                            smear, travel * 0.22, Vec4(1, 1, 1, peakA),
+                            smear, travel * 0.2, Vec4(1, 1, 1, peakA),
                             blendType='easeOut'),
                         LerpColorScaleInterval(
-                            smear, travel * 0.78, Vec4(1, 1, 1, 0),
+                            smear, travel * 0.8, Vec4(1, 1, 1, 0),
                             blendType='easeIn'),
                     ),
                 ),
@@ -333,22 +333,22 @@ class SmudgeHitCreamSplash(object):
                 origin[1] + cos(angle) * dist,
                 origin[2] + lift,
             )
-            half = float(look.get('fleckHalf', 0.1))
+            half = float(look.get('fleckHalf', 0.12))
             if index % 2 == 0:
                 cm = CardMaker(
                     'smudge-hit-cream-splash-fleck-%s' % index)
                 cm.setFrame(-half, half, -half * 0.9, half * 0.9)
-                startScale = Point3(0.35, 0.35, 0.35)
-                midScale = Point3(1.15, 1.15, 0.55)
-                endScale = Point3(1.45, 1.45, 0.12)
+                startScale = Point3(0.32, 0.32, 0.32)
+                midScale = Point3(1.25, 1.25, 0.58)
+                endScale = Point3(1.55, 1.55, 0.1)
             else:
                 cm = CardMaker(
                     'smudge-hit-cream-splash-streak-%s' % index)
                 cm.setFrame(
-                    -half * 0.32, half * 0.32, -half * 1.45, half * 1.45)
-                startScale = Point3(0.28, 0.28, 0.6)
-                midScale = Point3(0.5, 0.5, 1.35)
-                endScale = Point3(1.2, 0.2, 0.14)
+                    -half * 0.3, half * 0.3, -half * 1.55, half * 1.55)
+                startScale = Point3(0.26, 0.26, 0.65)
+                midScale = Point3(0.55, 0.55, 1.45)
+                endScale = Point3(1.3, 0.18, 0.12)
             fleck = parentNP.attachNewNode(cm.generate())
             fleck.setPos(origin)
             fleck.setBillboardPointEye()
@@ -356,22 +356,22 @@ class SmudgeHitCreamSplash(object):
             colors = look.get('fleckColors') or getattr(
                 CorruptionGlobals,
                 'SMUDGE_HIT_CREAM_SPLASH_FLECK_COLORS',
-                ((1.0, 0.97, 0.82, 0.9),))
+                ((1.0, 0.97, 0.82, 0.94),))
             color = colors[index % len(colors)]
             fleck.setColor(color[0], color[1], color[2], color[3])
             fleck.setScale(startScale)
             fleck.setBin('fixed', int(look.get('binSort', 46)) + 1)
             fleck.setDepthWrite(False)
             self._nodes.append(fleck)
-            travel = float(look.get('fleckSec', 0.2))
-            delay = 0.01 * index
+            travel = float(look.get('fleckSec', 0.26))
+            delay = 0.009 * index
             return Sequence(
                 Wait(delay),
                 Parallel(
                     LerpPosInterval(fleck, travel, end, blendType='easeOut'),
                     Sequence(
-                        LerpScaleInterval(fleck, travel * 0.45, midScale),
-                        LerpScaleInterval(fleck, travel * 0.55, endScale),
+                        LerpScaleInterval(fleck, travel * 0.42, midScale),
+                        LerpScaleInterval(fleck, travel * 0.58, endScale),
                     ),
                     LerpColorScaleInterval(
                         fleck, travel, Vec4(1, 1, 1, 0), blendType='easeIn'),
@@ -388,7 +388,7 @@ class SmudgeHitCreamSplash(object):
             return None
         delay = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_DELAY_SEC', 0.16))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_DELAY_SEC', 0.12))
         parts = []
 
         if getattr(
@@ -400,10 +400,10 @@ class SmudgeHitCreamSplash(object):
 
         creamCount = max(0, int(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT', 4)))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT', 6)))
         streakCount = max(0, int(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COUNT', 1)))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COUNT', 3)))
         for i in range(creamCount):
             part = self._spawnAftershockSpark(
                 parentNP, origin, i, creamCount, elongated=False)
@@ -425,19 +425,19 @@ class SmudgeHitCreamSplash(object):
     def _spawnAftershockHalo(self, parentNP, origin):
         half = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_HALF', 0.46))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_HALF', 0.62))
         startScale = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_START', 0.28))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_START', 0.26))
         peakScale = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK', 1.5))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK', 1.8))
         sec = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_SEC', 0.3))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_SEC', 0.34))
         peakA = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.22))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.3))
         r, g, b, _a = getattr(
             CorruptionGlobals,
             'SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_COLOR',
@@ -477,11 +477,11 @@ class SmudgeHitCreamSplash(object):
         if elongated:
             size = float(getattr(
                 CorruptionGlobals,
-                'SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_SIZE', 0.12))
+                'SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_SIZE', 0.16))
             r, g, b, a = getattr(
                 CorruptionGlobals,
                 'SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COLOR',
-                (1.0, 0.98, 0.82, 0.82))
+                (1.0, 0.98, 0.82, 0.9))
             er, eg, eb, ea = getattr(
                 CorruptionGlobals,
                 'SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_END',
@@ -491,11 +491,11 @@ class SmudgeHitCreamSplash(object):
         else:
             size = float(getattr(
                 CorruptionGlobals,
-                'SMUDGE_HIT_CREAM_AFTERSHOCK_SIZE', 0.1))
+                'SMUDGE_HIT_CREAM_AFTERSHOCK_SIZE', 0.12))
             r, g, b, a = getattr(
                 CorruptionGlobals,
                 'SMUDGE_HIT_CREAM_AFTERSHOCK_COLOR',
-                (1.0, 0.96, 0.72, 0.85))
+                (1.0, 0.96, 0.72, 0.92))
             er, eg, eb, ea = getattr(
                 CorruptionGlobals,
                 'SMUDGE_HIT_CREAM_AFTERSHOCK_END',
@@ -504,13 +504,13 @@ class SmudgeHitCreamSplash(object):
             angleBias = 0.18
         drift = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_DRIFT', 0.62))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_DRIFT', 0.92))
         fall = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_FALL', 0.4))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_FALL', 0.58))
         sec = float(getattr(
             CorruptionGlobals,
-            'SMUDGE_HIT_CREAM_AFTERSHOCK_SEC', 0.34))
+            'SMUDGE_HIT_CREAM_AFTERSHOCK_SEC', 0.38))
         angle = (2.0 * pi * index) / float(count) + angleBias
         try:
             cm = CardMaker(
@@ -518,8 +518,8 @@ class SmudgeHitCreamSplash(object):
                     nameSuffix, index))
             if elongated:
                 cm.setFrame(
-                    -size * 0.35, size * 0.35,
-                    -size * 1.15, size * 1.15)
+                    -size * 0.32, size * 0.32,
+                    -size * 1.25, size * 1.25)
             else:
                 cm.setFrame(-size, size, -size * 0.85, size * 0.85)
             spark = parentNP.attachNewNode(cm.generate())
@@ -527,10 +527,10 @@ class SmudgeHitCreamSplash(object):
             spark.setColor(r, g, b, 1)
             spark.setColorScale(r, g, b, a)
             spark.setPos(
-                origin[0] + cos(angle) * 0.1,
-                origin[1] + sin(angle) * 0.1,
-                origin[2] + 0.02 * (index % 2))
-            spark.setScale(0.26 + 0.06 * (index % 3))
+                origin[0] + cos(angle) * 0.12,
+                origin[1] + sin(angle) * 0.12,
+                origin[2] + 0.025 * (index % 2))
+            spark.setScale(0.28 + 0.07 * (index % 3))
             binSort = int(getattr(
                 CorruptionGlobals, 'SMUDGE_HIT_CREAM_SPLASH_BIN', 46))
             spark.setBin('fixed', binSort)
@@ -541,12 +541,12 @@ class SmudgeHitCreamSplash(object):
 
         # Settle sideways / slightly down after purple ink splash.
         end = Point3(
-            origin[0] + cos(angle) * drift * 0.6,
-            origin[1] + sin(angle) * drift * 0.6,
-            origin[2] - fall - 0.06 * (index % 3))
-        peak = size * (1.15 + 0.08 * (index % 2))
+            origin[0] + cos(angle) * drift * 0.65,
+            origin[1] + sin(angle) * drift * 0.65,
+            origin[2] - fall - 0.07 * (index % 3))
+        peak = size * (1.2 + 0.1 * (index % 2))
         self._nodes.append(spark)
-        stagger = 0.02 * (index % 3)
+        stagger = 0.018 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(

@@ -602,9 +602,9 @@ OVERLORD_HIT_CREAM_WASH_LOOK = {
 # Cream splash + delayed cream aftershock on Ink Smudge hit / splash
 # (after purple SmudgeInkSplashFx #75). Sunny cream / pastel contrast against
 # purple ink so basic corrupt packs read juicier. Deepened mid-body hit
-# juice (#231 deepen): juicier splat/flecks + radial cream hose smears
+# juice beyond #259: juicier splat/flecks + thicker radial cream hose smears
 # (SmudgeInkSplashFx punch-smear cousin) + wider settle aftershock —
-# distinct from Snare whip (#245) / Brute drip (#249) / Gunk bloom (#238).
+# distinct from Snare whip (#269) / Brute drip (#264) / Gunk bloom (#276).
 # Same residual grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_*. Client only.
 # No keyblades / KH branding.
 # SMUDGE_HIT_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
@@ -613,40 +613,40 @@ OVERLORD_HIT_CREAM_WASH_LOOK = {
 SMUDGE_HIT_CREAM_SPLASH_ENABLED = True
 SMUDGE_HIT_CREAM_SPLASH_DELAY_SEC = 0.06  # fallback; look prefers purple compose
 SMUDGE_HIT_CREAM_SPLASH_BIN = 46  # above purple ink splash (45)
-SMUDGE_HIT_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.96)  # sunny cream
-SMUDGE_HIT_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.74)
+SMUDGE_HIT_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.98)  # sunny cream
+SMUDGE_HIT_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.8)
 SMUDGE_HIT_CREAM_SPLASH_FLECK_COLORS = (
-    (1.0, 0.97, 0.82, 0.92),  # sunny cream
-    (1.0, 0.96, 0.62, 0.86),  # butter
-    (1.0, 0.9, 0.78, 0.82),   # soft peach pastel
+    (1.0, 0.97, 0.82, 0.94),  # sunny cream
+    (1.0, 0.96, 0.62, 0.88),  # butter
+    (1.0, 0.9, 0.78, 0.84),   # soft peach pastel
 )
 # Radial cream hose smears — mid-body punch-smear readability (not Snare
 # horizontal whip / Brute vertical drip / Gunk flat puddle bloom).
 SMUDGE_HIT_CREAM_SPLASH_SMEAR_ENABLED = True
-SMUDGE_HIT_CREAM_SPLASH_SMEAR_COUNT = 3
-SMUDGE_HIT_CREAM_SPLASH_SMEAR_HALF = 0.1
-SMUDGE_HIT_CREAM_SPLASH_SMEAR_SPREAD = 0.95
-SMUDGE_HIT_CREAM_SPLASH_SMEAR_SEC = 0.22
-SMUDGE_HIT_CREAM_SPLASH_SMEAR_PEAK_ALPHA = 0.9
-SMUDGE_HIT_CREAM_SPLASH_SMEAR_COLOR = (1.0, 0.97, 0.84, 0.92)
+SMUDGE_HIT_CREAM_SPLASH_SMEAR_COUNT = 4  # thicker radial hose vs #259 (3)
+SMUDGE_HIT_CREAM_SPLASH_SMEAR_HALF = 0.12
+SMUDGE_HIT_CREAM_SPLASH_SMEAR_SPREAD = 1.12
+SMUDGE_HIT_CREAM_SPLASH_SMEAR_SEC = 0.25
+SMUDGE_HIT_CREAM_SPLASH_SMEAR_PEAK_ALPHA = 0.94
+SMUDGE_HIT_CREAM_SPLASH_SMEAR_COLOR = (1.0, 0.97, 0.84, 0.94)
 SMUDGE_HIT_CREAM_SPLASH_LOOK = {
     'id': 'smudge-hit-cream-splash',
     # lift / delaySec composed with smudgeInkSplashLook('hit') when played.
     'lift': 2.05,
     'delaySec': SMUDGE_HIT_CREAM_SPLASH_DELAY_SEC,
-    'delayScale': 0.32,
-    'peakAlpha': 0.96,
-    'splatHalf': 0.3,  # juicier mid-body core vs #231 (0.24)
-    'splatPeak': 1.72,
-    'splatSec': 0.17,
-    'rimScale': 1.36,
+    'delayScale': 0.28,
+    'peakAlpha': 0.98,
+    'splatHalf': 0.34,  # juicier mid-body core vs #259 (0.3)
+    'splatPeak': 1.88,
+    'splatSec': 0.19,
+    'rimScale': 1.42,
     'splatColor': SMUDGE_HIT_CREAM_SPLASH_COLOR,
     'rimColor': SMUDGE_HIT_CREAM_SPLASH_RIM_COLOR,
-    'fleckCount': 6,  # deepened vs #231 (4); radial pack spray
-    'fleckHalf': 0.11,
-    'fleckDist': 1.12,
-    'fleckLift': 0.48,  # taller mid-body spray (vs Snare string-lash height)
-    'fleckSec': 0.24,
+    'fleckCount': 7,  # deepened vs #259 (6); radial pack spray
+    'fleckHalf': 0.12,
+    'fleckDist': 1.28,
+    'fleckLift': 0.55,  # taller mid-body spray (vs Snare string-lash height)
+    'fleckSec': 0.26,
     'fleckColors': SMUDGE_HIT_CREAM_SPLASH_FLECK_COLORS,
     'smearEnabled': SMUDGE_HIT_CREAM_SPLASH_SMEAR_ENABLED,
     'smearCount': SMUDGE_HIT_CREAM_SPLASH_SMEAR_COUNT,
@@ -658,24 +658,24 @@ SMUDGE_HIT_CREAM_SPLASH_LOOK = {
     'binSort': SMUDGE_HIT_CREAM_SPLASH_BIN,
 }
 SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED = True
-SMUDGE_HIT_CREAM_AFTERSHOCK_DELAY_SEC = 0.14
-SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT = 5  # deepened pack residual vs #231 (4)
-SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COUNT = 2
-SMUDGE_HIT_CREAM_AFTERSHOCK_SIZE = 0.11
-SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_SIZE = 0.14
-SMUDGE_HIT_CREAM_AFTERSHOCK_DRIFT = 0.78  # wider radial settle
-SMUDGE_HIT_CREAM_AFTERSHOCK_FALL = 0.48
-SMUDGE_HIT_CREAM_AFTERSHOCK_SEC = 0.36
-SMUDGE_HIT_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.9)
+SMUDGE_HIT_CREAM_AFTERSHOCK_DELAY_SEC = 0.12
+SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT = 6  # deepened pack residual vs #259 (5)
+SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COUNT = 3
+SMUDGE_HIT_CREAM_AFTERSHOCK_SIZE = 0.12
+SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_SIZE = 0.16
+SMUDGE_HIT_CREAM_AFTERSHOCK_DRIFT = 0.92  # wider radial settle vs #259
+SMUDGE_HIT_CREAM_AFTERSHOCK_FALL = 0.58
+SMUDGE_HIT_CREAM_AFTERSHOCK_SEC = 0.38
+SMUDGE_HIT_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.92)
 SMUDGE_HIT_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
-SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.86)
+SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.9)
 SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
 SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_ENABLED = True
-SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_HALF = 0.54
-SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_START = 0.28
-SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK = 1.65
-SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_SEC = 0.32
-SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.26
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_HALF = 0.62
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_START = 0.26
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK = 1.8
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_SEC = 0.34
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.3
 SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Soft cream wash pulse after Smudge purple ink splash (hit only) —
