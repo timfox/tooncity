@@ -143,6 +143,25 @@ FINALE_REVEAL_SUB_COLOR = (1.0, 0.72, 0.48, 1.0)
 FINALE_REVEAL_DELAY_SEC = 2.45
 FINALE_REVEAL_HOLD_SEC = 3.6
 
+# Oswald shadow flash — rubber-hose silhouette on the reveal sting.
+# Trusted lead shape → ink shadow that sells the twist. Campaign-owned
+# tunables (keep out of corruption/ while ink-drip ships). No KH branding.
+FINALE_REVEAL_SHADOW_COLOR = (0.04, 0.02, 0.06, 1.0)
+FINALE_REVEAL_SHADOW_PEAK_ALPHA = 0.92
+# Sit under title/sub banners so the twist copy stays readable.
+FINALE_REVEAL_SHADOW_POS = (0.0, 0.0, -0.28)
+FINALE_REVEAL_SHADOW_SCALE = 0.45
+# Squash → tall stretch → settle (reads as rubber-hose rabbit ears).
+FINALE_REVEAL_SHADOW_SQUASH = (1.35, 1.0, 0.55)
+FINALE_REVEAL_SHADOW_STRETCH = (0.72, 1.0, 1.55)
+FINALE_REVEAL_SHADOW_SQUASH_SEC = 0.07
+FINALE_REVEAL_SHADOW_STRETCH_SEC = 0.12
+FINALE_REVEAL_SHADOW_SETTLE_SEC = 0.18
+FINALE_REVEAL_SHADOW_FADE_IN_SEC = 0.06
+FINALE_REVEAL_SHADOW_HOLD_SEC = 0.28
+FINALE_REVEAL_SHADOW_FADE_OUT_SEC = 0.55
+FINALE_REVEAL_SHADOW_BIN = 101
+
 STATE_IDLE = 0
 STATE_ACTIVE = 1
 STATE_VICTORY = 2
