@@ -105,6 +105,28 @@ HOSE_SQUASH = (
 )
 HOSE_STRETCH_RECOVER = 0.14
 
+# Impact juice on connect (attacker + corrupt/demo hit-react).
+# Flat squash → tall recover stretch → settle. Heavier on the finisher.
+HIT_IMPACT_SQUASH = (
+    # (sx, sy, sz, squashSec)
+    (1.55, 1.55, 0.48, 0.05),
+    (1.7, 1.7, 0.4, 0.055),
+    (1.9, 1.9, 0.32, 0.07),
+)
+HIT_IMPACT_STRETCH = (
+    # (sx, sy, sz, stretchSec)
+    (0.72, 0.72, 1.38, 0.08),
+    (0.62, 0.62, 1.5, 0.09),
+    (0.5, 0.5, 1.7, 0.12),
+)
+HIT_IMPACT_SETTLE_SEC = 0.08
+
+# Player hit-react when a CorruptToon lands a smack (scale juice + tiny hitstop).
+PLAYER_HIT_REACT_SQUASH = (1.75, 1.75, 0.38, 0.06)
+PLAYER_HIT_REACT_STRETCH = (0.68, 0.68, 1.42, 0.1)
+PLAYER_HIT_REACT_SETTLE_SEC = 0.1
+PLAYER_HIT_REACT_HITSTOP_SEC = 0.04
+
 # Melee hit sphere relative to the toon (forward reach).
 HIT_FORWARD = 3.2
 HIT_RADIUS = 2.4

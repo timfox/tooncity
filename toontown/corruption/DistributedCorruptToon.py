@@ -918,22 +918,14 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         return True
 
     def __playHitReaction(self, hitIndex, attacker):
+        """Ink flash + knockback; scale squash/stretch owned by hackslash HitJuice."""
         if self._hitIval is not None:
             self._hitIval.finish()
-        stretch = 1.18 + 0.14 * hitIndex
-        squash = 0.68 - 0.04 * hitIndex
         target = self.visualRoot if self.visualRoot is not None else (
             self.geom if self.geom is not None else self)
         self._hitIval = Sequence(
-            Parallel(
-                LerpScaleInterval(target, 0.06, (stretch, stretch, squash)),
-                LerpColorScaleInterval(target, 0.06, Vec4(1.7, 0.65, 2.0, 1)),
-            ),
-            Parallel(
-                LerpScaleInterval(target, 0.1, (0.88, 0.88, 1.22)),
-                LerpColorScaleInterval(target, 0.1, Vec4(1, 1, 1, 1)),
-            ),
-            LerpScaleInterval(target, 0.08, (1, 1, 1)),
+            LerpColorScaleInterval(target, 0.06, Vec4(1.7, 0.65, 2.0, 1)),
+            LerpColorScaleInterval(target, 0.14, Vec4(1, 1, 1, 1)),
         )
         self._hitIval.start()
         try:

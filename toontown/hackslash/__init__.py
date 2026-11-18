@@ -7,10 +7,12 @@ Slice 1: stretch punches, short combo window, soft nearest-hostile targeting.
 from .MeleeCombat import MeleeCombatController
 from .SoftTarget import SoftTargetFinder, HackSlashTarget
 from .DemoHostile import DemoHostile
+from . import HitJuice
 
 __all__ = [
     'MeleeCombatController',
     'SoftTargetFinder',
     'HackSlashTarget',
     'DemoHostile',
+    'HitJuice',
 ]

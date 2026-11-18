@@ -11,9 +11,10 @@ class ToggleHackSlash(MagicWord):
         'Enables rubber-hose melee: press F (or LMB) for a short 3-hit stretch '
         'punch combo with soft nearest-hostile targeting, a subtle '
         'camera/facing nudge toward the sticky lock (mid-combo soft '
-        'orbit/pull for readability without hard-locking), hitstop, a brief '
-        'white flash on connect, and an on-screen punch counter that ticks '
-        'on hits then fades when the string breaks (finisher also FOV-punches). '
+        'orbit/pull for readability without hard-locking), hitstop, impact '
+        'squash/stretch juice on connect (and when a corrupt smacks you), a '
+        'brief white flash, and an on-screen punch counter that ticks on hits '
+        'then fades when the string breaks (finisher also FOV-punches). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
@@ -34,7 +35,7 @@ class ToggleHackSlash(MagicWord):
         if enabled:
             return (
                 'Stretch-punch melee ON. Press F (or LMB) for fist combos. '
-                'Punch counter ticks on connect; soft-lock orbit mid-combo + '
+                'Connects squash/stretch; punch counter + soft-lock orbit + '
                 'hit flash. Soft-targets demo hostiles (and street suits).'
             )
         return 'Stretch-punch melee OFF.'
