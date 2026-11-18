@@ -5,6 +5,7 @@ import random
 from toontown.launcher import DownloadForceAcknowledge
 from direct.task.Task import Task
 from toontown.hood import ZoneUtil
+from toontown.safezone import CorruptStreetBreadcrumb
 
 class TTPlayground(Playground.Playground):
 
@@ -20,8 +21,11 @@ class TTPlayground(Playground.Playground):
     def enter(self, requestStatus):
         Playground.Playground.enter(self, requestStatus)
         taskMgr.doMethodLater(1, self.__birds, 'TT-birds')
+        # Polluted Loopy / Punchline / Silly tunnel placemarkers (hub explore).
+        CorruptStreetBreadcrumb.ensureCorruptStreetBreadcrumbs(self)
 
     def exit(self):
+        CorruptStreetBreadcrumb.stopCorruptStreetBreadcrumbs()
         Playground.Playground.exit(self)
         taskMgr.remove('TT-birds')
 
