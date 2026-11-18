@@ -160,9 +160,10 @@ class OverlordCounterWindowsTest(unittest.TestCase):
         self.assertTrue(fn(ink, 'rain'))
         self.assertTrue(fn(ink, 'slam'))
         self.assertTrue(fn(ink, 'ink_surge'))
-        # Smudge kit stays without dedicated counters.
-        self.assertFalse(fn(ink, 'ink_dash'))
-        self.assertFalse(fn(ink, 'ink_splat'))
+        # Smudge counters covered by test_ink_smudge_counter_windows.py
+        # (same archetype, distinct move ids).
+        self.assertTrue(fn(ink, 'ink_dash'))
+        self.assertTrue(fn(ink, 'ink_splat'))
         self.assertFalse(fn(ink, 'smack'))
         # Street / Oswald kits still covered.
         self.assertTrue(fn(self.cg.ARCHETYPE_BRUTE, 'spit'))

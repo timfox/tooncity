@@ -183,6 +183,11 @@ class MeleeCombatController(DirectObject):
         self.accept(
             'corruptOverlordInkSurgeCounter',
             self._onOverlordInkSurgeCounter)
+        # Ink Smudge ink_dash / ink_splat → same path by move id.
+        self.accept(
+            'corruptInkDashCounter', self._onInkDashCounter)
+        self.accept(
+            'corruptInkSplatCounter', self._onInkSplatCounter)
         self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
         # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
@@ -211,6 +216,8 @@ class MeleeCombatController(DirectObject):
         self.ignore('corruptOverlordRainCounter')
         self.ignore('corruptOverlordSlamCounter')
         self.ignore('corruptOverlordInkSurgeCounter')
+        self.ignore('corruptInkDashCounter')
+        self.ignore('corruptInkSplatCounter')
         self.ignore('hackslash-hit')
         taskMgr.remove(self._taskName)  # noqa: F821
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
@@ -1310,9 +1317,29 @@ class MeleeCombatController(DirectObject):
             corrupt, windowSec,
             rangeAttr='OVERLORD_INK_SURGE_COUNTER_RANGE', defaultRange=10.0)
 
+    def _onInkDashCounter(self, corrupt=None, windowSec=None):
+        """Ink Smudge ink_dash telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook (Snare-like). Act 1 / P2-add swarm
+        rush punish parity with street kits. Range-gated to dash band.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='INK_DASH_COUNTER_RANGE', defaultRange=8.5)
+
+    def _onInkSplatCounter(self, corrupt=None, windowSec=None):
+        """Ink Smudge ink_splat telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook (Snare-like). Close-range splat punish.
+        Range-gated so out-of-splat Smudge doesn't buff.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='INK_SPLAT_COUNTER_RANGE', defaultRange=6.5)
+
     def _armTelegraphCounterWindow(self, corrupt=None, windowSec=None,
                                    rangeAttr=None, defaultRange=10.5):
-        """Shared range-gated arm for Snare / Brute / Gagster / Oswald / Overlord counters."""
+        """Shared range-gated arm for Snare / Brute / Gagster / Oswald / Overlord / Smudge counters."""
         if not self.enabled:
             return
         if corrupt is not None and rangeAttr:

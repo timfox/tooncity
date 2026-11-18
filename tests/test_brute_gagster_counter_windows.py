@@ -150,8 +150,8 @@ class BruteGagsterCounterWindowsTest(unittest.TestCase):
         self.assertFalse(fn(brute, 'smack'))
         self.assertTrue(fn(gagster, 'gag_lob'))
         self.assertFalse(fn(gagster, 'smack'))
-        self.assertFalse(fn(ink, 'ink_dash'))
-        # Overlord climax counters are covered by test_overlord_counter_windows.py.
+        # Smudge / Overlord counters covered by dedicated suites.
+        self.assertTrue(fn(ink, 'ink_dash'))
         self.assertTrue(fn(ink, 'rain'))
         # Oswald betrayal counters are covered by test_oswald_counter_windows.py.
         # Disable flags respected.

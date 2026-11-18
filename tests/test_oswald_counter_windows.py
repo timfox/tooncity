@@ -154,9 +154,9 @@ class OswaldCounterWindowsTest(unittest.TestCase):
         self.assertTrue(fn(self.cg.ARCHETYPE_GAGSTER, 'gag_lob'))
         self.assertTrue(fn(self.cg.ARCHETYPE_SNARE, 'smack'))
         # Overlord climax counters are covered by test_overlord_counter_windows.py.
-        # Smudge kit stays without dedicated counters.
+        # Smudge counters are covered by test_ink_smudge_counter_windows.py.
         self.assertTrue(fn(self.cg.ARCHETYPE_INK, 'rain'))
-        self.assertFalse(fn(self.cg.ARCHETYPE_INK, 'ink_dash'))
+        self.assertTrue(fn(self.cg.ARCHETYPE_INK, 'ink_dash'))
         self.assertFalse(fn(self.cg.ARCHETYPE_BRUTE, 'slam'))
         # Disable flags respected.
         prev_l = self.cg.OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED

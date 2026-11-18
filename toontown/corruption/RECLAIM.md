@@ -138,7 +138,13 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 Ink Smudge AI uses ``ink_dash`` (short planar rush then hit) by default and
 close ``ink_splat`` AoE when already in their face — Act 1 / Overlord P2-add
 swarm identity, not default smack fodder. Distinct from Oswald
-``betrayal_lunge`` / ``stain_burst`` (longer dash + shove).
+``betrayal_lunge`` / ``stain_burst`` (longer dash + shove). Melee
+mid-ink_dash / mid-ink_splat telegraph cancels the wind-up (same snare-style
+AI interrupt as Brute spit / Gagster lob / Overlord / Oswald;
+``INK_DASH_MELEE_INTERRUPT`` / ``INK_SPLAT_MELEE_INTERRUPT``). After each
+telegraph reads, a short dedicated counter window arms — F / LMB punish
+opener (``INK_DASH_COUNTER_*`` / ``INK_SPLAT_COUNTER_*``; same reward path;
+gameplay timing only; interrupt ≠ counter).
 
 ## Depth D2 enemy demo
 
@@ -169,6 +175,12 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # (CorruptTelegraphCreamWashFx — silhouette / idle cream-wash grammar)
 # plus squash/SFX so wind-ups read without a combat HUD; impact flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
+# Melee mid-ink_dash / mid-ink_splat telegraph cancels the wind-up (same
+# snare-style AI interrupt as Brute spit / Gagster lob;
+# INK_DASH_MELEE_INTERRUPT / INK_SPLAT_MELEE_INTERRUPT). After each telegraph
+# reads, a short dedicated counter window arms — F / LMB punish opener
+# (INK_DASH_COUNTER_* / INK_SPLAT_COUNTER_*; same reward path; gameplay
+# timing only; interrupt ≠ counter).
 # Melee hits on Smudge flash SmudgeInkSplashFx (cheap purple ink splash)
 # then SmudgeHitCreamSplashFx (deepened cream splash beyond #259 + thicker
 # radial cream hose smears + wider cream aftershock) so pack hits read
