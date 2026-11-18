@@ -14,6 +14,7 @@ from .HackSlashConfig import (
     juggleCancelSlamHitIndex,
     perfectDodgeCounterOpenerDamage,
     perfectDodgeCounterOpenerRate,
+    softLockCyclePulseScaleKeys,
 )
 from .SoftTarget import (
     SoftTargetFinder,
@@ -54,6 +55,7 @@ __all__ = [
     'juggleCancelSlamHitIndex',
     'perfectDodgeCounterOpenerDamage',
     'perfectDodgeCounterOpenerRate',
+    'softLockCyclePulseScaleKeys',
     'SoftTargetFinder',
     'HackSlashTarget',
     'assistAimYawNudge',

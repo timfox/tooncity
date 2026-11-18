@@ -3,8 +3,10 @@
 World-space cream brackets over the sticky soft-lock target. On acquire/snap,
 plays a short squash → stretch → settle hose pop plus cream/ink accent flecks,
 an expanding cream pulse ring, a soft delayed cream wash pulse, a brief FOV
-punch, and a soft FOV cream wash after the lens kick. Toontown spiritual-sequel
-tone only — no keyblades / no KH branding.
+punch, and a soft FOV cream wash after the lens kick. On manual Tab/` cycle,
+plays a lighter cycle reticle pulse (+ short cream ring) so the new lock
+reads clearly without re-firing acquire FOV / cream wash. Toontown
+spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec4
@@ -82,8 +84,8 @@ class SoftLockReticleFx(object):
             except Exception:
                 pass
 
-    def attach(self, target, snapped=False):
-        """Follow target; if snapped, play the hose pop + cream/ink accents."""
+    def attach(self, target, snapped=False, cycled=False):
+        """Follow target; snap = full acquire juice; cycled = brief pulse."""
         if target is None:
             self.hide()
             return
@@ -98,6 +100,8 @@ class SoftLockReticleFx(object):
         self._followTarget()
         if snapped:
             self.playSnapPop()
+        elif cycled:
+            self.playCyclePulse()
 
     def tick(self):
         """Keep the reticle parked above the current soft-lock target."""
@@ -140,15 +144,48 @@ class SoftLockReticleFx(object):
         self._armCreamWash()
         self._requestFovPunch()
 
-    def _playPulseRing(self, origin, parent):
-        """Expanding pastel cream ring at the reticle on acquire/snap."""
+    def playCyclePulse(self):
+        """Brief reticle hose pulse when Tab/` switches soft-lock.
+
+        Lighter than playSnapPop — scale pulse + short cream ring only.
+        Skips accents / cream wash / FOV so rapid cycle stays readable.
+        """
+        if not getattr(HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_ENABLED', True):
+            return
+        if self._root is None:
+            return
+        self._clearPop()
+        self._clearPulseRing()
+        settle = float(HackSlashConfig.SOFT_LOCK_RETICLE_SETTLE_SCALE)
+        self._popIval = HitJuice.playSoftLockCyclePulse(
+            self._root, settle,
+            name=self.avatar.uniqueName('hackslashSoftLockCyclePulse'))
+        try:
+            origin = self._root.getPos(render)  # noqa: F821
+            parent = render  # noqa: F821
+        except Exception:
+            return
+        self._playCyclePulseRing(origin, parent)
+
+    def _playPulseRing(self, origin, parent, peak=None, sec=None, peakA=None,
+                       nameSuffix='PulseRing'):
+        """Expanding pastel cream ring at the reticle on acquire/snap/cycle."""
         if not getattr(HackSlashConfig, 'SOFT_LOCK_PULSE_RING_ENABLED', True):
             return
         half = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_HALF)
         start = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_START)
-        peak = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_PEAK)
-        sec = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_SEC)
-        peakA = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_PEAK_ALPHA)
+        if peak is None:
+            peak = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_PEAK)
+        else:
+            peak = float(peak)
+        if sec is None:
+            sec = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_SEC)
+        else:
+            sec = float(sec)
+        if peakA is None:
+            peakA = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_PEAK_ALPHA)
+        else:
+            peakA = float(peakA)
         r, g, b, a = HackSlashConfig.SOFT_LOCK_PULSE_RING_COLOR
         er, eg, eb, ea = HackSlashConfig.SOFT_LOCK_PULSE_RING_END
         binSort = int(HackSlashConfig.SOFT_LOCK_PULSE_RING_BIN)
@@ -184,9 +221,26 @@ class SoftLockReticleFx(object):
                 ),
             ),
             Func(self._clearPulseRing),
-            name=self.avatar.uniqueName('hackslashSoftLockPulseRing'),
+            name=self.avatar.uniqueName(
+                'hackslashSoftLock%s' % nameSuffix),
         )
         self._pulseIval.start()
+
+    def _playCyclePulseRing(self, origin, parent):
+        """Shorter/quieter cream ring for Tab/` cycle (no acquire FOV/wash)."""
+        if not getattr(HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_ENABLED', True):
+            return
+        if not getattr(HackSlashConfig, 'SOFT_LOCK_PULSE_RING_ENABLED', True):
+            return
+        peak = float(getattr(
+            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_PEAK', 1.65))
+        sec = float(getattr(
+            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_SEC', 0.14))
+        peakA = float(getattr(
+            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA', 0.48))
+        self._playPulseRing(
+            origin, parent, peak=peak, sec=sec, peakA=peakA,
+            nameSuffix='CyclePulseRing')
 
     def _clearPulseRing(self):
         if self._pulseIval is not None:

@@ -281,10 +281,11 @@ class MeleeCombatController(DirectObject):
         self._applyFinisherShake()
         return Task.cont
 
-    def _updateSoftLockReticle(self, target, snapped=False):
-        """Follow soft-lock; hose-pop + pulse + washes + FOV on snap."""
+    def _updateSoftLockReticle(self, target, snapped=False, cycled=False):
+        """Follow soft-lock; acquire snap juice or brief cycle pulse."""
         try:
-            self._softLockReticle.attach(target, snapped=bool(snapped))
+            self._softLockReticle.attach(
+                target, snapped=bool(snapped), cycled=bool(cycled))
             # Flush deferred soft-lock FOV after HitStopFx resumes.
             self._softLockReticle.tick()
         except Exception:
@@ -308,8 +309,10 @@ class MeleeCombatController(DirectObject):
         """Manual soft-lock switch during rubber-hose melee.
 
         Breaks sticky hold onto the next/prev yaw-ordered candidate and
-        immediately refreshes the lock hint + reticle (snap juice when the
-        lock key changes). Cooldown stops key-repeat double snaps.
+        immediately refreshes the lock hint + reticle. When the lock key
+        changes, plays a brief cycle reticle pulse (not full acquire snap
+        FOV/wash) so the new target reads clearly. Cooldown stops key-repeat
+        double pulses.
         """
         if not self.enabled:
             return
@@ -329,7 +332,9 @@ class MeleeCombatController(DirectObject):
                 self._showLockHint('%s  [%d]' % (name, hp))
             except Exception:
                 pass
-            self._updateSoftLockReticle(target, snapped=snapped)
+            # Cycle path: brief reticle pulse cue (not full acquire snap juice).
+            self._updateSoftLockReticle(
+                target, snapped=False, cycled=bool(snapped))
             # Mild face/cam lean so the switch reads without waiting a tick.
             self._nudgeTowardLock(target)
         else:
