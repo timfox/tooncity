@@ -9,6 +9,8 @@ Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks for a brief
 rubber-hose number pop (and tiny ink flecks) on each connect.
 Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
 cream/ink hose pop when soft-lock acquires or snaps a corrupt target.
+Hit connect uses spawnHitSparkFlecks for short cream/ink fleck sparkles that
+layer with the impact squash silhouette.
 No keyblades / no KH framing — Toontown rubber-hose only.
 """
 
@@ -502,6 +504,129 @@ def spawnSoftLockAccents(origin, parent=None, name='hackslashSoftLockAccents'):
 
 def clearSoftLockAccents(nodes):
     """Remove cream/ink accent CardMaker nodes from a soft-lock snap."""
+    for np in list(nodes or []):
+        try:
+            if np is not None and not np.isEmpty():
+                np.removeNode()
+        except Exception:
+            pass
+
+
+def _hitSparkTablePick(table, hitIndex):
+    """Pick a per-hit tunable; scalars still work for older configs."""
+    if isinstance(table, (int, float)):
+        return float(table)
+    return float(table[min(max(0, int(hitIndex)), len(table) - 1)])
+
+
+def spawnHitSparkFlecks(origin, hitIndex=0, parent=None,
+                        name='hackslashHitSparkFlecks'):
+    """Cream + ink fleck sparkles at a melee connect. Returns (Parallel|None, nodes).
+
+    Short rubber-hose burst meant to layer with playImpactSquash /
+    playFinisherSlam — not KH glitter. Caller owns cleanup (pause Parallel
+    then clearHitSparkFlecks).
+    """
+    if origin is None or not getattr(HackSlashConfig, 'HIT_SPARK_ENABLED', True):
+        return None, []
+
+    parentNP = parent
+    if parentNP is None:
+        try:
+            parentNP = render  # noqa: F821
+        except Exception:
+            return None, []
+
+    creamCount = int(_hitSparkTablePick(
+        HackSlashConfig.HIT_SPARK_CREAM_COUNT, hitIndex))
+    inkCount = int(_hitSparkTablePick(
+        HackSlashConfig.HIT_SPARK_INK_COUNT, hitIndex))
+    streakCount = int(_hitSparkTablePick(
+        HackSlashConfig.HIT_SPARK_STREAK_COUNT, hitIndex))
+    if creamCount + inkCount + streakCount <= 0:
+        return None, []
+
+    size = float(HackSlashConfig.HIT_SPARK_SIZE)
+    streakSize = float(HackSlashConfig.HIT_SPARK_STREAK_SIZE)
+    drift = float(_hitSparkTablePick(HackSlashConfig.HIT_SPARK_DRIFT, hitIndex))
+    liftBurst = float(HackSlashConfig.HIT_SPARK_LIFT_BURST)
+    sec = float(HackSlashConfig.HIT_SPARK_SEC)
+    ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+
+    nodes = []
+    parts = []
+
+    def _spawnFleck(index, total, color, endColor, liftBias, nameSuffix,
+                    cardSize, elongated=False):
+        if total <= 0:
+            return
+        r, g, b, a = color
+        er, eg, eb, ea = endColor
+        angle = (2.0 * pi * index) / float(max(1, total)) + liftBias
+        try:
+            cm = CardMaker('%s-%s-%s' % (name, nameSuffix, index))
+            # Alternate fat blobs vs thin streaks for rubber-hose variety.
+            if elongated or index % 2 == 1:
+                cm.setFrame(
+                    -cardSize * 0.35, cardSize * 0.35,
+                    -cardSize * 1.25, cardSize * 1.25)
+            else:
+                cm.setFrame(-cardSize, cardSize, -cardSize * 0.85, cardSize * 0.85)
+            fleck = parentNP.attachNewNode(cm.generate())
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, a)
+            start = Point3(
+                ox + cos(angle) * 0.14,
+                oy + sin(angle) * 0.14,
+                oz + 0.05 * (index % 3))
+            fleck.setPos(start)
+            fleck.setScale(0.5 + 0.14 * (index % 3))
+            fleck.setBin('transparent', 24)
+            fleck.setDepthWrite(False)
+            fleck.setBillboardPointEye()
+        except Exception:
+            return
+        end = Point3(
+            start[0] + cos(angle) * drift,
+            start[1] + sin(angle) * drift,
+            start[2] + liftBurst + 0.12 * (index % 2))
+        parts.append(Parallel(
+            LerpPosInterval(fleck, sec, end, blendType='easeOut'),
+            LerpScaleInterval(fleck, sec, 0.04, blendType='easeIn'),
+            LerpColorScaleInterval(
+                fleck, sec, Vec4(er, eg, eb, ea), blendType='easeIn'),
+        ))
+        nodes.append(fleck)
+
+    for i in range(creamCount):
+        _spawnFleck(
+            i, creamCount,
+            HackSlashConfig.HIT_SPARK_CREAM_COLOR,
+            HackSlashConfig.HIT_SPARK_CREAM_END,
+            0.18, 'cream', size)
+    for i in range(inkCount):
+        _spawnFleck(
+            i, inkCount,
+            HackSlashConfig.HIT_SPARK_INK_COLOR,
+            HackSlashConfig.HIT_SPARK_INK_END,
+            0.9, 'ink', size)
+    for i in range(streakCount):
+        _spawnFleck(
+            i, streakCount,
+            HackSlashConfig.HIT_SPARK_STREAK_COLOR,
+            HackSlashConfig.HIT_SPARK_STREAK_END,
+            0.45, 'streak', streakSize, elongated=True)
+
+    if not parts:
+        return None, []
+    ival = Parallel(*parts, name=name)
+    ival.start()
+    return ival, nodes
+
+
+def clearHitSparkFlecks(nodes):
+    """Remove cream/ink hit-spark CardMaker nodes from a melee connect."""
     for np in list(nodes or []):
         try:
             if np is not None and not np.isEmpty():

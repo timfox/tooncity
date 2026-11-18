@@ -203,6 +203,27 @@ HIT_IMPACT_STRETCH = (
 )
 HIT_IMPACT_SETTLE_SEC = 0.08
 
+# Hit-connect cream/ink fleck sparkles (world-space CardMaker burst).
+# Layers with HIT_IMPACT squash — short rubber-hose cream sparks + ink flecks.
+# Toontown spiritual-sequel tone only — no keyblades / no KH branding.
+HIT_SPARK_ENABLED = True
+HIT_SPARK_LIFT = 1.2
+# Per-hit intensity: cream/ink counts and drift scale slightly up the string.
+HIT_SPARK_CREAM_COUNT = (3, 4, 5)
+HIT_SPARK_INK_COUNT = (3, 4, 5)
+HIT_SPARK_STREAK_COUNT = (2, 3, 4)
+HIT_SPARK_SIZE = 0.13
+HIT_SPARK_STREAK_SIZE = 0.2
+HIT_SPARK_DRIFT = (0.75, 0.9, 1.1)
+HIT_SPARK_LIFT_BURST = 0.35
+HIT_SPARK_SEC = 0.2
+HIT_SPARK_CREAM_COLOR = (1.0, 0.96, 0.62, 0.95)
+HIT_SPARK_CREAM_END = (1.0, 0.9, 0.45, 0.0)
+HIT_SPARK_INK_COLOR = (0.2, 0.06, 0.26, 0.9)
+HIT_SPARK_INK_END = (0.38, 0.1, 0.42, 0.0)
+HIT_SPARK_STREAK_COLOR = (1.0, 0.97, 0.78, 0.92)
+HIT_SPARK_STREAK_END = (1.0, 0.92, 0.55, 0.0)
+
 # Combo-finisher slam — bigger rubber-hose than HIT_IMPACT row 2 so the last
 # stretch-punch reads as a readable slam (flat pancake → tall spring → settle).
 FINISHER_SLAM_SQUASH = (2.2, 2.2, 0.2, 0.085)
