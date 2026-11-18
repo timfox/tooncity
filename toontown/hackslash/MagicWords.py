@@ -15,8 +15,9 @@ class ToggleHackSlash(MagicWord):
         'squash/stretch juice on connect (and when a corrupt smacks you), a '
         'brief white flash, Shift/X dodge roll with i-frames + rubber-hose '
         'afterimage trail (ink sparkle / star pop when those i-frames eat a '
-        'CorruptToon telegraph), and an on-screen punch counter that ticks on '
-        'hits then fades when the string breaks (finisher also FOV-punches). '
+        'CorruptToon telegraph), soft-lock cream/ink reticle hose pop on '
+        'acquire/snap, and an on-screen punch counter that ticks on hits then '
+        'fades when the string breaks (finisher also FOV-punches). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
@@ -39,7 +40,7 @@ class ToggleHackSlash(MagicWord):
                 'Stretch-punch melee ON. Press F (or LMB) for fist combos; '
                 'Shift/X to dodge with a smear trail (ink sparkle on perfect '
                 'dodge). Connects squash/stretch; punch counter + soft-lock '
-                'orbit + hit flash. Soft-targets demo hostiles (and street '
-                'suits).'
+                'reticle pop / orbit + hit flash. Soft-targets demo hostiles '
+                '(and street suits).'
             )
         return 'Stretch-punch melee OFF.'

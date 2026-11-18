@@ -40,16 +40,28 @@ class SoftTargetFinder:
         self._lockedKey = None
         self._lockedUntil = 0.0
         self._suitAdapters = {}
+        # True only for the acquire() call that freshly snaps onto a target.
+        self._snapped = False
 
     def clear(self):
         self._lockedKey = None
         self._lockedUntil = 0.0
         self._suitAdapters.clear()
+        self._snapped = False
+
+    def didSnap(self):
+        """True if the most recent acquire() snapped onto a new lock key."""
+        return bool(self._snapped)
+
+    def getLockedKey(self):
+        return self._lockedKey
 
     def acquire(self, now=None):
         if now is None:
             now = globalClock.getFrameTime()  # noqa: F821
 
+        self._snapped = False
+        prevKey = self._lockedKey
         candidates = list(self._iterCandidates())
         byKey = {self._key(t): t for t in candidates}
 
@@ -75,8 +87,11 @@ class SoftTargetFinder:
                 bestDist = dist
                 best = target
 
-        self._lockedKey = self._key(best) if best is not None else None
+        newKey = self._key(best) if best is not None else None
+        self._lockedKey = newKey
         self._lockedUntil = now + HackSlashConfig.TARGET_LOCK_HOLD_SEC
+        # Snap = first lock or switch onto a different living hostile.
+        self._snapped = newKey is not None and newKey != prevKey
         return best
 
     def _key(self, target):

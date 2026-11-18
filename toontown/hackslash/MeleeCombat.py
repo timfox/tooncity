@@ -27,6 +27,7 @@ from . import HitJuice
 from .DemoHostile import spawnDemoHostiles
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
+from .SoftLockReticleFx import SoftLockReticleFx
 from .SoftTarget import SoftTargetFinder
 
 
@@ -57,6 +58,7 @@ class MeleeCombatController(DirectObject):
         self._dodging = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
+        self._softLockReticle = SoftLockReticleFx(avatar)
         self._origScale = None
         self._baseFov = None
         self._shakeAmp = 0.0
@@ -125,6 +127,7 @@ class MeleeCombatController(DirectObject):
         self._clearLaunch()
         self._clearDodge()
         self._clearPerfectDodge()
+        self._clearSoftLockReticle()
         self._clearComboCounter()
         self._iframeUntil = 0.0
         self._dodgeIFrameUntil = 0.0
@@ -148,6 +151,10 @@ class MeleeCombatController(DirectObject):
             self._dodgePerfect.clear()
         except Exception:
             pass
+        try:
+            self._softLockReticle.clear()
+        except Exception:
+            pass
         self.ignoreAll()
 
     def isEnabled(self):
@@ -166,16 +173,38 @@ class MeleeCombatController(DirectObject):
         if not self.enabled:
             return Task.done
         target = self.targetFinder.acquire()
+        snapped = self.targetFinder.didSnap()
         if target is not None:
             name = target.getHackSlashName()
             hp = target.getHackSlashHp()
             self._showLockHint('%s  [%d]' % (name, hp))
+            self._updateSoftLockReticle(target, snapped=snapped)
             self._nudgeTowardLock(target)
         else:
             self._hideLockHint()
+            self._hideSoftLockReticle()
         # Always after soft-lock so finisher thud isn't lerped away.
         self._applyFinisherShake()
         return Task.cont
+
+    def _updateSoftLockReticle(self, target, snapped=False):
+        """Follow soft-lock target; hose-pop + cream/ink accents on snap."""
+        try:
+            self._softLockReticle.attach(target, snapped=bool(snapped))
+        except Exception:
+            pass
+
+    def _hideSoftLockReticle(self):
+        try:
+            self._softLockReticle.hide()
+        except Exception:
+            pass
+
+    def _clearSoftLockReticle(self):
+        try:
+            self._softLockReticle.clear()
+        except Exception:
+            pass
 
     def _nudgeTowardLock(self, target):
         """Subtle avatar + camera lean toward the sticky soft-lock target.
