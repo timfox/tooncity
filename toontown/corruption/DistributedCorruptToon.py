@@ -11,6 +11,7 @@ from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathPopFx import (
     DeathPopSplat, buildBodyPopInterval, deathPopLook)
 from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphString
+from toontown.corruption.BruteSludgeSplashFx import BruteSludgeSplash
 from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
@@ -72,6 +73,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._overlordInkRain = None
         self._snareTelegraphString = None
         self._bruteTelegraphSpit = None
+        self._bruteSludgeSplash = None
         self._smudgeTelegraphInk = None
         self._smudgeInkSplash = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
@@ -140,6 +142,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
+        self.__clearBruteSludgeSplash()
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
         self.__clearDeathPopSplat()
@@ -949,6 +952,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
+        self.__clearBruteSludgeSplash()
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
         self.__clearDeathPopSplat()
@@ -965,6 +969,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Ink Smudge: extra cheap purple splash so swarm deaths stay scannable.
         if self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
             self.__playSmudgeInkSplash(splatPos, kind='death')
+        # Sludge Brute: green sludge splash so tank pops stay scannable.
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_BRUTE:
+            self.__playBruteSludgeSplash(splatPos, kind='death')
         if bodyPop is None:
             self.__playPurityReclaimPop()
             self.hide()
@@ -1176,6 +1183,29 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
         self._smudgeInkSplash = None
 
+    def __playBruteSludgeSplash(self, pos=None, kind='hit'):
+        """Green sludge splash — Sludge Brute hit / death readability only."""
+        if self.getArchetype() != CorruptionGlobals.ARCHETYPE_BRUTE:
+            return
+        self.__clearBruteSludgeSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = BruteSludgeSplash()
+        self._bruteSludgeSplash = splash
+        splash.play(pos, kind=kind)
+
+    def __clearBruteSludgeSplash(self):
+        splash = getattr(self, '_bruteSludgeSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._bruteSludgeSplash = None
+
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""
         messenger.send('corruptToonDefeatedFx', [
@@ -1235,6 +1265,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__playSmudgeInkSplash(kind='hit')
             # Brief resume so idle drips return after the splash owns the frame.
             Sequence(Wait(0.28), Func(self.__resumeIdleInkDrip)).start()
+        # Sludge Brute: cheap green splash so tagged Brutes read vs Smudges.
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_BRUTE:
+            self.__pauseIdleInkDrip()
+            self.__playBruteSludgeSplash(kind='hit')
+            Sequence(Wait(0.3), Func(self.__resumeIdleInkDrip)).start()
         try:
             away = self.getPos(render) - attacker.getPos(render)
             away.setZ(0)
