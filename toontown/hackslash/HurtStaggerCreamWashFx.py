@@ -1,17 +1,18 @@
 """Rubber-hose cream wash aftershock after player hurt stagger.
 
 Fullscreen soft cream veil + residual flecks that settle *during* the
-committed hurt stagger (#199 / #215 / #247) — HitSparkCreamWashPulse /
+committed hurt stagger (#199 / #215 / #247 / #263) — HitSparkCreamWashPulse /
 PerfectDodgeCreamWashPulse overlay grammar as a brief smack→recovery juice
 beat so the hit still reads juicy before the F/Shift cancel window opens.
-Deepened past #247 so getting hit and recovering reads juicier still:
+Deepened past #263 so getting hit and recovering reads juicier still:
 brighter peak / longer mid hold, plus a richer residual cream wash aftershock
 (more flecks + stronger halo) that settles into the recovery cancel. Soft
 under HUD; cream / pastel only (not ink). Distinct from dodge-cancel cream
-flash deepen (#242 / #257) — fires on smack stagger, not Shift→F cancel —
-and from i-frame cream wash deepen (#228) — settles during hurt lockout, not
-mid-roll invuln. Wired from MeleeCombatController._armHurtRecoveryCancelWindow.
-Client only. Toontown spiritual sequel — no keyblades / no KH branding.
+flash deepen (#242 / #257 / #281) — fires on smack stagger, not Shift→F
+cancel — and from i-frame cream wash deepen (#228 / #272) — settles during
+hurt lockout, not mid-roll invuln. Wired from
+MeleeCombatController._armHurtRecoveryCancelWindow. Client only. Toontown
+spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi
@@ -62,17 +63,17 @@ class HurtStaggerCreamWashPulse(object):
             r, g, b = 1.0, 0.97, 0.82
 
         peak = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_PEAK', 0.098))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_PEAK', 0.099))
         mid = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_MID', 0.065))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_MID', 0.075))
         inSec = float(getattr(
             HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_IN_SEC', 0.04))
         pulseSec = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_PULSE_SEC', 0.10))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_PULSE_SEC', 0.11))
         holdSec = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_HOLD_SEC', 0.085))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_HOLD_SEC', 0.10))
         outSec = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_OUT_SEC', 0.38))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_OUT_SEC', 0.42))
         binSort = int(getattr(
             HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_BIN', 27))
         if delay is None:
@@ -96,7 +97,7 @@ class HurtStaggerCreamWashPulse(object):
             return None
 
         # Early two-beat during committed stagger: bright → settle → fade.
-        # Deepened-past peak + mid hold so smack→recovery reads juicier still.
+        # Deepened-past-#263 peak + mid hold so smack→recovery reads juicier.
         washVeil = Sequence(
             LerpColorScaleInterval(
                 wash, max(0.01, inSec), Vec4(r, g, b, peak),
@@ -149,7 +150,7 @@ class HurtStaggerCreamWashPulse(object):
             return None
         delay = float(getattr(
             HackSlashConfig,
-            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.09))
+            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.08))
         parts = []
 
         if getattr(
@@ -160,9 +161,9 @@ class HurtStaggerCreamWashPulse(object):
                 parts.append(halo)
 
         count = int(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT', 5))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT', 6))
         sec = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SEC', 0.32))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SEC', 0.36))
         for i in range(count):
             part = self._spawnAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -179,19 +180,19 @@ class HurtStaggerCreamWashPulse(object):
     def _spawnAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             HackSlashConfig,
-            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.44))
+            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.48))
         startScale = float(getattr(
             HackSlashConfig,
-            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_START', 0.28))
+            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_START', 0.32))
         peakScale = float(getattr(
             HackSlashConfig,
-            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 1.25))
+            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 1.35))
         sec = float(getattr(
             HackSlashConfig,
-            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.28))
+            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.32))
         peakA = float(getattr(
             HackSlashConfig,
-            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.12))
+            'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.14))
         r, g, b, _a = getattr(
             HackSlashConfig,
             'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_COLOR',
@@ -229,14 +230,14 @@ class HurtStaggerCreamWashPulse(object):
         """Softer cream chip that settles downward — residual wash aftershock."""
         count = max(1, int(total))
         size = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SIZE', 0.015))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SIZE', 0.017))
         drift = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DRIFT', 0.26))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DRIFT', 0.30))
         fall = float(getattr(
-            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_FALL', 0.20))
+            HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_FALL', 0.24))
         r, g, b, a = getattr(
             HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COLOR',
-            (1.0, 0.97, 0.78, 0.78))
+            (1.0, 0.97, 0.78, 0.84))
         er, eg, eb, ea = getattr(
             HackSlashConfig, 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_END_COLOR',
             (1.0, 0.93, 0.58, 0.0))
@@ -249,20 +250,20 @@ class HurtStaggerCreamWashPulse(object):
             # Alternate chip / cross / soft diamond — juicier residual settle.
             if (index % 3) == 0:
                 cm.setFrame(
-                    -size * 0.35, size * 0.35, -size * 1.45, size * 1.45)
+                    -size * 0.35, size * 0.35, -size * 1.55, size * 1.55)
             elif (index % 3) == 1:
                 cm.setFrame(
-                    -size * 1.45, size * 1.45, -size * 0.35, size * 0.35)
+                    -size * 1.55, size * 1.55, -size * 0.35, size * 0.35)
             else:
-                cm.setFrame(-size * 1.12, size * 1.12, -size * 0.95, size * 0.95)
+                cm.setFrame(-size * 1.18, size * 1.18, -size * 1.00, size * 1.00)
             fleck = parent.attachNewNode(cm.generate())
             fleck.setTransparency(TransparencyAttrib.MAlpha)
             fleck.setColor(r, g, b, 1)
             fleck.setColorScale(r, g, b, 0)
-            startX = ox + cos(angle) * 0.09
-            startZ = oz + 0.016 * (index % 3)
+            startX = ox + cos(angle) * 0.10
+            startZ = oz + 0.018 * (index % 3)
             fleck.setPos(startX, oy, startZ)
-            fleck.setScale(0.36 + 0.11 * (index % 3))
+            fleck.setScale(0.40 + 0.12 * (index % 3))
             fleck.setBin('fixed', binSort + 1 + (index % 2))
             fleck.setDepthTest(False)
             fleck.setDepthWrite(False)
@@ -271,27 +272,27 @@ class HurtStaggerCreamWashPulse(object):
 
         # Settle downward — residual cream after the hurt wash pulse.
         end = Point3(
-            startX + cos(angle) * drift * 0.65,
+            startX + cos(angle) * drift * 0.70,
             oy,
-            startZ - fall - 0.055 * (index % 3))
-        peak = 1.18 + 0.12 * (index % 2)
+            startZ - fall - 0.06 * (index % 3))
+        peak = 1.22 + 0.14 * (index % 2)
         self._fleckNPs.append(fleck)
-        stagger = 0.012 * (index % 3)
+        stagger = 0.010 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(
                 LerpColorScaleInterval(
-                    fleck, 0.07, Vec4(r, g, b, a), blendType='easeOut'),
+                    fleck, 0.08, Vec4(r, g, b, a), blendType='easeOut'),
                 LerpScaleInterval(
-                    fleck, max(0.01, sec * 0.32), peak, blendType='easeOut'),
+                    fleck, max(0.01, sec * 0.34), peak, blendType='easeOut'),
             ),
             Parallel(
                 LerpPosInterval(
-                    fleck, max(0.01, sec * 0.68), end, blendType='easeIn'),
+                    fleck, max(0.01, sec * 0.66), end, blendType='easeIn'),
                 LerpScaleInterval(
-                    fleck, max(0.01, sec * 0.68), 0.035, blendType='easeIn'),
+                    fleck, max(0.01, sec * 0.66), 0.03, blendType='easeIn'),
                 LerpColorScaleInterval(
-                    fleck, max(0.01, sec * 0.68), Vec4(er, eg, eb, ea),
+                    fleck, max(0.01, sec * 0.66), Vec4(er, eg, eb, ea),
                     blendType='easeIn'),
             ),
         )
