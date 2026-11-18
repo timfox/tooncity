@@ -35,6 +35,11 @@ class PlayEntryClient(DirectObject):
         self.accept('announceReclaimStart', self._onReclaimStart)
         # Reclaim director also shows banners; listen for DO messenger-less path:
         self.accept('purityRestoreFx', self._onPurity)
+        try:
+            from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
+            ensureReclaimCheerClient()
+        except Exception:
+            pass
         taskMgr.doMethodLater(2.0, self._bootZone, 'playEntryBoot')  # noqa: F821
 
     def destroy(self):

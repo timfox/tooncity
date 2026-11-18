@@ -13,9 +13,15 @@
    Punchline sludge green-brown, Silly hot magenta) via `HOOD_POLLUTION_BIAS`
    and `PollutionPropTint` (geom colorScale — does not stomp reclaim render bloom).
 5. At `0.0`, director announces reclaim complete and client plays a stronger purity
-   restore moment (banner + bloom + sting/NPC cheer messenger hooks).
+   restore moment (banner + bloom + sting + `ReclaimCheer` local Happy/wave + nearby nudge).
 
-## Demo
+## Discoverable play (preferred)
+
+Walk onto Loopy / Punchline / Silly: `PlayEntry` auto-arms melee and auto-starts
+reclaim packs. Fight with **F**, dodge with **Shift**, campaign with **C**.
+No `~spawncorrupt` required for the happy path.
+
+## Demo (magic words still work)
 
 Preferred street: Toontown Central Loopy Lane (`2200`).
 Compare ambient corruption on Punchline (`2300`) and Silly (`2100`) with `~pollute`.
