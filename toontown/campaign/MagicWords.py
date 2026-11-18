@@ -11,8 +11,8 @@ class StartCampaign(MagicWord):
     advancedDesc = (
         'Uses CampaignDirector + ReclaimDirector. Oswald leads Loopy → '
         'Punchline → Silly (hub plaza NPC deepen — authored plaza stand + '
-        'E-talk greet + cheer on reclaim street clear, then vanishes for '
-        'the twist) '
+        'E-talk greet / first-meet tip persist + cheer on reclaim street '
+        'clear, then vanishes for the twist) '
         'two-phase Ink Overlord finale (act-enter banners: '
         'cream edge + soft cream wash pulse; Punchline Act 2 tip: hose pop + '
         'juicier deepened cream hose settle past #256 (overshoot → rest → '

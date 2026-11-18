@@ -48,6 +48,9 @@ class CampaignDirectorAI(DirectObject):
         self.chaseCleared = 0
         # Remaining mid-chase Oswald HP (0 = full / unset). Survives relog.
         self.chaseHp = 0
+        # 1 after first trusted Oswald E-talk meet (first-meet tip persist).
+        # Durable across relog; not wiped on campaign replay.
+        self.oswaldMet = 0
         self._lastToonId = None
         self._hydratedToonId = None
         self._oswaldChaseDoId = None
@@ -127,6 +130,48 @@ class CampaignDirectorAI(DirectObject):
                 self._pushProgressToClient(toon)
         return ok
 
+    def markOswaldMet(self, toon=None):
+        """Latch + persist first trusted Oswald meet (first-meet tip).
+
+        Idempotent: already-met stays 1. Survives relog via CampaignProgressSave;
+        not cleared on campaign replay wipe (trust beat is character knowledge).
+        """
+        if toon is not None:
+            self._lastToonId = getattr(toon, 'doId', self._lastToonId)
+            # Hydrate so we do not clobber a prior met flag with a cold 0.
+            if hasattr(self, '_hydrateFromToon'):
+                try:
+                    self._hydrateFromToon(toon)
+                except Exception:
+                    pass
+        if int(getattr(self, 'oswaldMet', 0) or 0):
+            self._pushOswaldMetToClient(toon)
+            return True
+        self.oswaldMet = 1
+        self._persistForToon(toon)
+        self._pushOswaldMetToClient(toon)
+        return True
+
+    def _pushOswaldMetToClient(self, toon):
+        """Thin PollutionManager setOswaldMet push (login / meet)."""
+        if toon is None:
+            avId = self._lastToonId
+            if avId is None:
+                return False
+            toon = self.air.doId2do.get(int(avId))
+        if toon is None:
+            return False
+        pollutionMgr = getattr(self.air, 'pollutionManager', None)
+        if pollutionMgr is None:
+            return False
+        push = getattr(pollutionMgr, 'pushOswaldMetToAvatar', None)
+        if not callable(push):
+            return False
+        try:
+            return bool(push(toon, int(getattr(self, 'oswaldMet', 0) or 0)))
+        except Exception:
+            return False
+
     def _pushProgressToClient(self, toon):
         """Thin PollutionManager status push (login / hydrate / persist)."""
         if toon is None:
@@ -137,12 +182,16 @@ class CampaignDirectorAI(DirectObject):
         push = getattr(pollutionMgr, 'pushCampaignProgressToAvatar', None)
         if not callable(push):
             return False
+        ok = False
         try:
             # hydrate=False — caller already loaded / owns live director state.
-            return bool(push(toon, hydrate=False))
+            ok = bool(push(toon, hydrate=False))
         except Exception:
             self.notify.debug('campaign progress client push failed')
-            return False
+            ok = False
+        # First-meet latch is a sibling thin push (keeps 4-arg progress DC).
+        self._pushOswaldMetToClient(toon)
+        return ok
 
     def _pushVictoryToClient(self, toon, reclaimCount=None):
         """Relay campaignVictory over PollutionManager to the owning client.
