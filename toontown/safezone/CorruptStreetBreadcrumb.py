@@ -8,14 +8,16 @@ After the appear hose-pop, placemarkers briefly pulse / cream-highlight
 (#211), deepened with a juicier cream mid-settle + soft local cream
 halo so discoverability reads punchier without KH branding — distinct
 from the birds-return fullscreen cream wash (#226). Separately, a short
-ink crumb trail at the tunnel mouth pulses on a faster stagger so
-polluted streets read clearer from the playground side without relying
-on the overhead placemarker alone. A soft pollution fog edge veil also
-breathes at the playground-side tunnel lip (#221), deepened with a
-juicier cream mid-settle + soft cream rim bloom so polluted borders
-read punchier — distinct from placemarker/crumb scale pulses, tunnel
-placemarker cream deepen (#230), and birds-return fullscreen wash
-(#226).
+ink crumb trail at the tunnel mouth pulses on a faster stagger (#216),
+deepened with a juicier cream mid-settle + soft cream pip blot under
+each crumb so polluted streets read juicier from the playground side —
+distinct from placemarker cream deepen (#230), fog edge cream deepen
+(#236), and birds-return fullscreen wash (#226). A soft pollution fog
+edge veil also breathes at the playground-side tunnel lip (#221),
+deepened with a juicier cream mid-settle + soft cream rim bloom so
+polluted borders read punchier — distinct from placemarker/crumb scale
+pulses, tunnel placemarker cream deepen (#230), and birds-return
+fullscreen wash (#226).
 
 When a polluted reclaim tunnel clears (or purityRestoreFx fires while
 the hub is live), a brief birds-return cream wash pulses so the
@@ -76,20 +78,33 @@ _PULSE_HALO_MID = Vec4(1.0, 0.94, 0.70, 0.16)
 _PULSE_HALO_REST = Vec4(1.0, 0.97, 0.82, 0.0)
 
 # Tunnel-mouth ink crumb trail — distinct from overhead placemarker pulse.
+# Cream deepen: warmer peak → soft mid settle + local cream pip blot under
+# each crumb (not placemarker halo #230; not fog rim #236; not wash #226).
 _CRUMB_GLYPH = '•'
 _CRUMB_COUNT = 3
 _CRUMB_Z = 1.05
 _CRUMB_Y0 = -2.4
 _CRUMB_Y_STEP = 1.05
 _CRUMB_SCALE = 0.55
-_CRUMB_PULSE_PEAK = 1.38
+_CRUMB_PULSE_PEAK = 1.42  # slightly juicier snap on cream deepen
 _CRUMB_PULSE_HALF_SEC = 0.11
 _CRUMB_PULSE_GAP_SEC = 3.1
 _CRUMB_STAGGER_SEC = 0.13
 _CRUMB_FG = Vec4(0.22, 0.10, 0.28, 0.95)
 _CRUMB_SHADOW = Vec4(1.0, 0.92, 0.72, 0.75)
-_CRUMB_HIGHLIGHT = Vec4(1.0, 0.84, 0.48, 1.0)
+_CRUMB_HIGHLIGHT = Vec4(1.0, 0.88, 0.42, 1.0)  # juicier warm cream peak
+_CRUMB_CREAM_MID = Vec4(1.0, 0.92, 0.60, 1.0)  # soft settle before rest
+_CRUMB_CREAM_MID_SEC = 0.07  # snappier than placemarker 0.09 / fog 0.14
 _CRUMB_REST = Vec4(1.0, 1.0, 1.0, 1.0)
+# Soft cream pip blot under each crumb during the trail pulse.
+_CRUMB_PIP_NAME = 'corruptStreetCrumbCreamPip'
+_CRUMB_PIP_HALF_W = 0.38  # tiny trail blot — not placemarker halo / fog rim
+_CRUMB_PIP_HALF_H = 0.26
+_CRUMB_PIP_Z_OFF = -0.06
+_CRUMB_PIP_SCALE_PEAK = 1.48  # punchier than fog rim 1.16; not halo 1.32
+_CRUMB_PIP_PEAK = Vec4(1.0, 0.95, 0.70, 0.42)
+_CRUMB_PIP_MID = Vec4(1.0, 0.92, 0.62, 0.18)
+_CRUMB_PIP_REST = Vec4(1.0, 0.96, 0.78, 0.0)
 
 # Playground-edge pollution fog breath — opacity/billow (not placemarker
 # scale snap). Slower / softer than #211 / #216 so corruption presence
@@ -249,6 +264,36 @@ def streetBreadcrumbPulseParams():
     }
 
 
+def streetBreadcrumbPulseCreamParams():
+    """Pure cream-deepen params for tunnel-mouth ink crumb trail pulse.
+
+    Juicier cream mid-settle + soft cream pip blot under each crumb
+    (#216 deepen). Distinct from placemarkerPulseCreamParams (#230 local
+    text halo), playgroundFogEdgeCreamParams (#236 fog rim), and
+    BirdsReturnCreamWashFx fullscreen wash (#226). Headless-safe —
+    no Panda geom.
+    """
+    hi = _CRUMB_HIGHLIGHT
+    mid = _CRUMB_CREAM_MID
+    pipPeak = _CRUMB_PIP_PEAK
+    pipMid = _CRUMB_PIP_MID
+    return {
+        'highlight': (float(hi[0]), float(hi[1]), float(hi[2]), float(hi[3])),
+        'creamMid': (float(mid[0]), float(mid[1]), float(mid[2]), float(mid[3])),
+        'creamMidSec': float(_CRUMB_CREAM_MID_SEC),
+        'pipPeakAlpha': float(pipPeak[3]),
+        'pipMidAlpha': float(pipMid[3]),
+        'pipScalePeak': float(_CRUMB_PIP_SCALE_PEAK),
+        'pipHalfW': float(_CRUMB_PIP_HALF_W),
+        'pipHalfH': float(_CRUMB_PIP_HALF_H),
+        # Trail-local cream pip blot — not placemarker halo / fog rim / wash.
+        'localPip': True,
+        'fullscreenWash': False,
+        'placemarkerHalo': False,
+        'fogRim': False,
+    }
+
+
 def playgroundFogEdgePulseParams():
     """Pure timing / alpha for playground pollution fog edge breath.
 
@@ -313,6 +358,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._markers = {}  # zoneId -> NodePath
         self._pulseHalos = {}  # zoneId -> NodePath (cream deepen halo)
         self._crumbTrails = {}  # zoneId -> [NodePath, ...]
+        self._crumbCreamPips = {}  # zoneId -> [NodePath, ...] (crumb cream pips)
         self._fogEdges = {}  # zoneId -> NodePath
         self._fogCreamRims = {}  # zoneId -> NodePath (fog edge cream rim)
         self._popIvals = {}
@@ -633,13 +679,26 @@ class CorruptStreetBreadcrumb(DirectObject):
                     crumb.removeNode()
                 except Exception:
                     pass
+        oldPips = self._crumbCreamPips.pop(zoneId, None)
+        if oldPips:
+            for pip in oldPips:
+                try:
+                    pip.removeNode()
+                except Exception:
+                    pass
         # Drop leftover DNA crumbs if a prior session left them.
         leftover = link.find('**/corruptStreetCrumbTrail')
         if not leftover.isEmpty():
             leftover.removeNode()
         root = link.attachNewNode('corruptStreetCrumbTrail')
         crumbs = []
+        pips = []
         for i in range(max(1, int(_CRUMB_COUNT))):
+            y = _CRUMB_Y0 + (i * _CRUMB_Y_STEP)
+            # Soft cream pip blot under the ink crumb (cream deepen).
+            pip = self._makeCrumbCreamPip(root, i, y)
+            if pip is not None:
+                pips.append(pip)
             tn = TextNode('corruptStreetCrumbText-%s' % i)
             try:
                 tn.setFont(ToontownGlobals.getSignFont())
@@ -655,14 +714,38 @@ class CorruptStreetBreadcrumb(DirectObject):
                 pass
             crumb = root.attachNewNode(tn)
             crumb.setName('corruptStreetCrumb')
-            crumb.setPos(0, _CRUMB_Y0 + (i * _CRUMB_Y_STEP), _CRUMB_Z)
+            crumb.setPos(0, y, _CRUMB_Z)
             crumb.setScale(_CRUMB_SCALE)
             crumb.setBillboardPointEye()
             crumb.setDepthWrite(0)
             crumb.setBin('fixed', 39)
             crumbs.append(crumb)
         self._crumbTrails[zoneId] = crumbs
+        self._crumbCreamPips[zoneId] = pips
         return crumbs
+
+    def _makeCrumbCreamPip(self, root, index, y):
+        """Soft cream pip blot under one crumb — deepen #216 cream cue."""
+        pip = None
+        try:
+            cm = CardMaker('%s-%s' % (_CRUMB_PIP_NAME, index))
+            cm.setFrame(
+                -_CRUMB_PIP_HALF_W, _CRUMB_PIP_HALF_W,
+                -_CRUMB_PIP_HALF_H, _CRUMB_PIP_HALF_H)
+            pip = root.attachNewNode(cm.generate())
+            pip.setName(_CRUMB_PIP_NAME)
+            pip.setTransparency(TransparencyAttrib.MAlpha)
+            # Sit just under the ink crumb so cream peeks as a tiny blot.
+            pip.setPos(0, y, _CRUMB_Z + _CRUMB_PIP_Z_OFF)
+            pip.setScale(1.0)
+            pip.setColorScale(_CRUMB_PIP_REST)
+            pip.setDepthWrite(0)
+            pip.setBin('fixed', 38)  # under crumb (39), over fog (37)
+            pip.setBillboardPointEye()
+        except Exception:
+            self.notify.debug('crumb cream pip unavailable at index %s' % index)
+            pip = None
+        return pip
 
     def _playPop(self, zoneId, np, crumbs=None, fog=None, halo=None, rim=None):
         self._stopPulse(zoneId)
@@ -692,7 +775,7 @@ class CorruptStreetBreadcrumb(DirectObject):
                 np, _POP_SETTLE_SEC * 0.30,
                 baseScale,
                 startScale=baseScale * _POP_STRETCH),
-            # Placemarker cream deepen (#211+) + crumb + fog-edge cream pulses.
+            # Placemarker + crumb cream deepen + fog-edge cream pulses.
             Func(self._startPulseLoop, zoneId, np, halo),
             Func(self._startCrumbPulseLoop, zoneId, crumbs or ()),
             Func(self._startFogPulseLoop, zoneId, fog, rim),
@@ -838,18 +921,22 @@ class CorruptStreetBreadcrumb(DirectObject):
             except Exception:
                 pass
 
-    def _buildCrumbPulseIval(self, crumb):
-        """One brief scale + cream beat on a single trail crumb."""
+    def _buildCrumbPulseIval(self, crumb, pip=None):
+        """One brief scale + deepened cream beat on a single trail crumb."""
         baseScale = _CRUMB_SCALE
         half = max(0.01, float(_CRUMB_PULSE_HALF_SEC))
+        midSec = max(0.01, float(_CRUMB_CREAM_MID_SEC))
         peak = baseScale * float(_CRUMB_PULSE_PEAK)
-        return Parallel(
+        # Scale still snaps out/in; cream settles peak → mid → rest (juicier).
+        scaleOut = half
+        scaleIn = half + midSec
+        parts = [
             Sequence(
                 LerpScaleInterval(
-                    crumb, half, peak, startScale=baseScale,
+                    crumb, scaleOut, peak, startScale=baseScale,
                     blendType='easeOut'),
                 LerpScaleInterval(
-                    crumb, half, baseScale, startScale=peak,
+                    crumb, scaleIn, baseScale, startScale=peak,
                     blendType='easeIn'),
             ),
             Sequence(
@@ -857,16 +944,48 @@ class CorruptStreetBreadcrumb(DirectObject):
                     crumb, half, _CRUMB_HIGHLIGHT,
                     startColorScale=_CRUMB_REST, blendType='easeOut'),
                 LerpColorScaleInterval(
+                    crumb, midSec, _CRUMB_CREAM_MID,
+                    startColorScale=_CRUMB_HIGHLIGHT, blendType='easeInOut'),
+                LerpColorScaleInterval(
                     crumb, half, _CRUMB_REST,
-                    startColorScale=_CRUMB_HIGHLIGHT, blendType='easeIn'),
+                    startColorScale=_CRUMB_CREAM_MID, blendType='easeIn'),
+            ),
+        ]
+        if pip is not None:
+            parts.append(self._buildCrumbCreamPipIval(pip, half, midSec))
+        return Parallel(*parts)
+
+    def _buildCrumbCreamPipIval(self, pip, half, midSec):
+        """Trail cream pip bloom — peak → mid → fade (not #230/#236/#226)."""
+        peakScale = float(_CRUMB_PIP_SCALE_PEAK)
+        return Parallel(
+            Sequence(
+                LerpColorScaleInterval(
+                    pip, half, _CRUMB_PIP_PEAK,
+                    startColorScale=_CRUMB_PIP_REST, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    pip, midSec, _CRUMB_PIP_MID,
+                    startColorScale=_CRUMB_PIP_PEAK, blendType='easeInOut'),
+                LerpColorScaleInterval(
+                    pip, half, _CRUMB_PIP_REST,
+                    startColorScale=_CRUMB_PIP_MID, blendType='easeIn'),
+            ),
+            Sequence(
+                LerpScaleInterval(
+                    pip, half, peakScale, startScale=1.0,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    pip, half + midSec, 1.0, startScale=peakScale,
+                    blendType='easeIn'),
             ),
         )
 
     def _startCrumbPulseLoop(self, zoneId, crumbs=None):
-        """Staggered crumb-trail pulse — faster / distinct from placemarker."""
+        """Staggered crumb-trail cream pulse — faster / distinct from placemarker."""
         zoneId = int(zoneId)
         # Always pulse the live trail for this zone (Func may pass a snapshot).
         crumbs = self._crumbTrails.get(zoneId) or []
+        pips = self._crumbCreamPips.get(zoneId) or []
         if not self._active or not crumbs:
             return
         alive = []
@@ -878,6 +997,13 @@ class CorruptStreetBreadcrumb(DirectObject):
                 continue
         if not alive:
             return
+        alivePips = []
+        for pip in pips:
+            try:
+                if pip is not None and not pip.isEmpty():
+                    alivePips.append(pip)
+            except Exception:
+                continue
         self._stopCrumbPulse(zoneId)
         for crumb in alive:
             try:
@@ -885,14 +1011,21 @@ class CorruptStreetBreadcrumb(DirectObject):
                 crumb.setScale(_CRUMB_SCALE)
             except Exception:
                 pass
+        for pip in alivePips:
+            try:
+                pip.setColorScale(_CRUMB_PIP_REST)
+                pip.setScale(1.0)
+            except Exception:
+                pass
         stagger = max(0.0, float(_CRUMB_STAGGER_SEC))
         gap = max(0.4, float(_CRUMB_PULSE_GAP_SEC))
         # Overlapping chase into the tunnel — not the overhead placemarker loop.
         parts = []
         for i, crumb in enumerate(alive):
+            pip = alivePips[i] if i < len(alivePips) else None
             parts.append(Sequence(
                 Wait(stagger * i),
-                self._buildCrumbPulseIval(crumb),
+                self._buildCrumbPulseIval(crumb, pip),
             ))
         loop = Sequence(Parallel(*parts), Wait(gap))
         self._crumbPulseIvals[zoneId] = loop
@@ -904,6 +1037,12 @@ class CorruptStreetBreadcrumb(DirectObject):
                 try:
                     crumb.setScale(_CRUMB_SCALE)
                     crumb.setColorScale(_CRUMB_REST)
+                except Exception:
+                    pass
+            for pip in alivePips:
+                try:
+                    pip.setColorScale(_CRUMB_PIP_REST)
+                    pip.setScale(1.0)
                 except Exception:
                     pass
 
@@ -918,6 +1057,13 @@ class CorruptStreetBreadcrumb(DirectObject):
                     ival.pause()
                 except Exception:
                     pass
+        pips = self._crumbCreamPips.get(zoneId) or []
+        for pip in pips:
+            try:
+                pip.setColorScale(_CRUMB_PIP_REST)
+                pip.setScale(1.0)
+            except Exception:
+                pass
 
     def _buildFogPulseIval(self, fog, rim=None):
         """One soft opacity + billow breath with cream mid-settle / rim."""
@@ -1077,9 +1223,11 @@ class CorruptStreetBreadcrumb(DirectObject):
                 rim.removeNode()
             except Exception:
                 pass
+        # Pop pip list so trail-root remove covers them; fall back if needed.
+        pips = self._crumbCreamPips.pop(zoneId, None)
         trail = self._crumbTrails.pop(zoneId, None)
         if trail:
-            # Remove trail root (parent of crumbs) when present.
+            # Remove trail root (parent of crumbs + cream pips) when present.
             root = None
             try:
                 root = trail[0].getParent()
@@ -1090,6 +1238,7 @@ class CorruptStreetBreadcrumb(DirectObject):
                     if not root.isEmpty() and root.getName() == 'corruptStreetCrumbTrail':
                         root.removeNode()
                         trail = None
+                        pips = None
                 except Exception:
                     pass
             if trail:
@@ -1098,6 +1247,18 @@ class CorruptStreetBreadcrumb(DirectObject):
                         crumb.removeNode()
                     except Exception:
                         pass
+            if pips:
+                for pip in pips:
+                    try:
+                        pip.removeNode()
+                    except Exception:
+                        pass
+        elif pips:
+            for pip in pips:
+                try:
+                    pip.removeNode()
+                except Exception:
+                    pass
         np = self._markers.pop(zoneId, None)
         if np is not None:
             try:

@@ -3183,6 +3183,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'placemarkerPulseParams',
                 'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
+                'streetBreadcrumbPulseCreamParams',
                 'playgroundFogEdgePulseParams',
                 'playgroundFogEdgeCreamParams',
                 'CorruptStreetBreadcrumb',
@@ -3204,6 +3205,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         # Distinct tunnel-mouth crumb trail pulse (playground-side cue).
         self.assertIn('_startCrumbPulseLoop', crumb_src)
         self.assertIn('_CRUMB_PULSE_GAP_SEC', crumb_src)
+        # Crumb pulse cream deepen (trail pip mid-settle; not #230 / #236 / #226).
+        self.assertIn('_CRUMB_CREAM_MID', crumb_src)
+        self.assertIn('_makeCrumbCreamPip', crumb_src)
+        self.assertIn('corruptStreetCrumbCreamPip', crumb_src)
         # Playground pollution fog edge breath (distinct from #211 / #216).
         self.assertIn('_startFogPulseLoop', crumb_src)
         self.assertIn('_FOG_PULSE_GAP_SEC', crumb_src)
