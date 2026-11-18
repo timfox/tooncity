@@ -1,7 +1,7 @@
 """Discoverable KH×Toontown loop entry — no magic-word memorization required.
 
-On campaign streets: auto-arm melee, show prompts, bind R/C to start reclaim/campaign
-via PollutionManager.requestStreetEvent.
+On campaign streets: auto-arm melee, auto-start reclaim packs (no ~spawncorrupt),
+show prompts, bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
 """
 
 from panda3d.core import TextNode, Vec4
@@ -16,6 +16,9 @@ from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
 
+# Brief delay so zone + PollutionManager are ready before auto-fielding packs.
+AUTO_RECLAIM_DELAY_SEC = 1.35
+
 
 class PlayEntryClient(DirectObject):
     """Player-facing entry prompts + auto melee on corrupt streets."""
@@ -26,6 +29,8 @@ class PlayEntryClient(DirectObject):
         self._flashNP = None
         self._flashIval = None
         self._armedZone = None
+        self._autoReclaimZone = None
+        self._reclaimLive = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
         # Reclaim director also shows banners; listen for DO messenger-less path:
@@ -38,6 +43,7 @@ class PlayEntryClient(DirectObject):
             taskMgr.remove('playEntryBoot')  # noqa: F821
         except Exception:
             pass
+        self._cancelAutoReclaim()
         self._clearTip()
         self._clearFlash()
         self.ignore('r')
@@ -57,20 +63,29 @@ class PlayEntryClient(DirectObject):
         if zoneId is None:
             return
         zoneId = int(zoneId)
+        self._cancelAutoReclaim()
+        self._reclaimLive = False
         if zoneId not in self._campaignZoneIds():
             self._clearTip()
             self.ignore('r')
             self.ignore('c')
             self._armedZone = None
+            self._autoReclaimZone = None
             return
         self._armMelee(zoneId)
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
         self._showTip(
-            'CORRUPTION on %s — F fight  |  Shift dodge  |  R reclaim  |  C campaign'
+            'CORRUPTION on %s — packs incoming  |  F fight  |  Shift dodge  |  C campaign'
             % name)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
+        # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
+        self._autoReclaimZone = zoneId
+        taskMgr.doMethodLater(  # noqa: F821
+            AUTO_RECLAIM_DELAY_SEC,
+            self._autoStartReclaim,
+            self._autoReclaimTaskName(zoneId))
 
     def _actForZone(self, zoneId):
         for act in CampaignGlobals.ACTS:
@@ -91,7 +106,35 @@ class PlayEntryClient(DirectObject):
         except Exception:
             pass
 
+    def _autoReclaimTaskName(self, zoneId):
+        return 'playEntryAutoReclaim-%s' % int(zoneId)
+
+    def _cancelAutoReclaim(self):
+        zoneId = self._autoReclaimZone
+        if zoneId is None:
+            return
+        try:
+            taskMgr.remove(self._autoReclaimTaskName(zoneId))  # noqa: F821
+        except Exception:
+            pass
+
+    def _autoStartReclaim(self, task):
+        """Kick reclaim once per street enter so packs field without magic words."""
+        zoneId = self._autoReclaimZone
+        if zoneId is None:
+            return task.done
+        av = getattr(base, 'localAvatar', None)  # noqa: F821
+        if av is None or int(getattr(av, 'zoneId', -1)) != int(zoneId):
+            return task.done
+        if self._reclaimLive:
+            return task.done
+        self._requestReclaim()
+        self._flashBanner('CORRUPT PACKS INCOMING — Fight!')
+        return task.done
+
     def _onReclaimStart(self, *args):
+        self._reclaimLive = True
+        self._cancelAutoReclaim()
         av = getattr(base, 'localAvatar', None)  # noqa: F821
         if av is not None and hasattr(av, 'enableHackSlashMelee'):
             try:
@@ -101,9 +144,12 @@ class PlayEntryClient(DirectObject):
         self._flashBanner('RECLAIM LIVE — Clear Corrupt Toons with F!')
 
     def _onPurity(self, zoneId):
+        self._reclaimLive = False
         self._flashBanner('STREET PURIFIED — Head to the next hood!')
 
     def _requestReclaim(self):
+        if self._reclaimLive:
+            return
         pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
         if pm is None:
             return
