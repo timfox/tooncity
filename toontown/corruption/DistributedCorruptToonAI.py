@@ -629,8 +629,42 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             target.takeDamage(dmg)
         except Exception:
             self.notify.debug('takeDamage failed on av %s' % self._targetId)
+        # Balloon Snare: short planar reel toward the zip-flier (not damage-only).
+        self.__yankTargetTowardSnare(target)
         self.sendUpdate('announceAttackHit', [])
         return Task.done
+
+    def __yankTargetTowardSnare(self, target):
+        """Reel the hit toon a short distance toward this Balloon Snare.
+
+        Server shadow displace so follow-up chase/hit math sees the yank.
+        Client hurt-react lerp (hackslash) owns the readable local feel.
+        No-op for non-Snare archetypes (Smudge / Brute / Oswald / Overlord).
+        """
+        if not getattr(CorruptionGlobals, 'SNARE_LASH_YANK_ENABLED', True):
+            return
+        if (CorruptionGlobals.normalizeArchetype(self.archetype)
+                != CorruptionGlobals.ARCHETYPE_SNARE):
+            return
+        if target is None:
+            return
+        try:
+            sx = float(self.getX())
+            sy = float(self.getY())
+            tx = float(target.getX())
+            ty = float(target.getY())
+            tz = float(target.getZ())
+        except Exception:
+            return
+        nx, ny = CorruptionGlobals.snareLashYankPos(sx, sy, tx, ty)
+        if abs(nx - tx) < 1e-6 and abs(ny - ty) < 1e-6:
+            return
+        try:
+            target.setPos(nx, ny, tz)
+        except Exception:
+            self.notify.debug(
+                'snare lash yank setPos failed on av %s' % getattr(
+                    target, 'doId', self._targetId))
 
     def __defeat(self, attackerId=None):
         if self._defeated:

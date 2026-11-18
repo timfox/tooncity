@@ -3111,10 +3111,29 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'isSnareStringCounterWindowOpen',
                 'snareStringCounterArmAt',
                 'snareStringCounterUntil',
-                'isSnareStringCounterCreamSplashEligible'):
+                'isSnareStringCounterCreamSplashEligible',
+                'snareLashYankDelta',
+                'snareLashYankPos'):
             self.assertTrue(
                 callable(getattr(self.corruption, snare_helper, None)),
                 msg='CorruptionGlobals missing helper %s' % snare_helper)
+        # Balloon Snare string-lash yank (gameplay reel — not cream deepen).
+        for snare_yank_key in (
+                'SNARE_LASH_YANK_ENABLED',
+                'SNARE_LASH_YANK_DIST',
+                'SNARE_LASH_YANK_STOP',
+                'SNARE_LASH_YANK_SEC'):
+            self.assertIn(
+                snare_yank_key, cg_names,
+                msg='CorruptionGlobals missing snare lash yank %s' % (
+                    snare_yank_key,))
+        self.assertIs(self.corruption.SNARE_LASH_YANK_ENABLED, True)
+        self.assertGreater(float(self.corruption.SNARE_LASH_YANK_DIST), 0.0)
+        self.assertGreater(float(self.corruption.SNARE_LASH_YANK_STOP), 0.0)
+        self.assertGreater(float(self.corruption.SNARE_LASH_YANK_SEC), 0.0)
+        self.assertIn('_yankAvatarTowardSnare', melee_src)
+        self.assertIn('_clearSnareLashYank', melee_src)
+        self.assertIn('Snare lash yank', config_src)
         corrupt_src = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('__scheduleSnareStringSnapCounter', corrupt_src)
         self.assertIn('__clearSnareStringSnapCounter', corrupt_src)
@@ -3141,6 +3160,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             'toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('__maybeInterruptSnareTelegraph', corrupt_ai_src)
         self.assertIn('SNARE_STRING_COUNTER_INTERRUPT', corrupt_ai_src)
+        self.assertIn('__yankTargetTowardSnare', corrupt_ai_src)
+        self.assertIn('snareLashYankPos', corrupt_ai_src)
         self.assertIn('_onSnareStringSnapCounter', melee_src)
         self.assertIn('corruptSnareStringSnapCounter', melee_src)
         self.assertIn('windowSec', melee_src)
@@ -3150,6 +3171,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('string-snap counter', reclaim_md)
         self.assertIn('SnareStringCounterCreamSplashFx', reclaim_md)
         self.assertIn('whip filament', reclaim_md.lower())
+        self.assertIn('yank', reclaim_md.lower())
         corr_init = _read('toontown/corruption/__init__.py')
         self.assertIn('SnareStringCounterCreamSplashFx', corr_init)
 

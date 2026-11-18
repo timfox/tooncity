@@ -64,6 +64,8 @@ class MeleeCombatController(DirectObject):
         self._flashNP = None
         self._launchIval = None
         self._dodgeIval = None
+        # Balloon Snare string-lash → short planar reel toward the zip-flier.
+        self._snareLashYankIval = None
         self._iframeUntil = 0.0
         self._dodgeIFrameUntil = 0.0
         self._dodgeReadyAt = 0.0
@@ -193,6 +195,7 @@ class MeleeCombatController(DirectObject):
         self._clearHitFlash()
         self._clearLaunch()
         self._clearDodge()
+        self._clearSnareLashYank()
         self._clearDodgeCancelWindow()
         self._clearPerfectDodgeCounterWindow()
         self._clearJuggleCancelWindow()
@@ -1064,12 +1067,69 @@ class MeleeCombatController(DirectObject):
         # Rubber-hose player hit-react: flat squash → stretch recover + tiny stop.
         self._playPlayerHitReact()
         self._playTinyHitstop(HackSlashConfig.PLAYER_HIT_REACT_HITSTOP_SEC)
+        # Balloon Snare string-lash: short planar reel toward the zip-flier
+        # (archetype identity — not damage-only). AI also displaces in
+        # __resolveSingleTargetHit; this lerp is the readable local feel.
+        self._yankAvatarTowardSnare(corrupt)
         # Stronger flash than normal hit confirm so the window is obvious.
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
         # Brief stagger + cream wash aftershock, then cancel-into-dodge/melee
         # so combat stays responsive and the smack still reads juicy.
         self._armHurtRecoveryCancelWindow(now)
         messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
+
+    def _yankAvatarTowardSnare(self, corrupt=None):
+        """Thin hurt-react: reel local avatar a short distance toward a Snare.
+
+        CorruptionGlobals owns yank math / tunables; CorruptToonAI updates the
+        server shadow. No-op for non-Snare archetypes or when yank is disabled.
+        """
+        if corrupt is None or self._dodging:
+            return
+        try:
+            from toontown.corruption import CorruptionGlobals
+        except Exception:
+            return
+        if not getattr(CorruptionGlobals, 'SNARE_LASH_YANK_ENABLED', True):
+            return
+        try:
+            archetype = CorruptionGlobals.normalizeArchetype(
+                corrupt.getArchetype())
+        except Exception:
+            return
+        if archetype != CorruptionGlobals.ARCHETYPE_SNARE:
+            return
+        self._clearSnareLashYank()
+        try:
+            cpos = corrupt.getPos(render)  # noqa: F821
+            start = self.avatar.getPos(render)  # noqa: F821
+            nx, ny = CorruptionGlobals.snareLashYankPos(
+                float(cpos.getX()), float(cpos.getY()),
+                float(start.getX()), float(start.getY()))
+            if (abs(nx - float(start.getX())) < 1e-4
+                    and abs(ny - float(start.getY())) < 1e-4):
+                return
+            end = Point3(nx, ny, start.getZ())
+            sec = float(getattr(
+                CorruptionGlobals, 'SNARE_LASH_YANK_SEC', 0.11))
+            self._snareLashYankIval = Sequence(
+                LerpPosInterval(
+                    self.avatar, max(0.01, sec), end,
+                    other=render, blendType='easeIn'),  # noqa: F821
+                Func(self._clearSnareLashYank),
+                name=self.avatar.uniqueName('hackslashSnareLashYank'),
+            )
+            self._snareLashYankIval.start()
+        except Exception:
+            self._clearSnareLashYank()
+
+    def _clearSnareLashYank(self):
+        if self._snareLashYankIval is not None:
+            try:
+                self._snareLashYankIval.pause()
+            except Exception:
+                pass
+            self._snareLashYankIval = None
 
     def _onCorruptAttackDodged(self, corrupt=None):
         """Telegraph resolved into Shift/X dodge i-frames — ink sparkle juice."""
