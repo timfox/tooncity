@@ -6,10 +6,10 @@ HitSparkCreamWashPulse / OswaldTrustCreamWashPulse / HandoffCreamWashPulse
 / VictoryCreamWashPulse overlay grammar as a brief residual settle beat
 under held twist copy. Soft under the reveal edge strips; cream / pastel
 only (not ink). Wired from FinalePhaseFx cream aftershock arm (Oswald-
-twist path only) beside the cream edge. Trust / handoff / victory wash
-live in their own modules. Supports the twist without undoing it or
-replaying victory cheer wash. Client only. Toontown spiritual sequel —
-no keyblades / no KH branding.
+twist path only) beside the cream edge. Act-enter / trust / handoff /
+victory wash live in their own modules. Supports the twist without
+undoing it or replaying victory cheer wash. Client only. Toontown
+spiritual sequel — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4

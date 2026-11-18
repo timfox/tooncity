@@ -588,7 +588,9 @@ class PlayEntryClient(DirectObject):
         """Act-enter / reclaim cue flash with tip-matched rubber-hose pop.
 
         Act-enter ACTS banners (creamEdge=True) also pulse a soft cream
-        edge frame + tip flecks — wave-announce cream edge twin (#87).
+        edge frame + tip flecks — wave-announce cream edge twin (#87) —
+        then a delayed soft cream wash pulse (trust / finale / victory
+        wash twin) under the edge.
         """
         self._clearFlash()
         tn = TextNode('play-entry-flash')
@@ -619,6 +621,14 @@ class PlayEntryClient(DirectObject):
                 playActBannerCreamEdge()
             except Exception:
                 pass
+            # Soft cream wash pulse after cream edge (#110) — trust /
+            # finale / victory wash grammar. Act-enter only.
+            try:
+                from toontown.campaign.ActBannerCreamWashFx import (
+                    playActBannerCreamWash)
+                playActBannerCreamWash()
+            except Exception:
+                pass
         self._flashIval = Sequence(
             Parallel(*land),
             Wait(hold),
@@ -642,6 +652,12 @@ class PlayEntryClient(DirectObject):
             from toontown.campaign.ActBannerCreamEdgeFx import (
                 clearActBannerCreamEdge)
             clearActBannerCreamEdge()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.ActBannerCreamWashFx import (
+                clearActBannerCreamWash)
+            clearActBannerCreamWash()
         except Exception:
             pass
 
