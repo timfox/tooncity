@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Headless smoke: explore → fight → reclaim wiring (no Panda3D / resources).
 
-Asserts STREET_PACKS, campaign ACTS / PlayEntry entry points, and corrupt
-archetype registration via AST / direct import of panda-free modules.
+Asserts STREET_PACKS, campaign ACTS / PlayEntry entry points, corrupt
+archetype registration, and recent rubber-hose juice module / symbol
+presence via AST / direct import of panda-free modules.
 
 Run from repo root:
   python3 tests/test_headless_loop_smoke.py
@@ -134,6 +135,26 @@ def _class_and_func_names(tree: ast.AST) -> set:
     return names
 
 
+def _toplevel_assign_names(tree: ast.AST) -> set:
+    """Names bound by top-level Assign / AnnAssign (any RHS shape)."""
+    names = set()
+    for node in getattr(tree, 'body', []):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            names.add(node.target.id)
+    return names
+
+
+def _assert_module_file(rel: str) -> Path:
+    path = REPO_ROOT / rel
+    if not path.is_file():
+        raise AssertionError('missing module file %s' % rel)
+    return path
+
+
 def _load_corruption_globals():
     """CorruptionGlobals has no panda deps — import from file path."""
     path = REPO_ROOT / 'toontown' / 'corruption' / 'CorruptionGlobals.py'
@@ -253,6 +274,83 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIsNotNone(cg.finalePhaseLook(2))
         self.assertEqual(
             cg.OVERLORD_TELEGRAPH_CROWN_LOOK.get('id'), 'ink-crown')
+
+    def test_rubber_hose_juice_modules_present(self):
+        """AST-assert recent juice modules / symbols without importing Panda."""
+        # --- hackslash: hit-stop / soft-lock reticle / dodge trail + FOV ---
+        hack_modules = {
+            'toontown/hackslash/HitStopFx.py': {'HitStopFx'},
+            'toontown/hackslash/SoftLockReticleFx.py': {'SoftLockReticleFx'},
+            'toontown/hackslash/DodgeTrailFx.py': {'DodgeTrailFx'},
+        }
+        for rel, expected in hack_modules.items():
+            _assert_module_file(rel)
+            names = _class_and_func_names(_module_ast(rel))
+            missing = expected - names
+            self.assertFalse(
+                missing, msg='%s missing symbols %s' % (rel, missing))
+
+        config_tree = _module_ast('toontown/hackslash/HackSlashConfig.py')
+        config_names = _toplevel_assign_names(config_tree)
+        for tunable in (
+                'SOFT_LOCK_FOV_ENABLED',
+                'SOFT_LOCK_FOV_PUNCH',
+                'SOFT_LOCK_FOV_IN_SEC',
+                'SOFT_LOCK_FOV_OUT_SEC'):
+            self.assertIn(
+                tunable, config_names,
+                msg='HackSlashConfig missing soft-lock FOV tunable %s' % tunable)
+
+        # Re-exports keep client import paths stable.
+        hack_init = _read('toontown/hackslash/__init__.py')
+        for symbol in ('HitStopFx', 'SoftLockReticleFx', 'DodgeTrailFx'):
+            self.assertIn(symbol, hack_init)
+
+        # --- reclaim: street wash + wave-clear cream burst ---
+        _assert_module_file('toontown/reclaim/StreetColorWash.py')
+        wash_names = _class_and_func_names(
+            _module_ast('toontown/reclaim/StreetColorWash.py'))
+        self.assertIn('StreetColorWash', wash_names)
+
+        _assert_module_file('toontown/reclaim/WaveCreamBurstFx.py')
+        cream_names = _class_and_func_names(
+            _module_ast('toontown/reclaim/WaveCreamBurstFx.py'))
+        self.assertIn('WaveCreamBurstFxClient', cream_names)
+        self.assertIn('ensureWaveCreamBurstFxClient', cream_names)
+
+        reclaim_names = _toplevel_assign_names(self.reclaim_tree)
+        for cream_key in (
+                'WAVE_CLEAR_CREAM_ENABLED',
+                'WAVE_CLEAR_CREAM_FLASH_PEAK',
+                'WAVE_CLEAR_CREAM_COLOR',
+                'WAVE_CLEAR_CREAM_FLECK_COUNT',
+                'WAVE_CLEAR_CREAM_BIN'):
+            self.assertIn(
+                cream_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % cream_key)
+
+        # --- corruption: idle ink drip + overlord phase ink rain ---
+        _assert_module_file('toontown/corruption/IdleInkDripFx.py')
+        idle_names = _class_and_func_names(
+            _module_ast('toontown/corruption/IdleInkDripFx.py'))
+        self.assertIn('IdleInkDrip', idle_names)
+        self.assertIn('idleInkLook', idle_names)
+
+        _assert_module_file('toontown/corruption/OverlordPhaseInkRainFx.py')
+        rain_names = _class_and_func_names(
+            _module_ast('toontown/corruption/OverlordPhaseInkRainFx.py'))
+        self.assertIn('OverlordPhaseInkRain', rain_names)
+        self.assertIn('overlordInkRainLook', rain_names)
+
+        cg = self.corruption
+        self.assertTrue(
+            hasattr(cg, 'OVERLORD_PHASE_INK_RAIN_LOOK'),
+            msg='CorruptionGlobals missing OVERLORD_PHASE_INK_RAIN_LOOK')
+        self.assertEqual(
+            cg.OVERLORD_PHASE_INK_RAIN_LOOK.get('id'), 'ink-rain')
+        self.assertTrue(
+            hasattr(cg, 'IDLE_INK_DRIP_LOOK'),
+            msg='CorruptionGlobals missing IDLE_INK_DRIP_LOOK')
 
 
 def main() -> int:
