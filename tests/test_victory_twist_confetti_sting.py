@@ -2,11 +2,12 @@
 """Thin AST/unit tests for deepened victory confetti Oswald twist sting cream.
 
 Loads CampaignGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-VICTORY_TWIST_CONFETTI_* deepen tunables past #244 (micro cream pop rebound
-+ richer soft cream aftershock), rubber-hose (non-KH) wiring on the
+VICTORY_TWIST_CONFETTI_* deepen tunables past #265 (taller micro cream pop
+rebound + richer soft cream aftershock), rubber-hose (non-KH) wiring on the
 betrayal handoff plate, and VictoryTwistConfettiSting module presence.
-Distinct from act handoff cream edge settle deepen (#240) and betrayal
-banner cream hose deepen (#235 / #260).
+Distinct from act handoff cream edge settle deepen (#240), betrayal banner
+cream hose deepen (#235 / #260 / #288), Punchline tip (#256 / #284), and
+Silly almost-confess tip (#232 / #279 / #294).
 
 Run from repo root:
   python3 tests/test_victory_twist_confetti_sting.py
@@ -113,29 +114,37 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         camp = self.camp
         self.assertIs(camp.VICTORY_TWIST_CONFETTI_ENABLED, True)
         self.assertIs(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED, True)
-        # Juicier than #244 (12 / 0.20 / 0.82 / 1.58 / no POP_REBOUND).
+        # Juicier than #265 (13 / 0.23 / 0.90 / 1.72 / rebound 1.22 / after 7).
         self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_COUNT, 13)
         self.assertGreaterEqual(
-            float(camp.VICTORY_TWIST_CONFETTI_FLASH_PEAK), 0.23)
-        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_SEC), 0.90)
-        self.assertGreater(float(camp.VICTORY_TWIST_CONFETTI_POP), 1.65)
-        self.assertGreater(
-            float(camp.VICTORY_TWIST_CONFETTI_POP_REBOUND), 1.10)
-        self.assertGreater(
-            float(camp.VICTORY_TWIST_CONFETTI_POP_REBOUND_SEC), 0.0)
-        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_FALL), 0.26)
+            float(camp.VICTORY_TWIST_CONFETTI_FLASH_PEAK), 0.25)
+        self.assertGreaterEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_FLASH_HOLD_SEC), 0.09)
+        self.assertGreaterEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_FLASH_OUT_SEC), 0.52)
+        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_SEC), 0.96)
+        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_SIZE), 0.032)
+        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_DRIFT), 0.68)
+        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_FALL), 0.29)
+        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_POP), 1.84)
+        self.assertGreaterEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_POP_REBOUND), 1.28)
+        self.assertGreaterEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_POP_REBOUND_SEC), 0.055)
         self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_DELAY_SEC, 0.0)
         self.assertGreater(len(camp.VICTORY_TWIST_CONFETTI_COLORS), 0)
-        self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_STREAK_COUNT, 5)
+        self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_STREAK_COUNT, 6)
         self.assertGreaterEqual(
-            camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT, 7)
+            float(camp.VICTORY_TWIST_CONFETTI_STREAK_SIZE), 0.017)
         self.assertGreaterEqual(
-            float(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_SEC), 0.40)
+            camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT, 8)
         self.assertGreaterEqual(
-            float(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK), 1.30)
+            float(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_SEC), 0.44)
+        self.assertGreaterEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK), 1.38)
         self.assertGreaterEqual(
             float(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK_ALPHA),
-            0.16)
+            0.18)
         self.assertTrue(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_ENABLED)
         # Quieter / shorter than sunny victory cream swell.
         self.assertLess(
@@ -147,7 +156,7 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertLess(
             camp.VICTORY_TWIST_CONFETTI_FLASH_PEAK,
             camp.VICTORY_CREAM_FLASH_PEAK)
-        # Distinct from act handoff edge settle (#240) and betrayal hose (#235/#260).
+        # Distinct from act handoff edge settle (#240) and betrayal hose (#288).
         self.assertNotEqual(
             float(camp.VICTORY_TWIST_CONFETTI_POP),
             float(camp.HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT[0]))
@@ -157,6 +166,10 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertNotEqual(
             float(camp.VICTORY_TWIST_CONFETTI_POP_REBOUND),
             float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND[0]))
+        # Distinct from Silly almost-confess tip wash aftershock (#294).
+        self.assertNotEqual(
+            int(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT),
+            int(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT))
         # Soft cream aftershock stays under confetti bin.
         self.assertLess(
             int(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_BIN),
@@ -215,7 +228,7 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertIn('deepened', handoff_src.lower())
         self.assertIn('cream aftershock', handoff_src.lower())
         self.assertIn('pop rebound', handoff_src.lower())
-        self.assertIn('#244', handoff_src)
+        self.assertIn('#265', handoff_src)
         # Sting lives on betrayalHandoff branch, not sunny creamSwell.
         betrayal_idx = handoff_src.find('if betrayalHandoff:')
         self.assertGreater(betrayal_idx, 0)
@@ -231,22 +244,26 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
     def test_magic_words_mention_deepened_twist_cream(self):
         magic_l = _read('toontown/campaign/MagicWords.py').lower()
         self.assertIn('deepened victory/confetti twist cream sting', magic_l)
+        self.assertIn('past #265', magic_l)
+        self.assertIn('taller micro cream pop', magic_l)
         self.assertIn('soft cream aftershock', magic_l)
-        self.assertIn('micro cream pop', magic_l)
         self.assertIn('betrayal handoff', magic_l)
 
     def test_globals_comment_kh_free_and_distinct(self):
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('victory_twist_confetti_enabled')
         self.assertGreater(idx, 0)
-        snip = src[max(0, idx - 650):idx + 900]
+        snip = src[max(0, idx - 900):idx + 1100]
         self.assertIn('no keyblades', snip)
         self.assertIn('deepen', snip)
         self.assertIn('aftershock', snip)
         self.assertIn('pop rebound', snip)
         self.assertIn('#244', snip)
+        self.assertIn('#265', snip)
         self.assertIn('#240', snip)
         self.assertIn('#235', snip)
+        self.assertIn('#288', snip)
+        self.assertIn('#294', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
             self.assertNotIn(banned, snip)
 

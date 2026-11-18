@@ -27,11 +27,12 @@ reveal fires (oswaldRevealBanner), a dedicated betrayal handoff plate
 hose-pops the twist copy with a juicier deepened cream hose settle past
 #260 (overshoot → rest → micro rebound) so the twist lands juicier —
 complements almost-confess tip (#207) — and a deepened victory/confetti
-cream sting (VictoryTwistConfettiSting: juicier chips + micro cream pop
-rebound + richer soft cream aftershock, past #244) lands the hollow
+cream sting (VictoryTwistConfettiSting: juicier chips + taller micro cream
+pop rebound + richer soft cream aftershock, past #265) lands the hollow
 cheer that Oswald caused the corruption. Distinct from act handoff cream
-edge settle deepen (#240) and Punchline tip cream hose rebound
-(#256/#284 — tip bar, not betrayal title).
+edge settle deepen (#240), Punchline tip cream hose rebound
+(#256/#284 — tip bar, not betrayal title), betrayal banner cream hose
+(#235/#260/#288), and Silly almost-confess tip (#232/#279/#294).
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -350,9 +351,9 @@ class CampaignHandoffClient(DirectObject):
                 playFinaleRevealCreamEdge()
             except Exception:
                 pass
-            # Deepened bittersweet victory/confetti cream sting past #244 —
-            # juicier chips + micro cream pop rebound + richer soft cream
-            # aftershock so the hollow cheer that Oswald caused the
+            # Deepened bittersweet victory/confetti cream sting past #265 —
+            # juicier chips + taller micro cream pop rebound + richer soft
+            # cream aftershock so the hollow cheer that Oswald caused the
             # corruption lands readable (#82 swell already cleared).
             try:
                 origin = getattr(

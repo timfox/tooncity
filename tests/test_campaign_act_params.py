@@ -706,13 +706,15 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_COUNT, 13)
         self.assertTrue(
             getattr(camp, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED', False))
-        self.assertGreater(
-            float(getattr(camp, 'VICTORY_TWIST_CONFETTI_POP', 0)), 1.65)
-        self.assertGreater(
-            float(getattr(camp, 'VICTORY_TWIST_CONFETTI_POP_REBOUND', 0)),
-            1.10)
         self.assertGreaterEqual(
-            camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT, 7)
+            float(getattr(camp, 'VICTORY_TWIST_CONFETTI_POP', 0)), 1.84)
+        self.assertGreaterEqual(
+            float(getattr(camp, 'VICTORY_TWIST_CONFETTI_POP_REBOUND', 0)),
+            1.28)
+        self.assertGreaterEqual(
+            camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT, 8)
+        self.assertGreaterEqual(
+            camp.VICTORY_TWIST_CONFETTI_STREAK_COUNT, 6)
         sting_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'VictoryTwistConfettiSting.py'
@@ -720,6 +722,7 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('VictoryTwistConfettiSting', sting_src)
         self.assertIn('caused the corruption', sting_src.lower())
         self.assertIn('_buildAftershock', sting_src)
+        self.assertIn('past #265', sting_src)
         self.assertIn('VICTORY_TWIST_CONFETTI_POP', sting_src)
         self.assertIn('VICTORY_TWIST_CONFETTI_POP_REBOUND', sting_src)
         finale_src = (
@@ -735,7 +738,8 @@ class CampaignActParamsTest(unittest.TestCase):
         magic_l = magic_src.lower()
         self.assertIn('betrayal handoff', magic_l)
         self.assertIn('deepened victory/confetti twist cream sting', magic_l)
-        self.assertIn('micro cream pop', magic_l)
+        self.assertIn('past #265', magic_l)
+        self.assertIn('taller micro cream pop', magic_l)
         self.assertIn('no keyblades', magic_l)
 
     def test_act_param_keys_present_for_director(self):
