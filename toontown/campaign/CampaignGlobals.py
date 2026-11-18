@@ -858,20 +858,22 @@ FINALE_BETRAYAL_SETTLE_OVERSHOOT = (0.86, 1.0, 1.22, 0.10)
 FINALE_BETRAYAL_SETTLE_REST_SEC = 0.16
 FINALE_BETRAYAL_SUB_COLOR = (1.0, 0.78, 0.62, 1.0)
 FINALE_BETRAYAL_CUE_COLOR = (1.0, 0.88, 0.52, 1.0)
-# Deepened cream hose settle after betrayal title settle (#212 / #235 deepen).
-# Juicier outward overshoot → rest → micro rebound → rest so the twist
-# handoff plate lands rubber-hose and reads juicier — Punchline tip cream
-# hose rebound twin (#256) on the finale betrayal banner only. Juicier
-# climax than tip settles (#227 / #232 / #256). Distinct from act handoff
-# cream edge settle rebound (#240 — settles sunny edge frame, not title).
+# Deepened cream hose settle after betrayal title settle (#212 / #235 /
+# #260 deepen). Juicier outward overshoot → rest → micro rebound → rest
+# past #260 so the twist handoff plate lands rubber-hose and reads
+# juicier — Punchline tip cream hose rebound twin (#256 / #284) on the
+# finale betrayal banner only. Juicier climax than tip settles (#227 /
+# #232 / #256 / #284). Distinct from act handoff cream edge settle
+# rebound (#240 — settles sunny edge frame, not title), Silly almost-
+# confess tip (#232/#279), and victory twist confetti sting (#244/#273).
 # FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED = False drops this cream
 # settle + rebound only (hose pop + betrayal settle + cream edge remain).
 # No keyblades / KH branding.
 FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED = True
-FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT = (1.14, 1.0, 1.22, 0.09)  # juicier than #235 (1.12/1.18/0.08)
-FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC = 0.14
-FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND = (1.04, 1.0, 1.07, 0.05)  # micro second bounce
-FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND_REST_SEC = 0.07
+FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT = (1.16, 1.0, 1.26, 0.10)  # juicier than #260 (1.14/1.22/0.09)
+FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC = 0.15  # was 0.14 @ #260
+FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND = (1.05, 1.0, 1.09, 0.055)  # juicier micro bounce past #260
+FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND_REST_SEC = 0.08  # was 0.07 @ #260
 
 # Victory/confetti sting on Oswald twist (VictoryTwistConfettiSting /
 # #217 / #244 deepen). Fires with the betrayal handoff plate (#212) after

@@ -3,9 +3,10 @@
 
 Panda-free: loads CampaignGlobals + AST-checks CampaignHandoff betrayal
 title hose-pop appends juicier cream overshoot→rest→micro rebound after
-betrayal settle (#212 / #235 deepen). Distinct from Punchline tip cream
-hose rebound (#256 — tip bar) and Silly almost-confess tip cream hose
-(#232 — taller tip primary, no tip rebound).
+betrayal settle past #260 (#212 / #235 / #260 deepen). Distinct from
+Punchline tip cream hose rebound (#256/#284 — tip bar), Silly almost-
+confess tip cream hose (#232/#279 — taller tip primary, no tip rebound),
+and victory twist confetti sting (#244/#273).
 
 Run from repo root:
   python3 tests/test_betrayal_banner_cream_hose_settle.py
@@ -85,12 +86,12 @@ class BetrayalBannerCreamHoseSettleTest(unittest.TestCase):
         self.assertGreater(float(ox), 1.0)
         self.assertGreater(float(oz), 1.0)
         self.assertAlmostEqual(float(oy), 1.0)
-        # Juicier than #235 baseline (1.12 / 1.18 / 0.08 / rest 0.13).
-        self.assertGreaterEqual(float(ox), 1.14)
-        self.assertGreaterEqual(float(oz), 1.22)
-        self.assertGreaterEqual(float(over_sec), 0.09)
+        # Juicier than #260 baseline (1.14 / 1.22 / 0.09 / rest 0.14).
+        self.assertGreaterEqual(float(ox), 1.16)
+        self.assertGreaterEqual(float(oz), 1.26)
+        self.assertGreaterEqual(float(over_sec), 0.10)
         rest = float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC)
-        self.assertGreaterEqual(rest, 0.14)
+        self.assertGreaterEqual(rest, 0.15)
         rebound = camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND
         self.assertEqual(len(rebound), 4)
         rx, ry, rz, rebound_sec = rebound
@@ -98,18 +99,22 @@ class BetrayalBannerCreamHoseSettleTest(unittest.TestCase):
         self.assertGreater(float(rz), 1.0)
         self.assertAlmostEqual(float(ry), 1.0)
         self.assertGreater(float(rebound_sec), 0.0)
+        # Juicier micro rebound past #260 (1.04 / 1.07 / 0.05).
+        self.assertGreaterEqual(float(rx), 1.05)
+        self.assertGreaterEqual(float(rz), 1.09)
+        self.assertGreaterEqual(float(rebound_sec), 0.055)
         # Rebound is a quieter second bounce under the primary overshoot.
         self.assertLess(float(rx), float(ox))
         self.assertLess(float(rz), float(oz))
         rebound_rest = float(
             camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND_REST_SEC)
-        self.assertGreater(rebound_rest, 0.0)
+        self.assertGreaterEqual(rebound_rest, 0.08)
         # Settle stays a short readable climax beat.
         total = (
             float(over_sec) + rest + float(rebound_sec) + rebound_rest)
         self.assertLess(total, 0.45)
         self.assertGreater(total, 0.20)
-        # Distinct from Punchline tip cream hose rebound (#256) and Silly #232.
+        # Distinct from Punchline tip cream hose rebound (#256/#284) and Silly.
         punch_over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
         silly_over = camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
         self.assertNotEqual(tuple(over), tuple(punch_over))
@@ -128,6 +133,9 @@ class BetrayalBannerCreamHoseSettleTest(unittest.TestCase):
         self.assertGreater(float(oz), float(silly_over[2]))
         self.assertGreater(
             rest, float(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC))
+        # Punchline tip rebound stays under betrayal climax rebound.
+        punch_rebound = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND
+        self.assertLess(float(punch_rebound[2]), float(rz))
         # Silly tip keeps no tip rebound; betrayal title owns climax rebound.
         self.assertFalse(hasattr(
             camp, 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
@@ -135,13 +143,13 @@ class BetrayalBannerCreamHoseSettleTest(unittest.TestCase):
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('finale_betrayal_cream_hose_settle_enabled')
         self.assertGreater(idx, 0)
-        snip = src[max(0, idx - 650):idx + 650]
+        snip = src[max(0, idx - 750):idx + 750]
         self.assertIn('no keyblades', snip)
         self.assertIn('betrayal', snip)
         self.assertIn('rebound', snip)
         self.assertIn('juicier', snip)
-        self.assertIn('#235', snip)
-        self.assertIn('#256', snip)
+        self.assertIn('#260', snip)
+        self.assertIn('#284', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
             self.assertNotIn(banned, snip)
 
@@ -173,13 +181,15 @@ class BetrayalBannerCreamHoseSettleTest(unittest.TestCase):
         self.assertGreater(betr_settle, 0)
         self.assertGreater(cream_settle, betr_settle)
         self.assertGreater(cream_rebound, cream_settle)
-        # Module doc mentions deepened cream hose settle on betrayal plate.
+        # Module doc mentions juicier deepened cream hose settle past #260.
         self.assertIn('deepened cream hose settle', handoff_src.lower())
+        self.assertIn('past #260', handoff_src.lower())
         self.assertIn('micro rebound', handoff_src.lower())
 
     def test_magicwords_mention_deepened_betrayal_cream_hose_settle(self):
         magic_src = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('deepened cream hose', magic_src)
+        self.assertIn('juicier deepened', magic_src)
+        self.assertIn('cream hose settle past #260', magic_src)
         self.assertIn('micro rebound', magic_src)
         self.assertIn('betrayal handoff banner', magic_src)
         self.assertIn('no keyblades', magic_src)

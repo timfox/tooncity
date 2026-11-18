@@ -24,14 +24,14 @@ and a delayed soft cream wash pulse with a residual cream aftershock
 (flecks + soft halo); it clears before the Oswald twist / FinalePhaseFx
 reveal so the bittersweet sting stays intact. When Silly finale betrayal
 reveal fires (oswaldRevealBanner), a dedicated betrayal handoff plate
-hose-pops the twist copy with a deepened cream hose settle (overshoot →
-rest → micro rebound) so the twist lands juicier — complements
-almost-confess tip (#207) — and a deepened victory/confetti cream sting
-(VictoryTwistConfettiSting: juicier chips + micro cream pop rebound +
-richer soft cream aftershock, past #244) lands
-the hollow cheer that Oswald caused the corruption. Distinct from act
-handoff cream edge settle deepen (#240) and Punchline tip cream hose
-rebound (#256 — tip bar, not betrayal title).
+hose-pops the twist copy with a juicier deepened cream hose settle past
+#260 (overshoot → rest → micro rebound) so the twist lands juicier —
+complements almost-confess tip (#207) — and a deepened victory/confetti
+cream sting (VictoryTwistConfettiSting: juicier chips + micro cream pop
+rebound + richer soft cream aftershock, past #244) lands the hollow
+cheer that Oswald caused the corruption. Distinct from act handoff cream
+edge settle deepen (#240) and Punchline tip cream hose rebound
+(#256/#284 — tip bar, not betrayal title).
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -560,10 +560,10 @@ class CampaignHandoffClient(DirectObject):
 
         Early/mid Oswald trusted reclaim-lead clears append a soft
         overshoot → rest settle bounce after the hose pop. Trust fracture
-        holds the settle a rubbery beat longer (mid-act unease).         Betrayal
+        holds the settle a rubbery beat longer (mid-act unease). Betrayal
         handoff holds even longer so the twist title lands hard, then a
-        deepened cream hose settle (overshoot → rest → micro rebound) so
-        the twist plate reads juicier.
+        juicier deepened cream hose settle past #260 (overshoot → rest →
+        micro rebound) so the twist plate reads juicier.
         """
         settle = float(settleScale)
         sx, sy, sz, squashSec = getattr(
@@ -616,9 +616,10 @@ class CampaignHandoffClient(DirectObject):
                 titleNP, float(overSec), overPt, blendType='easeOut'))
             parts.append(LerpScaleInterval(
                 titleNP, restSec, settlePt, blendType='easeIn'))
-        # Deepened cream hose settle after betrayal settle — juicier twist
-        # land (tip cream hose rebound twin; distinct from Punchline #227 /
-        # #256 tip bar and Silly #232 almost-confess tip).
+        # Juicier deepened cream hose settle past #260 after betrayal settle
+        # — climax twist land (tip cream hose rebound twin; distinct from
+        # Punchline #227/#256/#284 tip bar and Silly #232/#279 almost-
+        # confess tip).
         if betrayalHandoff and bool(getattr(
                 CampaignGlobals, 'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED',
                 True)):
@@ -635,7 +636,7 @@ class CampaignHandoffClient(DirectObject):
             if creamOverSec is not None and creamOverSec > 0.0:
                 creamRestSec = float(getattr(
                     CampaignGlobals,
-                    'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC', 0.14))
+                    'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC', 0.15))
                 creamOverPt = Point3(
                     settle * float(cx), settle * float(cy), settle * float(cz))
                 parts.append(LerpScaleInterval(
@@ -644,7 +645,7 @@ class CampaignHandoffClient(DirectObject):
                 parts.append(LerpScaleInterval(
                     titleNP, max(0.01, creamRestSec), settlePt,
                     blendType='easeIn'))
-                # Micro rebound after cream overshoot→rest (#235 deepen).
+                # Micro rebound after cream overshoot→rest (past #260).
                 creamRebound = getattr(
                     CampaignGlobals,
                     'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND', None)
@@ -659,7 +660,7 @@ class CampaignHandoffClient(DirectObject):
                     reboundRestSec = float(getattr(
                         CampaignGlobals,
                         'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND_REST_SEC',
-                        0.07))
+                        0.08))
                     reboundPt = Point3(
                         settle * float(rx), settle * float(ry),
                         settle * float(rz))
