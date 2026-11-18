@@ -4,7 +4,7 @@ Combo-ish swings with cartoon squash/stretch timing and soft targeting.
 Client-local prototype — does not enter turn-based battle FSM.
 """
 
-from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
+from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec3, Vec4
 
 from direct.interval.IntervalGlobal import (
     ActorInterval,
@@ -80,7 +80,10 @@ class MeleeCombatController(DirectObject):
         self.accept('corruptToonHitPlayer', self._onCorruptHitPlayer)
         self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
-        taskMgr.add(self._tick, self._taskName)  # noqa: F821
+        # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
+        taskMgr.add(  # noqa: F821
+            self._tick, self._taskName,
+            priority=HackSlashConfig.LOCK_CAM_TASK_PRIORITY)
 
     def disable(self):
         if not self.enabled:
@@ -144,11 +147,24 @@ class MeleeCombatController(DirectObject):
         return Task.cont
 
     def _nudgeTowardLock(self, target):
-        """Subtle avatar + camera lean toward the sticky soft-lock target."""
+        """Subtle avatar + camera lean toward the sticky soft-lock target.
+
+        Idle: mild facing/look-at bias. Mid-combo: stronger look-at plus a soft
+        lateral orbit/pull so the locked corrupt stays readable — never a hard
+        lock; page-up/down free-look still wins.
+        """
         try:
             pos = target.getHackSlashPos()
         except Exception:
             return
+        inCombo = bool(self.busy)
+        faceLerp = (
+            HackSlashConfig.LOCK_COMBO_FACE_LERP
+            if inCombo else HackSlashConfig.LOCK_FACE_LERP)
+        camLerp = (
+            HackSlashConfig.LOCK_COMBO_CAM_LERP
+            if inCombo else HackSlashConfig.LOCK_CAM_LERP)
+
         # Soft heads-up: lerp facing instead of snapping (keeps locomotion feel).
         try:
             av = self.avatar
@@ -157,9 +173,14 @@ class MeleeCombatController(DirectObject):
             wantH = av.getH(render)  # noqa: F821
             av.setH(render, curH)  # noqa: F821
             delta = ((wantH - curH + 180.0) % 360.0) - 180.0
-            av.setH(render, curH + delta * HackSlashConfig.LOCK_FACE_LERP)  # noqa: F821
+            av.setH(render, curH + delta * faceLerp)  # noqa: F821
         except Exception:
             pass
+
+        # Yield to explicit page-up / page-down camera angles.
+        if getattr(self.avatar, 'isPageUp', 0) or getattr(self.avatar, 'isPageDown', 0):
+            return
+
         # Soft camera look-at nudge: blend a fraction of lookAt toward the lock.
         try:
             look = Point3(pos)
@@ -169,11 +190,47 @@ class MeleeCombatController(DirectObject):
             cam.lookAt(look)
             wantHpr = cam.getHpr()
             cam.setHpr(curHpr)
-            t = HackSlashConfig.LOCK_CAM_LERP
             cam.setHpr(
-                curHpr[0] + (((wantHpr[0] - curHpr[0] + 180.0) % 360.0) - 180.0) * t,
-                curHpr[1] + (wantHpr[1] - curHpr[1]) * t,
-                curHpr[2] + (wantHpr[2] - curHpr[2]) * t,
+                curHpr[0] + (((wantHpr[0] - curHpr[0] + 180.0) % 360.0) - 180.0) * camLerp,
+                curHpr[1] + (wantHpr[1] - curHpr[1]) * camLerp,
+                curHpr[2] + (wantHpr[2] - curHpr[2]) * camLerp,
+            )
+        except Exception:
+            pass
+
+        if inCombo:
+            self._orbitCamTowardLock(pos)
+
+    def _orbitCamTowardLock(self, targetPos):
+        """Soft lateral orbit + pull-back while a combo string is live.
+
+        Applied as a per-frame bias on top of smart-cam (does not accumulate):
+        peek past the shoulder toward the lock and ease back slightly so both
+        toon and corrupt stay in frame.
+        """
+        try:
+            cam = base.camera  # noqa: F821
+            av = self.avatar
+            curPos = cam.getPos()
+            toTarget = Vec3(targetPos - av.getPos(render))  # noqa: F821
+            toTarget.setZ(0.0)
+            right = av.getQuat(render).getRight()  # noqa: F821
+            right.setZ(0.0)
+            side = 0.0
+            if right.lengthSquared() > 1e-4 and toTarget.lengthSquared() > 1e-4:
+                right.normalize()
+                toTarget.normalize()
+                # Target on avatar-right → orbit cam +X (peek that shoulder).
+                side = max(-1.0, min(1.0, right.dot(toTarget)))
+            lateral = HackSlashConfig.LOCK_COMBO_ORBIT_LATERAL * side
+            pull = HackSlashConfig.LOCK_COMBO_ORBIT_PULL
+            lift = HackSlashConfig.LOCK_COMBO_ORBIT_LIFT
+            t = HackSlashConfig.LOCK_COMBO_ORBIT_LERP
+            # Smart-cam resets pos each frame; bias is offset * t (no drift).
+            cam.setPos(
+                curPos[0] + lateral * t,
+                curPos[1] - pull * t,
+                curPos[2] + lift * t,
             )
         except Exception:
             pass
