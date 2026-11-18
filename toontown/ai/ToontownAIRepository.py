@@ -45,6 +45,7 @@ from toontown.racing.DistributedViewPadAI import DistributedViewPadAI
 from toontown.racing.RaceManagerAI import RaceManagerAI
 from toontown.uberdog.DistributedPartyManagerAI import DistributedPartyManagerAI
 from toontown.safezone.SafeZoneManagerAI import SafeZoneManagerAI
+from toontown.corruption.PollutionManagerAI import PollutionManagerAI
 from toontown.shtiker.CogPageManagerAI import CogPageManagerAI
 from toontown.spellbook.ToontownMagicWordManagerAI import ToontownMagicWordManagerAI
 from toontown.suit.SuitInvasionManagerAI import SuitInvasionManagerAI
@@ -219,6 +220,10 @@ class ToontownAIRepository(ToontownInternalRepository):
         # Generate our safezone manager...
         self.safeZoneManager = SafeZoneManagerAI(self)
         self.safeZoneManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
+
+        # Generate pollution manager (corrupt toons / reclaim foundation)...
+        self.pollutionManager = PollutionManagerAI(self)
+        self.pollutionManager.generateWithRequired(OTP_ZONE_ID_MANAGEMENT)
 
         # Generate our magic word manager...
         self.magicWordManager = ToontownMagicWordManagerAI(self)
