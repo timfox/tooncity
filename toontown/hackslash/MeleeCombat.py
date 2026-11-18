@@ -55,6 +55,8 @@ class MeleeCombatController(DirectObject):
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._origScale = None
         self._baseFov = None
+        self._shakeAmp = 0.0
+        self._shakeUntil = 0.0
         self._comboHits = 0
         self._comboNP = None
         self._comboIval = None
@@ -109,6 +111,7 @@ class MeleeCombatController(DirectObject):
         self._clearPlayerHitReact()
         self._clearHitstop()
         self._restoreFov()
+        self._clearFinisherShake()
         self._clearHitFlash()
         self._clearLaunch()
         self._clearDodge()
@@ -155,6 +158,8 @@ class MeleeCombatController(DirectObject):
             self._nudgeTowardLock(target)
         else:
             self._hideLockHint()
+        # Always after soft-lock so finisher thud isn't lerped away.
+        self._applyFinisherShake()
         return Task.cont
 
     def _nudgeTowardLock(self, target):
@@ -369,6 +374,7 @@ class MeleeCombatController(DirectObject):
                 self._playLauncher(target, hitIndex)
             if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
                 self._playFinisherFovPunch()
+                self._playFinisherShake()
                 self._playFinisherSelfHop()
         else:
             # Whiff inside a live string soft-breaks the on-screen counter.
@@ -833,6 +839,47 @@ class MeleeCombatController(DirectObject):
             pass
         self._baseFov = None
 
+    def _playFinisherShake(self):
+        """Arm a brief camera thud after soft-lock each tick (optional)."""
+        if not HackSlashConfig.FINISHER_SHAKE_ENABLED:
+            return
+        amp = float(HackSlashConfig.FINISHER_SHAKE_AMPLITUDE)
+        sec = float(HackSlashConfig.FINISHER_SHAKE_SEC)
+        if amp <= 0.0 or sec <= 0.0:
+            return
+        self._shakeAmp = amp
+        try:
+            self._shakeUntil = globalClock.getFrameTime() + sec  # noqa: F821
+        except Exception:
+            self._shakeUntil = sec
+
+    def _applyFinisherShake(self):
+        """Decay-random camera offset — cartoon thud, not a long quake."""
+        if self._shakeAmp <= 0.0:
+            return
+        try:
+            now = globalClock.getFrameTime()  # noqa: F821
+        except Exception:
+            self._clearFinisherShake()
+            return
+        remaining = self._shakeUntil - now
+        if remaining <= 0.0:
+            self._clearFinisherShake()
+            return
+        total = max(0.01, float(HackSlashConfig.FINISHER_SHAKE_SEC))
+        amp = self._shakeAmp * (remaining / total)
+        offset = HitJuice.sampleShakeOffset(amp)
+        try:
+            cam = base.camera  # noqa: F821
+            pos = cam.getPos()
+            cam.setPos(pos[0] + offset[0], pos[1] + offset[1], pos[2] + offset[2])
+        except Exception:
+            self._clearFinisherShake()
+
+    def _clearFinisherShake(self):
+        self._shakeAmp = 0.0
+        self._shakeUntil = 0.0
+
     def _inHitRange(self, target):
         dist = self.targetFinder._distance(target)
         return dist <= (HackSlashConfig.HIT_FORWARD + HackSlashConfig.HIT_RADIUS)
@@ -885,12 +932,20 @@ class MeleeCombatController(DirectObject):
             av.setScale(self._origScale)
         except Exception:
             pass
-        self._impactIval = HitJuice.playImpactSquash(
-            av,
-            hitIndex=hitIndex,
-            finishScale=self._origScale,
-            name=av.uniqueName('hackslashImpactSquash'),
-        )
+        isFinisher = hitIndex >= HackSlashConfig.COMBO_LENGTH - 1
+        if isFinisher:
+            self._impactIval = HitJuice.playFinisherSlam(
+                av,
+                finishScale=self._origScale,
+                name=av.uniqueName('hackslashFinisherSlam'),
+            )
+        else:
+            self._impactIval = HitJuice.playImpactSquash(
+                av,
+                hitIndex=hitIndex,
+                finishScale=self._origScale,
+                name=av.uniqueName('hackslashImpactSquash'),
+            )
         # Target hit-react scale — DemoHostile / CorruptToon may also tint.
         visual = HitJuice.resolveVisualNode(target)
         if visual is not None and visual is not av:
@@ -900,12 +955,19 @@ class MeleeCombatController(DirectObject):
                 HitJuice.finishInterval(prev)
             except Exception:
                 pass
-            targetIval = HitJuice.playImpactSquash(
-                visual,
-                hitIndex=hitIndex,
-                finishScale=Point3(1.0, 1.0, 1.0),
-                name='hackslashTargetImpact',
-            )
+            if isFinisher:
+                targetIval = HitJuice.playFinisherSlam(
+                    visual,
+                    finishScale=Point3(1.0, 1.0, 1.0),
+                    name='hackslashTargetFinisherSlam',
+                )
+            else:
+                targetIval = HitJuice.playImpactSquash(
+                    visual,
+                    hitIndex=hitIndex,
+                    finishScale=Point3(1.0, 1.0, 1.0),
+                    name='hackslashTargetImpact',
+                )
             try:
                 setattr(target, '_hackslashImpactIval', targetIval)
             except Exception:

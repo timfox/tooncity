@@ -28,9 +28,16 @@ COMBO_DAMAGE = (8, 12, 28)
 HITSTOP_SEC = (0.045, 0.055, 0.11)
 
 # Camera FOV punch on finisher (degrees added, then restored).
-FINISHER_FOV_PUNCH = 12.0
-FINISHER_FOV_IN_SEC = 0.06
-FINISHER_FOV_OUT_SEC = 0.18
+# Slightly hotter than mid-combo so the stretch-punch slam reads.
+FINISHER_FOV_PUNCH = 16.0
+FINISHER_FOV_IN_SEC = 0.05
+FINISHER_FOV_OUT_SEC = 0.2
+
+# Optional brief camera shake on finisher (applied after soft-lock each tick).
+# Keep amplitude small — cartoon thud, not earthquake.
+FINISHER_SHAKE_ENABLED = True
+FINISHER_SHAKE_AMPLITUDE = 0.42
+FINISHER_SHAKE_SEC = 0.14
 
 # Soft-lock camera / facing nudge while melee is enabled (per-tick lerp).
 # Idle stays mild; mid-combo adds a soft orbit/pull for readable framing without
@@ -136,6 +143,12 @@ HIT_IMPACT_STRETCH = (
     (0.5, 0.5, 1.7, 0.12),
 )
 HIT_IMPACT_SETTLE_SEC = 0.08
+
+# Combo-finisher slam — bigger rubber-hose than HIT_IMPACT row 2 so the last
+# stretch-punch reads as a readable slam (flat pancake → tall spring → settle).
+FINISHER_SLAM_SQUASH = (2.2, 2.2, 0.2, 0.085)
+FINISHER_SLAM_STRETCH = (0.38, 0.38, 2.05, 0.15)
+FINISHER_SLAM_SETTLE_SEC = 0.11
 
 # Player hit-react when a CorruptToon lands a smack (scale juice + tiny hitstop).
 PLAYER_HIT_REACT_SQUASH = (1.75, 1.75, 0.38, 0.06)
