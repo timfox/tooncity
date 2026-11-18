@@ -2226,6 +2226,46 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('C campaign', hub_tip)
         self.assertNotIn('~startcampaign', hub_tip)
 
+        # Soft-lock target cycle — Tab/` manual next/prev among sticky hostiles.
+        # Combat-feel targeting (not cream FX): SoftTargetFinder.cycle +
+        # MeleeCombatController cycle handlers.
+        for target_cycle_key in (
+                'TARGET_CYCLE_ENABLED',
+                'TARGET_CYCLE_NEXT_KEY',
+                'TARGET_CYCLE_PREV_KEY',
+                'TARGET_CYCLE_COOLDOWN_SEC',
+                'TARGET_CYCLE_RANGE',
+                'TARGET_CYCLE_HALF_ANGLE_DEG'):
+            self.assertIn(
+                target_cycle_key, config_names,
+                msg='HackSlashConfig missing target cycle %s' % target_cycle_key)
+        soft_target_tree = _module_ast('toontown/hackslash/SoftTarget.py')
+        soft_target_names = _class_and_func_names(soft_target_tree)
+        for cycle_helper in ('nextCycleIndex', 'pickCycleChoice'):
+            self.assertIn(
+                cycle_helper, soft_target_names,
+                msg='SoftTarget missing cycle helper %s' % cycle_helper)
+        soft_target_methods = _class_method_names(soft_target_tree, 'SoftTargetFinder')
+        self.assertIn(
+            'cycle', soft_target_methods,
+            msg='SoftTargetFinder missing cycle()')
+        for cycle_method in (
+                '_onCycleNextPressed',
+                '_onCyclePrevPressed',
+                '_cycleSoftLockTarget'):
+            self.assertIn(
+                cycle_method, melee_methods,
+                msg='MeleeCombatController missing %s' % cycle_method)
+        self.assertIn('TARGET_CYCLE_ENABLED', melee_src)
+        self.assertIn('hackslash-target-cycle', melee_src)
+        self.assertIn('TARGET_CYCLE_NEXT_KEY', melee_src)
+        config_src = _read('toontown/hackslash/HackSlashConfig.py')
+        self.assertIn('Tab/` soft-lock cycle', config_src)
+        soft_target_src = _read('toontown/hackslash/SoftTarget.py')
+        self.assertIn('pickCycleChoice', soft_target_src)
+        self.assertIn('pickCycleChoice', hack_init)
+        self.assertIn('nextCycleIndex', hack_init)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)

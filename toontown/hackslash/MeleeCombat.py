@@ -91,6 +91,7 @@ class MeleeCombatController(DirectObject):
         self._comboCreamIval = None
         self._comboCreamNodes = []
         self.targetFinder = SoftTargetFinder(avatar)
+        self._cycleReadyAt = 0.0
         self._hintNP = None
         self._lockHintNP = None
         self._taskName = avatar.uniqueName('hackslashMeleeTick')
@@ -105,6 +106,7 @@ class MeleeCombatController(DirectObject):
         self._iframeUntil = 0.0
         self._dodgeIFrameUntil = 0.0
         self._dodgeReadyAt = 0.0
+        self._cycleReadyAt = 0.0
         self._dodging = False
         self._clearDodgeCancelWindow()
         self._comboHits = 0
@@ -116,6 +118,9 @@ class MeleeCombatController(DirectObject):
         self.accept(HackSlashConfig.ATTACK_KEY_ALT, self._onAttackPressed)
         self.accept(HackSlashConfig.DODGE_KEY, self._onDodgePressed)
         self.accept(HackSlashConfig.DODGE_KEY_ALT, self._onDodgePressed)
+        # Soft-lock target cycle (Tab next / ` prev) — KH-feel switch, no branding.
+        self.accept(HackSlashConfig.TARGET_CYCLE_NEXT_KEY, self._onCycleNextPressed)
+        self.accept(HackSlashConfig.TARGET_CYCLE_PREV_KEY, self._onCyclePrevPressed)
         self.accept('corruptToonHitPlayer', self._onCorruptHitPlayer)
         self.accept('corruptToonAttackDodged', self._onCorruptAttackDodged)
         self.accept('hackslash-hit', self._onHackSlashHit)
@@ -134,6 +139,8 @@ class MeleeCombatController(DirectObject):
         self.ignore(HackSlashConfig.ATTACK_KEY_ALT)
         self.ignore(HackSlashConfig.DODGE_KEY)
         self.ignore(HackSlashConfig.DODGE_KEY_ALT)
+        self.ignore(HackSlashConfig.TARGET_CYCLE_NEXT_KEY)
+        self.ignore(HackSlashConfig.TARGET_CYCLE_PREV_KEY)
         self.ignore('corruptToonHitPlayer')
         self.ignore('corruptToonAttackDodged')
         self.ignore('hackslash-hit')
@@ -158,6 +165,7 @@ class MeleeCombatController(DirectObject):
         self._clearComboCounter()
         self._iframeUntil = 0.0
         self._dodgeIFrameUntil = 0.0
+        self._cycleReadyAt = 0.0
         self._dodging = False
         self._comboHits = 0
         self.targetFinder.clear()
@@ -249,6 +257,52 @@ class MeleeCombatController(DirectObject):
     def _hideSoftLockReticle(self):
         try:
             self._softLockReticle.hide()
+        except Exception:
+            pass
+
+    def _onCycleNextPressed(self):
+        """Tab — soft-lock onto the next sticky-range hostile."""
+        self._cycleSoftLockTarget(1)
+
+    def _onCyclePrevPressed(self):
+        """` — soft-lock onto the previous sticky-range hostile."""
+        self._cycleSoftLockTarget(-1)
+
+    def _cycleSoftLockTarget(self, direction):
+        """Manual soft-lock switch during rubber-hose melee.
+
+        Breaks sticky hold onto the next/prev yaw-ordered candidate and
+        immediately refreshes the lock hint + reticle (snap juice when the
+        lock key changes). Cooldown stops key-repeat double snaps.
+        """
+        if not self.enabled:
+            return
+        if not getattr(HackSlashConfig, 'TARGET_CYCLE_ENABLED', True):
+            return
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now < float(getattr(self, '_cycleReadyAt', 0.0) or 0.0):
+            return
+        cooldown = float(getattr(HackSlashConfig, 'TARGET_CYCLE_COOLDOWN_SEC', 0.12) or 0.0)
+        self._cycleReadyAt = now + max(0.0, cooldown)
+        target = self.targetFinder.cycle(direction=direction, now=now)
+        snapped = self.targetFinder.didSnap()
+        if target is not None:
+            try:
+                name = target.getHackSlashName()
+                hp = target.getHackSlashHp()
+                self._showLockHint('%s  [%d]' % (name, hp))
+            except Exception:
+                pass
+            self._updateSoftLockReticle(target, snapped=snapped)
+            # Mild face/cam lean so the switch reads without waiting a tick.
+            self._nudgeTowardLock(target)
+        else:
+            self._hideLockHint()
+            self._hideSoftLockReticle()
+        try:
+            messenger.send(  # noqa: F821
+                'hackslash-target-cycle',
+                [self.avatar, target, int(direction), bool(snapped)])
         except Exception:
             pass
 

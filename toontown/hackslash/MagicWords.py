@@ -9,7 +9,8 @@ class ToggleHackSlash(MagicWord):
     desc = 'Toggle real-time rubber-hose Oswald stretch-punch melee.'
     advancedDesc = (
         'Enables rubber-hose melee: press F (or LMB) for a short 3-hit stretch '
-        'punch combo with soft nearest-hostile targeting, a subtle '
+        'punch combo with soft nearest-hostile targeting, Tab / ` to cycle '
+        'the sticky soft-lock next/prev among nearby hostiles, a subtle '
         'camera/facing nudge toward the sticky lock (mid-combo soft '
         'orbit/pull for readability without hard-locking), brief hitstop/freeze '
         'on connect, impact squash/stretch juice + cream/ink fleck sparkles '
@@ -26,7 +27,8 @@ class ToggleHackSlash(MagicWord):
         'soft-lock cream/ink '
         'reticle hose pop + cream pulse ring + soft cream wash pulse + brief '
         'FOV punch + soft FOV cream wash on '
-        'acquire/snap, and an on-screen punch counter that ticks on hits with a '
+        'acquire/snap (including manual Tab/` cycle snaps), and an on-screen '
+        'punch counter that ticks on hits with a '
         'rubber-hose pop + cream sparkle + delayed cream aftershock + soft '
         'cream wash pulse + cream wash aftershock then fades when the string '
         'breaks '
@@ -55,6 +57,7 @@ class ToggleHackSlash(MagicWord):
         if enabled:
             return (
                 'Stretch-punch melee ON. Press F (or LMB) for fist combos; '
+                'Tab/` to cycle soft-lock next/prev; '
                 'Shift/X to dodge with a smear trail + cream sparkle flecks + '
                 'cream aftershock + cream wash + cream/ink i-frame pulse + '
                 'i-frame cream wash, then F to cancel into a stretch-punch '
