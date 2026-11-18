@@ -247,6 +247,13 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             ensureWaveCreamBurstFxClient()
         except Exception:
             pass
+        # Cream shimmer hang after the wave-clear cream burst settles.
+        try:
+            from toontown.reclaim.WaveClearCreamShimmerFx import (
+                ensureWaveClearCreamShimmerFxClient)
+            ensureWaveClearCreamShimmerFxClient()
+        except Exception:
+            pass
         messenger.send(
             'reclaimWaveCleared', [self.reclaimZoneId, int(waveIndex)])
 
