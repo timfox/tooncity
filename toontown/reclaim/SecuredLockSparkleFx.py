@@ -1,11 +1,11 @@
 """Secured-street purity lock sparkle + soft audio/HUD sting.
 
-Deepened green-cream aspect2d flecks that celebrate when a reclaim street
-hits full purity lock (#205 / #209 deepen) so the street-secure payoff
-reads juicier. Distinct from mid-wave warm rim-flash cream (#234),
-wave-start sunny hose cream (#239), wave-clear mid-screen cream sparkle
-(#229), cheer flecks, and StreetSparkle horizon glitter — this is the
-lock-earned tip-near glitter by the purity meter / secured tip.
+Further-deepened green-cream aspect2d flecks past #243 that celebrate when
+a reclaim street hits full purity lock so the street-secure payoff reads
+juicier again. Distinct from mid-wave warm rim-flash cream (#234),
+wave-start sunny hose cream (#239), wave-clear mid-screen sunny cream
+sparkle (#253), cheer flecks, and StreetSparkle horizon glitter — this is
+the lock-earned tip-near glitter by the purity meter / secured tip.
 
 A quieter sparkle aftershock (settle flecks + soft green-cream halo) hangs
 after the rising glitter. Also plays a quiet cheer-cousin pitch sting (not
@@ -70,7 +70,7 @@ class SecuredLockSparkleFxClient(DirectObject):
         return False
 
     def playLockSting(self):
-        """Deepened green-cream flecks near the meter + quiet lock audio sting."""
+        """Further-deepened green-cream flecks near the meter + quiet lock sting."""
         if not getattr(ReclaimGlobals, 'SECURED_LOCK_SPARKLE_ENABLED', True):
             return
         self.clear()
@@ -88,17 +88,17 @@ class SecuredLockSparkleFxClient(DirectObject):
             ox, oy, oz = 0.0, 0.0, 0.42
 
         count = int(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_COUNT', 10))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_COUNT', 12))
         rise = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_RISE', 0.34))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_RISE', 0.40))
         spread = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_SPREAD', 0.62))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_SPREAD', 0.72))
         sec = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_SEC', 0.36))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_SEC', 0.40))
         binSort = int(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_BIN', 54))
         delay = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_DELAY_SEC', 0.03))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_DELAY_SEC', 0.02))
 
         fleckParts = self._spawnFlecks(
             parent, ox, oy, oz, binSort, count, rise, spread, sec)
@@ -137,10 +137,10 @@ class SecuredLockSparkleFxClient(DirectObject):
             afterHold = (
                 float(getattr(
                     ReclaimGlobals,
-                    'SECURED_LOCK_SPARKLE_AFTERSHOCK_DELAY_SEC', 0.16))
+                    'SECURED_LOCK_SPARKLE_AFTERSHOCK_DELAY_SEC', 0.14))
                 + float(getattr(
                     ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC',
-                    0.30))
+                    0.34))
                 + 0.06)
             holdSec = max(holdSec, afterHold)
 
@@ -157,39 +157,39 @@ class SecuredLockSparkleFxClient(DirectObject):
         if count <= 0:
             return []
         size = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_SIZE', 0.020))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_SIZE', 0.022))
         pop = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_POP', 1.24))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_POP', 1.32))
         r, g, b, a = getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_COLOR',
-            (0.76, 1.0, 0.84, 0.96))
+            (0.74, 1.0, 0.82, 0.98))
         er, eg, eb, ea = getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_END_COLOR',
-            (0.52, 1.0, 0.70, 0.0))
+            (0.50, 1.0, 0.68, 0.0))
 
         parts = []
         for i in range(count):
             try:
                 t = (float(i) / max(1, count - 1)) - 0.5
-                angle = (2.0 * pi * i) / float(count) + 0.18
+                angle = (2.0 * pi * i) / float(count) + 0.14
                 cm = CardMaker('reclaim-secured-lock-sparkle-%s' % i)
                 # Alternate chip / cross fleck — rubber-hose lock glitter.
                 if (i % 3) == 0:
                     cm.setFrame(
-                        -size * 0.35, size * 0.35, -size * 1.30, size * 1.30)
+                        -size * 0.35, size * 0.35, -size * 1.35, size * 1.35)
                 elif (i % 3) == 1:
                     cm.setFrame(
-                        -size * 1.30, size * 1.30, -size * 0.35, size * 0.35)
+                        -size * 1.35, size * 1.35, -size * 0.35, size * 0.35)
                 else:
                     cm.setFrame(-size, size, -size, size)
                 fleck = parent.attachNewNode(cm.generate())
                 fleck.setTransparency(TransparencyAttrib.MAlpha)
                 fleck.setColor(r, g, b, 1)
                 fleck.setColorScale(r, g, b, 0)
-                startX = ox + t * spread + cos(angle) * 0.026
-                startZ = oz + 0.012 * (i % 3) + sin(angle) * 0.012
+                startX = ox + t * spread + cos(angle) * 0.030
+                startZ = oz + 0.014 * (i % 3) + sin(angle) * 0.014
                 fleck.setPos(startX, oy, startZ)
-                fleck.setScale(0.36 + 0.08 * (i % 3))
+                fleck.setScale(0.38 + 0.09 * (i % 3))
                 fleck.setBin('fixed', binSort + (i % 2))
                 fleck.setDepthTest(False)
                 fleck.setDepthWrite(False)
@@ -198,13 +198,13 @@ class SecuredLockSparkleFxClient(DirectObject):
                 continue
 
             end = Point3(
-                startX + cos(angle) * 0.09,
+                startX + cos(angle) * 0.11,
                 oy,
                 startZ + rise * (0.5 + 0.5 * ((i % 4) / 3.0)))
-            stagger = 0.012 * i
-            twinkle = 0.040 + 0.01 * (i % 3)
-            # Juicier snap: brighter twinkle pop, then ease into the rise fade.
-            peakScale = pop + 0.04 * (i % 2)
+            stagger = 0.010 * i
+            twinkle = 0.036 + 0.01 * (i % 3)
+            # Juicier snap past #243: brighter twinkle pop, then rise fade.
+            peakScale = pop + 0.05 * (i % 2)
             parts.append(Sequence(
                 Wait(stagger),
                 Parallel(
@@ -227,14 +227,14 @@ class SecuredLockSparkleFxClient(DirectObject):
         return parts
 
     def _buildSparkleAftershock(self, parent, ox, oy, oz):
-        """Quieter settle flecks (+ optional halo) after deepened rising sparkle."""
+        """Quieter settle flecks (+ optional halo) after further-deepened sparkle."""
         if not getattr(
                 ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED',
                 True):
             return None
         delay = float(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_DELAY_SEC',
-            0.16))
+            0.14))
         parts = []
 
         if getattr(
@@ -245,9 +245,9 @@ class SecuredLockSparkleFxClient(DirectObject):
                 parts.append(halo)
 
         count = int(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT', 4))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT', 5))
         sec = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC', 0.30))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC', 0.34))
         for i in range(count):
             part = self._spawnSparkleAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -265,27 +265,27 @@ class SecuredLockSparkleFxClient(DirectObject):
     def _spawnSparkleAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_HALF',
-            0.34))
+            0.38))
         startScale = float(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_START',
-            0.22))
+            0.26))
         peakScale = float(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK',
-            1.16))
+            1.22))
         sec = float(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_SEC',
-            0.26))
+            0.30))
         peakA = float(getattr(
             ReclaimGlobals,
-            'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA', 0.14))
+            'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA', 0.17))
         r, g, b, _a = getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_COLOR',
-            (0.78, 1.0, 0.86, 1.0))
+            (0.76, 1.0, 0.84, 1.0))
         binSort = int(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_BIN', 55))
         try:
             cm = CardMaker('reclaim-secured-lock-sparkle-aftershock-halo')
-            # Soft oval under tip-near sparkle — greener than wave-clear halo.
+            # Soft oval under tip-near sparkle — greener than sunny #253 halo.
             cm.setFrame(-half, half, -half * 0.55, half * 0.55)
             halo = parent.attachNewNode(cm.generate())
             halo.setTransparency(TransparencyAttrib.MAlpha)
@@ -316,39 +316,39 @@ class SecuredLockSparkleFxClient(DirectObject):
         """Softer green-cream chip that settles — residual lock sparkle aftershock."""
         count = max(1, int(total))
         size = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_SIZE', 0.015))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_SIZE', 0.017))
         drift = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_DRIFT', 0.26))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_DRIFT', 0.30))
         fall = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_FALL', 0.20))
+            ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_FALL', 0.24))
         r, g, b, a = getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_COLOR',
-            (0.72, 1.0, 0.82, 0.82))
+            (0.70, 1.0, 0.80, 0.88))
         er, eg, eb, ea = getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_END_COLOR',
-            (0.50, 0.98, 0.68, 0.0))
+            (0.48, 0.98, 0.66, 0.0))
         binSort = int(getattr(
             ReclaimGlobals, 'SECURED_LOCK_SPARKLE_AFTERSHOCK_BIN', 55))
-        angle = (2.0 * pi * index) / float(count) + 0.41
+        angle = (2.0 * pi * index) / float(count) + 0.37
         try:
             cm = CardMaker(
                 'reclaim-secured-lock-sparkle-aftershock-%s' % index)
             if (index % 3) == 0:
                 cm.setFrame(
-                    -size * 0.35, size * 0.35, -size * 1.20, size * 1.20)
+                    -size * 0.35, size * 0.35, -size * 1.25, size * 1.25)
             elif (index % 3) == 1:
                 cm.setFrame(
-                    -size * 1.20, size * 1.20, -size * 0.35, size * 0.35)
+                    -size * 1.25, size * 1.25, -size * 0.35, size * 0.35)
             else:
-                cm.setFrame(-size, size, -size * 0.85, size * 0.85)
+                cm.setFrame(-size, size, -size * 0.90, size * 0.90)
             fleck = parent.attachNewNode(cm.generate())
             fleck.setTransparency(TransparencyAttrib.MAlpha)
             fleck.setColor(r, g, b, 1)
             fleck.setColorScale(r, g, b, 0)
-            startX = ox + cos(angle) * 0.07
-            startZ = oz + 0.012 * (index % 3)
+            startX = ox + cos(angle) * 0.08
+            startZ = oz + 0.014 * (index % 3)
             fleck.setPos(startX, oy, startZ)
-            fleck.setScale(0.26 + 0.08 * (index % 3))
+            fleck.setScale(0.28 + 0.09 * (index % 3))
             fleck.setBin('fixed', binSort + 1 + (index % 2))
             fleck.setDepthTest(False)
             fleck.setDepthWrite(False)
@@ -356,17 +356,17 @@ class SecuredLockSparkleFxClient(DirectObject):
             return None
 
         end = Point3(
-            startX + cos(angle) * drift * 0.55,
+            startX + cos(angle) * drift * 0.58,
             oy,
-            startZ - fall - 0.05 * (index % 3))
-        peak = 1.04 + 0.06 * (index % 2)
+            startZ - fall - 0.06 * (index % 3))
+        peak = 1.08 + 0.07 * (index % 2)
         self._fleckNPs.append(fleck)
-        stagger = 0.016 * (index % 3)
+        stagger = 0.014 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(
                 LerpColorScaleInterval(
-                    fleck, 0.05, Vec4(r, g, b, a), blendType='easeOut'),
+                    fleck, 0.045, Vec4(r, g, b, a), blendType='easeOut'),
                 LerpScaleInterval(
                     fleck, max(0.01, sec * 0.28), peak, blendType='easeOut'),
             ),
@@ -410,17 +410,17 @@ class SecuredLockSparkleFxClient(DirectObject):
             self._pitchIval = None
 
         volume = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_STING_VOLUME', 0.58))
+            ReclaimGlobals, 'SECURED_LOCK_STING_VOLUME', 0.62))
         start = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_STING_PITCH_START', 0.90))
+            ReclaimGlobals, 'SECURED_LOCK_STING_PITCH_START', 0.88))
         peak = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_STING_PITCH_PEAK', 1.34))
+            ReclaimGlobals, 'SECURED_LOCK_STING_PITCH_PEAK', 1.40))
         end = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_STING_PITCH_END', 1.10))
+            ReclaimGlobals, 'SECURED_LOCK_STING_PITCH_END', 1.12))
         swellSec = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_STING_SWELL_SEC', 0.11))
+            ReclaimGlobals, 'SECURED_LOCK_STING_SWELL_SEC', 0.12))
         settleSec = float(getattr(
-            ReclaimGlobals, 'SECURED_LOCK_STING_SETTLE_SEC', 0.11))
+            ReclaimGlobals, 'SECURED_LOCK_STING_SETTLE_SEC', 0.12))
 
         def setRate(r):
             try:
