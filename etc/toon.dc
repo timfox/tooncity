@@ -3296,11 +3296,15 @@ dclass DistributedCorruptToon : DistributedNode {
   requestHackSlashHit(uint16) airecv clsend;
 };
 
-// KH x Toontown slice 3: one-street reclaim director
+// KH x Toontown slice 3 / depth D3: reclaim director + escalating waves
 dclass DistributedReclaimDirector : DistributedObject {
   setState(uint8) required broadcast ram;
   setPollutionHint(uint16/1000(0-1)) broadcast ram;
+  setWaveIndex(uint8) required broadcast ram;
+  setMaxWaves(uint8) required broadcast ram;
+  setPackAlive(uint8) broadcast ram;
   announceReclaimStart() broadcast;
-  announcePackSpawn(uint8) broadcast;
+  announcePackSpawn(uint8, uint8) broadcast;
+  announceWaveCleared(uint8) broadcast;
   announceReclaimComplete() broadcast;
 };
