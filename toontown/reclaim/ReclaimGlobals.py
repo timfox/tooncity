@@ -243,6 +243,28 @@ PURITY_METER_TICK_FLECK_COLOR = (1.0, 0.96, 0.62, 0.95)
 PURITY_METER_TICK_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
 PURITY_METER_TICK_FLECK_BIN = 48
 
+# Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
+# Soft lift for tip readability against ink fog — not a purity payoff.
+# Composes with PlayEntry ink edge vignette (bin 48), StreetColorWash (28),
+# and StreetSparkleFx full-purity glitter (50). Sunny cream only — no KH blue.
+ENTRY_CREAM_SHIMMER_ENABLED = True
+ENTRY_CREAM_SHIMMER_MIN_POLLUTION = 0.08
+ENTRY_CREAM_SHIMMER_ORIGIN = (0.0, 0.0, -0.08)
+ENTRY_CREAM_SHIMMER_COLOR = (1.0, 0.97, 0.82, 1.0)
+# Above wash veil (28) / haze (25); below purity meter (45) + ink vignette (48).
+ENTRY_CREAM_SHIMMER_BIN = 36
+ENTRY_CREAM_SHIMMER_PEAK = 0.18
+ENTRY_CREAM_SHIMMER_IN_SEC = 0.10
+ENTRY_CREAM_SHIMMER_HOLD_SEC = 0.20
+ENTRY_CREAM_SHIMMER_OUT_SEC = 0.48
+ENTRY_CREAM_SHIMMER_FLECK_COUNT = 8
+ENTRY_CREAM_SHIMMER_FLECK_SIZE = 0.018
+ENTRY_CREAM_SHIMMER_FLECK_RISE = 0.38
+ENTRY_CREAM_SHIMMER_FLECK_SPREAD = 0.95
+ENTRY_CREAM_SHIMMER_FLECK_SEC = 0.42
+ENTRY_CREAM_SHIMMER_FLECK_COLOR = (1.0, 0.98, 0.72, 0.88)
+ENTRY_CREAM_SHIMMER_FLECK_END_COLOR = (1.0, 0.94, 0.55, 0.0)
+
 # Progressive street cream wash while reclaim purity fills (geom + soft veil).
 # Matches purity-meter / burst cream — rubber-hose sunny clear, not KH blue.
 # Overlay bin sits above pollution ink haze (25) and below purity meter (45).
