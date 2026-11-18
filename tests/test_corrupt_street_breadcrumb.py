@@ -167,6 +167,14 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'playgroundPollutionFogEdge',
                 'CardMaker'):
             self.assertIn(needle, self.src, msg='missing fog edge %s' % needle)
+        # Birds-return cream wash when hub pollution clears (#231).
+        for needle in (
+                '_cueBirdsReturnCreamWash',
+                '_clearBirdsReturnCreamWash',
+                'BirdsReturnCreamWashFx',
+                'playBirdsReturnCreamWash'):
+            self.assertIn(
+                needle, self.src, msg='missing birds-return wash %s' % needle)
         # No KH branding / magic-word discoverability.
         src_l = self.src.lower()
         self.assertNotIn('keyblade', src_l)
