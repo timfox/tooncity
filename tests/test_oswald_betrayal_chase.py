@@ -197,7 +197,8 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
                 'chaseEnabled',
                 'chaseDelaySec',
                 'chaseHp',
-                'chaseAttackMove'):
+                'chaseAttackMove',
+                'chaseCombatDefeated'):
             self.assertIn(required, names)
         src = _read(rel)
         self.assertIn('ARCHETYPE_CORRUPT_OSWALD', src)

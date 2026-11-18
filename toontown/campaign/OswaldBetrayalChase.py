@@ -86,6 +86,24 @@ def chaseClearMsg():
         "Oswald's stain is washed — purity holds for real this time!"))
 
 
+def chaseCombatDefeated(corrupt):
+    """True only after intentional combat defeat (hp≤0 / ``_defeated``).
+
+    Zone leave, DO despawn, or a missing doId must NOT count as clear —
+    those leave ``chaseCleared=0`` so hydrate / resume can re-field the
+    wash fight. ``corrupt is None`` is never a defeat.
+    """
+    if corrupt is None:
+        return False
+    if bool(getattr(corrupt, '_defeated', False)):
+        return True
+    try:
+        hp = int(getattr(corrupt, 'hp', 0) or 0)
+    except Exception:
+        hp = 0
+    return hp <= 0
+
+
 def epilogueEnabled():
     return bool(getattr(CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True))
 
@@ -163,10 +181,10 @@ class OswaldBetrayalChaseClient(DirectObject):
 
     AI schedules the DistributedCorruptToon spawn; this client mirrors the
     same delay from campaignVictory / reveal so the tip lands without a
-    new distributed announce (messenger is process-local). After clear,
+    new distributed announce (messenger is process-local).     After clear,
     accepts ``oswaldBetrayalChaseCleared`` (same-process) and also watches
-    for a live Corrupted Oswald to drop so real clients still fire the
-    campaign epilogue soft-end beat.
+    for Corrupted Oswald combat defeat (hp≤0) so real clients still fire
+    the campaign epilogue — zone leave / DO despawn must not soft-end.
     """
 
     def __init__(self):
@@ -358,7 +376,20 @@ class OswaldBetrayalChaseClient(DirectObject):
         if self._epilogueLatched:
             self._watchTask = None
             return task.done
-        alive = self._findLiveCorruptOswald()
+        # Prefer intentional combat defeat (hp≤0 / _defeated) even while the
+        # DO is still in the map during DEFEAT_DELETE_DELAY.
+        defeated = self._findCorruptOswald(includeDefeated=True)
+        if defeated is not None and chaseCombatDefeated(defeated):
+            try:
+                self._chaseDoId = int(getattr(defeated, 'doId', 0) or 0) or (
+                    self._chaseDoId)
+            except Exception:
+                pass
+            doId = int(self._chaseDoId or 0)
+            self._watchTask = None
+            self._emitChaseCleared(doId)
+            return task.done
+        alive = self._findCorruptOswald(includeDefeated=False)
         if alive is not None:
             self._sawChase = True
             try:
@@ -367,15 +398,15 @@ class OswaldBetrayalChaseClient(DirectObject):
             except Exception:
                 pass
             return task.again
-        if self._sawChase or self._chaseDoId:
-            # Saw chase then lost it — treat as clear.
-            doId = int(self._chaseDoId or 0)
-            self._watchTask = None
-            self._emitChaseCleared(doId)
-            return task.done
+        # Absent without defeat evidence (zone leave / DO despawn) — keep
+        # watching; do NOT false-clear / epilogue.
         return task.again
 
     def _findLiveCorruptOswald(self):
+        """Fightable Corrupted Oswald only (hp>0). Kept for callers/tests."""
+        return self._findCorruptOswald(includeDefeated=False)
+
+    def _findCorruptOswald(self, includeDefeated=False):
         cr = getattr(base, 'cr', None)  # noqa: F821
         if cr is None:
             return None
@@ -385,15 +416,20 @@ class OswaldBetrayalChaseClient(DirectObject):
         # Prefer tracked doId when AI same-process spawn announced it.
         if self._chaseDoId:
             obj = doMap.get(int(self._chaseDoId))
-            if obj is not None and self._isLiveCorruptOswald(
-                    obj, wantId, wantName):
+            if obj is not None and self._isChaseCorruptOswald(
+                    obj, wantId, wantName, includeDefeated=includeDefeated):
                 return obj
         for obj in list(doMap.values()):
-            if self._isLiveCorruptOswald(obj, wantId, wantName):
+            if self._isChaseCorruptOswald(
+                    obj, wantId, wantName, includeDefeated=includeDefeated):
                 return obj
         return None
 
     def _isLiveCorruptOswald(self, obj, wantId, wantName):
+        return self._isChaseCorruptOswald(
+            obj, wantId, wantName, includeDefeated=False)
+
+    def _isChaseCorruptOswald(self, obj, wantId, wantName, includeDefeated=False):
         if obj is None:
             return False
         try:
@@ -401,11 +437,7 @@ class OswaldBetrayalChaseClient(DirectObject):
                 return False
         except Exception:
             pass
-        try:
-            hp = int(getattr(obj, 'hp', 0) or 0)
-        except Exception:
-            hp = 0
-        if hp <= 0:
+        if not includeDefeated and chaseCombatDefeated(obj):
             return False
         try:
             archetype = int(getattr(obj, 'archetype', -1))
