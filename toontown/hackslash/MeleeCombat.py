@@ -815,8 +815,9 @@ class MeleeCombatController(DirectObject):
         )
         self._dodgeIval.start()
         # Afterimage smear + cream sparkle + cream aftershock + cream wash +
-        # i-frame pulse. DodgeTrailFx owns sparkle (#101), residual cream
-        # aftershock (#126), and DodgeTrailCreamWashPulse.
+        # i-frame pulse + i-frame cream wash. DodgeTrailFx owns sparkle
+        # (#101), residual cream aftershock (#126), DodgeTrailCreamWashPulse
+        # (#139), and DodgeIFrameCreamWashPulse.
         try:
             self._dodgeTrail.start(
                 iframeSec=HackSlashConfig.DODGE_IFRAME_SEC)

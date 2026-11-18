@@ -2,12 +2,14 @@
 
 Client juice for the Shift/X i-frame roll: brief translucent smear ghosts
 (and tiny spark pops) drip behind the toon while rolling. While dodge
-i-frames are active, short cream/ink pulses pop along the trail path.
-Cream/pastel sparkle flecks also drip along the smear path (no ink), then
-a delayed cream aftershock (softer flecks + soft halo), then a soft cream
-wash pulse — same residual grammar as finisher / combo cream aftershock +
-perfect-dodge / melee-hit cream wash. Wired from MeleeCombat dodge
-start/end so hit-squash / hitstop paths stay untouched.
+i-frames are active, short cream/ink pulses pop along the trail path,
+then a soft i-frame cream wash pulse. Cream/pastel sparkle flecks also
+drip along the smear path (no ink), then a delayed cream aftershock
+(softer flecks + soft halo), then a soft cream wash pulse — same residual
+grammar as finisher / combo cream aftershock + perfect-dodge / melee-hit
+cream wash, plus SoftLock FOV cream wash grammar for the i-frame settle.
+Wired from MeleeCombat dodge start/end so hit-squash / hitstop paths stay
+untouched.
 
 Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
@@ -28,11 +30,12 @@ from direct.interval.IntervalGlobal import (
 from direct.task import Task
 
 from . import HackSlashConfig
+from .DodgeIFrameCreamWashFx import DodgeIFrameCreamWashPulse
 from .DodgeTrailCreamWashFx import DodgeTrailCreamWashPulse
 
 
 class DodgeTrailFx(object):
-    """Owns trail drip + cream aftershock + cream wash for one dodge roll."""
+    """Owns trail drip + i-frame/trail cream washes for one dodge roll."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -41,6 +44,7 @@ class DodgeTrailFx(object):
         self._pulses = []
         self._creamSparkles = []
         self._creamWash = None
+        self._iframeCreamWash = None
         self._nextSpawnAt = 0.0
         self._nextPulseAt = 0.0
         self._nextCreamSparkleAt = 0.0
@@ -85,7 +89,7 @@ class DodgeTrailFx(object):
             self.clear()
             return
         # Keep the task alive while i-frame pulses can still fire.
-        # Cream wash self-clears; leave it running so the settle beat finishes.
+        # Cream washes self-clear; leave them running so settle beats finish.
         try:
             now = globalClock.getFrameTime()  # noqa: F821
         except Exception:
@@ -109,6 +113,13 @@ class DodgeTrailFx(object):
         if wash is not None:
             try:
                 wash.clear()
+            except Exception:
+                pass
+        iframeWash = self._iframeCreamWash
+        self._iframeCreamWash = None
+        if iframeWash is not None:
+            try:
+                iframeWash.clear()
             except Exception:
                 pass
         for entry in list(self._ghosts):
@@ -135,6 +146,21 @@ class DodgeTrailFx(object):
                 self._creamWash = None
         except Exception:
             self._creamWash = None
+
+    def _armIFrameCreamWash(self):
+        """Arm one delayed aspect2d cream wash after first i-frame pulse."""
+        try:
+            prior = self._iframeCreamWash
+            self._iframeCreamWash = None
+            if prior is not None:
+                prior.clear()
+            wash = DodgeIFrameCreamWashPulse()
+            if wash.play() is not None:
+                self._iframeCreamWash = wash
+            else:
+                self._iframeCreamWash = None
+        except Exception:
+            self._iframeCreamWash = None
 
     def _tick(self, task):
         try:
@@ -334,6 +360,10 @@ class DodgeTrailFx(object):
         )
         self._pulses.append({'ival': ival, 'nodes': nodes})
         ival.start()
+        # Soft i-frame cream wash after the first pulse settles — FOV/reticle
+        # aspect2d grammar. Later pulses during the window do not re-wash.
+        if self._pulseIndex == 1:
+            self._armIFrameCreamWash()
 
     def _makePulseFleck(self, origin, index, count, size, drift, sec,
                         color, endColor, ink=False):
