@@ -133,6 +133,34 @@ POLLUTION_FOG_SNAP_DELTA = 0.02
 POLLUTION_HAZE_ALPHA_MAX = 0.30
 POLLUTION_HAZE_BIN = 25
 
+# Purity-complete fog cream dissolve — sunny cream/pastel lift of street fog
+# when purityRestoreFx fires. Matches POLLUTION_FOG_CLEAR_SEC density ramp
+# (#38) + StreetSparkle chip/fleck patterns. Not ink; no KH branding.
+# FOG_CREAM_DISSOLVE_ENABLED = False drops cream tint + overlay only;
+# density clear ramp still runs.
+FOG_CREAM_DISSOLVE_ENABLED = True
+FOG_CREAM_DISSOLVE_SEC = POLLUTION_FOG_CLEAR_SEC
+FOG_CREAM_DISSOLVE_COLOR = (1.0, 0.97, 0.82)  # sunny cream fog tint
+FOG_CREAM_DISSOLVE_HAZE_PEAK = 0.20
+FOG_CREAM_DISSOLVE_BIN = 26  # above ink haze (25), below street sparkle (50)
+FOG_CREAM_DISSOLVE_ORIGIN = (0.0, 0.0, -0.28)
+FOG_CREAM_DISSOLVE_SHIMMER_IN_SEC = 0.08
+FOG_CREAM_DISSOLVE_SHIMMER_HOLD_SEC = 0.22
+FOG_CREAM_DISSOLVE_SHIMMER_OUT_SEC = 0.58
+FOG_CREAM_DISSOLVE_FLECK_COUNT = 14
+FOG_CREAM_DISSOLVE_FLECK_SIZE = 0.024
+FOG_CREAM_DISSOLVE_FLECK_RISE = 0.78
+FOG_CREAM_DISSOLVE_FLECK_SPREAD = 1.40
+FOG_CREAM_DISSOLVE_FLECK_SEC = 0.68
+FOG_CREAM_DISSOLVE_FLECK_COLOR = (1.0, 0.98, 0.72, 0.95)
+FOG_CREAM_DISSOLVE_FLECK_END_COLOR = (1.0, 0.94, 0.55, 0.0)
+FOG_CREAM_DISSOLVE_FLECK_COLORS = (
+    (1.0, 0.97, 0.82, 0.95),  # sunny cream
+    (1.0, 0.96, 0.62, 0.92),  # butter
+    (1.0, 0.9, 0.78, 0.9),    # soft peach pastel
+    (0.98, 0.94, 0.88, 0.88),  # warm parchment
+)
+
 # Street-entry rubber-hose ink vignette (PlayEntry on polluted ACTS streets).
 # Edge darken flashes in, then fades as the tip bar appears — not a KH sting.
 ENTRY_VIGNETTE_IN_SEC = 0.10
@@ -1023,6 +1051,24 @@ def hoodFogColor(zoneId, level):
         fog[0] * (0.7 + 0.3 * dens),
         fog[1] * (0.75 + 0.25 * dens),
         fog[2],
+    )
+
+
+def hoodFogCreamDissolveColor(zoneId, level, creamBlend):
+    """Ink fog RGB mixed toward sunny cream during purity dissolve.
+
+    creamBlend 0 = hood ink fog; 1 = FOG_CREAM_DISSOLVE_COLOR. Density still
+    drives how thick the fog reads; this only shifts the palette as it lifts.
+    """
+    ink = hoodFogColor(zoneId, level)
+    blend = max(0.0, min(1.0, float(creamBlend)))
+    if blend <= 0.0:
+        return ink
+    cream = FOG_CREAM_DISSOLVE_COLOR
+    return (
+        ink[0] + (float(cream[0]) - ink[0]) * blend,
+        ink[1] + (float(cream[1]) - ink[1]) * blend,
+        ink[2] + (float(cream[2]) - ink[2]) * blend,
     )
 
 

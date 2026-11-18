@@ -4,6 +4,7 @@ from direct.interval.IntervalGlobal import Func, LerpFunctionInterval, Sequence
 from panda3d.core import CardMaker, Fog, TransparencyAttrib, Vec4
 
 from toontown.corruption import CorruptionGlobals
+from toontown.corruption import PollutionFogCreamDissolveFx
 from toontown.corruption import PollutionPropTint
 from toontown.corruption import PollutionStreetAudio
 
@@ -13,7 +14,9 @@ class PollutionManager(DistributedObject.DistributedObject):
 
     Fog density, ink haze overlay, hood color grade, and prop tint all follow a
     presented pollution level that lerps toward the zone's true corruption so
-    reclaim packs visibly thicken/clear the street atmosphere.
+    reclaim packs visibly thicken/clear the street atmosphere. On purity
+    complete, fog cream-dissolves (sunny pastel tint + flecks) via
+    PollutionFogCreamDissolveFx while the density clear ramp still runs.
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManager')
@@ -31,6 +34,8 @@ class PollutionManager(DistributedObject.DistributedObject):
         self._rampIval = None
         self._propTint = None
         self._streetAudio = None
+        self._creamDissolve = None
+        self._creamDissolveBlend = 0.0
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
@@ -43,11 +48,19 @@ class PollutionManager(DistributedObject.DistributedObject):
         # Polluted vs pure street music beds (listens to pollutionChanged / purity).
         self._streetAudio = PollutionStreetAudio.PollutionStreetAudio()
         self._streetAudio.start()
+        # Purity-complete cream dissolve of fog / haze (listens to purityRestoreFx).
+        self._creamDissolve = (
+            PollutionFogCreamDissolveFx.PollutionFogCreamDissolveFx(self))
+        self._creamDissolve.start()
 
     def disable(self):
         self.ignoreAll()
         self.__finishRamp()
         self.__clearPresentation()
+        if self._creamDissolve is not None:
+            self._creamDissolve.stop()
+            self._creamDissolve = None
+        self._creamDissolveBlend = 0.0
         if self._streetAudio is not None:
             self._streetAudio.stop()
             self._streetAudio = None
@@ -61,6 +74,10 @@ class PollutionManager(DistributedObject.DistributedObject):
     def delete(self):
         self.__finishRamp()
         self.__clearPresentation()
+        if self._creamDissolve is not None:
+            self._creamDissolve.stop()
+            self._creamDissolve = None
+        self._creamDissolveBlend = 0.0
         if self._streetAudio is not None:
             self._streetAudio.stop()
             self._streetAudio = None
@@ -68,6 +85,35 @@ class PollutionManager(DistributedObject.DistributedObject):
             self._propTint.stop()
             self._propTint = None
         DistributedObject.DistributedObject.delete(self)
+
+    def beginCreamDissolve(self):
+        """Arm cream fog tint for the in-flight purity clear ramp."""
+        if not getattr(CorruptionGlobals, 'FOG_CREAM_DISSOLVE_ENABLED', True):
+            return
+        self._creamDissolveBlend = 0.0
+        # Refresh presentation so an in-flight clear picks up cream tint.
+        zoneId = self._activeZoneId
+        if zoneId is not None and self._presentedLevel > CorruptionGlobals.POLLUTION_PURE:
+            self.__setPresentedLevel(zoneId, self._presentedLevel)
+
+    def setCreamDissolveBlend(self, blend):
+        """0..1 cream mix into fog/haze color (driven by dissolve FX)."""
+        self._creamDissolveBlend = max(0.0, min(1.0, float(blend)))
+        zoneId = self._activeZoneId
+        if zoneId is None:
+            return
+        if self._presentedLevel <= CorruptionGlobals.POLLUTION_PURE:
+            return
+        self.__setPresentedLevel(zoneId, self._presentedLevel)
+
+    def finishCreamDissolve(self):
+        """Drop cream tint after dissolve overlay finishes."""
+        if self._creamDissolveBlend == 0.0:
+            return
+        self._creamDissolveBlend = 0.0
+        zoneId = self._activeZoneId
+        if zoneId is not None and self._presentedLevel > CorruptionGlobals.POLLUTION_PURE:
+            self.__setPresentedLevel(zoneId, self._presentedLevel)
 
     def getPollution(self, zoneId=None):
         if zoneId is None:
@@ -177,7 +223,12 @@ class PollutionManager(DistributedObject.DistributedObject):
             self._fog = Fog('CorruptionFog')
             render.setFog(self._fog)
 
-        fogR, fogG, fogB = CorruptionGlobals.hoodFogColor(zoneId, level)
+        creamBlend = self._creamDissolveBlend
+        if creamBlend > 0.001:
+            fogR, fogG, fogB = CorruptionGlobals.hoodFogCreamDissolveColor(
+                zoneId, level, creamBlend)
+        else:
+            fogR, fogG, fogB = CorruptionGlobals.hoodFogColor(zoneId, level)
         self._fog.setColor(fogR, fogG, fogB)
         self._fog.setExpDensity(CorruptionGlobals.hoodFogExpDensity(zoneId, level))
 
@@ -185,6 +236,13 @@ class PollutionManager(DistributedObject.DistributedObject):
         # Skip while reclaim purity bloom owns render colorScale.
         if not self.__restoreBloomActive():
             tintR, tintG, tintB = CorruptionGlobals.hoodColorGrade(zoneId, level)
+            # Soft cream lift into the grade while fog dissolves.
+            if creamBlend > 0.001:
+                cr, cg, cb = CorruptionGlobals.FOG_CREAM_DISSOLVE_COLOR
+                lift = 0.35 * creamBlend
+                tintR = tintR + (float(cr) - tintR) * lift
+                tintG = tintG + (float(cg) - tintG) * lift
+                tintB = tintB + (float(cb) - tintB) * lift
             render.setColorScale(Vec4(tintR, tintG, tintB, 1.0))
 
         self.__applyHaze(zoneId, level, fogR, fogG, fogB)
@@ -251,6 +309,7 @@ class PollutionManager(DistributedObject.DistributedObject):
 
     def __clearPresentation(self):
         self.__finishRamp()
+        self._creamDissolveBlend = 0.0
         self.__clearFogAndHaze()
         # Avoid stomping an in-flight purity restore bloom on render.
         if not self.__restoreBloomActive():
