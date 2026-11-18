@@ -357,21 +357,49 @@ COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 # Combo-counter cream edge pop — local cream border strips framing the punch
 # counter when it ticks so the string reads clearly (KH-feel HUD readability,
 # Toontown cream only). Act-banner / wave-announce cream edge grammar, snappier
-# because ticks fire often. Soft under counter TextNode (bin 55). Toggle
-# COMBO_COUNTER_CREAM_EDGE_ENABLED = False drops the edge pop only.
+# because ticks fire often. Deepened (#224 deepen): juicier peak/hold/scale +
+# quiet local cream edge aftershock so combo hits read juicier — distinct from
+# soft-lock cycle reticle cream deepen (#233) and dodge i-frame cream wash
+# deepen (#228). Soft under counter TextNode (bin 55). Toggle
+# COMBO_COUNTER_CREAM_EDGE_ENABLED = False drops the edge pop (+ edge aftershock).
 COMBO_COUNTER_CREAM_EDGE_ENABLED = True
 COMBO_COUNTER_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)  # sunny cream
-COMBO_COUNTER_CREAM_EDGE = 0.018  # strip thickness in aspect2d units
+COMBO_COUNTER_CREAM_EDGE = 0.024  # strip thickness in aspect2d units
 COMBO_COUNTER_CREAM_EDGE_HALF_W = 0.22  # local frame half-width around text
 COMBO_COUNTER_CREAM_EDGE_HALF_H = 0.08  # local frame half-height around text
-COMBO_COUNTER_CREAM_EDGE_PEAK = 0.55
-COMBO_COUNTER_CREAM_EDGE_PULSE = 0.32  # mid-beat alpha after peak
+COMBO_COUNTER_CREAM_EDGE_PEAK = 0.72
+COMBO_COUNTER_CREAM_EDGE_PULSE = 0.42  # mid-beat alpha after peak
 COMBO_COUNTER_CREAM_EDGE_IN_SEC = 0.04
-COMBO_COUNTER_CREAM_EDGE_HOLD_SEC = 0.02
-COMBO_COUNTER_CREAM_EDGE_PULSE_SEC = 0.06
-COMBO_COUNTER_CREAM_EDGE_OUT_SEC = 0.14
-COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK = 1.18  # soft outward pop on the frame
+COMBO_COUNTER_CREAM_EDGE_HOLD_SEC = 0.04
+COMBO_COUNTER_CREAM_EDGE_PULSE_SEC = 0.08
+COMBO_COUNTER_CREAM_EDGE_OUT_SEC = 0.18
+COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK = 1.28  # soft outward pop on the frame
 COMBO_COUNTER_CREAM_EDGE_BIN = 54  # under counter TextNode (55) / flecks (56+)
+
+# Combo-counter cream edge aftershock — residual cream flecks + soft halo
+# local to the punch-counter frame after the deepened edge pop so ticks still
+# read juicier. Same residual grammar as combo cream wash aftershock /
+# i-frame cream wash aftershock, quieter + tighter (ticks fire often; stays
+# on the HUD frame — not a fullscreen wash). Distinct from soft-lock cycle
+# cream wash (#233) and i-frame wash deepen (#228). Toggle
+# COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED = False drops aftershock only.
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED = True
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC = 0.08  # after edge start; mid-pop
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT = 3
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SIZE = 0.010
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DRIFT = 0.12
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_FALL = 0.10
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SEC = 0.22
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.70)
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_BIN = 53  # under edge strips (54)
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_ENABLED = True
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_HALF = 0.16
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_START = 0.35
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK = 1.15
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_SEC = 0.18
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK_ALPHA = 0.14
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
 def comboCounterCreamEdgePeakAtSec(inSec=None):
@@ -379,6 +407,13 @@ def comboCounterCreamEdgePeakAtSec(inSec=None):
     if inSec is None:
         inSec = COMBO_COUNTER_CREAM_EDGE_IN_SEC
     return max(0.0, float(inSec))
+
+
+def comboCounterCreamEdgeAftershockAtSec(delay=None):
+    """Seconds from tick until cream edge aftershock residual begins."""
+    if delay is None:
+        delay = COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC
+    return max(0.0, float(delay))
 
 
 # Mid/finisher launcher juice (upward juggle feel on the target).
@@ -1108,7 +1143,8 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Stretch punches: F/LMB  |  Shift/X dodge i-frame cream wash  |  '
+    'Stretch punches: F/LMB  |  combo cream edge  |  '
+    'Shift/X dodge i-frame cream wash  |  '
     'dodge→F cream flash  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash→F/Shift  |  '
     'Tab/` soft-lock cycle cream  |  hit soft-lock aim  |  ~melee'

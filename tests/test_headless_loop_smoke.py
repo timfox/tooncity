@@ -1936,6 +1936,47 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('ComboCounterCreamWashPulse', hit_juice_src)
         self.assertIn('ComboCounterCreamWashPulse', hack_init)
 
+        # Combo cream edge deepen (#224 deepen) — juicier local edge + aftershock.
+        # Distinct from soft-lock cycle cream deepen (#233) / i-frame (#228).
+        combo_edge_rel = 'toontown/hackslash/ComboCounterCreamEdgeFx.py'
+        _assert_module_file(combo_edge_rel)
+        combo_edge_names = _class_and_func_names(_module_ast(combo_edge_rel))
+        self.assertIn('ComboCounterCreamEdgePulse', combo_edge_names)
+        combo_edge_methods = _class_method_names(
+            _module_ast(combo_edge_rel), 'ComboCounterCreamEdgePulse')
+        self.assertIn('play', combo_edge_methods)
+        self.assertIn('clear', combo_edge_methods)
+        self.assertIn('_buildAftershock', combo_edge_methods)
+        self.assertIn('_spawnAftershockHalo', combo_edge_methods)
+        self.assertIn('_spawnAftershockFleck', combo_edge_methods)
+        for combo_edge_key in (
+                'COMBO_COUNTER_CREAM_EDGE_ENABLED',
+                'COMBO_COUNTER_CREAM_EDGE_PEAK',
+                'COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK',
+                'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED',
+                'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT',
+                'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_ENABLED',
+                'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_BIN'):
+            self.assertIn(
+                combo_edge_key, config_names,
+                msg='HackSlashConfig missing %s' % combo_edge_key)
+        combo_edge_funcs = _class_and_func_names(config_tree)
+        self.assertIn('comboCounterCreamEdgePeakAtSec', combo_edge_funcs)
+        self.assertIn('comboCounterCreamEdgeAftershockAtSec', combo_edge_funcs)
+        combo_edge_assigns = _assign_map(config_tree)
+        self.assertGreaterEqual(
+            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_PEAK'), 0.72)
+        self.assertGreaterEqual(
+            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK'), 1.28)
+        self.assertIs(
+            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED'),
+            True)
+        self.assertIn('ComboCounterCreamEdgePulse', melee_src)
+        self.assertIn('_playComboCreamEdge', melee_src)
+        self.assertIn('ComboCounterCreamEdgePulse', hack_init)
+        self.assertIn('comboCounterCreamEdgePeakAtSec', hack_init)
+        self.assertIn('comboCounterCreamEdgeAftershockAtSec', hack_init)
+
         # (#148 / #152 were prior headless smoke through #143 / #147 — no new juice.)
 
         # Finale reveal cream wash (#149) — soft wash after finale cream edge.
