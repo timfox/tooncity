@@ -3,10 +3,10 @@
 Soft center cream veil + light flecks so tip / explore copy stays readable
 against ink fog. Owns reclaim STREET_PACK zone enter only — composes with
 PlayEntry ink edge vignette (corruption tunables), EntryCreamWashPulseFx
-(StreetColorWash-style soft cream pulse under this shimmer), StreetColorWash
-(active reclaim wash), and StreetSparkleFx (full-purity horizon glitter).
-Never a purity payoff flash. Toontown spiritual-sequel tone only — no
-keyblades / no KH branding.
+(StreetColorWash-style soft cream pulse under this shimmer, plus delayed cream
+aftershock owned by the wash client), StreetColorWash (active reclaim wash),
+and StreetSparkleFx (full-purity horizon glitter). Never a purity payoff flash.
+Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
