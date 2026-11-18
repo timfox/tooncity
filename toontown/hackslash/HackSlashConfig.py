@@ -89,6 +89,19 @@ SOFT_LOCK_FOV_PUNCH = 5.5
 SOFT_LOCK_FOV_IN_SEC = 0.04
 SOFT_LOCK_FOV_OUT_SEC = 0.12
 
+# Soft-lock acquire cream pulse ring — expanding pastel cream ring on snap.
+# Layers with SoftLockReticleFx hose pop + accents + FOV punch (#52/#74).
+# Cream/pastel only — no ink, no keyblades / no KH branding.
+SOFT_LOCK_PULSE_RING_ENABLED = True
+SOFT_LOCK_PULSE_RING_HALF = 0.48
+SOFT_LOCK_PULSE_RING_START = 0.4
+SOFT_LOCK_PULSE_RING_PEAK = 2.15
+SOFT_LOCK_PULSE_RING_SEC = 0.24
+SOFT_LOCK_PULSE_RING_PEAK_ALPHA = 0.62
+SOFT_LOCK_PULSE_RING_COLOR = (1.0, 0.96, 0.78, 0.95)
+SOFT_LOCK_PULSE_RING_END = (1.0, 0.92, 0.62, 0.0)
+SOFT_LOCK_PULSE_RING_BIN = 25
+
 # Brief aspect2d white flash on connect (beyond hitstop).
 HIT_FLASH_PEAK_ALPHA = 0.38
 HIT_FLASH_IN_SEC = 0.03
