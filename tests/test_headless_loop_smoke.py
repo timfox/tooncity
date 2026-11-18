@@ -477,6 +477,30 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIsNotNone(cg.finalePhaseLook(2))
         self.assertEqual(
             cg.OVERLORD_TELEGRAPH_CROWN_LOOK.get('id'), 'ink-crown')
+        # Overlord telegraph cream deepen — radial phase flecks + impact
+        # aftershock (distinct from Brute spit drip #249 / Snare whip #245).
+        self.assertTrue(hasattr(cg, 'OVERLORD_TELEGRAPH_PUNCH_LOOK'))
+        self.assertTrue(hasattr(cg, 'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED'))
+        self.assertTrue(
+            hasattr(cg, 'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED'))
+        self.assertIs(cg.OVERLORD_TELEGRAPH_PUNCH_ENABLED, True)
+        self.assertIs(cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED, True)
+        self.assertIs(
+            cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED, True)
+        punch_look = cg.OVERLORD_TELEGRAPH_PUNCH_LOOK
+        self.assertEqual(punch_look.get('id'), 'overlord-telegraph-punch')
+        self.assertGreaterEqual(int(punch_look.get('creamFleckCount', 0)), 6)
+        self.assertTrue(punch_look.get('creamFleckEnabled'))
+        self.assertGreaterEqual(
+            int(cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT), 5)
+        punch_fx_rel = 'toontown/corruption/OverlordTelegraphPunchFx.py'
+        _assert_module_file(punch_fx_rel)
+        punch_methods = _class_method_names(
+            _module_ast(punch_fx_rel), 'OverlordTelegraphPunch')
+        self.assertIn('_spawnWarnCreamFlecks', punch_methods)
+        self.assertIn('_buildImpactCreamAftershock', punch_methods)
+        self.assertIn('OverlordTelegraphPunch', corrupt_src)
+        self.assertIn('__playOverlordTelegraphPunchWarn', corrupt_src)
         # Phase combat AI (beyond Smudge chase) must stay registered beside looks.
         self.assertIn(1, cg.OVERLORD_PHASE_COMBAT)
         self.assertIn(2, cg.OVERLORD_PHASE_COMBAT)
