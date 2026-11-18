@@ -22,13 +22,14 @@ cream hose (#232/#279) and Silly Overlord tip cream wash aftershock
 (#251/#279).
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
 cheer-feels-wrong foreshadow) with a slightly heavier tip hose pop +
-fracture trust settle, a deepened cream hose settle past #232 so the
+fracture trust settle, a deepened cream hose settle past #279 so the
 trust-fracture / almost-confess tip lands rubber-hose and clear
 (taller/longer primary overshoot; no tip rebound — Punchline deepen owns
-that), and a deepened delayed soft cream wash pulse + cream aftershock
-past #251; a mid-act approach tip then almost-confesses an uneasy
-half-truth before the finale reveal (Punchline tip / act-banner wash
-twin; FinalePhaseFx betrayal banner stays separate — no KH branding).
+that; betrayal banner owns climax rebound), and a deepened delayed soft
+cream wash pulse + cream aftershock past #279; a mid-act approach tip
+then almost-confesses an uneasy half-truth before the finale reveal
+(Punchline tip / act-banner wash twin; FinalePhaseFx betrayal banner
+stays separate — no KH branding).
 """
 
 from panda3d.core import (
@@ -595,11 +596,11 @@ class PlayEntryClient(DirectObject):
         + trust settle; when the finale act carries entryTipUnease,
         settle holds the longer fracture beat (entry foreshadow + mid-act
         almost-confess approach tip — no twist spoil), then a juicier
-        cream hose settle so the trust-fracture tip lands rubber-hose and
-        clear (taller/longer primary overshoot; no tip rebound —
-        Punchline deepen owns that; distinct from #251/#279 wash
-        aftershock). Default path keeps the shared PLAY_ENTRY_TIP_* hose
-        pop.
+        cream hose settle past #279 so the trust-fracture tip lands
+        rubber-hose and clear (taller/longer primary overshoot; no tip
+        rebound — Punchline deepen owns that; distinct from #251/#279
+        wash aftershock and betrayal banner #288). Default path keeps
+        the shared PLAY_ENTRY_TIP_* hose pop.
         """
         if tipNP is None:
             return None
@@ -678,10 +679,10 @@ class PlayEntryClient(DirectObject):
             else:
                 trustOvershootAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
                 trustRestAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'
-            # Deepened cream hose settle after fracture bounce (#207 / #232).
-            # Taller/longer primary overshoot only — no tip rebound
+            # Deepened cream hose settle after fracture bounce (#207 / #232 /
+            # #279). Taller/longer primary overshoot only — no tip rebound
             # (Punchline deepen owns that micro bounce; wash aftershock
-            # deepen past #251 rides tipHose='silly' beside this settle).
+            # deepen past #279 rides tipHose='silly' beside this settle).
             creamHoseSettle = bool(getattr(
                 CampaignGlobals,
                 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', True))

@@ -2,22 +2,23 @@
 
 Fullscreen soft cream veil that settles *after* Silly Street entry tip
 hose pop (#95) / Overlord foreshadow / Oswald almost-confess tip (#200 /
-#251 deepen) — same PerfectDodgeCreamWashPulse / HitSparkCreamWashPulse /
-ActBannerCreamWashPulse / OswaldTrustCreamWashPulse / HandoffCreamWashPulse
-/ VictoryCreamWashPulse / FinaleRevealCreamWashPulse /
-PunchlineTipCreamWashPulse overlay grammar as a brief Act-3 tip settle
-beat. A delayed cream aftershock (richer flecks settling downward + soft
-halo under the tip bar) follows the wash pulse — same residual grammar as
-Oswald trust cream wash aftershock (#170) / victory cream wash aftershock
-(#168), quieter and tip-bar anchored so the almost-confess / foreshadow tip
-reads juicier before the boss (deepened past #251). Soft under the tip bar;
-cream / pastel only (not ink). Wired from PlayEntry tipHose='silly' path
-only. Distinct from victory twist sting cream deepen (#244) and betrayal
-banner cream hose settle (#235); hose settle deepen (#232 / past) stays on
-the tip bar scale path. Loopy / Punchline / default tip hose, act-enter
-banner wash, trust / handoff / victory / finale-reveal wash live in their
-own modules. Client only. Toontown spiritual sequel — no keyblades / no KH
-branding.
+#251 / #279 deepen) — same PerfectDodgeCreamWashPulse /
+HitSparkCreamWashPulse / ActBannerCreamWashPulse /
+OswaldTrustCreamWashPulse / HandoffCreamWashPulse / VictoryCreamWashPulse /
+FinaleRevealCreamWashPulse / PunchlineTipCreamWashPulse overlay grammar as
+a brief Act-3 tip settle beat. A delayed cream aftershock (richer flecks
+settling downward + soft halo under the tip bar) follows the wash pulse —
+same residual grammar as Oswald trust cream wash aftershock (#170) /
+victory cream wash aftershock (#168), quieter and tip-bar anchored so the
+almost-confess / foreshadow tip reads juicier before the boss (deepened
+past #279). Soft under the tip bar; cream / pastel only (not ink). Wired
+from PlayEntry tipHose='silly' path only. Distinct from victory twist
+sting cream deepen (#244), Punchline tip cream hose (#256 / #284), and
+betrayal banner cream hose settle (#235 / #288); hose settle deepen
+(#232 / #279 / past) stays on the tip bar scale path. Loopy / Punchline /
+default tip hose, act-enter banner wash, trust / handoff / victory /
+finale-reveal wash live in their own modules. Client only. Toontown
+spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi
@@ -69,21 +70,21 @@ class SillyTipCreamWashPulse(object):
         peak = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_PEAK', 0.15))
         mid = float(getattr(
-            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_MID', 0.09))
+            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_MID', 0.10))
         inSec = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_IN_SEC', 0.07))
         pulseSec = float(getattr(
-            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC', 0.13))
+            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC', 0.14))
         holdSec = float(getattr(
-            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC', 0.14))
+            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC', 0.16))
         outSec = float(getattr(
-            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_OUT_SEC', 0.44))
+            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_OUT_SEC', 0.48))
         binSort = int(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_BIN', 49))
         if delay is None:
             delay = float(getattr(
                 CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC',
-                0.62))
+                0.68))
 
         try:
             cm = CardMaker('campaign-silly-tip-cream-wash')
@@ -160,7 +161,7 @@ class SillyTipCreamWashPulse(object):
         count = int(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT', 5))
         sec = float(getattr(
-            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC', 0.36))
+            CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC', 0.40))
         for i in range(count):
             part = self._spawnAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -177,19 +178,19 @@ class SillyTipCreamWashPulse(object):
     def _spawnAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_HALF',
-            0.40))
+            0.42))
         startScale = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_START',
             0.26))
         peakScale = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK',
-            1.18))
+            1.22))
         sec = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_SEC',
-            0.30))
+            0.33))
         peakA = float(getattr(
             CampaignGlobals,
-            'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.13))
+            'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.14))
         r, g, b, _a = getattr(
             CampaignGlobals,
             'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_COLOR',
@@ -228,16 +229,16 @@ class SillyTipCreamWashPulse(object):
         count = max(1, int(total))
         size = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SIZE',
-            0.016))
+            0.017))
         drift = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_DRIFT',
-            0.28))
+            0.30))
         fall = float(getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_FALL',
-            0.21))
+            0.23))
         r, g, b, a = getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COLOR',
-            (1.0, 0.97, 0.78, 0.76))
+            (1.0, 0.97, 0.78, 0.78))
         er, eg, eb, ea = getattr(
             CampaignGlobals, 'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_END_COLOR',
             (1.0, 0.93, 0.58, 0.0))
