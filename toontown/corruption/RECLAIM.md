@@ -66,19 +66,24 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 
 ## Archetype spawn mix
 
+Per-wave `waveScripts` on `STREET_PACKS` / campaign `ACTS` drive pack composition
+(and pack size) when present; `bruteFraction` / `snareFraction` remain the fallback
+via `pickPackArchetype`. Scripts use `ink` / `brute` / `snare` tokens.
+
 - **Loopy street pack** (`ReclaimGlobals.STREET_PACKS` / `loopy-smudge`, zone `2200`):
-  auto / R / `~startreclaim` fields Ink Smudge wave 1, then ~⅓ Sludge Brutes
-  (+ light Balloon Snares) from wave 2 (seed 0.55, pack 3×4). PlayEntry tip
-  reads explore → fight → reclaim; warm ink-yellow start banner.
-- Loopy campaign **C** stays pure Smudge (`ACTS` `bruteFraction` 0); STREET_PACKS
-  keeps the familiar Smudge-first / later-Brute tutorial for discoverable play.
+  scripted Smudge tutorial → Brute intro → Snare joins → mixed elite
+  (seed 0.55, maxPacks 4). PlayEntry tip reads explore → fight → reclaim;
+  warm ink-yellow start banner.
+- Loopy campaign **C** mirrors that ramp across 3 waves (`ACTS` `waveScripts`);
+  fraction fields stay `0` as fallback only.
 - **Punchline street pack** (`punchline-sludge`, zone `2300`):
-  auto / R / `~startreclaim` and campaign C both field Brutes + Balloon Snares
-  from wave 1 (seed 0.70, pack 4×4, Gunk Gagster / Sludge Brute / Balloon Snare).
+  scripted Snare-front opener → Snare swarm → Brute pair → sludge elite
+  (seed 0.70, maxPacks 4, Gunk Gagster / Sludge Brute / Balloon Snare).
   PlayEntry tip reads explore → fight → reclaim; start banner is gag-green.
-- Punchline campaign ACTS params stay the source of truth for **C**; STREET_PACKS
-  mirrors that mix so discoverable auto-reclaim matches the second-hood beat.
-- **Silly street pack** (`silly-overlord`, zone `2100`): Overlord only (no Brute / Snare mix)
+- Punchline campaign ACTS `waveScripts` stay the source of truth for **C**;
+  STREET_PACKS mirrors so discoverable auto-reclaim matches the second-hood beat.
+- **Silly street pack** (`silly-overlord`, zone `2100`): Overlord-only scripts
+  (solo → twin swell). Campaign finale P2 scripts swell to twin / triple Overlords.
 
 ```
 ~spawncorrupt 2 0 0   # Ink Smudge

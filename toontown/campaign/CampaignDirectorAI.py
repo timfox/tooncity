@@ -120,6 +120,7 @@ class CampaignDirectorAI(DirectObject):
             'snareFraction': act.get('snareFraction'),
             'snareWaveStart': act.get('snareWaveStart'),
             'snareName': act.get('snareName'),
+            'waveScripts': act.get('waveScripts'),
             'banner': act.get('banner'),
             'finalePhase': 0,
             'transitionSting': False,
@@ -171,6 +172,7 @@ class CampaignDirectorAI(DirectObject):
             snareFraction=params.get('snareFraction'),
             snareWaveStart=params.get('snareWaveStart'),
             snareName=params.get('snareName'),
+            waveScripts=params.get('waveScripts'),
             finalePhase=params.get('finalePhase', 0),
             transitionSting=params.get('transitionSting', False))
         banner = params.get('banner') or act.get('banner')

@@ -29,6 +29,7 @@ _ACT_PARAM_KEYS = (
     'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
     'bruteFraction', 'bruteWaveStart', 'bruteName',
     'snareFraction', 'snareWaveStart', 'snareName',
+    'waveScripts',
     'banner',
 )
 
@@ -104,6 +105,7 @@ def resolve_act_params(act, finale_phase=0):
         'snareFraction': act.get('snareFraction'),
         'snareWaveStart': act.get('snareWaveStart'),
         'snareName': act.get('snareName'),
+        'waveScripts': act.get('waveScripts'),
         'banner': act.get('banner'),
         'finalePhase': 0,
         'transitionSting': False,
@@ -143,8 +145,11 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(params['maxPacks'], 3)
         self.assertEqual(params['corruptHp'], 30)
         self.assertEqual(params['corruptName'], 'Ink Smudge')
+        # Fraction fallback stays Smudge-only; waveScripts own the ramp.
         self.assertEqual(params['bruteFraction'], 0.0)
         self.assertEqual(params['snareFraction'], 0.0)
+        self.assertTrue(params.get('waveScripts'))
+        self.assertEqual(len(params['waveScripts']), 3)
         self.assertEqual(params['finalePhase'], 0)
         self.assertFalse(params['transitionSting'])
 
@@ -157,6 +162,7 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(params['bruteWaveStart'], 1)
         self.assertEqual(params['snareFraction'], 0.25)
         self.assertEqual(params['snareWaveStart'], 1)
+        self.assertTrue(params.get('waveScripts'))
         self.assertEqual(params['finalePhase'], 0)
 
     def test_finale_p1_params_before_phase_advance(self):
@@ -171,6 +177,7 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(params['seedPollution'], 0.75)
         self.assertEqual(params['bruteFraction'], 0.0)
         self.assertEqual(params['snareFraction'], 0.0)
+        self.assertEqual(params.get('waveScripts'), act.get('waveScripts'))
         self.assertFalse(params['transitionSting'])
         self.assertIn('Phase 1', params['banner'])
 
@@ -190,6 +197,7 @@ class CampaignActParamsTest(unittest.TestCase):
         # Explicit Overlord-only mix retained on P2.
         self.assertEqual(params['bruteFraction'], 0.0)
         self.assertEqual(params['snareFraction'], 0.0)
+        self.assertEqual(params.get('waveScripts'), phase2.get('waveScripts'))
         # P2 is strictly harder than P1 on the key combat scalars.
         self.assertGreater(params['corruptHp'], act['corruptHp'])
         self.assertGreater(params['packSize'], act['packSize'])
@@ -204,6 +212,8 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(phase2['maxPacks'], 3)
         self.assertEqual(phase2['corruptName'], 'Ink Overlord Unleashed')
         self.assertTrue(phase2.get('transitionSting'))
+        self.assertTrue(phase2.get('waveScripts'))
+        self.assertEqual(len(phase2['waveScripts']), 3)
 
     def test_acts_align_with_street_packs_on_shared_keys(self):
         """Campaign C and discoverable auto-reclaim share hood fantasy scalars."""
@@ -224,7 +234,7 @@ class CampaignActParamsTest(unittest.TestCase):
 
         punch_act = self.acts_by_id['punchline']
         punch_pack = rg.STREET_PACKS[PUNCHLINE]
-        for key in shared + ('bruteWaveStart', 'snareWaveStart'):
+        for key in shared + ('bruteWaveStart', 'snareWaveStart', 'waveScripts'):
             self.assertEqual(
                 punch_act[key], punch_pack[key],
                 msg='punchline %s act vs STREET_PACKS' % key)
@@ -234,7 +244,7 @@ class CampaignActParamsTest(unittest.TestCase):
         silly_pack = rg.STREET_PACKS[SILLY]
         for key in (
                 'seedPollution', 'packSize', 'maxPacks', 'corruptHp',
-                'corruptName', 'bruteFraction', 'snareFraction'):
+                'corruptName', 'bruteFraction', 'snareFraction', 'waveScripts'):
             self.assertEqual(
                 finale_p1[key], silly_pack[key],
                 msg='finale P1 %s vs silly STREET_PACKS' % key)
