@@ -4,15 +4,15 @@ Fullscreen soft cream veil that settles *after* WaveClearCreamShimmerFx cream
 aftershock (#127) / clear shimmer (#93) — CheerCreamWashPulse /
 PurityCompleteCreamWashFx / EntryCreamWashPulseFx overlay grammar as a brief
 wave-clear settle beat. Soft under shimmer flecks; cream / pastel only (not
-ink). A further-deepened cream sparkle residual past #253 (rising chip/cross
+ink). A further-deepened cream sparkle residual past #273 (rising chip/cross
 flecks + juicier twinkle pop — CheerCreamSparkle / StreetSparkle / wave-edge
 sparkle grammar) follows the wash pulse so pack clear feels juicier without
 restaging the shimmer hang, cheer swell flecks, secured-lock tip-near green
-sting (#243), or purity-complete meter hose settle cream (#248). A quieter
-sparkle aftershock (settle flecks + soft halo) hangs after the rising
-glitter. Wired from WaveClearCreamShimmerFx.playHang beside the cream
-aftershock. Client only. Toontown spiritual sequel — no keyblades / no KH
-branding.
+sting (#286), purity-complete meter hose settle cream (#292), mid-wave warm
+rim flash, or wave-start meter hose pop. A quieter sparkle aftershock
+(settle flecks + soft halo) hangs after the rising glitter. Wired from
+WaveClearCreamShimmerFx.playHang beside the cream aftershock. Client only.
+Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -134,7 +134,7 @@ class WaveClearCreamWashPulse(object):
         if not getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_ENABLED', True):
             return None
         delay = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC', 0.07))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC', 0.06))
         origin = getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_ORIGIN',
             (0.0, 0.0, 0.08))
@@ -144,13 +144,13 @@ class WaveClearCreamWashPulse(object):
             ox, oy, oz = 0.0, 0.0, 0.08
 
         count = int(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_COUNT', 12))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_COUNT', 13))
         rise = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_RISE', 0.46))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_RISE', 0.50))
         spread = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SPREAD', 0.92))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SPREAD', 1.00))
         sec = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SEC', 0.44))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SEC', 0.48))
         binSort = int(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_BIN', 53))
         fleckParts = self._spawnSparkleFlecks(
@@ -178,39 +178,39 @@ class WaveClearCreamWashPulse(object):
         if count <= 0:
             return []
         size = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SIZE', 0.025))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SIZE', 0.027))
         pop = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_POP', 1.38))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_POP', 1.46))
         r, g, b, a = getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_COLOR',
-            (1.0, 0.98, 0.68, 0.97))
+            (1.0, 0.98, 0.66, 0.98))
         er, eg, eb, ea = getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_END_COLOR',
-            (1.0, 0.94, 0.50, 0.0))
+            (1.0, 0.94, 0.48, 0.0))
 
         parts = []
         for i in range(count):
             try:
                 t = (float(i) / max(1, count - 1)) - 0.5
-                angle = (2.0 * pi * i) / float(count) + 0.20
+                angle = (2.0 * pi * i) / float(count) + 0.18
                 cm = CardMaker('reclaim-wave-clear-cream-sparkle-%s' % i)
                 # Alternate chip / cross fleck — rubber-hose cream glitter.
                 if (i % 3) == 0:
                     cm.setFrame(
-                        -size * 0.35, size * 0.35, -size * 1.38, size * 1.38)
+                        -size * 0.35, size * 0.35, -size * 1.40, size * 1.40)
                 elif (i % 3) == 1:
                     cm.setFrame(
-                        -size * 1.38, size * 1.38, -size * 0.35, size * 0.35)
+                        -size * 1.40, size * 1.40, -size * 0.35, size * 0.35)
                 else:
                     cm.setFrame(-size, size, -size, size)
                 fleck = parent.attachNewNode(cm.generate())
                 fleck.setTransparency(TransparencyAttrib.MAlpha)
                 fleck.setColor(r, g, b, 1)
                 fleck.setColorScale(r, g, b, 0)
-                startX = ox + t * spread + cos(angle) * 0.034
-                startZ = oz + 0.017 * (i % 3) + sin(angle) * 0.017
+                startX = ox + t * spread + cos(angle) * 0.036
+                startZ = oz + 0.018 * (i % 3) + sin(angle) * 0.018
                 fleck.setPos(startX, oy, startZ)
-                fleck.setScale(0.44 + 0.10 * (i % 3))
+                fleck.setScale(0.46 + 0.11 * (i % 3))
                 fleck.setBin('fixed', binSort + (i % 2))
                 fleck.setDepthTest(False)
                 fleck.setDepthWrite(False)
@@ -219,13 +219,13 @@ class WaveClearCreamWashPulse(object):
                 continue
 
             end = Point3(
-                startX + cos(angle) * 0.13,
+                startX + cos(angle) * 0.14,
                 oy,
-                startZ + rise * (0.54 + 0.46 * ((i % 4) / 3.0)))
-            stagger = 0.011 * i
-            twinkle = 0.052 + 0.012 * (i % 3)
-            # Juicier pack snap past #253: brighter twinkle pop, then rise fade.
-            peakScale = pop + 0.06 * (i % 2)
+                startZ + rise * (0.56 + 0.44 * ((i % 4) / 3.0)))
+            stagger = 0.010 * i
+            twinkle = 0.054 + 0.012 * (i % 3)
+            # Juicier pack snap past #273: brighter twinkle pop, then rise fade.
+            peakScale = pop + 0.07 * (i % 2)
             parts.append(Sequence(
                 Wait(stagger),
                 Parallel(
@@ -255,7 +255,7 @@ class WaveClearCreamWashPulse(object):
             return None
         delay = float(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DELAY_SEC',
-            0.14))
+            0.12))
         parts = []
 
         if getattr(
@@ -266,9 +266,9 @@ class WaveClearCreamWashPulse(object):
                 parts.append(halo)
 
         count = int(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT', 6))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT', 7))
         sec = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC', 0.38))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC', 0.42))
         for i in range(count):
             part = self._spawnSparkleAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -285,22 +285,22 @@ class WaveClearCreamWashPulse(object):
     def _spawnSparkleAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_HALF',
-            0.44))
+            0.48))
         startScale = float(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_START',
-            0.30))
+            0.32))
         peakScale = float(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK',
-            1.24))
+            1.30))
         sec = float(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_SEC',
-            0.33))
+            0.36))
         peakA = float(getattr(
             ReclaimGlobals,
-            'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA', 0.17))
+            'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA', 0.19))
         r, g, b, _a = getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_COLOR',
-            (1.0, 0.97, 0.78, 1.0))
+            (1.0, 0.97, 0.76, 1.0))
         binSort = int(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_BIN', 54))
         try:
@@ -334,39 +334,39 @@ class WaveClearCreamWashPulse(object):
         """Softer cream chip that settles downward — residual sparkle aftershock."""
         count = max(1, int(total))
         size = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SIZE', 0.019))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SIZE', 0.021))
         drift = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DRIFT', 0.36))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DRIFT', 0.40))
         fall = float(getattr(
-            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_FALL', 0.29))
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_FALL', 0.32))
         r, g, b, a = getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COLOR',
-            (1.0, 0.97, 0.74, 0.88))
+            (1.0, 0.97, 0.72, 0.90))
         er, eg, eb, ea = getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_END_COLOR',
-            (1.0, 0.93, 0.52, 0.0))
+            (1.0, 0.93, 0.50, 0.0))
         binSort = int(getattr(
             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_BIN', 54))
-        angle = (2.0 * pi * index) / float(count) + 0.36
+        angle = (2.0 * pi * index) / float(count) + 0.34
         try:
             cm = CardMaker(
                 'reclaim-wave-clear-cream-sparkle-aftershock-%s' % index)
             if (index % 3) == 0:
                 cm.setFrame(
-                    -size * 0.35, size * 0.35, -size * 1.28, size * 1.28)
+                    -size * 0.35, size * 0.35, -size * 1.30, size * 1.30)
             elif (index % 3) == 1:
                 cm.setFrame(
-                    -size * 1.28, size * 1.28, -size * 0.35, size * 0.35)
+                    -size * 1.30, size * 1.30, -size * 0.35, size * 0.35)
             else:
                 cm.setFrame(-size, size, -size * 0.85, size * 0.85)
             fleck = parent.attachNewNode(cm.generate())
             fleck.setTransparency(TransparencyAttrib.MAlpha)
             fleck.setColor(r, g, b, 1)
             fleck.setColorScale(r, g, b, 0)
-            startX = ox + cos(angle) * 0.09
-            startZ = oz + 0.015 * (index % 3)
+            startX = ox + cos(angle) * 0.10
+            startZ = oz + 0.016 * (index % 3)
             fleck.setPos(startX, oy, startZ)
-            fleck.setScale(0.30 + 0.09 * (index % 3))
+            fleck.setScale(0.32 + 0.10 * (index % 3))
             fleck.setBin('fixed', binSort + 1 + (index % 2))
             fleck.setDepthTest(False)
             fleck.setDepthWrite(False)
@@ -374,12 +374,12 @@ class WaveClearCreamWashPulse(object):
             return None
 
         end = Point3(
-            startX + cos(angle) * drift * 0.60,
+            startX + cos(angle) * drift * 0.62,
             oy,
-            startZ - fall - 0.06 * (index % 3))
-        peak = 1.10 + 0.08 * (index % 2)
+            startZ - fall - 0.065 * (index % 3))
+        peak = 1.12 + 0.09 * (index % 2)
         self._sparkleNPs.append(fleck)
-        stagger = 0.013 * (index % 3)
+        stagger = 0.012 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(

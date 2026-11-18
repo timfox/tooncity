@@ -958,47 +958,49 @@ WAVE_CLEAR_CREAM_WASH_OUT_SEC = 0.34
 WAVE_CLEAR_CREAM_WASH_BIN = 50  # soft veil under shimmer flecks (51) / aftershock (52)
 # Cream sparkle flecks after wave-clear cream wash (#144) — CheerCreamSparkle /
 # StreetSparkle / wave-edge sparkle rising chip grammar. Pack-clear glitter
-# lift during wash settle deepened again past #253 so clearing a pack reads
+# lift during wash settle deepened again past #273 so clearing a pack reads
 # juicier — still below StreetSparkle horizon payoff. Mid-screen sunny cream
 # only: not a shimmer hang restage, cheer swell restage, secured-lock tip-near
-# green sting (#243), or purity-complete meter hose settle cream (#248).
-# Delay is relative to wash start (after WAVE_CLEAR_CREAM_WASH_DELAY_SEC).
-# Sunny pastel only; no KH blue. Above wash veil (50); shares cheer band (53).
+# green sting (#286), purity-complete meter hose settle cream (#292), mid-wave
+# warm rim flash, or wave-start meter hose pop. Delay is relative to wash
+# start (after WAVE_CLEAR_CREAM_WASH_DELAY_SEC). Sunny pastel only; no KH blue.
+# Above wash veil (50); shares cheer band (53).
 # Toggle WAVE_CLEAR_CREAM_SPARKLE_ENABLED = False drops sparkles (+ aftershock).
 WAVE_CLEAR_CREAM_SPARKLE_ENABLED = True
-WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC = 0.07  # after wash starts
+WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC = 0.06  # after wash starts
 WAVE_CLEAR_CREAM_SPARKLE_ORIGIN = (0.0, 0.0, 0.08)  # mid-screen; not lock tip / street
 WAVE_CLEAR_CREAM_SPARKLE_BIN = 53
-WAVE_CLEAR_CREAM_SPARKLE_COUNT = 12
-WAVE_CLEAR_CREAM_SPARKLE_SIZE = 0.025
-WAVE_CLEAR_CREAM_SPARKLE_RISE = 0.46
-WAVE_CLEAR_CREAM_SPARKLE_SPREAD = 0.92
-WAVE_CLEAR_CREAM_SPARKLE_SEC = 0.44
-WAVE_CLEAR_CREAM_SPARKLE_POP = 1.38  # twinkle scale peak — juicier pack snap
-WAVE_CLEAR_CREAM_SPARKLE_COLOR = (1.0, 0.98, 0.68, 0.97)
-WAVE_CLEAR_CREAM_SPARKLE_END_COLOR = (1.0, 0.94, 0.50, 0.0)
+WAVE_CLEAR_CREAM_SPARKLE_COUNT = 13
+WAVE_CLEAR_CREAM_SPARKLE_SIZE = 0.027
+WAVE_CLEAR_CREAM_SPARKLE_RISE = 0.50
+WAVE_CLEAR_CREAM_SPARKLE_SPREAD = 1.00
+WAVE_CLEAR_CREAM_SPARKLE_SEC = 0.48
+WAVE_CLEAR_CREAM_SPARKLE_POP = 1.46  # twinkle scale peak — juicier pack snap
+WAVE_CLEAR_CREAM_SPARKLE_COLOR = (1.0, 0.98, 0.66, 0.98)
+WAVE_CLEAR_CREAM_SPARKLE_END_COLOR = (1.0, 0.94, 0.48, 0.0)
 # Soft cream sparkle aftershock after the further-deepened rising flecks —
 # juicier settle chips + optional halo (cheer / shimmer aftershock grammar).
 # Owns the residual glitter hang so pack clear keeps juice without restaging
-# wash, tip-near lock glitter (#243), or meter hose settle cream (#248).
+# wash, tip-near lock glitter (#286), meter hose settle cream (#292), mid-wave
+# rim flash, or wave-start hose.
 # Toggle WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_ENABLED = False drops residual only.
 WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_ENABLED = True
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DELAY_SEC = 0.14  # after sparkle start
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT = 6
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SIZE = 0.019
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DRIFT = 0.36
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_FALL = 0.29
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC = 0.38
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COLOR = (1.0, 0.97, 0.74, 0.88)
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.52, 0.0)
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DELAY_SEC = 0.12  # after sparkle start
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT = 7
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SIZE = 0.021
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DRIFT = 0.40
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_FALL = 0.32
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC = 0.42
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COLOR = (1.0, 0.97, 0.72, 0.90)
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.50, 0.0)
 WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_BIN = 54
 WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_ENABLED = True
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_HALF = 0.44
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_START = 0.30
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK = 1.24
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_SEC = 0.33
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA = 0.17
-WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.78, 1.0)
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_HALF = 0.48
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_START = 0.32
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK = 1.30
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_SEC = 0.36
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA = 0.19
+WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.76, 1.0)
 # Warm cream wave-clear banner (was icy cyan; keep rubber-hose sunny).
 WAVE_CLEAR_BANNER_COLOR = (1.0, 0.94, 0.62, 1.0)
 WAVE_CLEAR_SUB_BANNER_COLOR = (1.0, 0.97, 0.82, 1.0)
