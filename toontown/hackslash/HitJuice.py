@@ -8,7 +8,8 @@ readable airborne float with cream sparkle before fall (spawnHangSparks stays
 as the cream-disabled fallback).
 Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks +
 spawnComboCreamSparkles for a brief rubber-hose number pop with ink flecks
-and cream sparkle on each connect, plus a delayed cream aftershock settle.
+and cream sparkle on each connect, plus a delayed cream aftershock settle
+and a soft cream wash pulse (ComboCounterCreamWashPulse).
 Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
 cream/ink hose pop when soft-lock acquires or snaps a corrupt target.
 Hit connect uses spawnHitSparkFlecks for short cream/ink fleck sparkles that
@@ -33,6 +34,11 @@ from direct.interval.IntervalGlobal import (
 )
 
 from . import HackSlashConfig
+from .ComboCounterCreamWashFx import ComboCounterCreamWashPulse
+
+
+# Active combo-counter cream wash (one at a time). Cleared with cream flecks.
+_comboCreamWash = None
 
 
 def resolveVisualNode(target):
@@ -538,9 +544,12 @@ def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkl
 
     Layers with playComboCounterPop + spawnComboInkFlecks — warm cream glitter,
     then a delayed cream aftershock settle (same residual grammar as perfect-
-    dodge / air-juggle cream aftershock). Cream/pastel only — not KH sparkles.
-    Returns (Interval|None, nodes). Caller owns cleanup.
+    dodge / air-juggle cream aftershock), then a soft cream wash pulse
+    (finisher / melee-hit / dodge cream wash grammar). Cream/pastel only —
+    not KH sparkles. Returns (Interval|None, nodes). Caller owns cleanup;
+    wash is retired by clearComboCreamSparkles.
     """
+    global _comboCreamWash
     if origin is None or not getattr(
             HackSlashConfig, 'COMBO_COUNTER_CREAM_ENABLED', True):
         return None, []
@@ -631,11 +640,44 @@ def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkl
     immediate = Parallel(*parts)
     aftershock = _buildComboCreamAftershock(
         parentNP, originPt, nodes, name=name + 'Aftershock')
+
+    # Soft cream wash pulse after cream aftershock — finisher/hit/dodge grammar.
+    washHold = 0.0
+    try:
+        wash = ComboCounterCreamWashPulse()
+        if wash.play() is not None:
+            _comboCreamWash = wash
+            # Hold teardown beside delayed wash so clear() doesn't kill the
+            # veil mid-pulse when the caller retires the cream ival early
+            # (wash self-clears too).
+            washHold = (
+                float(getattr(
+                    HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_DELAY_SEC',
+                    0.34))
+                + float(getattr(
+                    HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_IN_SEC',
+                    0.05))
+                + float(getattr(
+                    HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_PULSE_SEC',
+                    0.08))
+                + float(getattr(
+                    HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_HOLD_SEC',
+                    0.05))
+                + float(getattr(
+                    HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_OUT_SEC',
+                    0.30))
+                + 0.02)
+        else:
+            _comboCreamWash = None
+    except Exception:
+        _comboCreamWash = None
+
+    hold = [immediate]
     if aftershock is not None:
-        # Immediate tick glitter + delayed residual settle in parallel.
-        ival = Parallel(immediate, aftershock, name=name)
-    else:
-        ival = Parallel(immediate, name=name)
+        hold.append(aftershock)
+    if washHold > 0.0:
+        hold.append(Wait(washHold))
+    ival = Parallel(*hold, name=name)
     ival.start()
     return ival, nodes
 
@@ -805,7 +847,15 @@ def _spawnComboCreamAftershockSpark(parentNP, origin, nodes, index, total,
 
 
 def clearComboCreamSparkles(nodes):
-    """Remove cream-sparkle / aftershock CardMaker nodes from a combo tick."""
+    """Remove cream-sparkle / aftershock / wash nodes from a combo tick."""
+    global _comboCreamWash
+    wash = _comboCreamWash
+    _comboCreamWash = None
+    if wash is not None:
+        try:
+            wash.clear()
+        except Exception:
+            pass
     clearComboInkFlecks(nodes)
 
 
