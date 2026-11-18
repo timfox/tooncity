@@ -46,16 +46,17 @@ Compare ambient corruption on Punchline (`2300`) and Silly (`2100`) with `~pollu
 
 Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 
-## Sludge Brute spawn mix
+## Archetype spawn mix
 
-- Loopy campaign / reclaim wave 1: Ink Smudge only (`bruteFraction: 0` / `BRUTE_WAVE_START=2`)
-- Default reclaim waves 2+: ~⅓ Sludge Brutes
-- Punchline campaign: 50% Brutes from wave 1
-- Silly finale: Overlord only (no Brute mix)
+- Loopy campaign / reclaim wave 1: Ink Smudge only (`bruteFraction`/`snareFraction` 0, wave starts at 2)
+- Default reclaim waves 2+: ~⅓ Sludge Brutes + ~⅕ Balloon Snares
+- Punchline campaign: Brutes + Balloon Snares from wave 1
+- Silly finale: Overlord only (no Brute / Snare mix)
 
 ```
 ~spawncorrupt 2 0 0   # Ink Smudge
 ~spawncorrupt 1 0 1   # Sludge Brute
+~spawncorrupt 1 0 2   # Balloon Snare
 ```
 
 ## Depth D2 enemy demo
@@ -77,6 +78,16 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~hackslash 0
 # Brute: green squash telegraph + squirt SFX, then ink blob flies at you on hit.
 # Compare ~spawncorrupt 1   (Ink Smudge keeps purple melee telegraph).
+```
+
+## Balloon Snare string-lash demo
+
+```
+~spawncorrupt 1 0 2
+# or ~spawnsnare 1 0 2
+~hackslash 0
+# Snare: amber horizontal rubber stretch + vine zip SFX, string line snaps on hit.
+# Fast fragile zip-flier — distinct from Smudge melee and Brute spit.
 ```
 
 ## Ink Overlord finale phases

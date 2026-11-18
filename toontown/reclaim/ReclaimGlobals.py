@@ -26,6 +26,10 @@ BRUTE_WAVE_START = 2
 BRUTE_FRACTION = 0.34
 BRUTE_NAME = 'Sludge Brute'
 SMUDGE_NAME = 'Ink Smudge'
+# Balloon Snare zip/lash — mid waves only (never Loopy wave-1 Smudge-only).
+SNARE_WAVE_START = 2
+SNARE_FRACTION = 0.22
+SNARE_NAME = 'Balloon Snare'
 
 # Director FSM states (mirrored on client for banner / HUD).
 STATE_IDLE = 0
@@ -129,35 +133,64 @@ def waveCorruptHp(baseHp, waveIndex):
 
 
 def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
-                      bruteWaveStart=None):
-    """Choose Ink Smudge (0) or Sludge Brute (1) for one pack slot.
+                      bruteWaveStart=None, snareFraction=None,
+                      snareWaveStart=None):
+    """Choose Smudge (0), Brute (1), or Balloon Snare (2) for one pack slot.
 
     Keeps wave-1 / zero-fraction packs as pure Ink Smudge so Loopy demos
-    and early reclaim stay familiar.
+    and early reclaim stay familiar. Brutes take rear slots; Snares take
+    front slots so zip-lash reads before tank spit.
     """
     from toontown.corruption import CorruptionGlobals
     wave = max(1, int(waveIndex))
-    start = BRUTE_WAVE_START if bruteWaveStart is None else int(bruteWaveStart)
-    fraction = BRUTE_FRACTION if bruteFraction is None else float(bruteFraction)
-    if wave < start or fraction <= 0.0 or packCount <= 0:
+    count = max(0, int(packCount))
+    if count <= 0:
         return CorruptionGlobals.ARCHETYPE_INK
-    # Spread brutes across the pack instead of clumping at the end.
-    bruteSlots = max(1, int(round(packCount * fraction)))
-    bruteSlots = min(bruteSlots, packCount)
-    # Prefer rear slots so front-liners still read as Smudge melee.
-    startSlot = max(0, packCount - bruteSlots)
-    if int(slotIndex) >= startSlot:
+
+    bruteStart = (
+        BRUTE_WAVE_START if bruteWaveStart is None else int(bruteWaveStart))
+    bruteFrac = (
+        BRUTE_FRACTION if bruteFraction is None else float(bruteFraction))
+    snareStart = (
+        SNARE_WAVE_START if snareWaveStart is None else int(snareWaveStart))
+    snareFrac = (
+        SNARE_FRACTION if snareFraction is None else float(snareFraction))
+
+    bruteSlots = 0
+    if wave >= bruteStart and bruteFrac > 0.0:
+        bruteSlots = max(1, int(round(count * bruteFrac)))
+        bruteSlots = min(bruteSlots, count)
+    snareSlots = 0
+    if wave >= snareStart and snareFrac > 0.0:
+        snareSlots = max(1, int(round(count * snareFrac)))
+        snareSlots = min(snareSlots, count)
+    # Leave at least one Smudge when the pack has room.
+    if bruteSlots + snareSlots >= count and count > 1:
+        overflow = bruteSlots + snareSlots - (count - 1)
+        while overflow > 0 and snareSlots > 0:
+            snareSlots -= 1
+            overflow -= 1
+        while overflow > 0 and bruteSlots > 0:
+            bruteSlots -= 1
+            overflow -= 1
+
+    slot = int(slotIndex)
+    if bruteSlots and slot >= (count - bruteSlots):
         return CorruptionGlobals.ARCHETYPE_BRUTE
+    if snareSlots and slot < snareSlots:
+        return CorruptionGlobals.ARCHETYPE_SNARE
     return CorruptionGlobals.ARCHETYPE_INK
 
 
-def packSlotName(archetype, smudgeName=None, bruteName=None, slotIndex=0,
-                 packCount=1):
+def packSlotName(archetype, smudgeName=None, bruteName=None, snareName=None,
+                 slotIndex=0, packCount=1):
     """Display name for a pack slot (numbered when pack has multiples)."""
     from toontown.corruption import CorruptionGlobals
     arch = CorruptionGlobals.normalizeArchetype(archetype)
     if arch == CorruptionGlobals.ARCHETYPE_BRUTE:
         base = bruteName or BRUTE_NAME
+    elif arch == CorruptionGlobals.ARCHETYPE_SNARE:
+        base = snareName or SNARE_NAME
     else:
         base = smudgeName or SMUDGE_NAME
     if packCount > 1 and int(slotIndex) > 0:

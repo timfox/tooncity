@@ -73,15 +73,19 @@ class Purify(MagicWord):
 
 
 class SpawnCorrupt(MagicWord):
-    aliases = ['spawncorrupttoon', 'corrupttoon', 'spawnct', 'spawnbrute']
-    desc = 'Spawn CorruptToon enemies (Ink Smudge or Sludge Brute).'
+    aliases = [
+        'spawncorrupttoon', 'corrupttoon', 'spawnct',
+        'spawnbrute', 'spawnsnare', 'spawnballoon',
+    ]
+    desc = 'Spawn CorruptToon enemies (Smudge, Brute, or Balloon Snare).'
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
         'Client prefers DNA/Actor ink silhouette, else card limbs. '
         'Ink Smudge: purple melee telegraph + impact flash/thud. '
         'Sludge Brute (archetype=1): green spit telegraph/SFX + ink blob. '
+        'Balloon Snare (archetype=2): amber string-lash + vine zip SFX. '
         'Optional count (1-8), hp (0=archetype default base), '
-        'archetype (0=Ink, 1=Brute). '
+        'archetype (0=Ink, 1=Brute, 2=Snare). '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

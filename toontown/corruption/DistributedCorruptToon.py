@@ -46,8 +46,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._attackHitSfx = None
         self._bruteTelegraphSfx = None
         self._bruteHitSfx = None
+        self._snareTelegraphSfx = None
+        self._snareHitSfx = None
         self._spitBlobIval = None
         self._spitBlobNP = None
+        self._stringLashIval = None
+        self._stringLashNP = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -99,13 +103,14 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         for attr in ('_defeatIval', '_hitIval', '_pulseIval',
                      '_telegraphIval', '_attackHitIval',
                      '_attackFlashIval', '_purityFlashIval',
-                     '_spitBlobIval'):
+                     '_spitBlobIval', '_stringLashIval'):
             ival = getattr(self, attr, None)
             if ival is not None:
                 ival.finish()
                 setattr(self, attr, None)
         self.__clearAttackFlash()
         self.__clearSpitBlob()
+        self.__clearStringLash()
 
     def __buildGeom(self):
         self.visualRoot = self.attachNewNode('corrupt-visual')
@@ -342,7 +347,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         return int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
 
     def __applyArchetypeLook(self):
-        """Scale/tint for Ink vs Sludge Brute (finale phase look still wins)."""
+        """Scale/tint for Smudge / Brute / Snare (finale phase look still wins)."""
         look, _phase = self.__finalePhaseLook()
         stats = CorruptionGlobals.archetypeStats(self.archetype)
         scale = (
@@ -392,8 +397,14 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
             == CorruptionGlobals.ARCHETYPE_BRUTE)
 
+    def __isBalloonSnare(self):
+        """True when this enemy should use Balloon Snare string-lash AV."""
+        return (
+            int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
+            == CorruptionGlobals.ARCHETYPE_SNARE)
+
     def announceAttackTelegraph(self):
-        """Strong wind-up: charged squash, ink/spit flare, whoosh — dodgeable."""
+        """Strong wind-up: charged squash, ink/spit/lash flare — dodgeable."""
         if self._telegraphIval is not None:
             self._telegraphIval.finish()
         if self._attackHitIval is not None:
@@ -404,6 +415,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         target = self.visualRoot if self.visualRoot is not None else self
         look, _phase = self.__finalePhaseLook()
         isBrute = self.__isBruteSpit()
+        isSnare = self.__isBalloonSnare()
         if look:
             charge = Vec4(*look['telegraphCharge'])
             hold = Vec4(*look['telegraphHold'])
@@ -418,6 +430,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             squash = Point3(*CorruptionGlobals.BRUTE_TELEGRAPH_SQUASH)
             mid = Point3(*CorruptionGlobals.BRUTE_TELEGRAPH_MID)
             stretch = Point3(*CorruptionGlobals.BRUTE_TELEGRAPH_STRETCH)
+        elif isSnare:
+            # Amber rubber-hose string lash — horizontal stretch, quick zip.
+            charge = Vec4(*CorruptionGlobals.SNARE_TELEGRAPH_CHARGE_COLOR)
+            hold = Vec4(*CorruptionGlobals.SNARE_TELEGRAPH_HOLD_COLOR)
+            squash = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_SQUASH)
+            mid = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_MID)
+            stretch = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_STRETCH)
         else:
             # Ink Smudge melee telegraph — purple charge (unchanged).
             charge = Vec4(*CorruptionGlobals.TELEGRAPH_CHARGE_COLOR)
@@ -454,7 +473,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._telegraphIval.start()
 
     def announceAttackHit(self):
-        """Impact feedback when AI damage lands — slam, flash, thud/spit."""
+        """Impact feedback when AI damage lands — slam, flash, thud/spit/lash."""
         # Pause (don't finish) so telegraph's miss-recovery Funcs don't snap.
         if self._telegraphIval is not None:
             try:
@@ -467,6 +486,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         target = self.visualRoot if self.visualRoot is not None else self
         look, _phase = self.__finalePhaseLook()
         isBrute = self.__isBruteSpit()
+        isSnare = self.__isBalloonSnare()
         if look:
             impactScale = Point3(*look['impactScale'])
             impactColor = Vec4(*look['impactColor'])
@@ -475,6 +495,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             impactScale = Point3(1.7, 1.7, 0.48)
             impactColor = Vec4(0.55, 2.35, 0.4, 1.0)
             rebound = Vec4(0.55, 1.25, 0.4, 1.0)
+        elif isSnare:
+            impactScale = Point3(2.15, 0.55, 0.7)
+            impactColor = Vec4(2.4, 1.55, 0.4, 1.0)
+            rebound = Vec4(1.35, 0.85, 0.35, 1.0)
         else:
             impactScale = Point3(1.55, 1.55, 0.55)
             impactColor = Vec4(2.2, 0.9, 2.4, 1.0)
@@ -483,6 +507,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playAttackHitFlash()
         if isBrute:
             self.__playSpitBlob()
+        elif isSnare:
+            self.__playStringLash()
         self.__playOptionalActorPose('neutral')
         self._attackHitIval = Sequence(
             Parallel(
@@ -535,12 +561,27 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                     CorruptionGlobals.BRUTE_ATTACK_HIT_SFX)
             except Exception:
                 self._bruteHitSfx = False
+        if self._snareTelegraphSfx is None:
+            try:
+                self._snareTelegraphSfx = base.loader.loadSfx(
+                    CorruptionGlobals.SNARE_TELEGRAPH_SFX)
+            except Exception:
+                self._snareTelegraphSfx = False
+        if self._snareHitSfx is None:
+            try:
+                self._snareHitSfx = base.loader.loadSfx(
+                    CorruptionGlobals.SNARE_ATTACK_HIT_SFX)
+            except Exception:
+                self._snareHitSfx = False
 
     def __playTelegraphSfx(self):
         self.__ensureSfx()
         if self.__isBruteSpit() and self._bruteTelegraphSfx:
             sfx = self._bruteTelegraphSfx
             volume = CorruptionGlobals.BRUTE_TELEGRAPH_SFX_VOLUME
+        elif self.__isBalloonSnare() and self._snareTelegraphSfx:
+            sfx = self._snareTelegraphSfx
+            volume = CorruptionGlobals.SNARE_TELEGRAPH_SFX_VOLUME
         else:
             sfx = self._telegraphSfx
             volume = CorruptionGlobals.TELEGRAPH_SFX_VOLUME
@@ -560,6 +601,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self.__isBruteSpit() and self._bruteHitSfx:
             sfx = self._bruteHitSfx
             volume = CorruptionGlobals.BRUTE_ATTACK_HIT_SFX_VOLUME
+        elif self.__isBalloonSnare() and self._snareHitSfx:
+            sfx = self._snareHitSfx
+            volume = CorruptionGlobals.SNARE_ATTACK_HIT_SFX_VOLUME
         else:
             sfx = self._attackHitSfx
             volume = CorruptionGlobals.ATTACK_HIT_SFX_VOLUME
@@ -600,6 +644,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             elif self.__isBruteSpit():
                 color = CorruptionGlobals.BRUTE_HIT_FLASH_COLOR
                 peak = CorruptionGlobals.BRUTE_HIT_FLASH_PEAK
+            elif self.__isBalloonSnare():
+                color = CorruptionGlobals.SNARE_HIT_FLASH_COLOR
+                peak = CorruptionGlobals.SNARE_HIT_FLASH_PEAK
             else:
                 color = CorruptionGlobals.ATTACK_HIT_FLASH_COLOR
                 peak = CorruptionGlobals.ATTACK_HIT_FLASH_PEAK
@@ -694,6 +741,65 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
             self._spitBlobNP = None
 
+    def __playStringLash(self):
+        """Thin amber string line snapping from Snare toward the local toon."""
+        self.__clearStringLash()
+        try:
+            start = self.getPos(render)
+            start.setZ(start.getZ() + CorruptionGlobals.SNARE_LASH_Z)
+            end = start + Point3(0, 5, 0)
+            la = getattr(base, 'localAvatar', None)
+            if la is not None and not la.isEmpty():
+                end = la.getPos(render)
+                end.setZ(end.getZ() + 1.8)
+            cm = CardMaker('snare-string-lash')
+            cm.setFrame(
+                -CorruptionGlobals.SNARE_LASH_HALF_W,
+                CorruptionGlobals.SNARE_LASH_HALF_W,
+                -CorruptionGlobals.SNARE_LASH_HALF_H,
+                CorruptionGlobals.SNARE_LASH_HALF_H)
+            lash = render.attachNewNode(cm.generate())
+            lash.setPos(start)
+            lash.setBillboardPointEye()
+            lash.setTransparency(TransparencyAttrib.MAlpha)
+            color = CorruptionGlobals.SNARE_LASH_COLOR
+            lash.setColor(color[0], color[1], color[2], color[3])
+            lash.setBin('fixed', 40)
+            lash.setDepthWrite(False)
+            travel = float(CorruptionGlobals.SNARE_LASH_TRAVEL)
+            self._stringLashNP = lash
+            self._stringLashIval = Sequence(
+                Parallel(
+                    LerpPosInterval(lash, travel, end, blendType='easeIn'),
+                    LerpScaleInterval(
+                        lash, travel, Point3(0.55, 0.55, 2.4),
+                        startScale=Point3(1.0, 1.0, 0.45)),
+                ),
+                Parallel(
+                    LerpScaleInterval(lash, 0.06, Point3(2.4, 0.2, 0.2)),
+                    LerpColorScaleInterval(lash, 0.06, Vec4(1, 1, 1, 0)),
+                ),
+                Func(self.__clearStringLash),
+            )
+            self._stringLashIval.start()
+        except Exception:
+            self.__clearStringLash()
+
+    def __clearStringLash(self):
+        if self._stringLashIval is not None:
+            try:
+                self._stringLashIval.pause()
+            except Exception:
+                pass
+            self._stringLashIval = None
+        if self._stringLashNP is not None:
+            try:
+                if not self._stringLashNP.isEmpty():
+                    self._stringLashNP.removeNode()
+            except Exception:
+                pass
+            self._stringLashNP = None
+
     def announceDefeat(self):
         if self._defeatIval is not None:
             self._defeatIval.finish()
@@ -709,8 +815,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._spitBlobIval is not None:
             self._spitBlobIval.finish()
             self._spitBlobIval = None
+        if self._stringLashIval is not None:
+            self._stringLashIval.finish()
+            self._stringLashIval = None
         self.__clearAttackFlash()
         self.__clearSpitBlob()
+        self.__clearStringLash()
         target = self.visualRoot if self.visualRoot is not None else self
         # Satisfying ink splat + purity reclaim flash tied to pollution drop.
         self._defeatIval = Sequence(
