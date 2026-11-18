@@ -846,3 +846,11 @@ registerReclaimMagicWords()
 # Multi-hood campaign loop (slice 4 / goal gate).
 from toontown.campaign.MagicWords import registerCampaignMagicWords
 registerCampaignMagicWords()
+
+# Client handoff banners + reclaim power bump (no-op on AI).
+try:
+    from toontown.campaign.CampaignHandoff import ensureCampaignHandoffClient
+    ensureCampaignHandoffClient()
+except Exception:
+    pass
+

@@ -9,8 +9,8 @@ class StartCampaign(MagicWord):
     aliases = ['startcampaign', 'campaignstart', 'begincampaign']
     desc = 'Start or resume the multi-neighborhood reclaim campaign act.'
     advancedDesc = (
-        'Uses CampaignDirector + ReclaimDirector. Stand in the current act '
-        'street (Loopy → Punchline → Silly finale), then enable ~hackslash 0.')
+        'Uses CampaignDirector + ReclaimDirector. Loopy → Punchline → '
+        'Silly two-phase Ink Overlord finale. Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]
