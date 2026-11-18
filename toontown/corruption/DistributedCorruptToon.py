@@ -13,6 +13,7 @@ from toontown.corruption.CorruptDeathPopFx import (
 from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphString
 from toontown.corruption.BruteSludgeSplashFx import BruteSludgeSplash
 from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
+from toontown.corruption.CorruptTelegraphCreamSparkleFx import TelegraphCreamSparkles
 from toontown.corruption.CorruptTelegraphCreamWarnFx import TelegraphCreamWarnFlecks
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
@@ -76,6 +77,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._deathPopSplat = None
         self._telegraphInkDrip = None
         self._telegraphCreamWarn = None
+        self._telegraphCreamSparkle = None
         self._idleInkDrip = None
         self._idleCreamDrip = None
         self._idleCreamDripSparkle = None
@@ -156,6 +158,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
+        self.__clearTelegraphCreamSparkle()
         self.__clearIdleInkDrip()
         self.__clearIdleCreamDrip()
         self.__clearIdleCreamDripSparkle()
@@ -535,6 +538,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playTelegraphInkDrip(look)
         # Cream / pastel warn flecks — contrast layer on ink drip / silhouette.
         self.__playTelegraphCreamWarn(look)
+        # Rising cream / pastel sparkles from the telegraph cream warn spray.
+        self.__playTelegraphCreamSparkle(look)
         # Ink Smudge-only: purple ink-fist telegraph pop for melee wind-up read.
         if (not look) and (not isBrute) and (not isSnare):
             self.__playSmudgeTelegraphInk()
@@ -597,9 +602,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / cream warn / crown / rain / snare / spit / smudge fist so impact owns the frame.
+        # Clear telegraph drip / cream warn / sparkle / crown / rain / snare / spit / smudge fist so impact owns the frame.
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
+        self.__clearTelegraphCreamSparkle()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
@@ -997,6 +1003,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
+        self.__clearTelegraphCreamSparkle()
         self.__clearIdleInkDrip()
         self.__clearIdleCreamDrip()
         self.__clearIdleCreamDripSparkle()
@@ -1101,6 +1108,30 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._telegraphCreamWarn = None
+
+    def __playTelegraphCreamSparkle(self, finaleLook=None):
+        """Rising cream / pastel sparkles from telegraph cream warn spray."""
+        self.__clearTelegraphCreamSparkle()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        sparkles = TelegraphCreamSparkles()
+        self._telegraphCreamSparkle = sparkles
+        sparkles.play(
+            pos,
+            archetype=self.getArchetype(),
+            finaleLook=finaleLook,
+        )
+
+    def __clearTelegraphCreamSparkle(self):
+        sparkles = getattr(self, '_telegraphCreamSparkle', None)
+        if sparkles is not None:
+            try:
+                sparkles.clear()
+            except Exception:
+                pass
+        self._telegraphCreamSparkle = None
 
     def __startIdleInkDrip(self):
         """Ambient pollution drips between telegraphs (client-only presence)."""
