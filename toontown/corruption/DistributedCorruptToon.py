@@ -31,6 +31,8 @@ from toontown.corruption.OverlordHitCreamWashFx import OverlordHitCreamWashPulse
 from toontown.corruption.OverlordMagentaInkSplashFx import OverlordMagentaInkSplash
 from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
+from toontown.corruption.OverlordTelegraphPunchFx import (
+    OverlordTelegraphPunch, overlordTelegraphAnimSecs)
 from toontown.corruption.SmudgeHitCreamWashFx import SmudgeHitCreamWashPulse
 from toontown.corruption.SmudgeInkSplashFx import SmudgeInkSplash
 from toontown.corruption.SmudgeInkTelegraphFx import SmudgeInkTelegraphFist
@@ -101,6 +103,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._silhouetteCreamWash = None
         self._overlordCrown = None
         self._overlordInkRain = None
+        self._overlordTelegraphPunch = None
         self._overlordMagentaInkSplash = None
         self._overlordHitCreamWash = None
         self._snareTelegraphString = None
@@ -194,6 +197,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSilhouetteCreamWash()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordTelegraphPunch()
         self.__clearOverlordMagentaInkSplash()
         self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
@@ -617,10 +621,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__playGagsterTelegraphPuddle()
         else:
             self.__clearGagsterTelegraphPuddle()
-        # Overlord-only: ink crown + ink rain for phase telegraph read.
+        # Overlord-only: ink crown + ink rain + danger-ring warn for phase read.
         if look and phase >= 1:
             self.__playOverlordTelegraphCrown(look, phase)
             self.__playOverlordPhaseInkRain(look, phase)
+            self.__playOverlordTelegraphPunchWarn(look, phase)
             # Phase HUD cue so P1 magenta vs P2 crimson reads mid-wind-up.
             messenger.send(  # noqa: F821
                 'finaleTelegraphCue',
@@ -629,27 +634,42 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         else:
             self.__clearOverlordTelegraphCrown()
             self.__clearOverlordPhaseInkRain()
+            self.__clearOverlordTelegraphPunch()
         # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
         # wind-up reads clearly before announceAttackHit's slam lands.
+        # Overlord uses phase-aware timings so stretch lingers until impact.
+        if look:
+            anim = overlordTelegraphAnimSecs(finaleLook=look, phase=phase)
+            squashSec = float(anim['squashSec'])
+            midSec = float(anim['midSec'])
+            stretchSec = float(anim['stretchSec'])
+            holdSec = float(anim['holdSec'])
+            recoverSec = float(anim['recoverSec'])
+        else:
+            squashSec = 0.12
+            midSec = 0.18
+            stretchSec = 0.14
+            holdSec = 0.12
+            recoverSec = 0.1
         self._telegraphIval = Sequence(
             Parallel(
-                LerpScaleInterval(target, 0.12, squash),
-                LerpColorScaleInterval(target, 0.12, charge),
+                LerpScaleInterval(target, squashSec, squash),
+                LerpColorScaleInterval(target, squashSec, charge),
             ),
             Parallel(
-                LerpScaleInterval(target, 0.18, mid),
-                LerpColorScaleInterval(target, 0.18, hold),
+                LerpScaleInterval(target, midSec, mid),
+                LerpColorScaleInterval(target, midSec, hold),
             ),
             Parallel(
-                LerpScaleInterval(target, 0.14, stretch),
-                LerpColorScaleInterval(target, 0.14, charge),
+                LerpScaleInterval(target, stretchSec, stretch),
+                LerpColorScaleInterval(target, stretchSec, charge),
             ),
             # Linger stretched so the strike pose sticks until impact.
             # On miss (no announceAttackHit), ease back and resume ink pulse.
-            Wait(0.12),
+            Wait(holdSec),
             Parallel(
-                LerpScaleInterval(target, 0.1, Point3(1.0, 1.0, 1.0)),
-                LerpColorScaleInterval(target, 0.1, Vec4(1, 1, 1, 1)),
+                LerpScaleInterval(target, recoverSec, Point3(1.0, 1.0, 1.0)),
+                LerpColorScaleInterval(target, recoverSec, Vec4(1, 1, 1, 1)),
             ),
             Func(self.__resumePulse),
         )
@@ -664,13 +684,16 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / cream warn / sparkle / wash / crown / rain / snare / spit / smudge fist / gagster puddle warn so impact owns the frame.
+        # Clear telegraph drip / cream warn / sparkle / wash / crown / rain /
+        # punch warn / snare / spit / smudge fist / gagster puddle warn so
+        # impact owns the frame.
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearTelegraphCreamSparkle()
         self.__clearTelegraphCreamWash()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordTelegraphPunch()
         self.__clearSnareTelegraphString()
         # Impact lands on the player — drop any pending string-snap counter.
         self.__clearSnareStringSnapCounter()
@@ -680,7 +703,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
-        look, _phase = self.__finalePhaseLook()
+        look, phase = self.__finalePhaseLook()
         isBrute = self.__isBruteSpit()
         isSnare = self.__isBalloonSnare()
         isGagster = self.__isGunkGagster()
@@ -689,24 +712,49 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             impactColor = Vec4(*look['impactColor'])
             rebound = Vec4(*look.get(
                 'rebound', (1.1, 0.55, 1.35, 1.0)))
+            anim = overlordTelegraphAnimSecs(finaleLook=look, phase=phase)
+            slamSec = float(anim['impactSlamSec'])
+            reboundSec = float(anim['impactReboundSec'])
+            settleSec = float(anim['impactSettleSec'])
+            reboundScale = Point3(*look.get(
+                'impactReboundScale', (0.85, 0.85, 1.25)))
         elif isBrute:
             impactScale = Point3(1.7, 1.7, 0.48)
             impactColor = Vec4(0.55, 2.35, 0.4, 1.0)
             rebound = Vec4(0.55, 1.25, 0.4, 1.0)
+            slamSec = 0.06
+            reboundSec = 0.1
+            settleSec = 0.12
+            reboundScale = Point3(0.85, 0.85, 1.25)
         elif isSnare:
             impactScale = Point3(2.15, 0.55, 0.7)
             impactColor = Vec4(2.4, 1.55, 0.4, 1.0)
             rebound = Vec4(1.35, 0.85, 0.35, 1.0)
+            slamSec = 0.06
+            reboundSec = 0.1
+            settleSec = 0.12
+            reboundScale = Point3(0.85, 0.85, 1.25)
         elif isGagster:
             impactScale = Point3(1.45, 1.45, 0.7)
             impactColor = Vec4(0.45, 2.15, 2.35, 1.0)
             rebound = Vec4(0.45, 1.15, 1.25, 1.0)
+            slamSec = 0.06
+            reboundSec = 0.1
+            settleSec = 0.12
+            reboundScale = Point3(0.85, 0.85, 1.25)
         else:
             impactScale = Point3(1.55, 1.55, 0.55)
             impactColor = Vec4(2.2, 0.9, 2.4, 1.0)
             rebound = Vec4(1.1, 0.55, 1.35, 1.0)
+            slamSec = 0.06
+            reboundSec = 0.1
+            settleSec = 0.12
+            reboundScale = Point3(0.85, 0.85, 1.25)
         self.__playAttackHitSfx()
         self.__playAttackHitFlash()
+        if look:
+            # Overlord impact ground punch bloom — warn ring already cleared.
+            self.__playOverlordTelegraphPunchImpact(look, phase)
         if isBrute:
             self.__playSpitBlob()
         elif isSnare:
@@ -716,16 +764,16 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playOptionalActorPose('neutral')
         self._attackHitIval = Sequence(
             Parallel(
-                LerpScaleInterval(target, 0.06, impactScale),
-                LerpColorScaleInterval(target, 0.06, impactColor),
+                LerpScaleInterval(target, slamSec, impactScale),
+                LerpColorScaleInterval(target, slamSec, impactColor),
             ),
             Parallel(
-                LerpScaleInterval(target, 0.1, Point3(0.85, 0.85, 1.25)),
-                LerpColorScaleInterval(target, 0.1, rebound),
+                LerpScaleInterval(target, reboundSec, reboundScale),
+                LerpColorScaleInterval(target, reboundSec, rebound),
             ),
             Parallel(
-                LerpScaleInterval(target, 0.12, Point3(1.0, 1.0, 1.0)),
-                LerpColorScaleInterval(target, 0.12, Vec4(1, 1, 1, 1)),
+                LerpScaleInterval(target, settleSec, Point3(1.0, 1.0, 1.0)),
+                LerpColorScaleInterval(target, settleSec, Vec4(1, 1, 1, 1)),
             ),
             Func(self.__resumePulse),
         )
@@ -749,6 +797,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self.__resumePulse()
+        # Drop Overlord warn ring / crown / rain so dodge owns the recover beat.
+        self.__clearOverlordTelegraphCrown()
+        self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordTelegraphPunch()
         # Hackslash listens and plays perfect-dodge ink sparkle juice.
         messenger.send('corruptToonAttackDodged', [self])  # noqa: F821
 
@@ -1227,6 +1279,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSilhouetteCreamWash()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordTelegraphPunch()
         self.__clearOverlordMagentaInkSplash()
         self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
@@ -1719,6 +1772,37 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._overlordInkRain = None
+
+    def __playOverlordTelegraphPunchWarn(self, finaleLook=None, phase=1):
+        """Ground danger-ring warn — Overlord phase telegraphs only."""
+        self.__clearOverlordTelegraphPunch()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        punch = OverlordTelegraphPunch()
+        self._overlordTelegraphPunch = punch
+        punch.playWarn(pos, finaleLook=finaleLook, phase=phase)
+
+    def __playOverlordTelegraphPunchImpact(self, finaleLook=None, phase=1):
+        """Ground impact punch bloom — Overlord attack hit only."""
+        self.__clearOverlordTelegraphPunch()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        punch = OverlordTelegraphPunch()
+        self._overlordTelegraphPunch = punch
+        punch.playImpact(pos, finaleLook=finaleLook, phase=phase)
+
+    def __clearOverlordTelegraphPunch(self):
+        punch = getattr(self, '_overlordTelegraphPunch', None)
+        if punch is not None:
+            try:
+                punch.clear()
+            except Exception:
+                pass
+        self._overlordTelegraphPunch = None
 
     def __playOverlordMagentaInkSplash(self, pos=None, kind='hit'):
         """Magenta/crimson ink splash — Ink Overlord hit / death only."""

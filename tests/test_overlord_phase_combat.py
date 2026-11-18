@@ -74,6 +74,21 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertIn('slamDamage', p2)
         self.assertNotIn('slamHitRange', p1)
 
+    def test_finale_phase_look_has_telegraph_punch_timing(self):
+        """P1/P2 looks carry AV telegraph + impact punch timing keys."""
+        for phase in (1, 2):
+            look = self.cg.FINALE_PHASE_LOOK[phase]
+            for key in (
+                    'telegraphSquashSec', 'telegraphMidSec',
+                    'telegraphStretchSec', 'telegraphHoldSec',
+                    'telegraphRecoverSec', 'impactSlamSec',
+                    'impactReboundSec', 'impactSettleSec',
+                    'impactReboundScale'):
+                self.assertIn(key, look, msg='P%s missing %s' % (phase, key))
+        punch = self.cg.OVERLORD_TELEGRAPH_PUNCH_LOOK
+        self.assertEqual(punch.get('id'), 'overlord-telegraph-punch')
+        self.assertTrue(self.cg.OVERLORD_TELEGRAPH_PUNCH_ENABLED)
+
     def test_normalize_and_lookup_edges(self):
         self.assertEqual(self.cg.normalizeFinalePhase(1), 1)
         self.assertEqual(self.cg.normalizeFinalePhase(2), 2)
