@@ -184,6 +184,30 @@ PLAY_ENTRY_BANNER_POP_SQUASH = (1.48, 1.0, 0.58, 0.05)   # sx, sy, sz, sec
 PLAY_ENTRY_BANNER_POP_STRETCH = (0.80, 1.0, 1.38, 0.09)
 PLAY_ENTRY_BANNER_POP_SETTLE_SEC = 0.11
 
+# Cream edge pulse framing PlayEntry act-enter banners (aspect2d border strips).
+# Soft rubber-hose cream frame that pops with the act banner hose (#70) —
+# mirrors reclaim wave-announce cream edge (#87). Sunny cream / pastel only;
+# opposite of polluted ink edge vignette. No keyblades / KH branding.
+PLAY_ENTRY_BANNER_CREAM_EDGE_ENABLED = True
+PLAY_ENTRY_BANNER_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)
+PLAY_ENTRY_BANNER_CREAM_EDGE = 0.28  # strip thickness in aspect2d units
+PLAY_ENTRY_BANNER_CREAM_EDGE_PEAK = 0.42
+PLAY_ENTRY_BANNER_CREAM_EDGE_PULSE = 0.28  # mid-beat alpha after peak
+PLAY_ENTRY_BANNER_CREAM_EDGE_IN_SEC = 0.08
+PLAY_ENTRY_BANNER_CREAM_EDGE_HOLD_SEC = 0.10
+PLAY_ENTRY_BANNER_CREAM_EDGE_PULSE_SEC = 0.12
+PLAY_ENTRY_BANNER_CREAM_EDGE_OUT_SEC = 0.36
+# Above ink entry vignette (48); below handoff / celebration plates (60+).
+PLAY_ENTRY_BANNER_CREAM_EDGE_BIN = 50
+PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_COUNT = 6
+PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_SIZE = 0.022
+PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_DRIFT = 0.18
+PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_SEC = 0.28
+PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_COLOR = (1.0, 0.96, 0.62, 0.9)
+PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
+# Flecks cluster near the act banner (PLAY_ENTRY_BANNER_POS ~z 0.72).
+PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.72)
+
 # CampaignHandoff celebration title — rubber-hose scale pop on act clears.
 # Matches PlayEntry tip/banner hose pattern; cue keeps a lighter settle.
 # Oswald twist / victory copy unchanged — juice only. No KH branding.
