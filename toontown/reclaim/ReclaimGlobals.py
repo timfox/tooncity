@@ -243,6 +243,17 @@ PURITY_METER_TICK_FLECK_COLOR = (1.0, 0.96, 0.62, 0.95)
 PURITY_METER_TICK_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
 PURITY_METER_TICK_FLECK_BIN = 48
 
+# Progressive street cream wash while reclaim purity fills (geom + soft veil).
+# Matches purity-meter / burst cream — rubber-hose sunny clear, not KH blue.
+# Overlay bin sits above pollution ink haze (25) and below purity meter (45).
+STREET_WASH_CREAM = (1.0, 0.97, 0.82)
+STREET_WASH_STRENGTH = 1.0
+STREET_WASH_OVERLAY_PEAK_ALPHA = 0.20
+STREET_WASH_OVERLAY_BIN = 28
+STREET_WASH_LERP_SEC = 0.32
+STREET_WASH_ADVANCE_SEC = 0.42
+STREET_WASH_CLEAR_SEC = 0.55
+
 # Reclaim-complete purity burst (HUD overlay + sting).
 # Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.
 PURITY_BURST_PEAK_ALPHA = 0.78
