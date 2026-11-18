@@ -1,7 +1,8 @@
 """Rubber-hose cream juice for reclaim wave banners.
 
 Wave clear: soft aspect2d cream flash, expanding ring, and sunny flecks.
-Wave announce: cream edge-strip pulse framing the wave plate + tip flecks.
+Wave announce: cream edge-strip pulse framing the wave plate + tip flecks
+plus StreetSparkle-style cream sparkle flecks along the cream frame.
 Wave-clear cream shimmer hang (WaveClearCreamShimmerFx) follows this burst
 as a delayed residual layer — do not restage flash/ring there.
 
@@ -40,6 +41,7 @@ class WaveCreamBurstFxClient(DirectObject):
         self._edgeIval = None
         self._edgeRootNP = None
         self._edgeFleckNPs = []
+        self._edgeSparkleNPs = []
         self.accept('reclaimWaveCleared', self._onWaveCleared)
         self.accept('reclaimWaveAnnounce', self._onWaveAnnounce)
 
@@ -97,7 +99,7 @@ class WaveCreamBurstFxClient(DirectObject):
         self._ival.start()
 
     def playEdgePulse(self):
-        """Cream border strips + tip flecks framing the wave-announce plate."""
+        """Cream border strips + tip flecks + StreetSparkle cream sparkles."""
         if not getattr(ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_ENABLED', True):
             return
         self.clearEdge()
@@ -140,8 +142,10 @@ class WaveCreamBurstFxClient(DirectObject):
                 blendType='easeIn'),
         )
         fleckParts = self._spawnEdgeFlecks(parent)
+        sparkleParts = self._spawnEdgeSparkles(parent)
         parts = [edgePart]
         parts.extend(fleckParts)
+        parts.extend(sparkleParts)
         self._edgeIval = Sequence(
             Parallel(*parts),
             Func(self.clearEdge),
@@ -262,6 +266,97 @@ class WaveCreamBurstFxClient(DirectObject):
                         fleck, max(0.01, sec), 0.1, blendType='easeIn'),
                     LerpColorScaleInterval(
                         fleck, max(0.01, sec), Vec4(er, eg, eb, ea),
+                        blendType='easeIn'),
+                ),
+            ))
+        return parts
+
+    def _spawnEdgeSparkles(self, parent):
+        """StreetSparkle chip/cross flecks rising along the cream edge frame."""
+        if not getattr(
+                ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ENABLED',
+                True):
+            return []
+        count = int(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_COUNT', 8))
+        if count <= 0:
+            return []
+        size = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SIZE', 0.018))
+        rise = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_RISE', 0.30))
+        spread = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SPREAD', 1.10))
+        sec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SEC', 0.36))
+        binSort = int(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_BIN', 50)) + 2
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_COLOR',
+            (1.0, 0.98, 0.72, 0.90))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_END_COLOR',
+            (1.0, 0.94, 0.55, 0.0))
+        origin = getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ORIGIN',
+            (0.0, 0.0, 0.68))
+        try:
+            ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+        except Exception:
+            ox, oy, oz = 0.0, 0.0, 0.68
+
+        parts = []
+        for i in range(count):
+            try:
+                # Fan across the top cream strip; chip/cross like StreetSparkle.
+                t = (float(i) / max(1, count - 1)) - 0.5
+                angle = (2.0 * pi * i) / float(count) + 0.28
+                cm = CardMaker('reclaim-wave-cream-edge-sparkle-%s' % i)
+                if (i % 3) == 0:
+                    cm.setFrame(
+                        -size * 0.35, size * 0.35, -size * 1.30, size * 1.30)
+                elif (i % 3) == 1:
+                    cm.setFrame(
+                        -size * 1.30, size * 1.30, -size * 0.35, size * 0.35)
+                else:
+                    cm.setFrame(-size, size, -size, size)
+                sparkle = parent.attachNewNode(cm.generate())
+                sparkle.setTransparency(TransparencyAttrib.MAlpha)
+                sparkle.setColor(r, g, b, 1)
+                sparkle.setColorScale(r, g, b, 0)
+                startX = ox + t * spread + cos(angle) * 0.03
+                startZ = oz + 0.016 * (i % 3) + sin(angle) * 0.016
+                sparkle.setPos(startX, oy, startZ)
+                sparkle.setScale(0.4 + 0.08 * (i % 3))
+                sparkle.setBin('fixed', binSort + (i % 2))
+                sparkle.setDepthTest(False)
+                sparkle.setDepthWrite(False)
+                self._edgeSparkleNPs.append(sparkle)
+            except Exception:
+                continue
+
+            end = Point3(
+                startX + cos(angle) * 0.08,
+                oy,
+                startZ + rise * (0.5 + 0.5 * ((i % 4) / 3.0)))
+            delay = 0.018 * i
+            twinkle = 0.04 + 0.01 * (i % 3)
+            parts.append(Sequence(
+                Wait(delay),
+                Parallel(
+                    LerpColorScaleInterval(
+                        sparkle, twinkle, Vec4(r, g, b, a),
+                        blendType='easeOut'),
+                    LerpScaleInterval(
+                        sparkle, twinkle, 1.12, blendType='easeOut'),
+                ),
+                Parallel(
+                    LerpPosInterval(
+                        sparkle, max(0.01, sec), end, blendType='easeOut'),
+                    LerpScaleInterval(
+                        sparkle, max(0.01, sec), 0.06, blendType='easeIn'),
+                    LerpColorScaleInterval(
+                        sparkle, max(0.01, sec), Vec4(er, eg, eb, ea),
                         blendType='easeIn'),
                 ),
             ))
@@ -440,6 +535,13 @@ class WaveCreamBurstFxClient(DirectObject):
                 except Exception:
                     pass
         self._edgeFleckNPs = []
+        for np in self._edgeSparkleNPs:
+            if np is not None and not np.isEmpty():
+                try:
+                    np.removeNode()
+                except Exception:
+                    pass
+        self._edgeSparkleNPs = []
 
 
 _client = None
