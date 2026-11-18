@@ -345,13 +345,24 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertTrue(hasattr(cg, 'GAGSTER_TELEGRAPH_CHARGE_COLOR'))
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_COLOR'))
         self.assertTrue(hasattr(cg, 'GAGSTER_LOB_ARC_Z'))
-        # Gunk Gagster telegraph / puddle warn juice — cream/ink landing warn.
+        # Gunk Gagster telegraph / puddle warn juice (#197) — teal bounce-pie
+        # + cream/ink landing warn so Punchline lob wind-up is readable.
         self.assertTrue(hasattr(cg, 'GAGSTER_TELEGRAPH_PUDDLE_LOOK'))
         puddle_look = cg.GAGSTER_TELEGRAPH_PUDDLE_LOOK
         self.assertEqual(puddle_look.get('id'), 'teal-gag-puddle-warn')
         self.assertIn('puddleInkColor', puddle_look)
         self.assertIn('puddleCreamColor', puddle_look)
         self.assertIn('pieColor', puddle_look)
+        self.assertIn('creamFleckCount', puddle_look)
+        self.assertIn('puddleHalf', puddle_look)
+        self.assertGreater(float(puddle_look.get('puddleHalf', 0)), 0.5)
+        self.assertGreater(int(puddle_look.get('creamFleckCount', 0)), 0)
+        pie = puddle_look.get('pieColor')
+        self.assertIsInstance(pie, tuple)
+        self.assertGreaterEqual(len(pie), 3)
+        # Teal charge (R low, B high) — distinct from brown Brute spit.
+        self.assertLess(float(pie[0]), float(pie[2]))
+        self.assertLessEqual(float(puddle_look.get('holdSec', 99)), 0.35)
         gagster_fx_rel = 'toontown/corruption/GagsterPuddleTelegraphFx.py'
         _assert_module_file(gagster_fx_rel)
         gagster_fx_names = _class_and_func_names(_module_ast(gagster_fx_rel))
@@ -360,12 +371,18 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         gagster_fx_methods = _class_method_names(
             _module_ast(gagster_fx_rel), 'GagsterPuddleTelegraphWarn')
         self.assertIn('play', gagster_fx_methods)
+        self.assertIn('clear', gagster_fx_methods)
         self.assertIn('_buildPuddleWarn', gagster_fx_methods)
         self.assertIn('_buildBouncePie', gagster_fx_methods)
+        self.assertIn('_buildCreamWarnFlecks', gagster_fx_methods)
         corrupt_src = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('GagsterPuddleTelegraphWarn', corrupt_src)
+        self.assertIn('__isGunkGagster', corrupt_src)
         self.assertIn('__playGagsterTelegraphPuddle', corrupt_src)
         self.assertIn('__clearGagsterTelegraphPuddle', corrupt_src)
+        # Gunk-only gate on telegraph announce (not Smudge/Brute/Snare).
+        self.assertIn('isGagster and not look', corrupt_src)
+        self.assertGreater(corrupt_src.count('__clearGagsterTelegraphPuddle'), 2)
         ai_src = _read('toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('gag_lob', ai_src)
         self.assertIn('__resolveGagsterPuddle', ai_src)
@@ -736,7 +753,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('beginCreamDissolve', pollution_src)
         self.assertIn('setCreamDissolveBlend', pollution_src)
 
-        # Incomplete-reclaim re-creep — pure stays pure; contested slowly re-inks.
+        # Incomplete-reclaim re-creep (#194) — pure stays pure; contested
+        # residual ink slowly re-inks toward cap (not full blackout).
         for recreep_key in (
                 'STREET_SECURED',
                 'STREET_RECLAIMING',
@@ -755,13 +773,60 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertTrue(
             hasattr(cg, 'streetAllowsRecreep'),
             msg='CorruptionGlobals missing streetAllowsRecreep')
+        # Value lock (#194): enabled seep, 2.5s tick, +0.04/tick, cap 0.85.
+        self.assertIs(cg.POLLUTION_RECREEP_ENABLED, True)
+        self.assertAlmostEqual(cg.POLLUTION_RECREEP_TICK_SEC, 2.5, places=2)
+        self.assertAlmostEqual(cg.POLLUTION_RECREEP_PER_TICK, 0.04, places=3)
+        self.assertAlmostEqual(cg.POLLUTION_RECREEP_CAP, 0.85, places=2)
+        self.assertLess(cg.POLLUTION_RECREEP_CAP, 1.0)
+        self.assertFalse(cg.streetAllowsRecreep(cg.STREET_SECURED))
+        self.assertFalse(cg.streetAllowsRecreep(cg.STREET_RECLAIMING))
+        self.assertTrue(cg.streetAllowsRecreep(cg.STREET_CONTESTED))
         self.assertEqual(cg.pollutionRecreepStep(0.0), cg.POLLUTION_PURE)
         self.assertGreater(cg.pollutionRecreepStep(0.3), 0.3)
+        self.assertAlmostEqual(cg.pollutionRecreepStep(0.40), 0.44, places=5)
+        recreep_msg = str(cg.POLLUTION_RECREEP_MSG).lower()
+        self.assertIn('ink', recreep_msg)
+        self.assertIn('reclaim', recreep_msg)
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
+            self.assertNotIn(banned, recreep_msg)
+        pollution_ai_methods = _class_method_names(
+            _module_ast('toontown/corruption/PollutionManagerAI.py'),
+            'PollutionManagerAI')
+        for recreep_method in (
+                'markStreetSecured',
+                'markStreetReclaiming',
+                'markStreetContested',
+                '_ensureRecreepTask',
+                '__recreepTick',
+                '_announceRecreep'):
+            self.assertIn(
+                recreep_method, pollution_ai_methods,
+                msg='PollutionManagerAI missing %s' % recreep_method)
+        pollution_ai_src = _read(
+            'toontown/corruption/PollutionManagerAI.py')
+        self.assertIn('pollutionRecreeping', pollution_ai_src)
+        self.assertIn('POLLUTION_RECREEP_MSG', pollution_ai_src)
         director_ai_src = _read(
             'toontown/reclaim/DistributedReclaimDirectorAI.py')
         self.assertIn('markStreetContested', director_ai_src)
         self.assertIn('markStreetSecured', director_ai_src)
         self.assertIn('markStreetReclaiming', director_ai_src)
+        # Contested only on ACTIVE bail-out; complete secures (no re-creep).
+        stop_idx = director_ai_src.find('def stop(self):')
+        complete_idx = director_ai_src.find('def __complete(self):')
+        self.assertGreater(stop_idx, 0)
+        self.assertGreater(complete_idx, 0)
+        stop_snip = director_ai_src[stop_idx:complete_idx]
+        self.assertIn('markStreetContested', stop_snip)
+        self.assertIn('wasActive', stop_snip)
+        complete_snip = director_ai_src[complete_idx:complete_idx + 900]
+        self.assertIn('markStreetSecured', complete_snip)
+        self.assertNotIn('markStreetContested', complete_snip)
+        # Client presentation follows setZonePollution (no extra AI thrash).
+        client_pollution_src = _read(
+            'toontown/corruption/PollutionManager.py')
+        self.assertIn('Incomplete reclaim re-creep', client_pollution_src)
 
         # Dodge roll cream sparkle flecks (#101) — glitter along smear trail.
         for dodge_sparkle_key in (
@@ -2366,6 +2431,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIsInstance(jc_window, float)
         self.assertGreater(jc_start, 0.0)
         self.assertGreater(jc_window, 0.0)
+        # Timing lock (#196) — 0.12 rise lockout / 0.45 hang window.
+        self.assertAlmostEqual(jc_start, 0.12, places=2)
+        self.assertAlmostEqual(jc_window, 0.45, places=2)
         for jc_helper in (
                 'juggleCancelSlamHitIndex',
                 'isJuggleCancelWindowOpen'):
@@ -2387,10 +2455,21 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('hackslash-juggle-cancel', melee_src)
         self.assertIn('_cancelJuggleIntoSlam', melee_src)
         self.assertIn('juggleCancelSlamHitIndex', melee_src)
+        self.assertIn('_armJuggleCancelWindow', melee_src)
         self.assertIn('juggle→F slam', config_src)
         self.assertIn('juggleCancelSlamHitIndex', hack_init_src)
         self.assertIn('isJuggleCancelWindowOpen', hack_init_src)
         self.assertIn('juggle cancel', magic_src)
+        # Demo hint stays rubber-hose (no KH product nouns in player-facing copy).
+        demo_hint_node = _toplevel_value(config_tree, 'DEMO_HINT')
+        demo_hint = _literal(demo_hint_node)
+        if isinstance(demo_hint, list):
+            demo_hint = ''.join(str(part) for part in demo_hint)
+        self.assertIsInstance(demo_hint, str)
+        hint_l = demo_hint.lower()
+        self.assertIn('juggle→f slam', hint_l)
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, hint_l)
 
         # Hub tip discoverability (#184) — Oswald + Loopy + C, no magic words.
         hub_tip_node = _toplevel_value(self.campaign_tree, 'HUB_TIP')
@@ -2456,7 +2535,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('pickCycleChoice', hack_init)
         self.assertIn('nextCycleIndex', hack_init)
 
-        # Mid-act Oswald trust fracture (#190) + Punchline deepen unease tip.
+        # Mid-act Oswald trust fracture (#190) + Punchline deepen unease tip
+        # (#198). Finale stays sunny (no fracture) — foreshadow only.
         acts_node = _toplevel_value(self.campaign_tree, 'ACTS')
         acts = [_literal(elt) for elt in acts_node.elts]
         loopy_act = next(
@@ -2465,10 +2545,15 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         punch_act = next(
             (a for a in acts if isinstance(a, dict) and a.get('id') == 'punchline'),
             None)
+        finale_act = next(
+            (a for a in acts if isinstance(a, dict) and a.get('id') == 'finale'),
+            None)
         self.assertIsNotNone(loopy_act)
         self.assertIsNotNone(punch_act)
+        self.assertIsNotNone(finale_act)
         self.assertIs(loopy_act.get('trustFracture'), True)
         self.assertIs(punch_act.get('trustFracture'), True)
+        self.assertFalse(bool(finale_act.get('trustFracture')))
         handoff = loopy_act.get('handoff') or ''
         if isinstance(handoff, list):
             handoff = ''.join(str(part) for part in handoff)
@@ -2479,16 +2564,27 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         punch_tip = punch_act.get('entryTip') or ''
         if isinstance(punch_tip, list):
             punch_tip = ''.join(str(part) for part in punch_tip)
+        punch_cue = punch_act.get('nextCue') or ''
+        if isinstance(punch_cue, list):
+            punch_cue = ''.join(str(part) for part in punch_cue)
         self.assertIn('rubbery again', str(punch_handoff).lower())
         self.assertIn('half-beat off', str(punch_tip).lower())
-        for banned in ('keyblade', 'kingdom hearts', 'caused the corruption'):
+        self.assertIn('half-beat late', str(punch_cue).lower())
+        # Combat cues stay on Punchline tip while cheer feels off.
+        tip_l = str(punch_tip).lower()
+        self.assertIn('gunk gagster', tip_l)
+        self.assertIn('reclaim', tip_l)
+        for banned in (
+                'keyblade', 'kingdom hearts', 'caused the corruption', 'sora'):
             self.assertNotIn(banned, str(punch_handoff).lower())
-            self.assertNotIn(banned, str(punch_tip).lower())
+            self.assertNotIn(banned, tip_l)
+            self.assertNotIn(banned, str(punch_cue).lower())
         for fracture_key in (
                 'OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED',
                 'OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC',
                 'OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_COUNT',
-                'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC'):
+                'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC',
+                'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT'):
             self.assertIn(
                 fracture_key, _toplevel_assign_names(self.campaign_tree),
                 msg='CampaignGlobals missing %s' % fracture_key)
@@ -2496,15 +2592,36 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIs(
             campaign_assigns.get('OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED'),
             True)
+        fracture_rest = campaign_assigns.get(
+            'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC')
+        if isinstance(fracture_rest, float):
+            self.assertGreaterEqual(fracture_rest, 0.10)
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('trustFracture', handoff_src)
         self.assertIn('playOswaldTrustFractureCreamEdge', handoff_src)
         play_src = _read('toontown/campaign/PlayEntry.py')
         self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', play_src)
+        # Punchline tipHose uses fracture settle when trustFracture is armed.
+        tip_idx = play_src.find('def _tipHosePopInterval')
+        self.assertGreater(tip_idx, 0)
+        punch_idx = play_src.find("tipHose == 'punchline'", tip_idx)
+        silly_idx = play_src.find("tipHose == 'silly'", tip_idx)
+        self.assertGreater(punch_idx, 0)
+        self.assertGreater(silly_idx, punch_idx)
+        punch_snip = play_src[punch_idx:silly_idx]
+        self.assertIn("punchAct.get('trustFracture')", punch_snip)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC', punch_snip)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', punch_snip)
         edge_fx_names = _class_and_func_names(
             _module_ast('toontown/campaign/ActBannerCreamEdgeFx.py'))
         self.assertIn('playOswaldTrustFractureCreamEdge', edge_fx_names)
         self.assertIn('clearOswaldTrustFractureCreamEdge', edge_fx_names)
+        camp_magic_src = _read('toontown/campaign/MagicWords.py')
+        camp_magic_l = camp_magic_src.lower()
+        self.assertIn('tip unease', camp_magic_l)
+        self.assertIn('punchline', camp_magic_l)
+        self.assertIn('no keyblades', camp_magic_l)
+        self.assertNotIn('kingdom hearts', camp_magic_l)
 
         # TTC polluted tunnel placemarkers (#192) — hub discoverability.
         crumb_rel = 'toontown/safezone/CorruptStreetBreadcrumb.py'

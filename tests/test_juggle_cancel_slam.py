@@ -59,6 +59,11 @@ class JuggleCancelSlamTest(unittest.TestCase):
         self.assertTrue(self.cfg.JUGGLE_CANCEL_BUFFER)
         self.assertGreater(self.cfg.JUGGLE_CANCEL_START_SEC, 0.0)
         self.assertGreater(self.cfg.JUGGLE_CANCEL_WINDOW_SEC, 0.0)
+        # Timing lock (#196) — 0.12 rise lockout / 0.45 hang window.
+        self.assertAlmostEqual(
+            self.cfg.JUGGLE_CANCEL_START_SEC, 0.12, places=2)
+        self.assertAlmostEqual(
+            self.cfg.JUGGLE_CANCEL_WINDOW_SEC, 0.45, places=2)
         # Lockout ends around mid-juggle rise; window covers hang + early fall.
         mid_up = self.cfg.LAUNCH_UP_SEC[1]
         mid_hang = self.cfg.LAUNCH_HANG_SEC[1]
@@ -73,6 +78,7 @@ class JuggleCancelSlamTest(unittest.TestCase):
         hint_l = self.cfg.DEMO_HINT.lower()
         self.assertNotIn('keyblade', hint_l)
         self.assertNotIn('kingdom hearts', hint_l)
+        self.assertNotIn('sora', hint_l)
 
     def test_slam_hit_index(self):
         slam = self.cfg.juggleCancelSlamHitIndex
@@ -80,19 +86,23 @@ class JuggleCancelSlamTest(unittest.TestCase):
         self.assertEqual(slam(3), 2)
         self.assertEqual(slam(1), 0)
         self.assertEqual(slam(0), 0)
+        # Finisher slam is always the last combo beat.
+        self.assertEqual(slam(self.cfg.COMBO_LENGTH), self.cfg.COMBO_LENGTH - 1)
 
     def test_juggle_cancel_window_open_helper(self):
         open_fn = self.cfg.isJuggleCancelWindowOpen
+        start = self.cfg.JUGGLE_CANCEL_START_SEC
+        until = start + self.cfg.JUGGLE_CANCEL_WINDOW_SEC
         # Not armed.
-        self.assertFalse(open_fn(False, 0.12, 0.57, 0.20))
+        self.assertFalse(open_fn(False, start, until, start + 0.08))
         # Lockout (before openAt).
-        self.assertFalse(open_fn(True, 0.12, 0.57, 0.05))
-        # Live window.
-        self.assertTrue(open_fn(True, 0.12, 0.57, 0.12))
-        self.assertTrue(open_fn(True, 0.12, 0.57, 0.40))
+        self.assertFalse(open_fn(True, start, until, start - 0.01))
+        # Live window — opens at start, covers hang.
+        self.assertTrue(open_fn(True, start, until, start))
+        self.assertTrue(open_fn(True, start, until, start + 0.28))
         # Closed at/after until.
-        self.assertFalse(open_fn(True, 0.12, 0.57, 0.57))
-        self.assertFalse(open_fn(True, 0.12, 0.57, 0.60))
+        self.assertFalse(open_fn(True, start, until, until))
+        self.assertFalse(open_fn(True, start, until, until + 0.03))
 
 
 def main() -> int:
