@@ -12,10 +12,10 @@ WaveClearCreamWashPulse vocabulary).
 
 Wave start (pack spawn): further-deepened sunny cream rim + whole-meter
 squash→stretch hose-pop with richer rising cream flecks / soft halo past
-#239 so wave begin reads juicier still — distinct from mid-wave warm
-rim-flash cream (#213 / #234 / #275), wave-clear mid-screen sparkle
-(#229 / #273), purity-complete hose settle (#225 / #266), and secured-lock
-green hold (#209 / #261).
+#280 so wave begin reads juicier still — distinct from mid-wave warm
+rim-flash cream (#213 / #234 / #275 / #302), wave-clear mid-screen sparkle
+(#229 / #273 / #297), purity-complete hose settle (#225 / #266 / #292),
+and secured-lock green hold (#209 / #261 / #286).
 
 Purity complete (after celebration settles): further-deepened soft tall
 stretch → longer settle on the full meter with richer settling pure-cream
@@ -230,11 +230,12 @@ class PurityMeterHud(object):
         """Further-deepened sunny cream rim + hose pop when a wave starts.
 
         Squash→stretch→settle on the meter root with richer rising cream
-        flecks / soft halo past #239 so pack-wave begin reads juicier
+        flecks / soft halo past #280 so pack-wave begin reads juicier
         still — not mid-wave warm rim-flash cream warn (#213 / #234 /
-        #275), not wave-clear mid-screen sparkle (#229 / #273), not
-        purity-complete hose settle (#225 / #266), and not secured-lock
-        green hold + soft uniform scale (#209 / #261).
+        #275 / #302), not wave-clear mid-screen sparkle (#229 / #273 /
+        #297), not purity-complete hose settle (#225 / #266 / #292), and
+        not secured-lock green hold + soft uniform scale (#209 / #261 /
+        #286).
         """
         if not getattr(ReclaimGlobals, 'WAVE_START_METER_POP_ENABLED', True):
             return
@@ -243,9 +244,9 @@ class PurityMeterHud(object):
         self._clearPressureWarn()
         rimColor = getattr(
             ReclaimGlobals, 'WAVE_START_METER_RIM_COLOR',
-            (1.0, 0.97, 0.58, 0.94))
+            (1.0, 0.98, 0.54, 0.98))
         rimSec = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_RIM_SEC', 0.34))
+            ReclaimGlobals, 'WAVE_START_METER_RIM_SEC', 0.40))
         if self._rimNP is not None and not self._rimNP.isEmpty():
             try:
                 self._rimNP.setColor(*rimColor)
@@ -254,12 +255,12 @@ class PurityMeterHud(object):
 
         sqx, sqy, sqz, squashSec = getattr(
             ReclaimGlobals, 'WAVE_START_METER_POP_SQUASH',
-            (0.78, 1.0, 0.44, 0.06))
+            (0.74, 1.0, 0.38, 0.07))
         stx, sty, stz, stretchSec = getattr(
             ReclaimGlobals, 'WAVE_START_METER_POP_STRETCH',
-            (1.16, 1.0, 1.46, 0.09))
+            (1.18, 1.0, 1.54, 0.10))
         settleSec = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_POP_SETTLE_SEC', 0.16))
+            ReclaimGlobals, 'WAVE_START_METER_POP_SETTLE_SEC', 0.20))
         try:
             baseScale = self._root.getScale()
             try:
@@ -340,18 +341,18 @@ class PurityMeterHud(object):
         if self._root is None or self._root.isEmpty():
             return None
         half = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_HALF', 0.088))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_HALF', 0.098))
         start = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_START', 0.36))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_START', 0.32))
         peak = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_PEAK', 1.42))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_PEAK', 1.52))
         sec = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_SEC', 0.32))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_SEC', 0.38))
         peakA = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_PEAK_ALPHA', 0.20))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_PEAK_ALPHA', 0.24))
         r, g, b, a = getattr(
             ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_COLOR',
-            (1.0, 0.98, 0.74, 1.0))
+            (1.0, 0.99, 0.70, 1.0))
         binSort = int(getattr(
             ReclaimGlobals, 'WAVE_START_METER_CREAM_BIN', 48))
         try:
@@ -391,25 +392,25 @@ class PurityMeterHud(object):
     def _spawnWaveStartCreamFlecks(self):
         """Richer sunny cream chips rising off the meter on wave-start hose."""
         count = int(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_COUNT', 8))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_COUNT', 10))
         if count <= 0 or self._root is None or self._root.isEmpty():
             return []
         halfW = float(ReclaimGlobals.PURITY_METER_WIDTH) * 0.5
         halfH = float(ReclaimGlobals.PURITY_METER_HEIGHT) * 0.5
         size = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_SIZE', 0.015))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_SIZE', 0.017))
         rise = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_RISE', 0.15))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_RISE', 0.18))
         spread = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_SPREAD', 0.26))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_SPREAD', 0.30))
         sec = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_CREAM_SEC', 0.36))
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_SEC', 0.42))
         r, g, b, a = getattr(
             ReclaimGlobals, 'WAVE_START_METER_CREAM_COLOR',
-            (1.0, 0.99, 0.68, 0.96))
+            (1.0, 0.99, 0.64, 0.98))
         er, eg, eb, ea = getattr(
             ReclaimGlobals, 'WAVE_START_METER_CREAM_END_COLOR',
-            (1.0, 0.95, 0.50, 0.0))
+            (1.0, 0.96, 0.46, 0.0))
         fleckBin = int(getattr(
             ReclaimGlobals, 'WAVE_START_METER_CREAM_BIN', 48))
 

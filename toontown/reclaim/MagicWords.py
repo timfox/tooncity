@@ -39,7 +39,7 @@ class StartReclaim(MagicWord):
         'mid-wave rim, or wave-start hose). Wave announce '
         'plates get a cream edge pulse with cream sparkle flecks + soft '
         'cream wash pulse, and the purity meter juicily hose-pops with '
-        'richer sunny cream flecks past #239 so wave begin reads juicier '
+        'richer sunny cream flecks past #280 so wave begin reads juicier '
         'still (flatter squash + taller stretch + rising cream, not '
         'mid-wave warm rim flash, wave-clear sparkle, or secured green '
         'lock). Mid-wave purity stall / ink-rise whispers a '
