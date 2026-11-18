@@ -1295,6 +1295,62 @@ SNARE_TELEGRAPH_STRING_LOOK = {
     'binSort': 43,
 }
 
+# Balloon Snare string-snap counter window — after the amber string telegraph
+# pops readable, open a short player punish window into melee. Synergizes with
+# hackslash perfect-dodge counter (same rewarded opener path). Snare mid-
+# telegraph melee can interrupt the wind-up so the zip-flier feels fair.
+# Toontown spiritual-sequel tone — no keyblades / KH branding.
+SNARE_STRING_COUNTER_ENABLED = True
+# Seconds after announceAttackTelegraph before the counter window arms
+# (lets the string-lash pop read first).
+SNARE_STRING_COUNTER_ARM_DELAY_SEC = 0.14
+# How long the rewarded counter→melee window stays open once armed.
+SNARE_STRING_COUNTER_WINDOW_SEC = 0.48
+# Planar range — only arm the local player's counter when this Snare is a
+# readable melee threat (covers string-lash hit reach + a little slack).
+SNARE_STRING_COUNTER_RANGE = 10.5
+# Opener damage / play-rate multipliers while the string-snap counter is spent
+# (match perfect-dodge counter feel so telegraph punish and dodge punish rhyme).
+SNARE_STRING_COUNTER_DAMAGE_MULT = 1.5
+SNARE_STRING_COUNTER_RATE_MULT = 1.2
+# Cancel Snare wind-up when melee lands mid-telegraph (AI interrupt).
+SNARE_STRING_COUNTER_INTERRUPT = True
+# Messenger name — DistributedCorruptToon → MeleeCombat thin hook.
+SNARE_STRING_COUNTER_EVENT = 'corruptSnareStringSnapCounter'
+
+
+def snareStringCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after a Snare string-snap counter."""
+    if mult is None:
+        mult = SNARE_STRING_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def snareStringCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after a Snare string-snap counter."""
+    if mult is None:
+        mult = SNARE_STRING_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isSnareStringCounterWindowOpen(armed, until, now):
+    """True while a Balloon Snare string-snap counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def snareStringCounterArmAt(now, delay=None):
+    """Absolute time when the string-snap counter should arm after telegraph."""
+    if delay is None:
+        delay = SNARE_STRING_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def snareStringCounterUntil(armedAt, window=None):
+    """Absolute expiry for a string-snap counter window armed at armedAt."""
+    if window is None:
+        window = SNARE_STRING_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
 # Gunk Gagster gag-lob — teal bounce-bomb wind-up, arcing pie lob, puddle splat.
 # Reads apart from Brute spit (green linear), Snare lash (amber horizontal),
 # and Smudge melee (purple squash).

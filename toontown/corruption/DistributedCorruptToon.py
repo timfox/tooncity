@@ -6,6 +6,7 @@ from direct.distributed import DistributedNode
 from direct.interval.IntervalGlobal import (
     LerpColorScaleInterval, LerpPosInterval, LerpScaleInterval, Parallel,
     Sequence, Func, Wait)
+from direct.task import Task
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathPopFx import (
@@ -104,6 +105,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._overlordHitCreamWash = None
         self._snareTelegraphString = None
         self._snareStringSnapSplash = None
+        self._snareStringCounterTask = None
         self._bruteTelegraphSpit = None
         self._bruteSludgeSplash = None
         self._smudgeTelegraphInk = None
@@ -196,6 +198,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
+        self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearSmudgeTelegraphInk()
@@ -604,8 +607,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Balloon Snare-only: amber string-lash telegraph pop for zip/lash read.
         if isSnare and not look:
             self.__playSnareTelegraphString()
+            # After the string pops readable, arm a short punish→melee window.
+            self.__scheduleSnareStringSnapCounter()
         else:
             self.__clearSnareTelegraphString()
+            self.__clearSnareStringSnapCounter()
         # Gunk Gagster-only: teal bounce-pie + cream/ink puddle warn for lob read.
         if isGagster and not look:
             self.__playGagsterTelegraphPuddle()
@@ -666,6 +672,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
+        # Impact lands on the player — drop any pending string-snap counter.
+        self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
         self.__clearGagsterTelegraphPuddle()
@@ -1223,6 +1231,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
+        self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearSmudgeTelegraphInk()
@@ -1773,6 +1782,55 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._snareTelegraphString = None
+
+    def __scheduleSnareStringSnapCounter(self):
+        """After string telegraph reads, arm a short punish→melee counter window.
+
+        Client-only cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path so telegraph punish and dodge punish rhyme.
+        """
+        self.__clearSnareStringSnapCounter()
+        if not getattr(
+                CorruptionGlobals, 'SNARE_STRING_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'SNARE_STRING_COUNTER_ARM_DELAY_SEC', 0.14))
+        window = float(getattr(
+            CorruptionGlobals, 'SNARE_STRING_COUNTER_WINDOW_SEC', 0.48))
+        event = str(getattr(
+            CorruptionGlobals, 'SNARE_STRING_COUNTER_EVENT',
+            'corruptSnareStringSnapCounter'))
+
+        def _fire(task=None):
+            self._snareStringCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._snareStringCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('snare-string-counter'))
+        except Exception:
+            self._snareStringCounterTask = None
+            _fire()
+
+    def __clearSnareStringSnapCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('snare-string-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._snareStringCounterTask = None
 
     def __playBruteTelegraphSpit(self):
         """Green spit-gob telegraph pop — Sludge Brute wind-ups only."""

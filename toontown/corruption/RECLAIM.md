@@ -313,6 +313,9 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 ~hackslash 0
 # Snare: amber horizontal rubber stretch + string-lash telegraph pop
 # (BalloonSnareTelegraphFx) + vine zip SFX; string line snaps on hit.
+# After the string telegraph reads, a short string-snap counter window
+# arms — F / LMB for a bumped snappy punish opener (same reward path as
+# perfect-dodge counter); melee mid-telegraph interrupts the wind-up.
 # Land F / LMB — cheap amber string-snap splash (SnareStringSnapSplashFx)
 # on each hit; defeat layers a larger splash with CorruptDeathPopFx.
 # Fast fragile zip-flier — distinct from Smudge melee and Brute spit.

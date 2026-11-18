@@ -2412,6 +2412,60 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         magic_src = _read('toontown/hackslash/MagicWords.py')
         self.assertIn('perfect-dodge counter', magic_src)
 
+        # Balloon Snare string-snap counter window — after amber string
+        # telegraph, short punish→melee (synergy with perfect-dodge counter).
+        cg_names = set(dir(self.corruption))
+        for snare_counter_key in (
+                'SNARE_STRING_COUNTER_ENABLED',
+                'SNARE_STRING_COUNTER_ARM_DELAY_SEC',
+                'SNARE_STRING_COUNTER_WINDOW_SEC',
+                'SNARE_STRING_COUNTER_RANGE',
+                'SNARE_STRING_COUNTER_DAMAGE_MULT',
+                'SNARE_STRING_COUNTER_RATE_MULT',
+                'SNARE_STRING_COUNTER_INTERRUPT',
+                'SNARE_STRING_COUNTER_EVENT'):
+            self.assertIn(
+                snare_counter_key, cg_names,
+                msg='CorruptionGlobals missing snare string counter %s' % (
+                    snare_counter_key,))
+        self.assertIs(self.corruption.SNARE_STRING_COUNTER_ENABLED, True)
+        self.assertIs(self.corruption.SNARE_STRING_COUNTER_INTERRUPT, True)
+        self.assertGreater(
+            float(self.corruption.SNARE_STRING_COUNTER_ARM_DELAY_SEC), 0.0)
+        self.assertGreater(
+            float(self.corruption.SNARE_STRING_COUNTER_WINDOW_SEC), 0.0)
+        self.assertGreater(
+            float(self.corruption.SNARE_STRING_COUNTER_DAMAGE_MULT), 1.0)
+        self.assertGreater(
+            float(self.corruption.SNARE_STRING_COUNTER_RATE_MULT), 1.0)
+        self.assertEqual(
+            self.corruption.SNARE_STRING_COUNTER_EVENT,
+            'corruptSnareStringSnapCounter')
+        for snare_helper in (
+                'snareStringCounterOpenerDamage',
+                'snareStringCounterOpenerRate',
+                'isSnareStringCounterWindowOpen',
+                'snareStringCounterArmAt',
+                'snareStringCounterUntil'):
+            self.assertTrue(
+                callable(getattr(self.corruption, snare_helper, None)),
+                msg='CorruptionGlobals missing helper %s' % snare_helper)
+        corrupt_src = _read('toontown/corruption/DistributedCorruptToon.py')
+        self.assertIn('__scheduleSnareStringSnapCounter', corrupt_src)
+        self.assertIn('__clearSnareStringSnapCounter', corrupt_src)
+        self.assertIn('corruptSnareStringSnapCounter', corrupt_src)
+        corrupt_ai_src = _read(
+            'toontown/corruption/DistributedCorruptToonAI.py')
+        self.assertIn('__maybeInterruptSnareTelegraph', corrupt_ai_src)
+        self.assertIn('SNARE_STRING_COUNTER_INTERRUPT', corrupt_ai_src)
+        self.assertIn('_onSnareStringSnapCounter', melee_src)
+        self.assertIn('corruptSnareStringSnapCounter', melee_src)
+        self.assertIn('windowSec', melee_src)
+        self.assertIn('Snare string→F counter', config_src)
+        self.assertIn('Balloon Snare', magic_src)
+        reclaim_md = _read('toontown/corruption/RECLAIM.md')
+        self.assertIn('string-snap counter', reclaim_md)
+
         # Air-juggle → slam cancel window — mid-juggle hang cancel into
         # finisher slam (aerial control; builds on dodge-cancel grammar).
         for juggle_cancel_key in (

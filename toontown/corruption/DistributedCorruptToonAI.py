@@ -116,9 +116,37 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         damage = max(0, int(amount))
         newHp = max(0, self.hp - damage)
         self.b_setHp(newHp)
+        # Balloon Snare string-snap punish: melee mid-telegraph cancels the
+        # wind-up so the zip-flier feels fair to counter.
+        if newHp > 0:
+            self.__maybeInterruptSnareTelegraph()
         if newHp <= 0:
             self.__defeat(attackerId)
         return damage
+
+    def __maybeInterruptSnareTelegraph(self):
+        """Cancel Snare wind-up when punished mid-string telegraph."""
+        if not self._attacking:
+            return
+        if not getattr(
+                CorruptionGlobals, 'SNARE_STRING_COUNTER_INTERRUPT', True):
+            return
+        if (CorruptionGlobals.normalizeArchetype(self.archetype)
+                != CorruptionGlobals.ARCHETYPE_SNARE):
+            return
+        self._attacking = False
+        self._puddleXY = None
+        try:
+            taskMgr.remove(self.uniqueName('corrupt-attack'))
+        except Exception:
+            pass
+        # Brief recovery so a successful punish doesn't chain into an instant
+        # re-telegraph — still snappier than a full miss cooldown.
+        cool = float(self._stats.get(
+            'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN))
+        self._attackReadyAt = (
+            globalClock.getFrameTime() + max(0.2, cool * 0.45))  # noqa: F821
+        self.notify.debug('snare string-snap interrupt — wind-up cancelled')
 
     def requestHackSlashHit(self, damage):
         """Client melee RPC: SoftTarget applyHackSlashHit → AI damage."""

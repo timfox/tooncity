@@ -883,6 +883,6 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 # On-screen hint while demo mode is active
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  Shift/X dodge→F  |  perfect dodge→F counter  |  '
-    'juggle→F slam  |  hurt→F/Shift cancel  |  Tab/` soft-lock cycle  |  '
-    'hit soft-lock aim  |  ~melee'
+    'Snare string→F counter  |  juggle→F slam  |  hurt→F/Shift cancel  |  '
+    'Tab/` soft-lock cycle  |  hit soft-lock aim  |  ~melee'
 )
