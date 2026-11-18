@@ -9,11 +9,11 @@ PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
 Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
 + cream-sparkle pop (CampaignHandoffConfetti) framed by a soft cream edge
-pulse tuned to the carnival glitter — no KH / keyblade framing. Campaign
-victory fires a soft cream confetti swell + cream sparkle on the purity
-cheer only, framed by a victory-tuned cream edge and a delayed soft cream
-wash pulse; it clears before the Oswald twist / FinalePhaseFx reveal so
-the bittersweet sting stays intact.
+pulse and a delayed soft cream wash pulse tuned to the carnival glitter —
+no KH / keyblade framing. Campaign victory fires a soft cream confetti
+swell + cream sparkle on the purity cheer only, framed by a victory-tuned
+cream edge and a delayed soft cream wash pulse; it clears before the
+Oswald twist / FinalePhaseFx reveal so the bittersweet sting stays intact.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -44,6 +44,10 @@ from toontown.campaign.CampaignHandoffConfetti import (
     playVictoryCreamSwell,
 )
 from toontown.campaign.CampaignPower import applyPowerBump
+from toontown.campaign.HandoffCreamWashFx import (
+    clearHandoffCreamWash,
+    playHandoffCreamWash,
+)
 from toontown.campaign.VictoryCreamWashFx import (
     clearVictoryCreamWash,
     playVictoryCreamWash,
@@ -271,6 +275,12 @@ class CampaignHandoffClient(DirectObject):
                 playHandoffCreamEdge()
             except Exception:
                 pass
+            # Soft cream wash pulse after cream edge / sparkle (#124/#99) —
+            # victory / melee / perfect-dodge wash grammar. Handoff-only.
+            try:
+                playHandoffCreamWash()
+            except Exception:
+                pass
         elif trustSettle:
             # Trust hose-settle without carnival — keep #117 trust cream edge.
             try:
@@ -482,6 +492,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearHandoffCreamEdge()
+        except Exception:
+            pass
+        try:
+            clearHandoffCreamWash()
         except Exception:
             pass
         try:
