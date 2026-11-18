@@ -232,6 +232,21 @@ WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.98, 0.72, 0.90)
 WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.55, 0.0)
 # Along the top cream strip (edge ~z 1.0 - EDGE); below tip-fleck origin.
 WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.68)
+# Wave-announce cream wash pulse — soft aspect2d veil after cream edge sparkle
+# (#113) / cream edge (#87). Purity-fill / wave-clear / cheer cream wash
+# grammar. Quieter than wave-clear wash (#144) / cheer wash (#142);
+# cream/pastel only. Toggle WAVE_ANNOUNCE_CREAM_EDGE_WASH_ENABLED = False
+# drops wash only.
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_ENABLED = True
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_DELAY_SEC = 0.40  # after edge pulse; after sparkle (~0.36)
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_PEAK = 0.09
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_MID = 0.045
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_IN_SEC = 0.05
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_PULSE_SEC = 0.09
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_HOLD_SEC = 0.06
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_OUT_SEC = 0.34
+WAVE_ANNOUNCE_CREAM_EDGE_WASH_BIN = 48  # soft veil under edge (50) / flecks (51) / sparkles (52)
 
 # Persistent reclaim purity meter (aspect2d bar: pollution → purity fill).
 # Empty bar = street still inky; fills warm as packs clear pollution.

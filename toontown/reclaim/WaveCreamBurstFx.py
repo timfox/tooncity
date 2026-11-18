@@ -2,7 +2,9 @@
 
 Wave clear: soft aspect2d cream flash, expanding ring, and sunny flecks.
 Wave announce: cream edge-strip pulse framing the wave plate + tip flecks
-plus StreetSparkle-style cream sparkle flecks along the cream frame.
+plus StreetSparkle-style cream sparkle flecks along the cream frame, then a
+soft cream wash pulse after the edge sparkle — do not restage flash/ring
+there.
 Wave-clear cream shimmer hang (WaveClearCreamShimmerFx) follows this burst
 as a delayed residual layer, then a quieter cream aftershock, then a soft
 cream wash pulse — do not restage flash/ring there.
@@ -28,10 +30,11 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.WaveEdgeCreamWashFx import WaveEdgeCreamWashPulse
 
 
 class WaveCreamBurstFxClient(DirectObject):
-    """Wave-clear cream burst + wave-announce cream edge pulse."""
+    """Wave-clear cream burst + wave-announce cream edge pulse + wash."""
 
     def __init__(self):
         DirectObject.__init__(self)
@@ -40,9 +43,11 @@ class WaveCreamBurstFxClient(DirectObject):
         self._ringNP = None
         self._fleckNPs = []
         self._edgeIval = None
+        self._edgeBurstIval = None
         self._edgeRootNP = None
         self._edgeFleckNPs = []
         self._edgeSparkleNPs = []
+        self._creamWash = None
         self.accept('reclaimWaveCleared', self._onWaveCleared)
         self.accept('reclaimWaveAnnounce', self._onWaveAnnounce)
 
@@ -100,7 +105,7 @@ class WaveCreamBurstFxClient(DirectObject):
         self._ival.start()
 
     def playEdgePulse(self):
-        """Cream border strips + tip flecks + StreetSparkle cream sparkles."""
+        """Cream border strips + tip flecks + sparkles + soft cream wash."""
         if not getattr(ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_ENABLED', True):
             return
         self.clearEdge()
@@ -147,8 +152,60 @@ class WaveCreamBurstFxClient(DirectObject):
         parts = [edgePart]
         parts.extend(fleckParts)
         parts.extend(sparkleParts)
+
+        # Edge Parallel starts immediately; wash rides beside it.
+        edgeBurst = Parallel(*parts, name='reclaimWaveCreamEdgeBurst')
+        self._edgeBurstIval = edgeBurst
+        try:
+            edgeBurst.start()
+        except Exception:
+            self.clearEdge()
+            return
+
+        # Soft cream wash pulse after cream edge sparkle — purity-fill /
+        # wave-clear wash vocabulary.
+        washHold = 0.0
+        try:
+            wash = WaveEdgeCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+                # Hold teardown beside delayed wash so clearEdge() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        ReclaimGlobals,
+                        'WAVE_ANNOUNCE_CREAM_EDGE_WASH_DELAY_SEC', 0.40))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'WAVE_ANNOUNCE_CREAM_EDGE_WASH_IN_SEC', 0.05))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'WAVE_ANNOUNCE_CREAM_EDGE_WASH_PULSE_SEC', 0.09))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'WAVE_ANNOUNCE_CREAM_EDGE_WASH_HOLD_SEC', 0.06))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'WAVE_ANNOUNCE_CREAM_EDGE_WASH_OUT_SEC', 0.34))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        edgeSec = inSec + holdSec + pulseSec + outSec
+        sparkleSec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SEC', 0.36))
+        fleckSec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_SEC', 0.28))
+        burstHold = max(edgeSec, sparkleSec, fleckSec) + 0.04
+
+        hold = [Wait(burstHold)]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
         self._edgeIval = Sequence(
-            Parallel(*parts),
+            Parallel(*hold),
             Func(self.clearEdge),
             name='reclaimWaveCreamEdgePulse',
         )
@@ -522,6 +579,19 @@ class WaveCreamBurstFxClient(DirectObject):
             except Exception:
                 pass
             self._edgeIval = None
+        if self._edgeBurstIval is not None:
+            try:
+                self._edgeBurstIval.pause()
+            except Exception:
+                pass
+            self._edgeBurstIval = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         root = self._edgeRootNP
         self._edgeRootNP = None
         if root is not None and not root.isEmpty():
