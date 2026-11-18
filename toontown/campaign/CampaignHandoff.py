@@ -19,7 +19,9 @@ framing. Campaign victory fires a soft cream confetti swell + cream
 sparkle on the purity cheer only, framed by a victory-tuned cream edge
 and a delayed soft cream wash pulse with a residual cream aftershock
 (flecks + soft halo); it clears before the Oswald twist / FinalePhaseFx
-reveal so the bittersweet sting stays intact.
+reveal so the bittersweet sting stays intact. When Silly finale betrayal
+reveal fires (oswaldRevealBanner), a dedicated betrayal handoff plate
+hose-pops the twist copy — complements almost-confess tip (#207).
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -36,10 +38,12 @@ from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
 from toontown.campaign.ActBannerCreamEdgeFx import (
+    clearFinaleRevealCreamEdge,
     clearHandoffCreamEdge,
     clearOswaldTrustBannerCreamEdge,
     clearOswaldTrustFractureCreamEdge,
     clearVictoryCreamEdge,
+    playFinaleRevealCreamEdge,
     playHandoffCreamEdge,
     playOswaldTrustBannerCreamEdge,
     playOswaldTrustFractureCreamEdge,
@@ -72,6 +76,7 @@ _CUE_SCALE = 0.052
 _POWER_SCALE = 0.036
 _HOLD_SEC = 4.6
 _CARD_COLOR = (0.12, 0.28, 0.22, 0.55)
+_BETRAYAL_CARD_COLOR = (0.18, 0.08, 0.10, 0.62)
 _TITLE_COLOR = Vec4(0.55, 1.0, 0.78, 1)
 _SUB_COLOR = Vec4(0.95, 1.0, 0.88, 1)
 _CUE_COLOR = Vec4(1.0, 0.92, 0.42, 1)
@@ -97,10 +102,14 @@ class CampaignHandoffClient(DirectObject):
         self._ival = None
         self._localReclaimCount = 0
         self._finaleClears = 0
+        self._betrayalArmed = False
         self.accept('purityRestoreFx', self._onPurityRestore)
         self.accept('campaignVictory', self._onVictory)
         self.accept('campaignPhase', self._onPhase)
         self.accept('reclaimFinalePhase', self._onReclaimFinalePhase)
+        # FinalePhaseFx fires this when the betrayal AV sting lands — handoff
+        # plate owns the readable twist copy (hose-pop, not plain TextNode).
+        self.accept('oswaldRevealBanner', self._onOswaldBetrayalBanner)
 
     def destroy(self):
         self.ignoreAll()
@@ -129,17 +138,18 @@ class CampaignHandoffClient(DirectObject):
                     powerMult=mult,
                     nextStreet=None)
             else:
-                tease = getattr(
-                    CampaignGlobals, 'FINALE_TWIST_TEASE', '') or (
-                    act.get('nextCue') or 'Oswald caused the corruption')
+                # Purity cheer only — betrayal handoff plate lands the twist
+                # when oswaldRevealBanner fires (synced with FinalePhaseFx AV).
+                self._betrayalArmed = bool(act.get('betrayalHandoff', True))
                 self._celebrate(
-                    act.get('handoffTitle') or 'VICTORY…?',
-                    subtitle=act.get('handoff') or (
-                        '%s smiles too wide…' % face),
-                    nextCue=tease,
-                    color=_TWIST_COLOR,
+                    'TOON CITY IS SAVED!',
+                    subtitle='%s leads the neighborhood cheer' % face,
+                    nextCue='Purity holds…',
+                    color=_VICTORY_COLOR,
                     powerMult=mult,
-                    nextStreet=None)
+                    nextStreet=None,
+                    holdSec=2.4,
+                    creamSwell=True)
             return
         if act is None:
             self._celebrate(
@@ -189,22 +199,34 @@ class CampaignHandoffClient(DirectObject):
         return None, None
 
     def _onVictory(self, reclaimCount=0):
-        # Purity cheer (+ cream confetti swell), then Oswald twist tease.
-        # Cream swell is cheer-only — twist / FinalePhaseFx reveal stay
-        # bittersweet (no carnival after the truth lands).
+        # Purity cheer (+ cream confetti swell). Twist copy is owned by the
+        # betrayal handoff plate on oswaldRevealBanner — cream swell stays
+        # cheer-only so the bittersweet sting stays intact. Fallback twist
+        # onDone only when betrayal handoff is not armed.
         face = _face()
         tease = getattr(CampaignGlobals, 'FINALE_TWIST_TEASE', '')
         teaseColor = Vec4(*getattr(
             CampaignGlobals, 'FINALE_TWIST_TEASE_COLOR',
             (1.0, 0.55, 0.35, 1.0)))
-        if not tease:
+        finale = None
+        for act in CampaignGlobals.ACTS:
+            if act.get('finale'):
+                finale = act
+                break
+        betrayalOwnsTwist = bool(
+            finale and finale.get('betrayalHandoff', True) and tease)
+        if betrayalOwnsTwist:
+            self._betrayalArmed = True
+        if not tease or betrayalOwnsTwist:
             self._celebrate(
                 'TOON CITY IS SAVED!',
                 subtitle='%s leads the neighborhood cheer' % face,
-                nextCue='Purity holds — take a victory lap!',
+                nextCue=('Purity holds…' if betrayalOwnsTwist else
+                         'Purity holds — take a victory lap!'),
                 color=_VICTORY_COLOR,
                 powerMult=None,
                 nextStreet=None,
+                holdSec=2.4 if betrayalOwnsTwist else None,
                 creamSwell=True)
             return
 
@@ -227,6 +249,57 @@ class CampaignHandoffClient(DirectObject):
                 nextStreet=None,
                 holdSec=3.8))
 
+    def _onOswaldBetrayalBanner(self, title=''):
+        """Land the betrayal handoff plate when Silly finale reveal fires."""
+        if not self._betrayalArmed:
+            # Still land if finale act asks for betrayal handoff (messenger
+            # may arrive without a prior purity/victory cheer on this client).
+            finale = None
+            for act in CampaignGlobals.ACTS:
+                if act.get('finale'):
+                    finale = act
+                    break
+            if not (finale and finale.get('betrayalHandoff', True)):
+                return
+        self._betrayalArmed = False
+        self._showBetrayalHandoff(title=title)
+
+    def _showBetrayalHandoff(self, title=''):
+        """Hose-pop handoff plate that lands Oswald caused the corruption."""
+        face = _face()
+        finale = None
+        for act in CampaignGlobals.ACTS:
+            if act.get('finale'):
+                finale = act
+                break
+        banner = (
+            title
+            or getattr(CampaignGlobals, 'FINALE_REVEAL_BANNER', '')
+            or (finale.get('handoffTitle') if finale else None)
+            or 'OSWALD CAUSED THE CORRUPTION')
+        subtitle = getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SUB', '') or (
+            finale.get('handoff') if finale else '') or (
+            '%s smiles too wide — the ink was his all along' % face)
+        cue = getattr(
+            CampaignGlobals, 'FINALE_BETRAYAL_HANDOFF_CUE', '') or (
+            finale.get('nextCue') if finale else '') or (
+            'Oswald caused the corruption')
+        color = Vec4(*getattr(
+            CampaignGlobals, 'FINALE_REVEAL_BANNER_COLOR',
+            (1.0, 0.42, 0.28, 1.0)))
+        hold = float(getattr(
+            CampaignGlobals, 'FINALE_BETRAYAL_HANDOFF_HOLD_SEC', 3.8))
+        self._celebrate(
+            banner,
+            subtitle=subtitle,
+            nextCue=cue,
+            color=color,
+            powerMult=None,
+            nextStreet=None,
+            holdSec=hold,
+            betrayalHandoff=True)
+
     def _onPhase(self, phaseIndex, message):
         # Skip duplicate flash when finale phase FX already own phase 2.
         phase = int(phaseIndex) + 1
@@ -244,17 +317,26 @@ class CampaignHandoffClient(DirectObject):
     def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
                    powerMult=None, nextStreet=None, holdSec=None, onDone=None,
                    confetti=False, trustSettle=False, creamSwell=False,
-                   trustFracture=False):
+                   trustFracture=False, betrayalHandoff=False):
         """Staged rubber-hose celebration: card → title pop → cue → hold."""
         self._clear()
         root = aspect2d.attachNewNode('campaign-handoff-root')  # noqa: F821
-        root.setPos(0, 0, 0.42)
+        # Betrayal plate sits a touch lower so FinalePhaseFx shadow/flash
+        # still read above the ink sting without covering the title.
+        root.setPos(0, 0, 0.36 if betrayalHandoff else 0.42)
         root.setTransparency(TransparencyAttrib.MAlpha)
         root.setColorScale(1, 1, 1, 0)
         self._rootNP = root
         hold = _HOLD_SEC if holdSec is None else float(holdSec)
 
-        if creamSwell:
+        if betrayalHandoff:
+            # Soft cream edge frame under the twist plate — FinalePhaseFx
+            # still owns flash/shadow/aftershock; plate owns readable copy.
+            try:
+                playFinaleRevealCreamEdge()
+            except Exception:
+                pass
+        elif creamSwell:
             # Soft cream swell under the purity victory plate only.
             try:
                 origin = getattr(
@@ -324,7 +406,8 @@ class CampaignHandoffClient(DirectObject):
             cm.setFrame(-1.15, 1.15, -0.28, 0.22)
             card = root.attachNewNode(cm.generate())
             card.setTransparency(TransparencyAttrib.MAlpha)
-            card.setColor(*_CARD_COLOR)
+            card.setColor(*(
+                _BETRAYAL_CARD_COLOR if betrayalHandoff else _CARD_COLOR))
             card.setBin('fixed', 60)
             card.setDepthTest(False)
             card.setDepthWrite(False)
@@ -333,16 +416,28 @@ class CampaignHandoffClient(DirectObject):
 
         titleScale = float(getattr(
             CampaignGlobals, 'HANDOFF_TITLE_SCALE', 0.078))
+        if betrayalHandoff:
+            titleScale = float(getattr(
+                CampaignGlobals, 'HANDOFF_TITLE_SCALE', 0.078)) * 0.95
         titleNP = self._makeLine(
             root, 'campaign-handoff-title', title, color, titleScale, 0.08)
         subScale = float(getattr(
             CampaignGlobals, 'OSWALD_TRUST_SUB_SCALE', _SUB_SCALE))
-        if not trustSettle:
+        if not trustSettle and not betrayalHandoff:
             subScale = _SUB_SCALE
         subNP = None
         if subtitle:
             subColor = _SUB_COLOR
-            if trustFracture:
+            if betrayalHandoff:
+                betr = getattr(
+                    CampaignGlobals, 'FINALE_BETRAYAL_SUB_COLOR', None)
+                if betr is not None:
+                    subColor = Vec4(*betr)
+                else:
+                    subColor = Vec4(*getattr(
+                        CampaignGlobals, 'FINALE_REVEAL_SUB_COLOR',
+                        (1.0, 0.72, 0.48, 1.0)))
+            elif trustFracture:
                 frac = getattr(
                     CampaignGlobals, 'OSWALD_TRUST_FRACTURE_SUB_COLOR', None)
                 if frac is not None:
@@ -356,8 +451,14 @@ class CampaignHandoffClient(DirectObject):
             cueText = nextCue or ('Next street → %s' % nextStreet)
         cueNP = None
         if cueText:
+            cueColor = _CUE_COLOR
+            if betrayalHandoff:
+                betrCue = getattr(
+                    CampaignGlobals, 'FINALE_BETRAYAL_CUE_COLOR', None)
+                if betrCue is not None:
+                    cueColor = Vec4(*betrCue)
             cueNP = self._makeLine(
-                root, 'campaign-handoff-cue', cueText, _CUE_COLOR,
+                root, 'campaign-handoff-cue', cueText, cueColor,
                 _CUE_SCALE, -0.11)
             cueNP.setColorScale(1, 1, 1, 0)
             cueNP.setScale(_CUE_SCALE * 0.55)
@@ -373,11 +474,13 @@ class CampaignHandoffClient(DirectObject):
             LerpColorScaleInterval(root, 0.18, Vec4(1, 1, 1, 1)),
             self._titleHosePopInterval(
                 titleNP, titleScale, trustSettle=trustSettle,
-                trustFracture=trustFracture),
+                trustFracture=trustFracture,
+                betrayalHandoff=betrayalHandoff),
         ]
         if subNP is not None:
-            if trustSettle:
+            if trustSettle or betrayalHandoff:
                 # Oswald trusted cheer/lead subtitle — tip-matched hose settle.
+                # Betrayal plate also hose-pops the twist sub for readability.
                 parts.append(Sequence(
                     Wait(0.22),
                     Parallel(
@@ -427,12 +530,13 @@ class CampaignHandoffClient(DirectObject):
         self._ival.start()
 
     def _titleHosePopInterval(self, titleNP, settleScale, trustSettle=False,
-                              trustFracture=False):
+                              trustFracture=False, betrayalHandoff=False):
         """Tip-matched squash → stretch → settle on the handoff title.
 
         Early/mid Oswald trusted reclaim-lead clears append a soft
         overshoot → rest settle bounce after the hose pop. Trust fracture
-        holds the settle a rubbery beat longer (mid-act unease).
+        holds the settle a rubbery beat longer (mid-act unease). Betrayal
+        handoff holds even longer so the twist title lands hard.
         """
         settle = float(settleScale)
         sx, sy, sz, squashSec = getattr(
@@ -458,8 +562,15 @@ class CampaignHandoffClient(DirectObject):
             LerpScaleInterval(
                 titleNP, settleSec, settlePt, blendType='easeIn'),
         ]
-        if trustSettle:
-            if trustFracture:
+        if trustSettle or betrayalHandoff:
+            if betrayalHandoff:
+                ox, oy, oz, overSec = getattr(
+                    CampaignGlobals, 'FINALE_BETRAYAL_SETTLE_OVERSHOOT',
+                    (0.86, 1.0, 1.22, 0.10))
+                restSec = float(getattr(
+                    CampaignGlobals, 'FINALE_BETRAYAL_SETTLE_REST_SEC',
+                    0.16))
+            elif trustFracture:
                 ox, oy, oz, overSec = getattr(
                     CampaignGlobals, 'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT',
                     (0.88, 1.0, 1.18, 0.09))
@@ -565,6 +676,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearOswaldTrustCreamWash()
+        except Exception:
+            pass
+        try:
+            clearFinaleRevealCreamEdge()
         except Exception:
             pass
         if self._rootNP and not self._rootNP.isEmpty():

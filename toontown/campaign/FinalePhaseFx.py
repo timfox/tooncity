@@ -4,13 +4,14 @@ FOV punch + fullscreen flash + render color slam — mirrors hackslash /
 purity-restore patterns so the phase flip reads as a boss moment.
 
 On Silly finale victory / twist, plays a short readable AV reveal sting
-(banner + FOV/flash + rubber-hose Oswald silhouette shadow flash +
-optional SFX) that Oswald caused the corruption, then a soft cream
-aftershock framed by a quieter cream edge pulse and a delayed soft cream
-wash pulse that support the beat without undoing it. Composes with #82
-victory cream swell (cheer only — cleared before reveal) and #129
-victory cream edge. Toontown spiritual sequel — no keyblades / no KH
-branding.
+(FOV/flash + rubber-hose Oswald silhouette shadow flash + optional SFX)
+that Oswald caused the corruption, then a soft cream aftershock framed
+by a quieter cream edge pulse and a delayed soft cream wash pulse that
+support the beat without undoing it. Readable twist copy is owned by
+CampaignHandoff's betrayal handoff plate (hose-pop) via oswaldRevealBanner
+— complements almost-confess tip (#207). Composes with #82 victory cream
+swell (cheer only — cleared before reveal) and #129 victory cream edge.
+Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec3, Vec4
@@ -190,7 +191,23 @@ class FinalePhaseFxClient(DirectObject):
             name='oswaldRevealFovPunch',
         )
         self._playRevealSfx()
-        self._showRevealBanners()
+        # Readable twist copy: CampaignHandoff betrayal plate (hose-pop).
+        # Local TextNode banners stay available as fallback if handoff is down.
+        title = getattr(
+            CampaignGlobals, 'FINALE_REVEAL_BANNER',
+            CampaignGlobals.FINALE_TWIST_TEASE)
+        try:
+            from toontown.campaign.CampaignHandoff import (
+                ensureCampaignHandoffClient)
+            ensureCampaignHandoffClient()
+            handoffOwnsCopy = True
+        except Exception:
+            handoffOwnsCopy = False
+        if handoffOwnsCopy:
+            messenger.send('oswaldRevealBanner', [title])  # noqa: F821
+        else:
+            self._showRevealBanners()
+            messenger.send('oswaldRevealBanner', [title])  # noqa: F821
 
         parts = []
         if self._flashNP is not None:
@@ -215,16 +232,18 @@ class FinalePhaseFxClient(DirectObject):
 
         holdSec = float(getattr(
             CampaignGlobals, 'FINALE_REVEAL_HOLD_SEC', 3.6))
-        title = getattr(
-            CampaignGlobals, 'FINALE_REVEAL_BANNER',
-            CampaignGlobals.FINALE_TWIST_TEASE)
-        messenger.send('oswaldRevealBanner', [title])  # noqa: F821
 
         # Cream aftershock after ink/shadow sting — residual cream that
         # supports the twist (does not replay #82 victory swell).
         aftershockDelay = float(getattr(
             CampaignGlobals, 'FINALE_REVEAL_CREAM_AFTERSHOCK_DELAY_SEC', 0.72))
         stingParts = Parallel(*parts) if parts else Wait(0.01)
+        fadeTail = []
+        if not handoffOwnsCopy:
+            fadeTail = [
+                Func(self._fadeRevealBanners),
+                Wait(0.45),
+            ]
         self._ival = Sequence(
             Parallel(
                 stingParts,
@@ -234,8 +253,7 @@ class FinalePhaseFxClient(DirectObject):
                 ),
             ),
             Wait(max(0.0, holdSec - 1.2)),
-            Func(self._fadeRevealBanners),
-            Wait(0.45),
+            *fadeTail,
             Func(self._clear),
             name='oswaldRevealSting',
         )

@@ -456,6 +456,45 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('almost confess', magic_l)
         self.assertIn('half-truth', magic_l)
 
+    def test_finale_betrayal_handoff_banner(self):
+        """Finale betrayal handoff plate lands twist when reveal fires."""
+        camp = self.camp
+        finale = self.acts_by_id['finale']
+        self.assertTrue(finale.get('betrayalHandoff'))
+        self.assertFalse(bool(finale.get('trustFracture')))
+        self.assertIn('caused the corruption', camp.FINALE_REVEAL_BANNER.lower())
+        self.assertIn('trusted', camp.FINALE_REVEAL_SUB.lower())
+        self.assertIn('smile', camp.FINALE_BETRAYAL_HANDOFF_CUE.lower())
+        self.assertGreater(camp.FINALE_BETRAYAL_HANDOFF_HOLD_SEC, 0.0)
+        self.assertGreater(camp.FINALE_BETRAYAL_SETTLE_REST_SEC, 0.0)
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'key blade'):
+            self.assertNotIn(banned, camp.FINALE_REVEAL_BANNER.lower())
+            self.assertNotIn(banned, camp.FINALE_REVEAL_SUB.lower())
+            self.assertNotIn(banned, camp.FINALE_BETRAYAL_HANDOFF_CUE.lower())
+        handoff_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'CampaignHandoff.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('oswaldRevealBanner', handoff_src)
+        self.assertIn('_onOswaldBetrayalBanner', handoff_src)
+        self.assertIn('_showBetrayalHandoff', handoff_src)
+        self.assertIn('betrayalHandoff', handoff_src)
+        self.assertIn('FINALE_BETRAYAL_SETTLE_OVERSHOOT', handoff_src)
+        self.assertIn('playFinaleRevealCreamEdge', handoff_src)
+        finale_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'FinalePhaseFx.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('ensureCampaignHandoffClient', finale_src)
+        self.assertIn('oswaldRevealBanner', finale_src)
+        magic_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8')
+        magic_l = magic_src.lower()
+        self.assertIn('betrayal handoff', magic_l)
+        self.assertIn('no keyblades', magic_l)
+
     def test_act_param_keys_present_for_director(self):
         for act_id, act in self.acts_by_id.items():
             params = resolve_act_params(act)
