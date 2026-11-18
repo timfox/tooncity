@@ -5,9 +5,11 @@ celebration — Oswald as the trusted face, title hose-pop, clear next-street
 cue — not a single toast line. Finale victory keeps the Oswald twist beat.
 
 Title lands with the same squash→stretch→settle rubber-hose scale pop as
-PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Act handoffs
-also fire a short confetti / streamer pop (CampaignHandoffConfetti) —
-carnival reclaim juice, no KH / keyblade framing.
+PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
+trusted Oswald lead clears also settle-bounce the title and hose-pop the
+Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
+pop (CampaignHandoffConfetti) — carnival reclaim juice, no KH / keyblade
+framing. FinalePhaseFx twist reveal stays separate.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -113,7 +115,8 @@ class CampaignHandoffClient(DirectObject):
                 color=_TITLE_COLOR,
                 powerMult=mult,
                 nextStreet=None,
-                confetti=True)
+                confetti=True,
+                trustSettle=True)
             return
         title = act.get('handoffTitle') or (
             '%s IS PURE!' % act.get('name', 'Street').upper())
@@ -128,7 +131,7 @@ class CampaignHandoffClient(DirectObject):
             nextStreet = None
             nextCue = act.get('nextCue') or (
                 'Take a victory lap with %s' % face)
-        # Loopy→Punchline (and act) handoffs get the carnival confetti pop.
+        # Loopy→Punchline (and act) handoffs: confetti + Oswald trust settle.
         self._celebrate(
             title,
             subtitle=subtitle,
@@ -136,7 +139,8 @@ class CampaignHandoffClient(DirectObject):
             color=_TITLE_COLOR,
             powerMult=mult,
             nextStreet=nextStreet,
-            confetti=True)
+            confetti=True,
+            trustSettle=True)
 
     def _actsForZone(self, zoneId):
         zoneId = int(zoneId)
@@ -199,7 +203,7 @@ class CampaignHandoffClient(DirectObject):
 
     def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
                    powerMult=None, nextStreet=None, holdSec=None, onDone=None,
-                   confetti=False):
+                   confetti=False, trustSettle=False):
         """Staged rubber-hose celebration: card → title pop → cue → hold."""
         self._clear()
         root = aspect2d.attachNewNode('campaign-handoff-root')  # noqa: F821
@@ -235,11 +239,15 @@ class CampaignHandoffClient(DirectObject):
             CampaignGlobals, 'HANDOFF_TITLE_SCALE', 0.078))
         titleNP = self._makeLine(
             root, 'campaign-handoff-title', title, color, titleScale, 0.08)
+        subScale = float(getattr(
+            CampaignGlobals, 'OSWALD_TRUST_SUB_SCALE', _SUB_SCALE))
+        if not trustSettle:
+            subScale = _SUB_SCALE
         subNP = None
         if subtitle:
             subNP = self._makeLine(
                 root, 'campaign-handoff-sub', subtitle, _SUB_COLOR,
-                _SUB_SCALE, -0.02)
+                subScale, -0.02)
             subNP.setColorScale(1, 1, 1, 0)
         cueText = nextCue
         if nextStreet and nextStreet not in (nextCue or ''):
@@ -261,13 +269,25 @@ class CampaignHandoffClient(DirectObject):
 
         parts = [
             LerpColorScaleInterval(root, 0.18, Vec4(1, 1, 1, 1)),
-            self._titleHosePopInterval(titleNP, titleScale),
+            self._titleHosePopInterval(
+                titleNP, titleScale, trustSettle=trustSettle),
         ]
         if subNP is not None:
-            parts.append(Sequence(
-                Wait(0.22),
-                LerpColorScaleInterval(subNP, 0.2, Vec4(1, 1, 1, 1)),
-            ))
+            if trustSettle:
+                # Oswald trusted cheer/lead subtitle — tip-matched hose settle.
+                parts.append(Sequence(
+                    Wait(0.22),
+                    Parallel(
+                        LerpColorScaleInterval(
+                            subNP, 0.2, Vec4(1, 1, 1, 1)),
+                        self._trustSubHosePopInterval(subNP, subScale),
+                    ),
+                ))
+            else:
+                parts.append(Sequence(
+                    Wait(0.22),
+                    LerpColorScaleInterval(subNP, 0.2, Vec4(1, 1, 1, 1)),
+                ))
         if cueNP is not None:
             parts.append(Sequence(
                 Wait(0.42),
@@ -303,8 +323,12 @@ class CampaignHandoffClient(DirectObject):
         )
         self._ival.start()
 
-    def _titleHosePopInterval(self, titleNP, settleScale):
-        """Tip-matched squash → stretch → settle on the handoff title."""
+    def _titleHosePopInterval(self, titleNP, settleScale, trustSettle=False):
+        """Tip-matched squash → stretch → settle on the handoff title.
+
+        Early/mid Oswald trusted reclaim-lead clears append a soft
+        overshoot → rest settle bounce after the hose pop.
+        """
         settle = float(settleScale)
         sx, sy, sz, squashSec = getattr(
             CampaignGlobals, 'HANDOFF_TITLE_POP_SQUASH',
@@ -321,14 +345,53 @@ class CampaignHandoffClient(DirectObject):
             titleNP.setScale(settlePt)
         except Exception:
             return Sequence(name='campaignHandoffTitleHosePopEmpty')
-        return Sequence(
+        parts = [
             LerpScaleInterval(
                 titleNP, float(squashSec), squashPt, blendType='easeOut'),
             LerpScaleInterval(
                 titleNP, float(stretchSec), stretchPt, blendType='easeOut'),
             LerpScaleInterval(
                 titleNP, settleSec, settlePt, blendType='easeIn'),
-            name='campaignHandoffTitleHosePop',
+        ]
+        if trustSettle:
+            ox, oy, oz, overSec = getattr(
+                CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT',
+                (0.90, 1.0, 1.14, 0.07))
+            restSec = float(getattr(
+                CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_REST_SEC', 0.09))
+            overPt = Point3(settle * ox, settle * oy, settle * oz)
+            parts.append(LerpScaleInterval(
+                titleNP, float(overSec), overPt, blendType='easeOut'))
+            parts.append(LerpScaleInterval(
+                titleNP, restSec, settlePt, blendType='easeIn'))
+        return Sequence(*parts, name='campaignHandoffTitleHosePop')
+
+    def _trustSubHosePopInterval(self, subNP, settleScale):
+        """Tip-matched squash → stretch → settle on Oswald trust subtitle."""
+        settle = float(settleScale)
+        sx, sy, sz, squashSec = getattr(
+            CampaignGlobals, 'OSWALD_TRUST_SUB_POP_SQUASH',
+            (1.50, 1.0, 0.56, 0.05))
+        tx, ty, tz, stretchSec = getattr(
+            CampaignGlobals, 'OSWALD_TRUST_SUB_POP_STRETCH',
+            (0.80, 1.0, 1.40, 0.08))
+        settleSec = float(getattr(
+            CampaignGlobals, 'OSWALD_TRUST_SUB_POP_SETTLE_SEC', 0.10))
+        settlePt = Point3(settle, settle, settle)
+        squashPt = Point3(settle * sx, settle * sy, settle * sz)
+        stretchPt = Point3(settle * tx, settle * ty, settle * tz)
+        try:
+            subNP.setScale(settlePt)
+        except Exception:
+            return Sequence(name='campaignHandoffTrustSubHosePopEmpty')
+        return Sequence(
+            LerpScaleInterval(
+                subNP, float(squashSec), squashPt, blendType='easeOut'),
+            LerpScaleInterval(
+                subNP, float(stretchSec), stretchPt, blendType='easeOut'),
+            LerpScaleInterval(
+                subNP, settleSec, settlePt, blendType='easeIn'),
+            name='campaignHandoffTrustSubHosePop',
         )
 
     def _makeLine(self, parent, name, text, color, scale, z):
