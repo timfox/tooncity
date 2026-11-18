@@ -97,7 +97,9 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # presence, layered with soft cream / pastel contrast drips
 # (IdleCreamDripContrastFx) plus sunny cream / pastel sparkle flecks on
 # the cream drip path (IdleCreamDripSparkleFx) plus sunny cream / pastel
-# rim flecks on the ink silhouette (CorruptSilhouetteCreamRimFx).
+# rim flecks on the ink silhouette (CorruptSilhouetteCreamRimFx) plus
+# rising cream / pastel sparkle flecks on the silhouette cream rim
+# (CorruptSilhouetteCreamSparkleFx).
 # Telegraph wind-up pauses idle drips / sparkles / rim flecks and plays
 # a short ink drip / splat pop (CorruptTelegraphInkFx) layered with
 # sunny cream / pastel warn flecks + delayed cream aftershock
@@ -137,6 +139,18 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # flecks along the drip path (IdleCreamDripSparkleFx — silhouette rim
 # sparkle grammar). Telegraph pauses drips + sparkles + rim flecks.
 # IDLE_CREAM_DRIP_SPARKLE_ENABLED = False drops sparkles only.
+```
+
+## Silhouette cream rim rising sparkle demo
+
+```
+~spawncorrupt 2
+~hackslash 0
+# Watch cream rim flecks (CorruptSilhouetteCreamRimFx) with sunny cream /
+# pastel sparkle flecks rising from the rim edge
+# (CorruptSilhouetteCreamSparkleFx — drip-sparkle twinkle grammar).
+# Telegraph pauses drips + sparkles + rim + rising rim sparkles.
+# SILHOUETTE_CREAM_SPARKLE_ENABLED = False drops rising sparkles only.
 ```
 
 ## Telegraph cream warn fleck demo

@@ -801,6 +801,52 @@ IDLE_CREAM_DRIP_SPARKLE_LOOK = {
     'binSort': IDLE_CREAM_DRIP_SPARKLE_BIN,
 }
 
+# Silhouette cream rim rising sparkle flecks — soft sunny chips rising from
+# the CorruptSilhouetteCreamRimFx rim edge between telegraphs (client only).
+# Compose lift/period via CorruptSilhouetteCreamSparkleFx.silhouetteCreamSparkleLook
+# → silhouetteCreamRimLook; fleck size/timing borrows idle cream drip sparkle
+# (#125) twinkle grammar. Distinct from rim orbit (#114) and drip-path sparkle:
+# starts on rim, rises mostly upward with twinkle pop. Not ink-colored.
+# SILHOUETTE_CREAM_SPARKLE_ENABLED = False drops rising sparkles only (rim stays).
+SILHOUETTE_CREAM_SPARKLE_ENABLED = True
+SILHOUETTE_CREAM_SPARKLE_BIN = 44
+SILHOUETTE_CREAM_SPARKLE_COLORS = (
+    (1.0, 0.97, 0.82, 0.84),  # sunny cream
+    (1.0, 0.96, 0.62, 0.78),  # butter
+    (1.0, 0.9, 0.78, 0.74),   # soft peach pastel
+    (0.98, 0.94, 0.88, 0.7),  # warm parchment
+)
+SILHOUETTE_CREAM_SPARKLE_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+SILHOUETTE_CREAM_SPARKLE_LOOK = {
+    'id': 'silhouette-cream-sparkle',
+    # lift / period composed with silhouetteCreamRimLook when played; fallbacks below.
+    'lift': 2.05,
+    'periodSec': 1.18,
+    'periodScale': 0.64,
+    'settleSec': 0.47,
+    'settleBias': -0.08,
+    'fleckCount': 2,
+    'fleckHalf': 0.06,
+    'fleckHalfScale': 0.88,
+    'rimRadius': 0.69,
+    'rimRadiusScale': 0.96,
+    'rimZJitter': 0.15,
+    'rimZJitterScale': 0.7,
+    'fleckDist': 0.12,
+    'fleckLift': 0.55,
+    'fleckSec': 0.4,
+    'fleckSecScale': 1.12,
+    'fleckStagger': 0.038,
+    'fleckColors': SILHOUETTE_CREAM_SPARKLE_COLORS,
+    'fleckEndColors': SILHOUETTE_CREAM_SPARKLE_END_COLORS,
+    'binSort': SILHOUETTE_CREAM_SPARKLE_BIN,
+}
+
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
 BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)
