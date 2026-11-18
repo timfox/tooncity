@@ -63,9 +63,14 @@ COMBO_COUNTER_COLORS = (
 
 # Mid/finisher launcher juice (upward juggle feel on the target).
 LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more
-LAUNCH_HEIGHT = (0.0, 1.6, 2.4)
-LAUNCH_UP_SEC = 0.12
-LAUNCH_DOWN_SEC = 0.18
+LAUNCH_HEIGHT = (0.0, 1.85, 3.1)
+LAUNCH_UP_SEC = (0.0, 0.12, 0.16)
+LAUNCH_HANG_SEC = (0.0, 0.06, 0.14)
+LAUNCH_DOWN_SEC = (0.0, 0.16, 0.22)
+# Local toon hop cue on finisher so the juggle reads as a shared air beat.
+FINISHER_SELF_HOP = 1.15
+FINISHER_SELF_UP_SEC = 0.11
+FINISHER_SELF_DOWN_SEC = 0.2
 
 # I-frame / dodge cue after CorruptToon smacks the local toon.
 IFRAME_SEC = 0.55
