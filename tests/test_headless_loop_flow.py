@@ -584,9 +584,18 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('pickSoftLockAcquire', soft_src)
         self.assertIn('isSoftLockPrioritySubject', soft_src)
         self.assertIn('TARGET_PRIORITY_ENABLED', soft_src)
+        # Sticky hold yields glued adds when Overlord/Oswald is in cone.
+        self.assertIn('shouldStickyYieldToPriority', soft_src)
+        self.assertTrue(
+            soft.shouldStickyYieldToPriority(False, True))
+        self.assertFalse(
+            soft.shouldStickyYieldToPriority(True, True))
+        self.assertFalse(
+            soft.shouldStickyYieldToPriority(False, False))
         hs_init = _read('toontown/hackslash/__init__.py')
         self.assertIn('softLockAcquireRank', hs_init)
         self.assertIn('pickSoftLockAcquire', hs_init)
+        self.assertIn('shouldStickyYieldToPriority', hs_init)
 
         melee_tree = _module_ast('toontown/hackslash/MeleeCombat.py')
         melee_methods = _class_method_names(melee_tree, 'MeleeCombatController')

@@ -27,8 +27,10 @@ TARGET_CYCLE_HALF_ANGLE_DEG = 95.0
 
 # Soft-lock climax / twist priority — prefer Ink Overlord and Corrupted
 # Oswald over nearer pack Smudge adds (Silly P2 adds / betrayal chase).
-# Auto-acquire and fresh Tab still use the forward cone; sticky hold keeps
-# a manual cycle so players can still focus trash when they want. Toggle
+# Auto-acquire, fresh Tab, and sticky hold yield to Overlord/Oswald when
+# one is in the forward acquire cone so pack adds do not glue auto through
+# climax/twist. Sticky still holds when already on a priority subject or
+# when no boss is in cone (manual Tab cycle can still focus trash). Toggle
 # TARGET_PRIORITY_ENABLED = False restores nearest-only soft-lock.
 TARGET_PRIORITY_ENABLED = True
 
