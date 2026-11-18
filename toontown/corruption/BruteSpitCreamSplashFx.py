@@ -3,13 +3,14 @@
 World-space CardMaker juice that fires when the green spit blob lands after
 the telegraph spit-gob wind-up — sunny cream / pastel contrast against the
 green BRUTE_SPIT_BLOB_* so the tank spit reads juicy (rubber-hose corruption
-feel). Deepened spit-land juice: juicier splat/flecks, vertical cream drip
-filaments (spit-gob fall read), then a wider settling aftershock (halo +
-residual flecks) — distinct from Snare counter cream deepen (#245, horizontal
-whip filaments) and Gunk puddle cream deepen (#238, flat ground bloom). Same
-residual grammar as telegraph cream warn aftershock (#121). Wired from
-DistributedCorruptToon.__playSpitBlob. Client only. Toontown spiritual
-sequel — no keyblades / no KH branding.
+feel). Deepened spit-land juice beyond #249: juicier splat/flecks, thicker
+vertical cream drip filaments (spit-gob fall read), then a heavier downward
+settle aftershock (halo + residual flecks) — distinct from Snare counter
+cream deepen (#245, horizontal whip filaments), Gunk puddle cream deepen
+(#238, flat ground bloom), and Smudge hit cream deepen (#259, radial hose
+smears). Same residual grammar as telegraph cream warn aftershock (#121).
+Wired from DistributedCorruptToon.__playSpitBlob. Client only. Toontown
+spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -189,29 +190,29 @@ class BruteSpitCreamSplash(object):
             rim.setDepthWrite(False)
             self._nodes.append(rim)
 
-            peak = float(look.get('splatPeak', 1.72))
-            sec = float(look.get('splatSec', 0.17))
-            peakA = float(look.get('peakAlpha', 0.96))
+            peak = float(look.get('splatPeak', 1.88))
+            sec = float(look.get('splatSec', 0.19))
+            peakA = float(look.get('peakAlpha', 0.98))
             return Parallel(
                 Sequence(
                     LerpColorScaleInterval(
-                        splat, sec * 0.25, Vec4(1, 1, 1, peakA),
+                        splat, sec * 0.22, Vec4(1, 1, 1, peakA),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        splat, sec * 0.75, Vec4(1, 1, 1, 0),
+                        splat, sec * 0.78, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(splat, sec, peak, blendType='easeOut'),
                 Sequence(
                     LerpColorScaleInterval(
-                        rim, sec * 0.2, Vec4(1, 1, 1, 0.65),
+                        rim, sec * 0.18, Vec4(1, 1, 1, 0.7),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        rim, sec * 0.8, Vec4(1, 1, 1, 0),
+                        rim, sec * 0.82, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(
-                    rim, sec, peak * 1.14, blendType='easeOut'),
+                    rim, sec, peak * 1.18, blendType='easeOut'),
             )
         except Exception:
             return None
@@ -247,12 +248,12 @@ class BruteSpitCreamSplash(object):
             cm = CardMaker(
                 'brute-spit-cream-splash-drip-%s' % index)
             # Tall / thin frame — cream drip, not whip filament / puddle bloom.
-            cm.setFrame(-half * 0.55, half * 0.55, -half * 1.55, half * 1.55)
+            cm.setFrame(-half * 0.5, half * 0.5, -half * 1.7, half * 1.7)
             drip = parentNP.attachNewNode(cm.generate())
             start = Point3(
-                origin[0] + side * 0.04,
-                origin[1] + 0.02 * ((index % 2) - 0.5),
-                origin[2] + 0.12 + 0.04 * (index % 3),
+                origin[0] + side * 0.05,
+                origin[1] + 0.025 * ((index % 2) - 0.5),
+                origin[2] + 0.14 + 0.05 * (index % 3),
             )
             drip.setPos(start)
             drip.setBillboardPointEye()
@@ -262,7 +263,7 @@ class BruteSpitCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'BRUTE_SPIT_CREAM_SPLASH_DRIP_COLOR',
-                    (1.0, 0.97, 0.84, 0.92)))
+                    (1.0, 0.97, 0.84, 0.94)))
             tint = 0.92 + 0.06 * (index % 3)
             drip.setColor(
                 min(1.4, color[0] * tint),
@@ -270,7 +271,7 @@ class BruteSpitCreamSplash(object):
                 min(1.4, color[2] * tint),
                 color[3])
             drip.setColorScale(1, 1, 1, 0)
-            drip.setScale(Point3(0.45, 0.45, 0.55))
+            drip.setScale(Point3(0.42, 0.42, 0.6))
             drip.setBin('fixed', int(look.get('binSort', 41)) + 1)
             drip.setDepthWrite(False)
             self._nodes.append(drip)
@@ -278,32 +279,32 @@ class BruteSpitCreamSplash(object):
                 'dripSec',
                 getattr(
                     CorruptionGlobals,
-                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_SEC', 0.22)))
+                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_SEC', 0.25)))
             peakA = float(look.get(
                 'dripPeakAlpha',
                 getattr(
                     CorruptionGlobals,
                     'BRUTE_SPIT_CREAM_SPLASH_DRIP_PEAK_ALPHA',
-                    0.9)))
-            delay = 0.014 * index
+                    0.94)))
+            delay = 0.012 * index
             return Sequence(
                 Wait(delay),
                 Parallel(
                     LerpPosInterval(drip, travel, end, blendType='easeIn'),
                     Sequence(
                         LerpScaleInterval(
-                            drip, travel * 0.35, Point3(0.7, 0.7, 1.55),
+                            drip, travel * 0.32, Point3(0.75, 0.75, 1.7),
                             blendType='easeOut'),
                         LerpScaleInterval(
-                            drip, travel * 0.65, Point3(0.2, 0.2, 1.85),
+                            drip, travel * 0.68, Point3(0.18, 0.18, 2.05),
                             blendType='easeIn'),
                     ),
                     Sequence(
                         LerpColorScaleInterval(
-                            drip, travel * 0.22, Vec4(1, 1, 1, peakA),
+                            drip, travel * 0.2, Vec4(1, 1, 1, peakA),
                             blendType='easeOut'),
                         LerpColorScaleInterval(
-                            drip, travel * 0.78, Vec4(1, 1, 1, 0),
+                            drip, travel * 0.8, Vec4(1, 1, 1, 0),
                             blendType='easeIn'),
                     ),
                 ),
@@ -530,14 +531,14 @@ class BruteSpitCreamSplash(object):
         except Exception:
             return None
 
-        # Settle with a stronger downward bias after spit land (drip residual).
+        # Heavier downward settle after spit land (beyond #249 drip residual).
         end = Point3(
-            origin[0] + cos(angle) * drift * 0.55,
-            origin[1] + sin(angle) * drift * 0.55,
-            origin[2] - fall - 0.08 * (index % 3))
-        peak = size * (1.15 + 0.08 * (index % 2))
+            origin[0] + cos(angle) * drift * 0.5,
+            origin[1] + sin(angle) * drift * 0.5,
+            origin[2] - fall - 0.1 * (index % 3))
+        peak = size * (1.22 + 0.1 * (index % 2))
         self._nodes.append(spark)
-        stagger = 0.02 * (index % 3)
+        stagger = 0.018 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(
@@ -548,10 +549,10 @@ class BruteSpitCreamSplash(object):
                     spark, max(0.01, sec), end, blendType='easeIn'),
                 Sequence(
                     LerpScaleInterval(
-                        spark, max(0.01, sec * 0.4), peak,
+                        spark, max(0.01, sec * 0.38), peak,
                         blendType='easeOut'),
                     LerpScaleInterval(
-                        spark, max(0.01, sec * 0.6), 0.12,
+                        spark, max(0.01, sec * 0.62), 0.1,
                         blendType='easeIn'),
                 ),
             ),

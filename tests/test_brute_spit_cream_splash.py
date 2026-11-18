@@ -97,13 +97,14 @@ class BruteSpitCreamSplashTest(unittest.TestCase):
         self.assertGreater(self.cg.BRUTE_SPIT_CREAM_SPLASH_LIFT, 0.0)
         look = self.cg.BRUTE_SPIT_CREAM_SPLASH_LOOK
         self.assertEqual(look.get('id'), 'brute-spit-cream-splash')
-        # Deepened spit-land splash vs #223 baseline (4 flecks / 3 aftershock).
-        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 6)
-        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.65)
-        self.assertGreaterEqual(float(look.get('fleckLift', 0)), 0.45)
+        # Beyond #249 spit-land deepen (was 6 flecks / 3 drips / 5 aftershock).
+        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 7)
+        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.8)
+        self.assertGreaterEqual(float(look.get('splatHalf', 0)), 0.32)
+        self.assertGreaterEqual(float(look.get('fleckLift', 0)), 0.52)
         self.assertTrue(look.get('dripEnabled'))
-        self.assertGreaterEqual(int(look.get('dripCount', 0)), 3)
-        self.assertGreater(float(look.get('dripFall', 0)), 0.0)
+        self.assertGreaterEqual(int(look.get('dripCount', 0)), 4)
+        self.assertGreaterEqual(float(look.get('dripFall', 0)), 1.05)
         look_id = str(look.get('id', '')).lower()
         self.assertNotIn('keyblade', look_id)
         self.assertNotIn('kingdom hearts', look_id)
@@ -118,15 +119,15 @@ class BruteSpitCreamSplashTest(unittest.TestCase):
         self.assertGreaterEqual(float(drip[2]), 0.55)
         self.assertGreater(
             self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_DELAY_SEC, 0.0)
-        # Deepened spit residual — juicier than #223; distinct from Snare whip.
+        # Heavier spit residual beyond #249; distinct from Snare whip.
         self.assertGreaterEqual(
-            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT, 5)
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT, 6)
         self.assertGreaterEqual(
-            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT, 2)
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT, 3)
         self.assertGreaterEqual(
-            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_FALL, 0.5)
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_FALL, 0.65)
         self.assertGreaterEqual(
-            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF, 0.5)
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF, 0.6)
         # Delay composes toward spit travel (impact timing).
         self.assertGreater(float(self.cg.BRUTE_SPIT_BLOB_TRAVEL), 0.0)
         self.assertGreaterEqual(float(look.get('delayScale', 0)), 0.5)

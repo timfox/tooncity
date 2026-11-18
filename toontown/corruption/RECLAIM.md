@@ -141,9 +141,10 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # cream-wash grammar);
 # Smudge death layers splash with CorruptDeathPopFx for swarm readability.
 # Melee hits on Brute flash BruteSludgeSplashFx (cheap green sludge splash);
-# Brute spit land also fires BruteSpitCreamSplashFx (deepened cream splash +
-# vertical cream drip filaments + delayed cream aftershock) so the spit
-# impact reads juicier after telegraph — distinct from Snare whip / Gunk bloom.
+# Brute spit land also fires BruteSpitCreamSplashFx (deepened cream splash
+# beyond #249 + thicker vertical cream drip filaments + heavier downward
+# cream aftershock) so the spit impact reads juicier after telegraph —
+# distinct from Snare whip / Gunk bloom / Smudge radial hose.
 # Brute death layers splash with CorruptDeathPopFx.
 # Melee hits on Snare flash SnareStringSnapSplashFx (cheap amber string-snap);
 # Snare death layers splash with CorruptDeathPopFx.
@@ -316,9 +317,10 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 ~hackslash 0
 # Brute: green squash + spit-gob telegraph pop (BruteSpitTelegraphFx)
 # + ink drip + squirt SFX, then ink blob on hit. Spit land also fires
-# BruteSpitCreamSplashFx (deepened cream splash + vertical cream drip
-# filaments + delayed cream aftershock) so the green tank spit reads
-# juicier after the telegraph — distinct from Snare whip / Gunk bloom.
+# BruteSpitCreamSplashFx (deepened cream splash beyond #249 + thicker
+# vertical cream drip filaments + heavier downward cream aftershock) so
+# the green tank spit reads juicier after the telegraph — distinct from
+# Snare whip / Gunk bloom / Smudge radial hose.
 # Land F / LMB — cheap green sludge splash (BruteSludgeSplashFx) on each hit;
 # defeat layers a larger splash with CorruptDeathPopFx.
 # Compare ~spawncorrupt 1   (Ink Smudge: purple ink-fist telegraph + drip).

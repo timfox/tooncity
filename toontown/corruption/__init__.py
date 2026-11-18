@@ -37,10 +37,11 @@ contrast against purple ink; overlord-hit / telegraph / silhouette /
 death cream-wash grammar). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
 pop). Sludge Brute spit land / splash also fires BruteSpitCreamSplashFx
-(deepened cream splash + vertical cream drip filaments + delayed cream
-aftershock — sunny cream/pastel juice on the spit impact; distinct from
-Snare counter cream whip / Gunk puddle cream bloom; telegraph cream warn
-aftershock grammar). Sludge Brute hits and deaths also flash
+(deepened cream splash beyond #249 + thicker vertical cream drip filaments
++ heavier downward cream aftershock — sunny cream/pastel juice on the spit
+impact; distinct from Snare counter cream whip / Gunk puddle cream bloom /
+Smudge radial hose; telegraph cream warn aftershock grammar). Sludge Brute
+hits and deaths also flash
 BruteSludgeSplashFx (cheap green rubber-hose sludge splash; composes with
 spit / death / idle looks).
 Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
