@@ -3290,6 +3290,10 @@ dclass PollutionManager : DistributedObject {
   // unlockedThrough, CampaignGlobals STATE_*, chaseCleared (0/1), reclaimCount.
   requestCampaignProgress() airecv clsend;
   setCampaignProgress(uint8, uint8, uint8, uint8);
+  // Finale reclaim complete — live campaignVictory messenger for real clients
+  // (PlayEntry / OswaldPresence / chase tip / FinalePhaseFx / Handoff).
+  // reclaimCount uint8; AI-local messenger alone never crosses processes.
+  announceCampaignVictory(uint8);
 };
 
 dclass DistributedCorruptToon : DistributedNode {

@@ -191,6 +191,27 @@ class PollutionManager(DistributedObject.DistributedObject):
         except Exception:
             self.notify.debug('campaignProgressSync messenger failed')
 
+    def announceCampaignVictory(self, reclaimCount=0):
+        """Live finale reclaim complete — rebroadcast campaignVictory locally.
+
+        AI-process messenger.send('campaignVictory') never reaches real
+        clients. PollutionManagerAI.pushCampaignVictoryToAvatar pushes this
+        DC update so PlayEntry / OswaldPresence / OswaldBetrayalChase /
+        FinalePhaseFx / CampaignHandoff hear the same event.
+        """
+        count = max(0, min(255, int(reclaimCount or 0)))
+        self.campaignReclaimCount = count
+        try:
+            from toontown.campaign import CampaignGlobals
+            msg = getattr(
+                CampaignGlobals, 'CAMPAIGN_VICTORY_MSG', 'campaignVictory')
+        except Exception:
+            msg = 'campaignVictory'
+        try:
+            messenger.send(msg, [count])  # noqa: F821
+        except Exception:
+            self.notify.debug('campaignVictory messenger failed')
+
     def d_requestHackSlashIFrame(self, durationMs):
         """Tell AI the local toon is invulnerable for durationMs (capped server-side)."""
         self.sendUpdate('requestHackSlashIFrame', [max(0, int(durationMs))])

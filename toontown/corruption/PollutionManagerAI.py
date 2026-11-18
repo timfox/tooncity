@@ -305,6 +305,30 @@ class PollutionManagerAI(DistributedObjectAI):
             return False
         return True
 
+    def pushCampaignVictoryToAvatar(self, toon, reclaimCount=0):
+        """Relay finale campaignVictory to a real client (not AI-local only).
+
+        CampaignDirectorAI still messenger.sends for same-process listeners;
+        this DC announce lands PlayEntry / OswaldPresence / chase tip /
+        FinalePhaseFx / Handoff accepts on the owning avatar's client.
+        """
+        if toon is None:
+            return False
+        avId = getattr(toon, 'doId', None)
+        if avId is None:
+            return False
+        count = max(0, min(255, int(reclaimCount or 0)))
+        try:
+            self.sendUpdateToAvatarId(
+                int(avId),
+                'announceCampaignVictory',
+                [count])
+        except Exception:
+            self.notify.debug(
+                'announceCampaignVictory send failed av=%s' % avId)
+            return False
+        return True
+
     def requestStreetEvent(self, eventType):
         """Player-facing entry: start reclaim (0) or campaign act (1) in sender zone."""
         avId = self.air.getAvatarIdFromSender()
