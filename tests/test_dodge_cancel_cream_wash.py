@@ -2,10 +2,11 @@
 """Behavioral headless tests for dodge-cancel cream wash flash deepen helpers.
 
 Loads HackSlashConfig dodge-cancel cream wash helpers without Panda3D. Covers
-deepened-past-#242 flash tunables + richer cream flash aftershock so
-late-dodge cancel into melee reads juicier still (#219 / #242 deepen) —
-distinct from dodge i-frame cream wash deepen (#228), combo counter cream
-edge deepen (#237), and hurt-stagger cream wash deepen (#247).
+deepened-past-#257 flash tunables + richer cream flash aftershock so
+late-dodge cancel into melee reads juicier still (#219 / #242 / #257 deepen)
+— distinct from dodge i-frame cream wash deepen (#228 / #272), combo
+counter cream edge deepen (#237), and hurt-stagger cream wash deepen
+(#247 / #263).
 
 Run from repo root:
   python3 tests/test_dodge_cancel_cream_wash.py
@@ -90,17 +91,17 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         self.assertLess(
             self.cfg.DODGE_CANCEL_CREAM_WASH_MID,
             self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK)
-        # Deepened past #242: juicier than first deepen cancel flash.
+        # Deepened past #257: juicier than second deepen cancel flash.
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK, 0.15)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK, 0.16)
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_HOLD_SEC, 0.055)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_HOLD_SEC, 0.07)
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_MID, 0.085)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_MID, 0.095)
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_PULSE_SEC, 0.08)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_PULSE_SEC, 0.09)
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_OUT_SEC, 0.28)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_OUT_SEC, 0.32)
         # Snappier flash than dodge-trail settle wash; still a brief cancel beat.
         self.assertLessEqual(
             self.cfg.DODGE_CANCEL_CREAM_WASH_DELAY_SEC,
@@ -114,14 +115,14 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         # Cancel flash can pop a touch louder than hit wash; still soft.
         self.assertLessEqual(
             self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK,
-            self.cfg.HIT_SPARK_CREAM_WASH_PEAK + 0.05)
+            self.cfg.HIT_SPARK_CREAM_WASH_PEAK + 0.06)
         # Richer residual flash aftershock after the deepened veil.
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT, 5)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT, 6)
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK, 1.18)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK, 1.28)
         self.assertGreaterEqual(
-            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA, 0.11)
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA, 0.13)
         self.assertTrue(
             self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
         self.assertGreater(
@@ -150,7 +151,7 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         self.assertGreaterEqual(cream[0], cream[2])
         self.assertGreaterEqual(cream[1], cream[2])
         hint_l = self.cfg.DEMO_HINT.lower()
-        self.assertIn('cream flash deepen', hint_l)
+        self.assertIn('cream flash deepen++', hint_l)
         self.assertNotIn('keyblade', hint_l)
         self.assertNotIn('kingdom hearts', hint_l)
 
@@ -219,6 +220,7 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         mw_src = (REPO_ROOT / 'toontown/hackslash/MagicWords.py').read_text(
             encoding='utf-8')
         self.assertIn('cream wash flash', mw_src.lower())
+        self.assertIn('deepened-past-#257 cream wash', mw_src.lower())
         self.assertIn('richer cream flash', mw_src.lower())
         self.assertIn('aftershock', mw_src.lower())
         self.assertNotIn('keyblade', mw_src.lower())

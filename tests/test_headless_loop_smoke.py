@@ -2875,9 +2875,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_flushDodgeCancelBuffer', melee_src)
         self.assertIn('_cancelDodgeIntoMelee', melee_src)
 
-        # Dodge-cancel cream wash flash deepen past #242 — juicier Shift→F
-        # flash + richer residual aftershock. Distinct from i-frame (#228) /
-        # combo cream edge (#237) / hurt wash (#247).
+        # Dodge-cancel cream wash flash deepen past #257 — juicier Shift→F
+        # flash + richer residual aftershock. Distinct from i-frame (#228 /
+        # #272) / combo cream edge (#237) / hurt wash (#247 / #263).
         cancel_wash_rel = 'toontown/hackslash/DodgeCancelCreamWashFx.py'
         _assert_module_file(cancel_wash_rel)
         cancel_wash_names = _class_and_func_names(_module_ast(cancel_wash_rel))
@@ -2905,18 +2905,18 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('dodgeCancelCreamWashAftershockAtSec', cancel_wash_funcs)
         cancel_wash_assigns = _assign_map(config_tree)
         self.assertGreaterEqual(
-            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_PEAK'), 0.15)
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_PEAK'), 0.16)
         self.assertGreaterEqual(
-            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_HOLD_SEC'), 0.055)
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_HOLD_SEC'), 0.07)
         self.assertGreaterEqual(
-            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_MID'), 0.085)
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_MID'), 0.095)
         self.assertGreaterEqual(
             cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT'),
-            5)
+            6)
         self.assertGreaterEqual(
             cancel_wash_assigns.get(
                 'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK'),
-            1.18)
+            1.28)
         self.assertIs(
             cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED'),
             True)
