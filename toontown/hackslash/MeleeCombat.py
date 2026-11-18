@@ -229,7 +229,7 @@ class MeleeCombatController(DirectObject):
         return Task.cont
 
     def _updateSoftLockReticle(self, target, snapped=False):
-        """Follow soft-lock target; hose-pop + cream pulse ring + FOV on snap."""
+        """Follow soft-lock; hose-pop + pulse ring + cream wash + FOV on snap."""
         try:
             self._softLockReticle.attach(target, snapped=bool(snapped))
             # Flush deferred soft-lock FOV after HitStopFx resumes.

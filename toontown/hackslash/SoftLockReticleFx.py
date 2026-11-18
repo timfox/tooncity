@@ -2,8 +2,8 @@
 
 World-space cream brackets over the sticky soft-lock target. On acquire/snap,
 plays a short squash → stretch → settle hose pop plus cream/ink accent flecks,
-an expanding cream pulse ring, and a brief FOV punch. Toontown spiritual-sequel
-tone only — no keyblades / no KH branding.
+an expanding cream pulse ring, a soft delayed cream wash pulse, and a brief
+FOV punch. Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec4
@@ -19,10 +19,11 @@ from direct.interval.LerpInterval import LerpFunc
 
 from . import HackSlashConfig
 from . import HitJuice
+from .SoftLockCreamWashFx import SoftLockCreamWashPulse
 
 
 class SoftLockReticleFx(object):
-    """Owns the soft-lock reticle node, snap pop, accents, pulse ring, FOV."""
+    """Owns soft-lock reticle, snap pop, accents, pulse ring, wash, FOV."""
 
     def __init__(self, avatar, hitStop=None, beforeFov=None, fovBusy=None):
         self.avatar = avatar
@@ -39,17 +40,19 @@ class SoftLockReticleFx(object):
         self._accentNodes = []
         self._pulseIval = None
         self._pulseNP = None
+        self._creamWash = None
         self._fovIval = None
         self._baseFov = None
         self._pendingFov = False
 
     def clear(self):
-        """Stop juice and remove reticle + accents + pulse ring."""
+        """Stop juice and remove reticle + accents + pulse ring + wash."""
         self._pendingFov = False
         self.restoreFov()
         self._clearPop()
         self._clearAccents()
         self._clearPulseRing()
+        self._clearCreamWash()
         self._target = None
         if self._root is not None:
             try:
@@ -66,6 +69,7 @@ class SoftLockReticleFx(object):
         self._clearPop()
         self._clearAccents()
         self._clearPulseRing()
+        self._clearCreamWash()
         self._target = None
         if self._root is not None:
             try:
@@ -98,12 +102,13 @@ class SoftLockReticleFx(object):
         self._followTarget()
 
     def playSnapPop(self):
-        """Hose pop + cream accents + cream pulse ring + FOV punch on snap."""
+        """Hose pop + accents + pulse ring + cream wash + FOV on snap."""
         if self._root is None:
             return
         self._clearPop()
         self._clearAccents()
         self._clearPulseRing()
+        self._clearCreamWash()
         settle = float(HackSlashConfig.SOFT_LOCK_RETICLE_SETTLE_SCALE)
         self._popIval = HitJuice.playSoftLockReticlePop(
             self._root, settle,
@@ -112,7 +117,8 @@ class SoftLockReticleFx(object):
             origin = self._root.getPos(render)  # noqa: F821
             parent = render  # noqa: F821
         except Exception:
-            # Still request FOV even if accents / pulse can't place.
+            # Still arm wash + FOV even if accents / pulse can't place.
+            self._armCreamWash()
             self._requestFovPunch()
             return
         accentIval, nodes = HitJuice.spawnSoftLockAccents(
@@ -123,6 +129,9 @@ class SoftLockReticleFx(object):
         # Cream/pastel pulse ring — sibling of accents so hose scale doesn't
         # swallow the expand; layers with FOV punch (#74).
         self._playPulseRing(origin, parent)
+        # Soft cream wash pulse after cream pulse ring — combo/juggle aspect2d
+        # grammar. SoftLockCreamWashPulse owns the veil.
+        self._armCreamWash()
         self._requestFovPunch()
 
     def _playPulseRing(self, origin, parent):
@@ -185,6 +194,27 @@ class SoftLockReticleFx(object):
         try:
             if np is not None and not np.isEmpty():
                 np.removeNode()
+        except Exception:
+            pass
+
+    def _armCreamWash(self):
+        """Arm one delayed aspect2d cream wash per soft-lock snap."""
+        try:
+            wash = SoftLockCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+    def _clearCreamWash(self):
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is None:
+            return
+        try:
+            wash.clear()
         except Exception:
             pass
 
