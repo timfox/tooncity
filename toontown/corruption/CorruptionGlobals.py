@@ -278,6 +278,58 @@ TELEGRAPH_INK_DRIP_LOOK = {
     },
 }
 
+# Ambient idle ink drip — sparse rubber-hose pollution presence between
+# telegraphs (client only). Cheaper than TELEGRAPH_INK_DRIP_*: 1–2 drips,
+# no splat pop, longer period, lower alpha. Pauses while telegraph juice
+# owns the frame. Overlord retints via IdleInkDripFx.idleInkLook(finaleLook).
+IDLE_INK_DRIP_LOOK = {
+    ARCHETYPE_INK: {
+        'id': 'ink-idle',
+        'lift': 2.05,
+        'periodSec': 2.15,
+        'settleSec': 0.55,
+        'dripCount': 1,
+        'dripHalf': 0.11,
+        'dripSpread': 0.32,
+        'dripFall': 0.95,
+        'dripSec': 0.55,
+        'dripStagger': 0.05,
+        'dripColor': (0.32, 0.08, 0.48, 0.55),
+        'streakColor': (0.48, 0.16, 0.72, 0.48),
+        'binSort': 39,
+    },
+    ARCHETYPE_BRUTE: {
+        'id': 'sludge-idle',
+        'lift': 2.35,
+        'periodSec': 2.45,
+        'settleSec': 0.65,
+        'dripCount': 2,
+        'dripHalf': 0.14,
+        'dripSpread': 0.4,
+        'dripFall': 1.1,
+        'dripSec': 0.62,
+        'dripStagger': 0.07,
+        'dripColor': (0.14, 0.48, 0.12, 0.55),
+        'streakColor': (0.22, 0.68, 0.18, 0.48),
+        'binSort': 39,
+    },
+    ARCHETYPE_SNARE: {
+        'id': 'amber-idle',
+        'lift': 1.85,
+        'periodSec': 1.85,
+        'settleSec': 0.4,
+        'dripCount': 1,
+        'dripHalf': 0.09,
+        'dripSpread': 0.55,
+        'dripFall': 0.75,
+        'dripSec': 0.48,
+        'dripStagger': 0.04,
+        'dripColor': (0.72, 0.36, 0.1, 0.5),
+        'streakColor': (0.88, 0.5, 0.16, 0.42),
+        'binSort': 39,
+    },
+}
+
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
 BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)

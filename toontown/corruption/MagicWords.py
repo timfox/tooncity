@@ -86,7 +86,8 @@ class SpawnCorrupt(MagicWord):
         'squirt SFX + ink blob. '
         'Balloon Snare (archetype=2): amber string-lash telegraph pop + '
         'vine zip SFX. '
-        'All archetypes: short rubber-hose ink drip on telegraph. '
+        'All archetypes: ambient idle ink drip between telegraphs + '
+        'short rubber-hose ink drip on telegraph. '
         'Optional count (1-8), hp (0=archetype default base), '
         'archetype (0=Ink, 1=Brute, 2=Snare). '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
