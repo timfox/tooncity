@@ -26,7 +26,8 @@ reveal fires (oswaldRevealBanner), a dedicated betrayal handoff plate
 hose-pops the twist copy with a deepened cream hose settle (overshoot →
 rest → micro rebound) so the twist lands juicier — complements
 almost-confess tip (#207) — and a deepened victory/confetti cream sting
-(VictoryTwistConfettiSting: juicier chips + soft cream aftershock) lands
+(VictoryTwistConfettiSting: juicier chips + micro cream pop rebound +
+richer soft cream aftershock, past #244) lands
 the hollow cheer that Oswald caused the corruption. Distinct from act
 handoff cream edge settle deepen (#240) and Punchline tip cream hose
 rebound (#256 — tip bar, not betrayal title).
@@ -348,9 +349,10 @@ class CampaignHandoffClient(DirectObject):
                 playFinaleRevealCreamEdge()
             except Exception:
                 pass
-            # Deepened bittersweet victory/confetti cream sting — juicier
-            # chips + soft cream aftershock so the hollow cheer that Oswald
-            # caused the corruption lands readable (#82 swell already cleared).
+            # Deepened bittersweet victory/confetti cream sting past #244 —
+            # juicier chips + micro cream pop rebound + richer soft cream
+            # aftershock so the hollow cheer that Oswald caused the
+            # corruption lands readable (#82 swell already cleared).
             try:
                 origin = getattr(
                     CampaignGlobals, 'VICTORY_TWIST_CONFETTI_ORIGIN',
