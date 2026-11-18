@@ -2776,9 +2776,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_flushDodgeCancelBuffer', melee_src)
         self.assertIn('_cancelDodgeIntoMelee', melee_src)
 
-        # Dodge-cancel cream wash flash deepen (#219 deepen) — juicier Shift→F
-        # flash + quiet residual aftershock. Distinct from i-frame (#228) /
-        # combo cream edge (#237).
+        # Dodge-cancel cream wash flash deepen past #242 — juicier Shift→F
+        # flash + richer residual aftershock. Distinct from i-frame (#228) /
+        # combo cream edge (#237) / hurt wash (#247).
         cancel_wash_rel = 'toontown/hackslash/DodgeCancelCreamWashFx.py'
         _assert_module_file(cancel_wash_rel)
         cancel_wash_names = _class_and_func_names(_module_ast(cancel_wash_rel))
@@ -2806,9 +2806,18 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('dodgeCancelCreamWashAftershockAtSec', cancel_wash_funcs)
         cancel_wash_assigns = _assign_map(config_tree)
         self.assertGreaterEqual(
-            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_PEAK'), 0.14)
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_PEAK'), 0.15)
         self.assertGreaterEqual(
-            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_HOLD_SEC'), 0.04)
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_HOLD_SEC'), 0.055)
+        self.assertGreaterEqual(
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_MID'), 0.085)
+        self.assertGreaterEqual(
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT'),
+            5)
+        self.assertGreaterEqual(
+            cancel_wash_assigns.get(
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK'),
+            1.18)
         self.assertIs(
             cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED'),
             True)

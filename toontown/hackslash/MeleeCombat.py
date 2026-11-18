@@ -1372,16 +1372,16 @@ class MeleeCombatController(DirectObject):
             self.avatar.setScale(1.0, 1.0, 1.0)
         except Exception:
             pass
-        # Deepened soft cream wash flash + quiet aftershock so Shift→F cancel
-        # reads juicily — wash owns the brief flash; stretch-punch start owns
-        # the hit beat after.
+        # Deepened-past-#242 soft cream wash flash + richer aftershock so
+        # Shift→F cancel reads juicily — wash owns the brief flash;
+        # stretch-punch start owns the hit beat after.
         self._playDodgeCancelCreamWash()
         messenger.send('hackslash-dodge-cancel', [self.avatar])  # noqa: F821
 
     def _playDodgeCancelCreamWash(self):
         """Deepened cream wash flash the instant dodge cancels into stretch-punch."""
         try:
-            # DodgeCancelCreamWashPulse owns the cancel flash + residual aftershock.
+            # Pulse owns the deepened cancel flash + richer residual aftershock.
             self._dodgeCancelCreamWash.play()
         except Exception:
             pass

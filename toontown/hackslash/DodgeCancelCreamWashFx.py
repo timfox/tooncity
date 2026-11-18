@@ -1,16 +1,18 @@
 """Rubber-hose cream wash flash on dodge → melee cancel.
 
 Fullscreen soft cream veil that flashes *when* late-dodge cancel into
-stretch-punch fires (#186 / #219) — SoftLockFovCreamWashPulse /
+stretch-punch fires (#186 / #219 / #242) — SoftLockFovCreamWashPulse /
 DodgeTrailCreamWashPulse / HurtStaggerCreamWashPulse overlay grammar as a
-brief Shift→F juice beat so the cancel reads clearly. Deepened so
-dodge→melee windows read juicier: brighter peak / longer mid hold, plus a
-quiet residual cream flash aftershock (softer flecks + soft halo) that
-settles after the snappy cancel flash. Soft under HUD; cream / pastel only
-(not ink). Distinct from dodge i-frame cream wash deepen (#228) — fires on
-cancel into melee, not mid-roll invuln settle — and from combo counter cream
-edge deepen (#237) — stays a fullscreen wash flash, not a local HUD frame.
-Wired from MeleeCombatController._cancelDodgeIntoMelee. Client only.
+brief Shift→F juice beat so the cancel reads clearly. Deepened past #242 so
+dodge→melee windows read juicier still: brighter peak / longer mid hold,
+plus a richer residual cream flash aftershock (more flecks + stronger soft
+halo) that settles after the snappy cancel flash. Soft under HUD; cream /
+pastel only (not ink). Distinct from dodge i-frame cream wash deepen (#228)
+— fires on cancel into melee, not mid-roll invuln settle — from combo
+counter cream edge deepen (#237) — stays a fullscreen wash flash, not a
+local HUD frame — and from hurt-stagger cream wash deepen (#247) — intentional
+cancel beat, not smack stagger. Wired from
+MeleeCombatController._cancelDodgeIntoMelee. Client only.
 Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
@@ -62,17 +64,17 @@ class DodgeCancelCreamWashPulse(object):
             r, g, b = 1.0, 0.97, 0.82
 
         peak = float(getattr(
-            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_PEAK', 0.14))
+            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_PEAK', 0.15))
         mid = float(getattr(
-            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_MID', 0.075))
+            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_MID', 0.085))
         inSec = float(getattr(
             HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_IN_SEC', 0.03))
         pulseSec = float(getattr(
-            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_PULSE_SEC', 0.07))
+            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_PULSE_SEC', 0.08))
         holdSec = float(getattr(
-            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_HOLD_SEC', 0.04))
+            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_HOLD_SEC', 0.055))
         outSec = float(getattr(
-            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_OUT_SEC', 0.24))
+            HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_OUT_SEC', 0.28))
         binSort = int(getattr(
             HackSlashConfig, 'DODGE_CANCEL_CREAM_WASH_BIN', 28))
         if delay is None:
@@ -96,7 +98,7 @@ class DodgeCancelCreamWashPulse(object):
             return None
 
         # Immediate snappy flash on cancel: bright → settle → fade.
-        # Deepened peak + mid hold so Shift→F reads juicier without wash spam.
+        # Deepened past #242 peak + mid hold so Shift→F reads juicier still.
         washVeil = Sequence(
             LerpColorScaleInterval(
                 wash, max(0.01, inSec), Vec4(r, g, b, peak),
@@ -149,7 +151,7 @@ class DodgeCancelCreamWashPulse(object):
             return None
         delay = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.06))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.05))
         parts = []
 
         if getattr(
@@ -161,10 +163,10 @@ class DodgeCancelCreamWashPulse(object):
 
         count = int(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT', 4))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT', 5))
         sec = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SEC', 0.20))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SEC', 0.24))
         for i in range(count):
             part = self._spawnAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -181,19 +183,19 @@ class DodgeCancelCreamWashPulse(object):
     def _spawnAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.38))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.42))
         startScale = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_START', 0.22))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_START', 0.26))
         peakScale = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 1.05))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 1.18))
         sec = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.16))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.20))
         peakA = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.09))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.11))
         r, g, b, _a = getattr(
             HackSlashConfig,
             'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_COLOR',
@@ -234,17 +236,17 @@ class DodgeCancelCreamWashPulse(object):
         count = max(1, int(total))
         size = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SIZE', 0.012))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SIZE', 0.014))
         drift = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DRIFT', 0.22))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DRIFT', 0.26))
         fall = float(getattr(
             HackSlashConfig,
-            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_FALL', 0.14))
+            'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_FALL', 0.16))
         r, g, b, a = getattr(
             HackSlashConfig,
             'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COLOR',
-            (1.0, 0.97, 0.78, 0.70))
+            (1.0, 0.97, 0.78, 0.76))
         er, eg, eb, ea = getattr(
             HackSlashConfig,
             'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_END_COLOR',
