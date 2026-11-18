@@ -1462,6 +1462,66 @@ GAGSTER_PUDDLE_HALF = 1.15
 GAGSTER_PUDDLE_PEAK = 2.35
 GAGSTER_PUDDLE_SEC = 0.28
 
+# Cream splash + delayed cream aftershock on Gunk Gagster puddle land /
+# splash (after telegraph puddle warn #197). Sunny cream / pastel contrast
+# against teal GAGSTER_PUDDLE_* so the trap impact reads juicy. Same residual
+# grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_* / Snare counter cream splash
+# (#214). Client only. No keyblades / KH branding.
+# GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
+# GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED = False drops aftershock only.
+GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED = True
+GAGSTER_PUDDLE_CREAM_SPLASH_DELAY_SEC = 0.06  # fallback; look prefers puddle compose
+GAGSTER_PUDDLE_CREAM_SPLASH_LIFT = 0.42  # above flat teal puddle ring
+GAGSTER_PUDDLE_CREAM_SPLASH_BIN = 40  # above teal puddle (38)
+GAGSTER_PUDDLE_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.94)  # sunny cream
+GAGSTER_PUDDLE_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.7)
+GAGSTER_PUDDLE_CREAM_SPLASH_FLECK_COLORS = (
+    (1.0, 0.97, 0.82, 0.9),   # sunny cream
+    (1.0, 0.96, 0.62, 0.84),  # butter
+    (1.0, 0.9, 0.78, 0.8),    # soft peach pastel
+)
+GAGSTER_PUDDLE_CREAM_SPLASH_LOOK = {
+    'id': 'gagster-puddle-cream-splash',
+    # lift / delaySec composed with GAGSTER_PUDDLE_SEC when played.
+    'lift': GAGSTER_PUDDLE_CREAM_SPLASH_LIFT,
+    'delaySec': GAGSTER_PUDDLE_CREAM_SPLASH_DELAY_SEC,
+    'delayScale': 0.22,
+    'peakAlpha': 0.94,
+    'splatHalf': 0.26,
+    'splatPeak': 1.55,
+    'splatSec': 0.16,
+    'rimScale': 1.3,
+    'splatColor': GAGSTER_PUDDLE_CREAM_SPLASH_COLOR,
+    'rimColor': GAGSTER_PUDDLE_CREAM_SPLASH_RIM_COLOR,
+    'fleckCount': 4,
+    'fleckHalf': 0.1,
+    'fleckDist': 1.05,
+    'fleckLift': 0.42,
+    'fleckSec': 0.22,
+    'fleckColors': GAGSTER_PUDDLE_CREAM_SPLASH_FLECK_COLORS,
+    'binSort': GAGSTER_PUDDLE_CREAM_SPLASH_BIN,
+}
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED = True
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DELAY_SEC = 0.16
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT = 3
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COUNT = 1
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_SIZE = 0.1
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_SIZE = 0.12
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DRIFT = 0.65
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_FALL = 0.35
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_SEC = 0.34
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.85)
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.82)
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_ENABLED = True
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_HALF = 0.48
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_START = 0.3
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK = 1.55
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_SEC = 0.3
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.22
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+
 # Gunk Gagster telegraph puddle warn — short rubber-hose teal bounce-pie +
 # cream/ink ground puddle warn on announceAttackTelegraph (client only).
 # Distinct from hit-time GAGSTER_LOB_* / GAGSTER_PUDDLE_* and from Brute spit /

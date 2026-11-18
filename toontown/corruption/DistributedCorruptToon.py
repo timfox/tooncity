@@ -18,6 +18,7 @@ from toontown.corruption.CorruptTelegraphCreamSparkleFx import TelegraphCreamSpa
 from toontown.corruption.CorruptTelegraphCreamWarnFx import TelegraphCreamWarnFlecks
 from toontown.corruption.CorruptTelegraphCreamWashFx import TelegraphCreamWashPulse
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
+from toontown.corruption.GagsterPuddleCreamSplashFx import GagsterPuddleCreamSplash
 from toontown.corruption.GagsterPuddleTelegraphFx import GagsterPuddleTelegraphWarn
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.CorruptSilhouetteCreamRimFx import SilhouetteCreamRimFlecks
@@ -120,6 +121,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._smudgeInkSplash = None
         self._smudgeHitCreamWash = None
         self._gagsterTelegraphPuddle = None
+        self._gagsterPuddleCreamSplash = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -215,6 +217,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamWash()
         self.__clearGagsterTelegraphPuddle()
+        self.__clearGagsterPuddleCreamSplash()
         self.__clearDeathPopSplat()
 
     def __buildGeom(self):
@@ -1225,6 +1228,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 Func(self.__clearGagPuddle),
             )
             self._gagPuddleIval.start()
+            # Cream splash aftershock so the trap land reads juicy vs teal ink.
+            self.__playGagsterPuddleCreamSplash(landPos)
         except Exception:
             self.__clearGagPuddle()
 
@@ -1298,6 +1303,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamWash()
         self.__clearGagsterTelegraphPuddle()
+        self.__clearGagsterPuddleCreamSplash()
         self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
         look = deathPopLook(self.getArchetype())
@@ -2030,6 +2036,33 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._gagsterTelegraphPuddle = None
+
+    def __playGagsterPuddleCreamSplash(self, pos=None):
+        """Cream splash + delayed aftershock — Gunk Gagster puddle land only."""
+        if not self.__isGunkGagster():
+            return
+        if not getattr(
+                CorruptionGlobals,
+                'GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED', True):
+            return
+        self.__clearGagsterPuddleCreamSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = GagsterPuddleCreamSplash()
+        self._gagsterPuddleCreamSplash = splash
+        splash.play(pos)
+
+    def __clearGagsterPuddleCreamSplash(self):
+        splash = getattr(self, '_gagsterPuddleCreamSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._gagsterPuddleCreamSplash = None
 
     def __playSmudgeTelegraphInk(self):
         """Purple ink-fist telegraph pop — Ink Smudge melee wind-ups only."""

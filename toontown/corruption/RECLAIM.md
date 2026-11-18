@@ -141,6 +141,9 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # Brute death layers splash with CorruptDeathPopFx.
 # Melee hits on Snare flash SnareStringSnapSplashFx (cheap amber string-snap);
 # Snare death layers splash with CorruptDeathPopFx.
+# Gunk Gagster lob land flashes a teal puddle ring plus
+# GagsterPuddleCreamSplashFx (brief cream splash + delayed cream aftershock)
+# so the trap impact reads juicy after the telegraph puddle warn.
 # Melee hits on Ink Overlord flash OverlordMagentaInkSplashFx (magenta /
 # crimson, phase-retinted) then soft cream wash pulse
 # (OverlordHitCreamWashFx — telegraph / silhouette / death cream-wash

@@ -45,7 +45,10 @@ cream warn aftershock grammar). Balloon Snare hits and deaths also flash
 SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
 composes with string / death / idle looks). Gunk Gagster wind-ups also flash
 GagsterPuddleTelegraphFx (teal bounce-pie charge + cream/ink ground puddle
-warn at the lob landing). Ink Overlord phase telegraphs also flash
+warn at the lob landing). Gunk Gagster puddle land / splash also fires
+GagsterPuddleCreamSplashFx (brief cream splash + delayed cream aftershock —
+sunny cream/pastel juice on the trap impact; telegraph cream warn aftershock
+grammar / Snare counter cream splash #214). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
 OverlordPhaseInkRainFx (ink rain / ink fall shower) plus
 OverlordTelegraphPunchFx (ground danger-ring warn + impact punch bloom;
