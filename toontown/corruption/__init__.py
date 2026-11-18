@@ -6,11 +6,13 @@ green spit telegraph + traveling ink blob on hit, Balloon Snare amber
 string-lash + vine zip. Between telegraphs, IdleInkDripFx plays sparse ambient rubber-hose ink
 drips (archetype-tinted pollution presence) layered with
 IdleCreamDripContrastFx (soft cream / pastel drips — contrast to idle ink)
-plus CorruptSilhouetteCreamRimFx (sunny cream / pastel rim flecks along the
+plus IdleCreamDripSparkleFx (sunny cream / pastel sparkle flecks along the
+cream drip path — silhouette rim sparkle grammar) plus
+CorruptSilhouetteCreamRimFx (sunny cream / pastel rim flecks along the
 ink silhouette edge). Telegraphs play CorruptTelegraphInkFx (short
 rubber-hose ink drip / splat pop) layered with CorruptTelegraphCreamWarnFx
 (sunny cream / pastel warn flecks + delayed cream aftershock — contrast to
-ink) and pause idle drips / rim flecks for the wind-up. Ink Smudge wind-ups also flash
+ink) and pause idle drips / sparkles / rim flecks for the wind-up. Ink Smudge wind-ups also flash
 SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Ink Smudge hits and
 deaths also flash SmudgeInkSplashFx (cheap purple rubber-hose ink splash for
 swarm readability; composes with telegraph / death / idle ink looks). Sludge

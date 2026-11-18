@@ -95,13 +95,14 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # when available), else improved card limbs. Chase AI unchanged; between
 # telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
 # presence, layered with soft cream / pastel contrast drips
-# (IdleCreamDripContrastFx) plus sunny cream / pastel rim flecks on the
-# ink silhouette (CorruptSilhouetteCreamRimFx). Telegraph wind-up pauses
-# idle drips / rim flecks and plays a short ink drip / splat pop
-# (CorruptTelegraphInkFx) layered with sunny cream / pastel warn flecks
-# + delayed cream aftershock (CorruptTelegraphCreamWarnFx — contrast to
-# ink) plus squash/SFX so wind-ups read without a combat HUD; impact
-# flash on hit.
+# (IdleCreamDripContrastFx) plus sunny cream / pastel sparkle flecks on
+# the cream drip path (IdleCreamDripSparkleFx) plus sunny cream / pastel
+# rim flecks on the ink silhouette (CorruptSilhouetteCreamRimFx).
+# Telegraph wind-up pauses idle drips / sparkles / rim flecks and plays
+# a short ink drip / splat pop (CorruptTelegraphInkFx) layered with
+# sunny cream / pastel warn flecks + delayed cream aftershock
+# (CorruptTelegraphCreamWarnFx — contrast to ink) plus squash/SFX so
+# wind-ups read without a combat HUD; impact flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
 # Melee hits on Smudge flash SmudgeInkSplashFx (cheap purple ink splash);
 # Smudge death layers splash with CorruptDeathPopFx for swarm readability.
@@ -125,6 +126,17 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Watch idle purple ink drips layered with soft cream / pastel drips
 # (IdleCreamDripContrastFx). Contrast to IdleInkDripFx.
 # IDLE_CREAM_DRIP_ENABLED = False drops cream drips only.
+```
+
+## Idle cream drip sparkle fleck demo
+
+```
+~spawncorrupt 2
+~hackslash 0
+# Watch idle cream contrast drips with sunny cream / pastel sparkle
+# flecks along the drip path (IdleCreamDripSparkleFx — silhouette rim
+# sparkle grammar). Telegraph pauses drips + sparkles + rim flecks.
+# IDLE_CREAM_DRIP_SPARKLE_ENABLED = False drops sparkles only.
 ```
 
 ## Telegraph cream warn fleck demo
