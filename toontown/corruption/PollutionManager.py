@@ -8,6 +8,7 @@ from toontown.corruption import PollutionFogCreamDissolveFx
 from toontown.corruption import PollutionHoodTintCreamFadeFx
 from toontown.corruption import PollutionPropTint
 from toontown.corruption import PollutionStreetAudio
+from toontown.hood import ZoneUtil
 
 
 class PollutionManager(DistributedObject.DistributedObject):
@@ -165,6 +166,11 @@ class PollutionManager(DistributedObject.DistributedObject):
             zoneId = getattr(base.localAvatar, 'zoneId', None)
         if zoneId is None:
             return
+        # Branch zone so STREET_PACKS / AI pollution keys match floor ids.
+        try:
+            zoneId = int(ZoneUtil.getBranchZone(int(zoneId)))
+        except Exception:
+            zoneId = int(zoneId)
         self._activeZoneId = zoneId
         if zoneId not in self.zonePollution:
             self.d_requestZonePollution(zoneId)

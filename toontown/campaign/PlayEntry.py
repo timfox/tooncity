@@ -47,6 +47,7 @@ from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
 from toontown.corruption import CorruptionGlobals
+from toontown.hood import ZoneUtil
 from toontown.reclaim import ReclaimGlobals
 
 # Brief delay so zone + PollutionManager are ready before auto-fielding packs.
@@ -137,7 +138,11 @@ class PlayEntryClient(DirectObject):
             zoneId = getattr(base.localAvatar, 'zoneId', None)
         if zoneId is None:
             return
-        zoneId = int(zoneId)
+        # Branch zone so ACTS / STREET_PACKS match (boot may see floor ids).
+        try:
+            zoneId = int(ZoneUtil.getBranchZone(int(zoneId)))
+        except Exception:
+            zoneId = int(zoneId)
         self._cancelAutoReclaim()
         self._cancelSillyApproachTip()
         self._reclaimLive = False

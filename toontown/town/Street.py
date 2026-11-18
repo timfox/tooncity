@@ -130,6 +130,8 @@ class Street(BattlePlace.BattlePlace):
         self.accept('doorDoneEvent', self.handleDoorDoneEvent)
         self.accept('DistributedDoor_doorTrigger', self.handleDoorTrigger)
         self.enterZone(requestStatus['zoneId'])
+        # Re-arm PlayEntry tips / auto-campaign + pollution presentation.
+        self.announceLocalAvatarZoneChange(self.zoneId)
         self.tunnelOriginList = base.cr.hoodMgr.addLinkTunnelHooks(self, self.loader.nodeList, self.zoneId)
         self.fsm.request(requestStatus['how'], [requestStatus])
         if base.cr.wantStreetSign:
@@ -137,6 +139,7 @@ class Street(BattlePlace.BattlePlace):
         return
 
     def exit(self, visibilityFlag = 1):
+        self.announceLocalToonLeftZone()
         if visibilityFlag:
             self.visibilityOff()
         self.loader.geom.reparentTo(hidden)
