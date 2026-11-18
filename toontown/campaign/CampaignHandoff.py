@@ -11,8 +11,9 @@ Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
 + cream-sparkle pop (CampaignHandoffConfetti) framed by a soft cream edge
 pulse tuned to the carnival glitter — no KH / keyblade framing. Campaign
 victory fires a soft cream confetti swell + cream sparkle on the purity
-cheer only, framed by a victory-tuned cream edge; it clears before the
-Oswald twist / FinalePhaseFx reveal so the bittersweet sting stays intact.
+cheer only, framed by a victory-tuned cream edge and a delayed soft cream
+wash pulse; it clears before the Oswald twist / FinalePhaseFx reveal so
+the bittersweet sting stays intact.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -43,6 +44,10 @@ from toontown.campaign.CampaignHandoffConfetti import (
     playVictoryCreamSwell,
 )
 from toontown.campaign.CampaignPower import applyPowerBump
+from toontown.campaign.VictoryCreamWashFx import (
+    clearVictoryCreamWash,
+    playVictoryCreamWash,
+)
 
 # Celebration timing — readable rubber-hose reclaim beat, not a flash toast.
 # Title settle/pop tunables live in CampaignGlobals (HANDOFF_TITLE_*).
@@ -243,6 +248,12 @@ class CampaignHandoffClient(DirectObject):
             # (#82/#105). Cheer-only — twist / phase stay edge-free.
             try:
                 playVictoryCreamEdge()
+            except Exception:
+                pass
+            # Soft cream wash pulse after cream edge / sparkle (#129/#105) —
+            # melee / perfect-dodge wash grammar. Cheer-only.
+            try:
+                playVictoryCreamWash()
             except Exception:
                 pass
         elif confetti:
@@ -475,6 +486,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearVictoryCreamEdge()
+        except Exception:
+            pass
+        try:
+            clearVictoryCreamWash()
         except Exception:
             pass
         try:
