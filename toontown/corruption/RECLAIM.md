@@ -92,17 +92,21 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # drip / splat pop (CorruptTelegraphInkFx) plus squash/SFX so wind-ups
 # read without a combat HUD; impact flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
+# Melee hits on Smudge flash SmudgeInkSplashFx (cheap purple ink splash);
+# Smudge death layers splash with CorruptDeathPopFx for swarm readability.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray); purity pop + pollution drop.
 ```
 
-## Ink Smudge telegraph demo
+## Ink Smudge telegraph / splash demo
 
 ```
 ~spawncorrupt 2 0 0
 ~hackslash 0
 # Smudge: purple squash + ink-fist telegraph pop (SmudgeInkTelegraphFx)
 # + ink drip + pie whoosh SFX, then impact flash on hit.
+# Land F / LMB — cheap purple ink splash (SmudgeInkSplashFx) on each hit;
+# defeat layers a larger splash with CorruptDeathPopFx.
 ```
 
 ## Sludge Brute spit demo

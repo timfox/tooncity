@@ -217,6 +217,63 @@ SMUDGE_TELEGRAPH_INK_LOOK = {
     'smearColor': (0.75, 0.28, 1.15, 0.9),
     'binSort': 42,
 }
+
+# Ink Smudge hit/death ink splash — cheap rubber-hose purple splash for swarm
+# readability (client only). Composes with SmudgeInkTelegraphFx / CorruptDeathPopFx
+# / IdleInkDripFx palettes via SmudgeInkSplashFx.smudgeInkSplashLook. Hit is the
+# cheap pack-scan cue; death layers a slightly larger splash with DeathPop.
+SMUDGE_INK_SPLASH_LOOK = {
+    'hit': {
+        'id': 'smudge-hit-splash',
+        'lift': 2.05,
+        'peakAlpha': 0.94,
+        'splatHalf': 0.26,
+        'splatPeak': 1.55,
+        'splatSec': 0.18,
+        'rimScale': 1.26,
+        'smearCount': 3,
+        'smearHalf': 0.09,
+        'smearSec': 0.2,
+        'smearSpread': 0.75,
+        'fleckCount': 2,
+        'fleckHalf': 0.11,
+        'fleckDist': 1.05,
+        'fleckLift': 0.4,
+        'fleckSec': 0.22,
+        'dripCount': 1,
+        'dripHalf': 0.08,
+        'dripSpread': 0.22,
+        'dripFall': 0.7,
+        'dripSec': 0.32,
+        'dripStagger': 0.03,
+        'binSort': 45,
+    },
+    'death': {
+        'id': 'smudge-death-splash',
+        'lift': 1.55,
+        'peakAlpha': 0.97,
+        'splatHalf': 0.38,
+        'splatPeak': 2.05,
+        'splatSec': 0.26,
+        'rimScale': 1.35,
+        'smearCount': 4,
+        'smearHalf': 0.12,
+        'smearSec': 0.28,
+        'smearSpread': 1.15,
+        'fleckCount': 4,
+        'fleckHalf': 0.16,
+        'fleckDist': 1.75,
+        'fleckLift': 0.7,
+        'fleckSec': 0.3,
+        'dripCount': 2,
+        'dripHalf': 0.1,
+        'dripSpread': 0.35,
+        'dripFall': 1.05,
+        'dripSec': 0.42,
+        'dripStagger': 0.04,
+        'binSort': 46,
+    },
+}
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
 ATTACK_HIT_FLASH_PEAK = 0.55
 ATTACK_HIT_FLASH_IN = 0.04

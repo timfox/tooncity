@@ -7,10 +7,12 @@ string-lash + vine zip. Between telegraphs, IdleInkDripFx plays sparse
 ambient rubber-hose ink drips (archetype-tinted pollution presence).
 Telegraphs play CorruptTelegraphInkFx (short rubber-hose ink drip / splat
 pop) and pause idle drips for the wind-up. Ink Smudge wind-ups also flash
-SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Sludge Brute wind-ups
-also flash BruteSpitTelegraphFx (green rubber-hose spit-gob pop). Balloon
-Snare wind-ups also flash BalloonSnareTelegraphFx (amber rubber-hose
-string-lash pop). Ink Overlord phase telegraphs also flash
+SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Ink Smudge hits and
+deaths also flash SmudgeInkSplashFx (cheap purple rubber-hose ink splash for
+swarm readability; composes with telegraph / death / idle ink looks). Sludge
+Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
+pop). Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
+rubber-hose string-lash pop). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
 OverlordPhaseInkRainFx (ink rain / ink fall shower). Defeat plays
 CorruptDeathPopFx (rubber-hose ink splat / balloon pop). Clearing them lowers
