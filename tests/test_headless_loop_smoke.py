@@ -2892,8 +2892,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('pickCycleChoice', hack_init)
         self.assertIn('nextCycleIndex', hack_init)
 
-        # Soft-lock cycle reticle pulse — brief hose pulse + short cream ring
-        # when Tab/` switches lock (lighter than acquire snap FOV/wash).
+        # Soft-lock cycle reticle cream deepen (#210 deepen) — hose pulse +
+        # deepened cream ring + quiet cycle cream wash when Tab/` switches
+        # lock (lighter than acquire snap FOV/accents; distinct from #228).
         for cycle_pulse_key in (
                 'SOFT_LOCK_CYCLE_PULSE_ENABLED',
                 'SOFT_LOCK_CYCLE_PULSE_SQUASH',
@@ -2902,28 +2903,51 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'SOFT_LOCK_CYCLE_PULSE_RING_ENABLED',
                 'SOFT_LOCK_CYCLE_PULSE_RING_PEAK',
                 'SOFT_LOCK_CYCLE_PULSE_RING_SEC',
-                'SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA'):
+                'SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_DELAY_SEC',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_COLOR',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_PEAK',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_MID',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_BIN'):
             self.assertIn(
                 cycle_pulse_key, config_names,
                 msg='HackSlashConfig missing cycle pulse %s' % cycle_pulse_key)
         self.assertIs(config_assigns.get('SOFT_LOCK_CYCLE_PULSE_ENABLED'), True)
         self.assertIs(
             config_assigns.get('SOFT_LOCK_CYCLE_PULSE_RING_ENABLED'), True)
+        self.assertIs(
+            config_assigns.get('SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED'), True)
         self.assertIn(
             'softLockCyclePulseScaleKeys', config_funcs,
             msg='HackSlashConfig missing softLockCyclePulseScaleKeys')
+        self.assertIn(
+            'softLockCycleCreamWashPeakAtSec', config_funcs,
+            msg='HackSlashConfig missing softLockCycleCreamWashPeakAtSec')
         self.assertIn('softLockCyclePulseScaleKeys', hack_init)
+        self.assertIn('softLockCycleCreamWashPeakAtSec', hack_init)
+        cycle_wash_rel = 'toontown/hackslash/SoftLockCycleCreamWashFx.py'
+        _assert_module_file(cycle_wash_rel)
+        cycle_wash_names = _class_and_func_names(_module_ast(cycle_wash_rel))
+        self.assertIn('SoftLockCycleCreamWashPulse', cycle_wash_names)
+        cycle_wash_methods = _class_method_names(
+            _module_ast(cycle_wash_rel), 'SoftLockCycleCreamWashPulse')
+        self.assertIn('play', cycle_wash_methods)
+        self.assertIn('clear', cycle_wash_methods)
         reticle_tree = _module_ast('toontown/hackslash/SoftLockReticleFx.py')
         reticle_methods = _class_method_names(reticle_tree, 'SoftLockReticleFx')
         self.assertIn(
             'playCyclePulse', reticle_methods,
             msg='SoftLockReticleFx missing playCyclePulse')
         self.assertIn('_playCyclePulseRing', reticle_methods)
+        self.assertIn('_armCycleCreamWash', reticle_methods)
         hit_juice_src = _read('toontown/hackslash/HitJuice.py')
         self.assertIn('playSoftLockCyclePulse', hit_juice_src)
         self.assertIn('cycled=', melee_src)
         self.assertIn('SOFT_LOCK_CYCLE_PULSE_ENABLED', config_src)
-        self.assertIn('Tab/` soft-lock cycle pulse', config_src)
+        self.assertIn('SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED', config_src)
+        self.assertIn('Tab/` soft-lock cycle cream', config_src)
+        self.assertIn('SoftLockCycleCreamWashPulse', hack_init)
 
         # Soft-lock hit assist — one-shot yaw/aim nudge on melee connect
         # against the sticky soft-lock (combat feel, not cream FX).

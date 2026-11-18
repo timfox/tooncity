@@ -4,9 +4,9 @@ World-space cream brackets over the sticky soft-lock target. On acquire/snap,
 plays a short squash → stretch → settle hose pop plus cream/ink accent flecks,
 an expanding cream pulse ring, a soft delayed cream wash pulse, a brief FOV
 punch, and a soft FOV cream wash after the lens kick. On manual Tab/` cycle,
-plays a lighter cycle reticle pulse (+ short cream ring) so the new lock
-reads clearly without re-firing acquire FOV / cream wash. Toontown
-spiritual-sequel tone only — no keyblades / no KH branding.
+plays a lighter cycle reticle pulse + deepened cream ring + quiet cycle cream
+wash so the new lock reads juicier without re-firing acquire FOV / accents.
+Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec4
@@ -23,6 +23,7 @@ from direct.interval.LerpInterval import LerpFunc
 from . import HackSlashConfig
 from . import HitJuice
 from .SoftLockCreamWashFx import SoftLockCreamWashPulse
+from .SoftLockCycleCreamWashFx import SoftLockCycleCreamWashPulse
 from .SoftLockFovCreamWashFx import SoftLockFovCreamWashPulse
 
 
@@ -147,8 +148,9 @@ class SoftLockReticleFx(object):
     def playCyclePulse(self):
         """Brief reticle hose pulse when Tab/` switches soft-lock.
 
-        Lighter than playSnapPop — scale pulse + short cream ring only.
-        Skips accents / cream wash / FOV so rapid cycle stays readable.
+        Lighter than playSnapPop — scale pulse + deepened cream ring + quiet
+        cycle cream wash. Skips accents / acquire wash / FOV so rapid cycle
+        stays readable while the cream cue reads juicier.
         """
         if not getattr(HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_ENABLED', True):
             return
@@ -156,6 +158,7 @@ class SoftLockReticleFx(object):
             return
         self._clearPop()
         self._clearPulseRing()
+        self._clearCreamWash()
         settle = float(HackSlashConfig.SOFT_LOCK_RETICLE_SETTLE_SCALE)
         self._popIval = HitJuice.playSoftLockCyclePulse(
             self._root, settle,
@@ -164,8 +167,13 @@ class SoftLockReticleFx(object):
             origin = self._root.getPos(render)  # noqa: F821
             parent = render  # noqa: F821
         except Exception:
+            # Still arm cycle cream wash even if the ring can't place.
+            self._armCycleCreamWash()
             return
         self._playCyclePulseRing(origin, parent)
+        # Quiet cycle cream wash after deepened cream ring — SoftLockCycle
+        # CreamWashPulse owns the veil (under acquire SoftLockCreamWashPulse).
+        self._armCycleCreamWash()
 
     def _playPulseRing(self, origin, parent, peak=None, sec=None, peakA=None,
                        nameSuffix='PulseRing'):
@@ -227,20 +235,31 @@ class SoftLockReticleFx(object):
         self._pulseIval.start()
 
     def _playCyclePulseRing(self, origin, parent):
-        """Shorter/quieter cream ring for Tab/` cycle (no acquire FOV/wash)."""
+        """Deepened cream ring for Tab/` cycle (no acquire FOV/accents)."""
         if not getattr(HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_ENABLED', True):
             return
         if not getattr(HackSlashConfig, 'SOFT_LOCK_PULSE_RING_ENABLED', True):
             return
         peak = float(getattr(
-            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_PEAK', 1.65))
+            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_PEAK', 1.90))
         sec = float(getattr(
-            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_SEC', 0.14))
+            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_SEC', 0.18))
         peakA = float(getattr(
-            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA', 0.48))
+            HackSlashConfig, 'SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA', 0.58))
         self._playPulseRing(
             origin, parent, peak=peak, sec=sec, peakA=peakA,
             nameSuffix='CyclePulseRing')
+
+    def _armCycleCreamWash(self):
+        """Arm one delayed aspect2d cream wash per Tab/` cycle pulse."""
+        try:
+            wash = SoftLockCycleCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
 
     def _clearPulseRing(self):
         if self._pulseIval is not None:
