@@ -2173,11 +2173,20 @@ SNARE_STRING_COUNTER_RATE_MULT = 1.2
 # Cancel Snare wind-up when melee lands mid-telegraph (AI interrupt).
 SNARE_STRING_COUNTER_INTERRUPT = True
 # Extend the same snare-style mid-telegraph melee cancel to Punchline kits:
-# Brute spit + Gagster lob wind-ups only (not Brute slam, Overlord rain/surge).
-# AI path in DistributedCorruptToonAI.__maybeInterruptMeleeTelegraph.
+# Brute spit + Gagster lob wind-ups only (not Brute slam — tank secondary
+# stays commit-through). AI path in
+# DistributedCorruptToonAI.__maybeInterruptMeleeTelegraph.
 # Dedicated counter→melee windows (below) are separate from interrupt cancel.
 BRUTE_SPIT_MELEE_INTERRUPT = True
 GAGSTER_LOB_MELEE_INTERRUPT = True
+# Overlord climax telegraphs (rain / slam / ink_surge) — same mid-telegraph
+# melee cancel as street kits so boss punish skill matches Punchline packs.
+# Smudge ink_dash/splat and Oswald betrayal kit stay commit-through (follow-ups).
+# Dedicated Overlord counter windows by move id are a separate deepen.
+# No cream / no KH.
+OVERLORD_RAIN_MELEE_INTERRUPT = True
+OVERLORD_SLAM_MELEE_INTERRUPT = True
+OVERLORD_INK_SURGE_MELEE_INTERRUPT = True
 # Messenger name — DistributedCorruptToon → MeleeCombat thin hook.
 SNARE_STRING_COUNTER_EVENT = 'corruptSnareStringSnapCounter'
 
@@ -2213,7 +2222,9 @@ def isMeleeInterruptibleTelegraph(archetype, move):
     Snare: any string telegraph when SNARE_STRING_COUNTER_INTERRUPT.
     Brute: spit only (slam stays commit-through).
     Gagster: gag_lob only.
-    Overlord / Smudge / Oswald: False here — out of this PR's scope.
+    Overlord (ARCHETYPE_INK + rain/slam/ink_surge move ids): when the matching
+    OVERLORD_*_MELEE_INTERRUPT flag is on — climax punish parity with street kits.
+    Smudge ink_dash/splat and Oswald betrayal kit: False (follow-up scope).
     """
     aid = normalizeArchetype(archetype)
     moveName = str(move or 'smack')
@@ -2223,6 +2234,15 @@ def isMeleeInterruptibleTelegraph(archetype, move):
         return bool(BRUTE_SPIT_MELEE_INTERRUPT)
     if aid == ARCHETYPE_GAGSTER and moveName == 'gag_lob':
         return bool(GAGSTER_LOB_MELEE_INTERRUPT)
+    # Overlord moves are unique strings on ARCHETYPE_INK (finalePhase >= 1);
+    # Smudge never telegraphs rain / slam / ink_surge.
+    if aid == ARCHETYPE_INK:
+        if moveName == 'rain':
+            return bool(OVERLORD_RAIN_MELEE_INTERRUPT)
+        if moveName == 'slam':
+            return bool(OVERLORD_SLAM_MELEE_INTERRUPT)
+        if moveName == 'ink_surge':
+            return bool(OVERLORD_INK_SURGE_MELEE_INTERRUPT)
     return False
 
 

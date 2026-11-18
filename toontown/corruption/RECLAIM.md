@@ -438,7 +438,9 @@ Smudge purple fallthrough). Full dialogue is out of scope here.
    when the player is already in the ink (`OVERLORD_PHASE_COMBAT[1]` two-note
    Rising kit — second pressure beyond rain-only before Unleash) matching the
    rain puddle / spread — not Smudge melee smack. Mid-range surge stays on
-   Unleashed only.
+   Unleashed only. Melee mid-rain / mid-slam telegraph cancels the wind-up
+   (same snare-style AI interrupt as Brute spit / Gagster lob;
+   `OVERLORD_RAIN_MELEE_INTERRUPT` / `OVERLORD_SLAM_MELEE_INTERRUPT`).
 2. Clear packs → purity beat → director restarts **Phase 2**.
 3. **Phase 2 — Unleashed**: crimson telegraphs (wider squash / taller stretch) +
    phase-two SFX, hotter crown flash, denser ink rain on rain telegraphs,
@@ -453,6 +455,9 @@ Smudge purple fallthrough). Full dialogue is out of scope here.
    (planar rush then landing AoE — third Unleashed note beyond rain/slam),
    close-range **slam** when the player is already in the ink, plus
    **Smudge adds** on wave 2+ (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
+   Melee mid-telegraph also cancels **ink_surge** wind-up
+   (`OVERLORD_INK_SURGE_MELEE_INTERRUPT`) — climax punish parity with
+   rain/slam; dedicated Overlord counter windows stay a follow-up.
 4. Clear again → campaign victory + soft twist tease
    (`CampaignGlobals.FINALE_TWIST_TEASE`) → delayed **Corrupted Oswald**
    chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client) →

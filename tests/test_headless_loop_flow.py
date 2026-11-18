@@ -8,7 +8,7 @@ chaining the spiritual-sequel loop:
 
   explore — zone messengers, Oswald NPC stub, Loopy unease, hub breadcrumb
             act-unlock dim (#332), chase-pending hub tip (#342)
-  fight   — archetype kits, melee interrupt (#329), Brute/Gagster counters
+  fight   — archetype kits, melee interrupt (#329/#361), Brute/Gagster counters
             (#343), juggle hang stun, reclaim KO fail + retry (#338), soft-
             lock boss priority (#339), Overlord P1 rising slam (#334) +
             move-id telegraph (#340), boss/chase HP bar (#331)
@@ -654,15 +654,27 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'juggleHangStunSec', 'JUGGLE_HANG_STUN_ENABLED'):
             self.assertIn(needle, corrupt_ai, msg='AI missing %s' % needle)
 
-        # Melee mid-telegraph interrupt covers Snare + Brute spit + Gagster lob.
+        # Melee mid-telegraph interrupt covers Snare + Brute spit + Gagster lob
+        # + Overlord rain/slam/ink_surge.
         self.assertTrue(cg.BRUTE_SPIT_MELEE_INTERRUPT)
         self.assertTrue(cg.GAGSTER_LOB_MELEE_INTERRUPT)
+        self.assertTrue(cg.OVERLORD_RAIN_MELEE_INTERRUPT)
+        self.assertTrue(cg.OVERLORD_SLAM_MELEE_INTERRUPT)
+        self.assertTrue(cg.OVERLORD_INK_SURGE_MELEE_INTERRUPT)
         self.assertTrue(cg.isMeleeInterruptibleTelegraph(
             cg.ARCHETYPE_BRUTE, 'spit'))
         self.assertFalse(cg.isMeleeInterruptibleTelegraph(
             cg.ARCHETYPE_BRUTE, 'slam'))
         self.assertTrue(cg.isMeleeInterruptibleTelegraph(
             cg.ARCHETYPE_GAGSTER, 'gag_lob'))
+        self.assertTrue(cg.isMeleeInterruptibleTelegraph(
+            cg.ARCHETYPE_INK, 'rain'))
+        self.assertTrue(cg.isMeleeInterruptibleTelegraph(
+            cg.ARCHETYPE_INK, 'slam'))
+        self.assertTrue(cg.isMeleeInterruptibleTelegraph(
+            cg.ARCHETYPE_INK, 'ink_surge'))
+        self.assertFalse(cg.isMeleeInterruptibleTelegraph(
+            cg.ARCHETYPE_INK, 'ink_dash'))
         self.assertIn('__maybeInterruptMeleeTelegraph', corrupt_ai)
         # Dedicated counter windows (beyond interrupt) for spit / lob.
         self.assertTrue(cg.BRUTE_SPIT_COUNTER_ENABLED)
