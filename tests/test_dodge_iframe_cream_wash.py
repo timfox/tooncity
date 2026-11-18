@@ -2,8 +2,8 @@
 """Behavioral headless tests for dodge i-frame pulse cream wash helpers.
 
 Loads HackSlashConfig dodge i-frame cream wash helpers without Panda3D.
-Covers deepened tunables + peak timing so the wash reads clearly during
-dodge invuln (#166 deepen), plus residual wash aftershock.
+Covers deepened-past tunables + peak timing so the wash reads juicier
+during dodge invuln (past #228), plus residual wash aftershock.
 
 Run from repo root:
   python3 tests/test_dodge_iframe_cream_wash.py
@@ -73,7 +73,7 @@ def _top_level_names(tree: ast.AST) -> set[str]:
 
 
 class DodgeIFrameCreamWashTest(unittest.TestCase):
-    """Config + AST checks for deepened dodge i-frame cream wash."""
+    """Config + AST checks for deepened-past dodge i-frame cream wash."""
 
     @classmethod
     def setUpClass(cls):
@@ -90,11 +90,13 @@ class DodgeIFrameCreamWashTest(unittest.TestCase):
         self.assertLess(
             self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_MID,
             self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_PEAK)
-        # Deepened readability: at least as strong as the prior quiet wash.
+        # Deepened-past readability: juicier than merged #228 i-frame wash.
         self.assertGreaterEqual(
-            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_PEAK, 0.09)
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_PEAK, 0.098)
         self.assertGreaterEqual(
-            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC, 0.08)
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC, 0.10)
+        self.assertGreaterEqual(
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_MID, 0.065)
         # Still quieter / under trail settle wash (rolls fire often).
         self.assertLessEqual(
             self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_PEAK,
@@ -102,11 +104,22 @@ class DodgeIFrameCreamWashTest(unittest.TestCase):
         self.assertLess(
             self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_BIN,
             self.cfg.DODGE_TRAIL_CREAM_WASH_BIN)
+        # Distinct from hurt-stagger cream wash deepen (#247 / #263) —
+        # mid-roll invuln (later delay), not smack lockout.
+        self.assertGreater(
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC,
+            self.cfg.HURT_STAGGER_CREAM_WASH_DELAY_SEC)
         # Peak lands while dodge i-frames are still live (first pulse @ start).
         peak_at = self.cfg.dodgeIFrameCreamWashPeakAtSec()
         self.assertLess(peak_at, self.cfg.DODGE_IFRAME_SEC)
+        # Richer residual wash aftershock after the deepened-past veil.
         self.assertGreaterEqual(
-            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT, 1)
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT, 4)
+        self.assertGreaterEqual(
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK, 1.10)
+        self.assertGreaterEqual(
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA,
+            0.09)
         self.assertTrue(
             self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
         cream = self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_COLOR
@@ -140,6 +153,9 @@ class DodgeIFrameCreamWashTest(unittest.TestCase):
         # Ban phrasing only — no KH product names as branding.
         self.assertIn('no keyblades', src.lower())
         self.assertNotIn('kingdom hearts', src.lower())
+        # Distinct from hurt-stagger / dodge-cancel deepen cues; past #228.
+        self.assertIn('distinct from', src.lower())
+        self.assertIn('deepened past #228', src.lower())
 
     def test_ast_trail_wires_iframe_cream_wash(self):
         trail_rel = 'toontown/hackslash/DodgeTrailFx.py'

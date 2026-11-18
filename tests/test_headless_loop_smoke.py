@@ -2568,8 +2568,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('radial cream hose', smudge_reclaim_md)
         self.assertIn('cream hose smears', smudge_corr_init)
 
-        # Dodge i-frame cream wash (#166 deepen) — stronger wash + aftershock
-        # after first i-frame pulse so invuln windows read clearly.
+        # Dodge i-frame cream wash deepen past #228 — juicier wash + richer
+        # aftershock after first i-frame pulse so invuln windows still read.
         iframe_wash_rel = 'toontown/hackslash/DodgeIFrameCreamWashFx.py'
         _assert_module_file(iframe_wash_rel)
         iframe_wash_names = _class_and_func_names(_module_ast(iframe_wash_rel))
@@ -2596,6 +2596,24 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 msg='HackSlashConfig missing %s' % iframe_wash_key)
         config_funcs = _class_and_func_names(config_tree)
         self.assertIn('dodgeIFrameCreamWashPeakAtSec', config_funcs)
+        iframe_wash_assigns = _assign_map(config_tree)
+        self.assertGreaterEqual(
+            iframe_wash_assigns.get('DODGE_TRAIL_PULSE_CREAM_WASH_PEAK'), 0.098)
+        self.assertGreaterEqual(
+            iframe_wash_assigns.get('DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC'),
+            0.10)
+        self.assertGreaterEqual(
+            iframe_wash_assigns.get(
+                'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT'),
+            4)
+        self.assertGreaterEqual(
+            iframe_wash_assigns.get(
+                'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK'),
+            1.10)
+        self.assertIs(
+            iframe_wash_assigns.get(
+                'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ENABLED'),
+            True)
         dodge_trail_src = _read('toontown/hackslash/DodgeTrailFx.py')
         self.assertIn('DodgeIFrameCreamWashPulse', dodge_trail_src)
         self.assertIn('_armIFrameCreamWash', dodge_trail_src)
