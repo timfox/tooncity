@@ -230,12 +230,19 @@ def ensureReclaimCheerClient():
     global _client
     if _client is None:
         _client = ReclaimCheerClient()
-    # Arm polluted-street entry cream shimmer with the same early bootstrap
-    # (PlayEntry / MagicWordIndex already ensure cheer) — reclaim/ only.
+    # Arm polluted-street entry cream shimmer + soft wash pulse with the same
+    # early bootstrap (PlayEntry / MagicWordIndex already ensure cheer) —
+    # reclaim/ only.
     try:
         from toontown.reclaim.EntryCreamShimmerFx import (
             ensureEntryCreamShimmerFxClient)
         ensureEntryCreamShimmerFxClient()
+    except Exception:
+        pass
+    try:
+        from toontown.reclaim.EntryCreamWashPulseFx import (
+            ensureEntryCreamWashPulseFxClient)
+        ensureEntryCreamWashPulseFxClient()
     except Exception:
         pass
     # Cream flecks layered on pitch swell (same messengers as this client).

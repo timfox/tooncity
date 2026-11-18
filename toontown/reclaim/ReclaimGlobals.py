@@ -280,8 +280,9 @@ PURITY_METER_FILL_SHIMMER_BIN = 49
 
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.
-# Composes with PlayEntry ink edge vignette (bin 48), StreetColorWash (28),
-# and StreetSparkleFx full-purity glitter (50). Sunny cream only — no KH blue.
+# Composes with EntryCreamWashPulseFx (bin 32), PlayEntry ink edge vignette
+# (bin 48), StreetColorWash (28), and StreetSparkleFx full-purity glitter (50).
+# Sunny cream only — no KH blue.
 ENTRY_CREAM_SHIMMER_ENABLED = True
 ENTRY_CREAM_SHIMMER_MIN_POLLUTION = 0.08
 ENTRY_CREAM_SHIMMER_ORIGIN = (0.0, 0.0, -0.08)
@@ -299,6 +300,22 @@ ENTRY_CREAM_SHIMMER_FLECK_SPREAD = 0.95
 ENTRY_CREAM_SHIMMER_FLECK_SEC = 0.42
 ENTRY_CREAM_SHIMMER_FLECK_COLOR = (1.0, 0.98, 0.72, 0.88)
 ENTRY_CREAM_SHIMMER_FLECK_END_COLOR = (1.0, 0.94, 0.55, 0.0)
+
+# Polluted reclaim-street entry cream wash pulse (StreetColorWash veil grammar).
+# Soft full-screen cream pop with EntryCreamShimmerFx — sibling of purity-complete
+# cream wash pulse (#104), softer / not a payoff flash. Progressive wash stays
+# separate. Sunny pastel only — no KH blue. Above progressive wash (28); below
+# entry shimmer (36) / ink vignette (48).
+ENTRY_CREAM_WASH_PULSE_ENABLED = True
+ENTRY_CREAM_WASH_PULSE_MIN_POLLUTION = 0.08
+ENTRY_CREAM_WASH_PULSE_COLOR = (1.0, 0.97, 0.82)
+ENTRY_CREAM_WASH_PULSE_BIN = 32
+ENTRY_CREAM_WASH_PULSE_PEAK = 0.16
+ENTRY_CREAM_WASH_PULSE_MID = 0.09
+ENTRY_CREAM_WASH_PULSE_IN_SEC = 0.08
+ENTRY_CREAM_WASH_PULSE_PULSE_SEC = 0.14
+ENTRY_CREAM_WASH_PULSE_HOLD_SEC = 0.12
+ENTRY_CREAM_WASH_PULSE_OUT_SEC = 0.50
 
 # Progressive street cream wash while reclaim purity fills (geom + soft veil).
 # Matches purity-meter / burst cream — rubber-hose sunny clear, not KH blue.
