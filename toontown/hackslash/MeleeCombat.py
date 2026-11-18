@@ -74,6 +74,12 @@ class MeleeCombatController(DirectObject):
         self._juggleCancelOpenAt = 0.0
         self._juggleCancelUntil = 0.0
         self._juggleAttackBuffered = False
+        # Hurt stagger → recovery cancel (armed when a CorruptToon smack lands).
+        self._hurtStaggerArmed = False
+        self._hurtCancelOpenAt = 0.0
+        self._hurtCancelUntil = 0.0
+        self._hurtAttackBuffered = False
+        self._hurtDodgeBuffered = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
         self._hitStop = HitStopFx(avatar)
@@ -121,6 +127,7 @@ class MeleeCombatController(DirectObject):
         self._clearDodgeCancelWindow()
         self._clearPerfectDodgeCounterWindow()
         self._clearJuggleCancelWindow()
+        self._clearHurtRecoveryCancelWindow()
         self._comboHits = 0
         self.avatar.hackSlashDemoHostiles = getattr(
             self.avatar, 'hackSlashDemoHostiles', []) or []
@@ -171,6 +178,7 @@ class MeleeCombatController(DirectObject):
         self._clearDodgeCancelWindow()
         self._clearPerfectDodgeCounterWindow()
         self._clearJuggleCancelWindow()
+        self._clearHurtRecoveryCancelWindow()
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
@@ -237,11 +245,12 @@ class MeleeCombatController(DirectObject):
     def _tick(self, task):
         if not self.enabled:
             return Task.done
-        # Flush buffered F/LMB once dodge-cancel / perfect-dodge / juggle-cancel
-        # windows open.
+        # Flush buffered F/LMB / Shift once dodge-cancel / perfect-dodge /
+        # juggle-cancel / hurt-recovery windows open.
         self._flushPerfectDodgeCounterBuffer()
         self._flushDodgeCancelBuffer()
         self._flushJuggleCancelBuffer()
+        self._flushHurtRecoveryCancelBuffer()
         target = self.targetFinder.acquire()
         snapped = self.targetFinder.didSnap()
         if target is not None:
@@ -438,6 +447,20 @@ class MeleeCombatController(DirectObject):
                 self._cancelJuggleIntoSlam()
                 fromJuggleCancel = True
 
+        # Hurt stagger → recovery cancel into melee: early smack is locked
+        # (optional buffer); once the cancel window opens, F/LMB aborts
+        # remaining stagger into a fresh stretch-punch.
+        fromHurtCancel = False
+        if (not fromJuggleCancel and
+                getattr(HackSlashConfig, 'HURT_STAGGER_ENABLED', True)):
+            if self._isInHurtStaggerLockout():
+                if getattr(HackSlashConfig, 'HURT_RECOVERY_CANCEL_BUFFER', True):
+                    self._hurtAttackBuffered = True
+                return
+            if self.isHurtRecoveryCancelOpen():
+                self._cancelHurtRecovery()
+                fromHurtCancel = True
+
         if (not fromJuggleCancel and
                 getattr(self.avatar.controlManager.currentControls,
                         'isAirborne', 0)):
@@ -447,13 +470,14 @@ class MeleeCombatController(DirectObject):
         # rewarded opener (damage + snappy rate) after i-frames eat a telegraph.
         fromPerfectCounter = False
         fromDodgeCancel = False
-        if not fromJuggleCancel and self.isPerfectDodgeCounterOpen():
+        if (not fromJuggleCancel and not fromHurtCancel and
+                self.isPerfectDodgeCounterOpen()):
             if self._dodging or self.isDodgeCancelOpen():
                 self._cancelDodgeIntoMelee()
             self._consumePerfectDodgeCounter()
             fromPerfectCounter = True
             fromDodgeCancel = True
-        elif (not fromJuggleCancel and
+        elif (not fromJuggleCancel and not fromHurtCancel and
                 getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True)):
             # Dodge → melee cancel: early roll is locked (optional buffer); once
             # the cancel window opens, F/LMB aborts remaining dodge recovery
@@ -466,7 +490,8 @@ class MeleeCombatController(DirectObject):
                 self._cancelDodgeIntoMelee()
                 fromDodgeCancel = True
 
-        if self.busy and not self.comboWindowOpen and not fromJuggleCancel:
+        if (self.busy and not self.comboWindowOpen and
+                not fromJuggleCancel and not fromHurtCancel):
             return
 
         messenger.send('wakeup')  # noqa: F821
@@ -474,11 +499,12 @@ class MeleeCombatController(DirectObject):
             # Mid-juggle cancel always jumps to the finisher slam hit.
             hitIndex = HackSlashConfig.juggleCancelSlamHitIndex()
             self.comboIndex = hitIndex
-        elif (not fromDodgeCancel and self.comboWindowOpen and
+        elif (not fromDodgeCancel and not fromHurtCancel and
+                self.comboWindowOpen and
                 self.comboIndex < HackSlashConfig.COMBO_LENGTH):
             hitIndex = self.comboIndex
         else:
-            # Dodge cancel / perfect counter always starts a fresh string.
+            # Dodge / hurt / perfect-counter cancel always starts a fresh string.
             hitIndex = 0
             self.comboIndex = 0
 
@@ -876,6 +902,21 @@ class MeleeCombatController(DirectObject):
         if self.isInvulnerable():
             return
         now = globalClock.getFrameTime()  # noqa: F821
+        # Interrupt an in-flight swing so hurt stagger owns the beat, then the
+        # recovery cancel can reopen into dodge or a fresh stretch-punch.
+        if self.busy:
+            self._finishSwing()
+            self.busy = False
+            self.comboWindowOpen = False
+            self.comboIndex = 0
+            self._restoreScale()
+            try:
+                if not getattr(
+                        self.avatar.controlManager.currentControls,
+                        'isAirborne', 0):
+                    self.avatar.setAnimState('Happy', 1.0)
+            except Exception:
+                pass
         self._iframeUntil = now + HackSlashConfig.IFRAME_SEC
         self.avatar.hackSlashIFrameUntil = self._iframeUntil
         self._reportIFrameToAI(HackSlashConfig.IFRAME_SEC)
@@ -884,6 +925,8 @@ class MeleeCombatController(DirectObject):
         self._playTinyHitstop(HackSlashConfig.PLAYER_HIT_REACT_HITSTOP_SEC)
         # Stronger flash than normal hit confirm so the window is obvious.
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
+        # Brief stagger then cancel-into-dodge/melee so combat stays responsive.
+        self._armHurtRecoveryCancelWindow(now)
         messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
 
     def _onCorruptAttackDodged(self, corrupt=None):
@@ -910,6 +953,16 @@ class MeleeCombatController(DirectObject):
         """Brief rubber-hose dash with i-frames (Shift / X)."""
         if not self.enabled or self._dodging:
             return
+        # Hurt stagger → recovery cancel into dodge: early smack is locked
+        # (optional buffer); once the cancel window opens, Shift/X aborts
+        # remaining stagger into a rubber-hose dash.
+        if getattr(HackSlashConfig, 'HURT_STAGGER_ENABLED', True):
+            if self._isInHurtStaggerLockout():
+                if getattr(HackSlashConfig, 'HURT_RECOVERY_CANCEL_BUFFER', True):
+                    self._hurtDodgeBuffered = True
+                return
+            if self.isHurtRecoveryCancelOpen():
+                self._cancelHurtRecovery()
         now = globalClock.getFrameTime()  # noqa: F821
         if now < self._dodgeReadyAt:
             return
@@ -983,6 +1036,102 @@ class MeleeCombatController(DirectObject):
                 iframeSec=HackSlashConfig.DODGE_IFRAME_SEC)
         except Exception:
             pass
+
+    def _armHurtRecoveryCancelWindow(self, now=None):
+        """Arm brief hurt stagger then cancel-into-dodge/melee from smack time."""
+        self._hurtAttackBuffered = False
+        self._hurtDodgeBuffered = False
+        if not getattr(HackSlashConfig, 'HURT_STAGGER_ENABLED', True):
+            self._clearHurtRecoveryCancelWindow()
+            return
+        if now is None:
+            now = globalClock.getFrameTime()  # noqa: F821
+        stagger = float(getattr(HackSlashConfig, 'HURT_STAGGER_SEC', 0.14))
+        window = float(
+            getattr(HackSlashConfig, 'HURT_RECOVERY_CANCEL_WINDOW_SEC', 0.38))
+        self._hurtStaggerArmed = True
+        self._hurtCancelOpenAt = now + max(0.0, stagger)
+        self._hurtCancelUntil = self._hurtCancelOpenAt + max(0.0, window)
+        messenger.send(
+            'hackslash-hurt-stagger',
+            [self.avatar, max(0.0, stagger), max(0.0, window)])  # noqa: F821
+
+    def _clearHurtRecoveryCancelWindow(self):
+        self._hurtStaggerArmed = False
+        self._hurtCancelOpenAt = 0.0
+        self._hurtCancelUntil = 0.0
+        self._hurtAttackBuffered = False
+        self._hurtDodgeBuffered = False
+
+    def _isInHurtStaggerLockout(self):
+        """True during committed hurt stagger before recovery cancel opens."""
+        if not getattr(HackSlashConfig, 'HURT_STAGGER_ENABLED', True):
+            return False
+        if not self._hurtStaggerArmed:
+            return False
+        now = globalClock.getFrameTime()  # noqa: F821
+        return now < self._hurtCancelOpenAt
+
+    def isHurtRecoveryCancelOpen(self):
+        """True while F/LMB or Shift/X may cancel hurt recovery."""
+        if not getattr(HackSlashConfig, 'HURT_STAGGER_ENABLED', True):
+            return False
+        open_ = HackSlashConfig.isHurtRecoveryCancelWindowOpen(
+            self._hurtStaggerArmed,
+            self._hurtCancelOpenAt,
+            self._hurtCancelUntil,
+            globalClock.getFrameTime())  # noqa: F821
+        if self._hurtStaggerArmed and not open_:
+            now = globalClock.getFrameTime()  # noqa: F821
+            if now >= self._hurtCancelUntil:
+                self._clearHurtRecoveryCancelWindow()
+        return open_
+
+    def _cancelHurtRecovery(self):
+        """Abort remaining hurt stagger so dodge or melee can own the beat.
+
+        Clears the hit-react scale ival so the cancel lands clean — clearer
+        smack→F / smack→Shift rubber-hose recovery flow.
+        """
+        self._hurtAttackBuffered = False
+        self._hurtDodgeBuffered = False
+        self._clearHurtRecoveryCancelWindow()
+        self._clearPlayerHitReact()
+        try:
+            self.avatar.setScale(1.0, 1.0, 1.0)
+        except Exception:
+            pass
+        messenger.send('hackslash-hurt-cancel', [self.avatar])  # noqa: F821
+
+    def _flushHurtRecoveryCancelBuffer(self):
+        """Fire buffered F/LMB or Shift once hurt recovery cancel opens."""
+        if not (self._hurtAttackBuffered or self._hurtDodgeBuffered):
+            # Expire a stale armed window with no buffer.
+            if self._hurtStaggerArmed:
+                now = globalClock.getFrameTime()  # noqa: F821
+                if now >= self._hurtCancelUntil:
+                    self._clearHurtRecoveryCancelWindow()
+            return
+        if self.isHurtRecoveryCancelOpen():
+            # Prefer dodge buffer when both were mashed during stagger — escape
+            # first, then melee can cancel the dodge via existing window.
+            if self._hurtDodgeBuffered:
+                self._hurtDodgeBuffered = False
+                self._hurtAttackBuffered = False
+                self._onDodgePressed()
+                return
+            if self._hurtAttackBuffered:
+                self._hurtAttackBuffered = False
+                self._onAttackPressed()
+                return
+        # Window expired (or never armed) — drop the buffers.
+        if self._hurtStaggerArmed:
+            now = globalClock.getFrameTime()  # noqa: F821
+            if now >= self._hurtCancelUntil:
+                self._clearHurtRecoveryCancelWindow()
+        else:
+            self._hurtAttackBuffered = False
+            self._hurtDodgeBuffered = False
 
     def _armDodgeCancelWindow(self, now=None):
         """Arm the late-dodge cancel-into-melee window from dodge start."""
