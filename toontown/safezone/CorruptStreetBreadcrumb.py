@@ -13,12 +13,13 @@ without KH branding — distinct from fog edge cream rim deepen (#250),
 tunnel cream deepen (#230 peak→mid→rest), #252 rim deepen alone, and
 birds-return wash (#226). Separately, a short ink crumb trail at the
 tunnel mouth pulses on a faster stagger (#216), deepened with a juicier
-cream mid-settle + soft cream pip blot (#241), then deepened again on
-that cream pip (juicier peak/mid + soft mid hold + micro rebound) so
-polluted streets read juicier from the playground side — distinct from
-placemarker cream rim deepen (#252 + past-#252), fog edge cream rim
-deepen (#250), tunnel cream deepen (#230), and birds-return fullscreen
-wash (#226).
+cream mid-settle + soft cream pip blot (#241), then pip cream deepen
+(#258: juicier peak/mid + soft mid hold + micro rebound), then deepened
+again past #258 (brighter/wider pip / longer mid hold / punchier
+rebound) so polluted streets read juicier from the playground side —
+distinct from placemarker cream rim deepen (#252 + past-#252), fog edge
+cream rim deepen (#250), #258 pip deepen alone, tunnel cream deepen
+(#230), and birds-return fullscreen wash (#226).
 A soft pollution fog edge veil also breathes at the playground-side
 tunnel lip (#221 / #236), deepened again on the cream rim (juicier
 peak/mid + soft mid hold + micro rebound) so polluted borders read
@@ -82,50 +83,51 @@ _PULSE_HALO_NAME = 'corruptStreetPlacemarkerCreamHalo'
 _PULSE_HALO_HALF_W = 2.85  # wider cream rim peeks past text (past #252 2.70)
 _PULSE_HALO_HALF_H = 0.72
 _PULSE_HALO_Z_OFF = -0.08
-_PULSE_HALO_SCALE_PEAK = 1.44  # juicier than #252 1.38; < crumb pip 1.56
+_PULSE_HALO_SCALE_PEAK = 1.44  # juicier than #252 1.38; < crumb pip 1.62
 _PULSE_HALO_PEAK = Vec4(1.0, 0.98, 0.84, 0.48)  # brighter sunny cream rim
 _PULSE_HALO_MID = Vec4(1.0, 0.96, 0.76, 0.26)
 _PULSE_HALO_REST = Vec4(1.0, 0.97, 0.82, 0.0)
 _PULSE_HALO_HOLD_SEC = 0.085  # longer than #252 0.07; still < fog rim 0.10
-_PULSE_HALO_REBOUND_SCALE = 1.12  # punchier than #252 1.10; < crumb pip 1.14
+_PULSE_HALO_REBOUND_SCALE = 1.12  # punchier than #252 1.10; < crumb pip 1.16
 _PULSE_HALO_REBOUND_SEC = 0.065  # slightly longer than #252 0.06; < fog 0.08
 _PULSE_HALO_REBOUND_PEAK = Vec4(1.0, 0.98, 0.82, 0.17)  # warmer cream flash
 
 # Tunnel-mouth ink crumb trail — distinct from overhead placemarker pulse.
 # Cream deepen (#241): warmer peak → soft mid settle + local cream pip blot.
-# Cream pip deepen (post-#241): juicier pip peak/mid + mid hold + micro
-# rebound — not placemarker halo rim #252; not fog rim #250; not #241 alone.
+# Cream pip deepen (#258): juicier pip peak/mid + mid hold + micro rebound.
+# Past-#258 deepen: brighter/wider pip / longer mid hold / punchier rebound
+# — not placemarker halo rim #252+; not fog rim #250; not #258 alone.
 _CRUMB_GLYPH = '•'
 _CRUMB_COUNT = 3
 _CRUMB_Z = 1.05
 _CRUMB_Y0 = -2.4
 _CRUMB_Y_STEP = 1.05
 _CRUMB_SCALE = 0.55
-_CRUMB_PULSE_PEAK = 1.46  # slightly juicier snap on pip cream deepen
+_CRUMB_PULSE_PEAK = 1.50  # juicier snap past #258 1.46; still < 1.6
 _CRUMB_PULSE_HALF_SEC = 0.11
 _CRUMB_PULSE_GAP_SEC = 3.1
 _CRUMB_STAGGER_SEC = 0.13
 _CRUMB_FG = Vec4(0.22, 0.10, 0.28, 0.95)
 _CRUMB_SHADOW = Vec4(1.0, 0.92, 0.72, 0.75)
-_CRUMB_HIGHLIGHT = Vec4(1.0, 0.90, 0.38, 1.0)  # juicier warm cream peak
-_CRUMB_CREAM_MID = Vec4(1.0, 0.94, 0.64, 1.0)  # soft settle before rest
-_CRUMB_CREAM_MID_SEC = 0.08  # snappier than placemarker 0.11 / fog 0.14
+_CRUMB_HIGHLIGHT = Vec4(1.0, 0.91, 0.34, 1.0)  # warmer sunny cream peak (past #258)
+_CRUMB_CREAM_MID = Vec4(1.0, 0.95, 0.68, 1.0)  # creamier soft settle before rest
+_CRUMB_CREAM_MID_SEC = 0.09  # longer linger than #258 0.08; still < placemarker 0.11
 _CRUMB_REST = Vec4(1.0, 1.0, 1.0, 1.0)
 # Soft cream pip blot under each crumb during the trail pulse.
-# Pip deepen (post-#241): juicier peak/mid + mid hold + micro rebound
-# settle — not placemarker halo #252; not fog rim #250; not #241 alone.
+# Past-#258 deepen: juicier peak/mid + longer mid hold + punchier rebound
+# settle — not placemarker halo #252+; not fog rim #250; not #258 alone.
 _CRUMB_PIP_NAME = 'corruptStreetCrumbCreamPip'
-_CRUMB_PIP_HALF_W = 0.42  # tiny trail blot — not placemarker halo / fog rim
-_CRUMB_PIP_HALF_H = 0.28
+_CRUMB_PIP_HALF_W = 0.46  # wider trail blot past #258 0.42 — still << halo / fog
+_CRUMB_PIP_HALF_H = 0.30
 _CRUMB_PIP_Z_OFF = -0.06
-_CRUMB_PIP_SCALE_PEAK = 1.56  # punchier than #241 1.48 / halo 1.38 / fog 1.22
-_CRUMB_PIP_PEAK = Vec4(1.0, 0.96, 0.72, 0.48)  # brighter sunny cream pip
-_CRUMB_PIP_MID = Vec4(1.0, 0.93, 0.64, 0.22)
+_CRUMB_PIP_SCALE_PEAK = 1.62  # punchier than #258 1.56 / halo 1.44 / fog 1.22
+_CRUMB_PIP_PEAK = Vec4(1.0, 0.97, 0.74, 0.52)  # brighter sunny cream pip (past #258)
+_CRUMB_PIP_MID = Vec4(1.0, 0.94, 0.66, 0.26)
 _CRUMB_PIP_REST = Vec4(1.0, 0.96, 0.78, 0.0)
-_CRUMB_PIP_HOLD_SEC = 0.05  # snappier mid linger than halo 0.07 / fog 0.10
-_CRUMB_PIP_REBOUND_SCALE = 1.14  # punchier micro rebound than halo 1.10 / fog 1.06
-_CRUMB_PIP_REBOUND_SEC = 0.05  # snappier than halo 0.06 / fog 0.08
-_CRUMB_PIP_REBOUND_PEAK = Vec4(1.0, 0.95, 0.70, 0.12)  # soft cream flash
+_CRUMB_PIP_HOLD_SEC = 0.06  # longer than #258 0.05; still < halo 0.085 / fog 0.10
+_CRUMB_PIP_REBOUND_SCALE = 1.16  # punchier than #258 1.14 / halo 1.12 / fog 1.06
+_CRUMB_PIP_REBOUND_SEC = 0.055  # slightly longer than #258 0.05; still < halo 0.065
+_CRUMB_PIP_REBOUND_PEAK = Vec4(1.0, 0.96, 0.72, 0.15)  # warmer cream flash
 
 # Playground-edge pollution fog breath — opacity/billow (not placemarker
 # scale snap). Slower / softer than #211 / #216 so corruption presence
@@ -152,7 +154,7 @@ _FOG_CREAM_RIM_HALF_W = 3.55  # peeks past ink fog as a sunnier rim
 _FOG_CREAM_RIM_HALF_H = 1.14
 _FOG_CREAM_RIM_Y_OFF = 0.04
 _FOG_CREAM_RIM_Z_OFF = -0.04
-_FOG_CREAM_RIM_SCALE_PEAK = 1.22  # juicier than #236 1.16; < halo 1.38 / pip 1.48
+_FOG_CREAM_RIM_SCALE_PEAK = 1.22  # juicier than #236 1.16; < halo 1.44 / pip 1.62
 _FOG_CREAM_RIM_PEAK = Vec4(1.0, 0.98, 0.84, 0.38)  # brighter sunny cream rim
 _FOG_CREAM_RIM_MID = Vec4(1.0, 0.95, 0.76, 0.20)
 _FOG_CREAM_RIM_REST = Vec4(1.0, 0.97, 0.82, 0.0)
@@ -308,10 +310,12 @@ def streetBreadcrumbPulseCreamParams():
 
     Juicier cream mid-settle + soft cream pip blot under each crumb
     (#241 deepen), then juicier pip peak/mid + mid hold + micro rebound
-    (pip deepen aftershock). Distinct from placemarkerPulseCreamParams
-    (#252 halo rim hold/rebound), playgroundFogEdgeCreamParams (#250 fog
-    rim), #241 peak→mid→rest alone, and BirdsReturnCreamWashFx
-    fullscreen wash (#226). Headless-safe — no Panda geom.
+    (#258), then deepened again past #258 (brighter/wider pip / longer
+    mid hold / punchier rebound). Distinct from placemarkerPulseCream
+    Params (#252 + past-#252 halo rim), playgroundFogEdgeCreamParams
+    (#250 fog rim), #258 pip deepen alone, #241 peak→mid→rest alone,
+    and BirdsReturnCreamWashFx fullscreen wash (#226). Headless-safe —
+    no Panda geom.
     """
     hi = _CRUMB_HIGHLIGHT
     mid = _CRUMB_CREAM_MID
@@ -1042,8 +1046,10 @@ class CorruptStreetBreadcrumb(DirectObject):
     def _buildCrumbCreamPipIval(self, pip, half, midSec):
         """Trail cream pip bloom — juicier peak → mid hold → rest → rebound.
 
-        Distinct from #241 peak→mid→rest (no hold/rebound), placemarker
-        halo rim #252, and fog rim #250.
+        Past-#258 deepen (brighter/wider pip + longer hold + punchier
+        rebound). Distinct from #241 peak→mid→rest (no hold/rebound),
+        #258 pip deepen alone, placemarker halo rim #252+, and fog rim
+        #250.
         """
         peakScale = float(_CRUMB_PIP_SCALE_PEAK)
         holdSec = max(0.03, float(_CRUMB_PIP_HOLD_SEC))

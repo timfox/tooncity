@@ -8,10 +8,11 @@ deepen mid-settle + local halo on that pulse (#230), placemarker cream
 rim deepen (#252; ≠ #250 / #230), placemarker cream deepen past #252
 (brighter halo / longer hold / punchier rebound), the distinct
 tunnel-mouth crumb-trail pulse (#216), crumb pulse cream deepen
-(mid-settle + pip #241), crumb pip cream deepen (juicier pip + mid hold
-+ rebound; ≠ #252 / #250 / #241), playground pollution fog edge breath
-(#221), fog-edge cream deepen (cream mid-settle + rim #236), and fog
-cream rim deepen (juicier rim + mid hold + rebound; ≠ #246 / #236).
+(mid-settle + pip #241), crumb pip cream deepen (#258; ≠ #252 / #250 /
+#241), crumb pip cream deepen past #258 (brighter/wider pip / longer
+hold / punchier rebound), playground pollution fog edge breath (#221),
+fog-edge cream deepen (cream mid-settle + rim #236), and fog cream rim
+deepen (juicier rim + mid hold + rebound; ≠ #246 / #236).
 
 Run from repo root:
   python3 tests/test_corrupt_street_breadcrumb.py
@@ -257,6 +258,13 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
             self.assertIn(
                 needle, self.src,
                 msg='missing crumb pip cream deepen %s' % needle)
+        # Past-#258 pip deepen floors (brighter/wider pip / longer hold).
+        self.assertRegex(
+            self.src,
+            r'_CRUMB_PIP_SCALE_PEAK\s*=\s*1\.(6[2-9]|[7-9])')
+        self.assertRegex(
+            self.src,
+            r'_CRUMB_PIP_HOLD_SEC\s*=\s*0\.0(6|7|8|9)')
         # Playground pollution fog edge breath (not #211 / #216).
         for needle in (
                 '_attachFogEdge',
@@ -548,6 +556,61 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         self.assertNotIn('rimHoldSec', cream)
         self.assertNotIn('haloRimRebound', cream)
         self.assertNotIn('rimRebound', cream)
+
+    def test_street_breadcrumb_pulse_cream_pip_deepen_past_258(self):
+        """Past-#258 deepen — brighter/wider pip / longer hold / punchier rebound."""
+        cream = self._crumb_cream()
+        placemarker_cream = self._cream()
+        fog_cream = self._fog_cream()
+        # Still trail-local pip rim rebound — not halo / fog / fullscreen.
+        self.assertTrue(cream['localPip'])
+        self.assertTrue(cream['pipRimRebound'])
+        self.assertFalse(cream['fullscreenWash'])
+        self.assertFalse(cream['placemarkerHalo'])
+        self.assertFalse(cream['fogRim'])
+        # Floors past merged #258 pip deepen knobs.
+        self.assertGreater(cream['creamMidSec'], 0.08)
+        self.assertLess(cream['creamMidSec'], placemarker_cream['creamMidSec'])
+        self.assertLess(cream['creamMidSec'], fog_cream['creamMidSec'])
+        self.assertGreater(cream['pipPeakAlpha'], 0.48)
+        self.assertLess(cream['pipPeakAlpha'], 0.55)
+        self.assertGreater(cream['pipMidAlpha'], 0.22)
+        self.assertLess(cream['pipMidAlpha'], cream['pipPeakAlpha'])
+        self.assertGreater(cream['pipScalePeak'], 1.56)
+        self.assertLess(cream['pipScalePeak'], 1.7)
+        self.assertGreater(cream['pipHalfW'], 0.42)
+        self.assertLess(cream['pipHalfW'], placemarker_cream['haloHalfW'])
+        self.assertGreater(cream['pipHalfH'], 0.28)
+        self.assertLess(cream['pipHalfH'], 0.6)
+        self.assertGreater(cream['pipHoldSec'], 0.05)
+        self.assertLess(cream['pipHoldSec'], placemarker_cream['haloHoldSec'])
+        self.assertLess(cream['pipHoldSec'], fog_cream['rimHoldSec'])
+        self.assertGreater(cream['pipReboundScale'], 1.14)
+        self.assertGreater(
+            cream['pipReboundScale'], placemarker_cream['haloReboundScale'])
+        self.assertGreater(
+            cream['pipReboundScale'], fog_cream['rimReboundScale'])
+        self.assertLess(cream['pipReboundScale'], cream['pipScalePeak'])
+        self.assertGreater(cream['pipReboundSec'], 0.05)
+        self.assertLess(cream['pipReboundSec'], placemarker_cream['haloReboundSec'])
+        self.assertLess(cream['pipReboundSec'], fog_cream['rimReboundSec'])
+        self.assertGreater(cream['pipReboundAlpha'], 0.12)
+        self.assertLess(cream['pipReboundAlpha'], cream['pipMidAlpha'])
+        # Warmer crumb cream peak than #258 (B softer / G creamier).
+        hi = cream['highlight']
+        mid = cream['creamMid']
+        self.assertLess(hi[2], 0.38)
+        self.assertGreaterEqual(hi[1], 0.91)
+        self.assertGreater(mid[2], 0.64)
+        # Punchier crumb scale snap past #258.
+        crumb = self._crumb_pulse()
+        self.assertGreater(crumb['peak'], 1.46)
+        self.assertLess(crumb['peak'], 1.6)
+        # Distinctness vs placemarker halo / fog rim vocabulary.
+        self.assertNotIn('haloHoldSec', cream)
+        self.assertNotIn('rimHoldSec', cream)
+        self.assertNotIn('pipHoldSec', placemarker_cream)
+        self.assertNotIn('pipHoldSec', fog_cream)
 
     def test_playground_fog_edge_pulse_params_distinct(self):
         placemarker = self._pulse()

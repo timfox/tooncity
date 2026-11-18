@@ -3584,6 +3584,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_CRUMB_PIP_HOLD_SEC', crumb_src)
         self.assertIn('_CRUMB_PIP_REBOUND_SCALE', crumb_src)
         self.assertIn('pipRimRebound', crumb_src)
+        # Past-#258 deepen floors (brighter/wider pip / longer hold / punchier rebound).
+        self.assertIn('_CRUMB_PIP_REBOUND_PEAK', crumb_src)
+        self.assertRegex(
+            crumb_src,
+            r'_CRUMB_PIP_SCALE_PEAK\s*=\s*1\.(6[2-9]|[7-9])')
+        self.assertRegex(
+            crumb_src,
+            r'_CRUMB_PIP_HOLD_SEC\s*=\s*0\.0(6|7|8|9)')
         # Playground pollution fog edge breath (distinct from #211 / #216).
         self.assertIn('_startFogPulseLoop', crumb_src)
         self.assertIn('_FOG_PULSE_GAP_SEC', crumb_src)
