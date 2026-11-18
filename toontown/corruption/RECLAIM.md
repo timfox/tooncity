@@ -91,9 +91,10 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # CorruptToons prefer ink-tinted Toon Actor silhouettes (DNA clone of you
 # when available), else improved card limbs. Chase AI unchanged; between
 # telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
-# presence. Telegraph wind-up pauses idle drips and plays a short ink
-# drip / splat pop (CorruptTelegraphInkFx) layered with sunny cream /
-# pastel warn flecks (CorruptTelegraphCreamWarnFx — contrast to ink)
+# presence, layered with soft cream / pastel contrast drips
+# (IdleCreamDripContrastFx). Telegraph wind-up pauses idle drips and plays
+# a short ink drip / splat pop (CorruptTelegraphInkFx) layered with sunny
+# cream / pastel warn flecks (CorruptTelegraphCreamWarnFx — contrast to ink)
 # plus squash/SFX so wind-ups read without a combat HUD; impact flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
 # Melee hits on Smudge flash SmudgeInkSplashFx (cheap purple ink splash);
@@ -107,6 +108,16 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray + CorruptDeathCreamFleckFx sunny
 # cream / pastel flecks); purity pop + pollution drop.
+```
+
+## Idle cream drip contrast demo
+
+```
+~spawncorrupt 2
+~hackslash 0
+# Watch idle purple ink drips layered with soft cream / pastel drips
+# (IdleCreamDripContrastFx). Contrast to IdleInkDripFx.
+# IDLE_CREAM_DRIP_ENABLED = False drops cream drips only.
 ```
 
 ## Telegraph cream warn fleck demo

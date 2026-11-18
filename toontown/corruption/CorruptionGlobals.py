@@ -628,6 +628,44 @@ IDLE_INK_DRIP_LOOK = {
     },
 }
 
+# Idle cream / pastel drip contrast — soft sunny chips layered with
+# IdleInkDripFx between telegraphs (client only). Cream drips fall beside
+# dark ink (phase-offset); not ink-colored. Compose lift/period via
+# IdleCreamDripContrastFx.idleCreamDripLook → idleInkLook.
+# IDLE_CREAM_DRIP_ENABLED = False drops cream drips only (ink idle stays).
+IDLE_CREAM_DRIP_ENABLED = True
+IDLE_CREAM_DRIP_BIN = 41
+IDLE_CREAM_DRIP_COLORS = (
+    (1.0, 0.97, 0.82, 0.72),  # sunny cream
+    (1.0, 0.96, 0.62, 0.68),  # butter
+    (1.0, 0.9, 0.78, 0.65),   # soft peach pastel
+    (0.98, 0.94, 0.88, 0.62),  # warm parchment
+)
+IDLE_CREAM_DRIP_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+IDLE_CREAM_DRIP_LOOK = {
+    'id': 'idle-cream-drip',
+    # lift / period composed with idleInkLook when played; these are fallbacks.
+    'lift': 2.05,
+    'periodSec': 2.55,
+    'periodScale': 1.18,
+    'settleSec': 0.75,
+    'settleBias': 0.22,
+    'dripCount': 1,
+    'dripHalf': 0.1,
+    'dripSpread': 0.38,
+    'dripFall': 0.85,
+    'dripSec': 0.58,
+    'dripStagger': 0.06,
+    'dripColors': IDLE_CREAM_DRIP_COLORS,
+    'dripEndColors': IDLE_CREAM_DRIP_END_COLORS,
+    'binSort': IDLE_CREAM_DRIP_BIN,
+}
+
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
 BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)
