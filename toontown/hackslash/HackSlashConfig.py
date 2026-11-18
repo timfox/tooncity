@@ -137,6 +137,23 @@ DODGE_TRAIL_SPARK_SIZE = 0.18
 DODGE_TRAIL_SPARK_DRIFT = 0.55
 DODGE_TRAIL_SPARK_COLOR = (1.0, 0.97, 0.75, 0.9)
 
+# Perfect dodge — Shift/X i-frames eat a CorruptToon telegraph (or near-miss).
+# Warm cream star pop + ink flecks; not KH blue / keyblade glitter.
+PERFECT_DODGE_STAR_COUNT = 5
+PERFECT_DODGE_STAR_SIZE = 0.28
+PERFECT_DODGE_STAR_DRIFT = 1.15
+PERFECT_DODGE_STAR_SEC = 0.28
+PERFECT_DODGE_STAR_COLOR = (1.0, 0.95, 0.55, 0.95)
+PERFECT_DODGE_STAR_END_COLOR = (1.0, 0.88, 0.4, 0.0)
+PERFECT_DODGE_FLECK_COUNT = 6
+PERFECT_DODGE_FLECK_SIZE = 0.12
+PERFECT_DODGE_FLECK_DRIFT = 1.35
+PERFECT_DODGE_FLECK_SEC = 0.32
+PERFECT_DODGE_FLECK_COLOR = (0.22, 0.06, 0.28, 0.9)
+PERFECT_DODGE_FLECK_END_COLOR = (0.4, 0.12, 0.45, 0.0)
+PERFECT_DODGE_LIFT = 1.35
+PERFECT_DODGE_FLASH_ALPHA = 0.32
+
 # Squash / stretch pulses (scale xyz multipliers over short windows).
 # Read as exaggerated rubber-hose hit frames, not realistic physics.
 HOSE_SQUASH = (

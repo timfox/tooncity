@@ -547,6 +547,25 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Client-readable cue so melee can flash i-frames / dodge window (#12).
         messenger.send('corruptToonHitPlayer', [self])
 
+    def announceAttackDodged(self):
+        """Telegraph resolved into dodge i-frames / near-miss — sparkle cue."""
+        # Ease telegraph pose out if it is still holding the stretch.
+        if self._telegraphIval is not None:
+            try:
+                self._telegraphIval.pause()
+            except Exception:
+                pass
+            self._telegraphIval = None
+            target = self.visualRoot if self.visualRoot is not None else self
+            try:
+                target.setScale(1.0, 1.0, 1.0)
+                target.setColorScale(1, 1, 1, 1)
+            except Exception:
+                pass
+            self.__resumePulse()
+        # Hackslash listens and plays perfect-dodge ink sparkle juice.
+        messenger.send('corruptToonAttackDodged', [self])  # noqa: F821
+
     def __resumePulse(self):
         if self._pulseIval is not None and not self._defeatedHidden():
             self._pulseIval.resume()

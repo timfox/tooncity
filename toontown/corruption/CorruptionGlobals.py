@@ -103,6 +103,8 @@ AI_TICK_DT = 0.25
 AGGRO_RANGE = 35.0
 MELEE_RANGE = 4.5
 ATTACK_HIT_RANGE = 5.5
+# Planar radius for i-frame near-miss sparkle (outside hit, still "almost").
+ATTACK_NEAR_MISS_RANGE = 8.0
 CHASE_SPEED = 9.0
 ATTACK_TELEGRAPH_DELAY = 0.55
 ATTACK_DAMAGE = 2
