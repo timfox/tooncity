@@ -1,8 +1,10 @@
 """Rubber-hose ink splat / pop juice when a CorruptToon is defeated.
 
-World-space scale-burst companion + brief CardMaker droplet spray. Wired from
-DistributedCorruptToon.announceDefeat so Ink Smudge / Sludge Brute / Balloon
-Snare deaths read as a Toontown gag splat — never KH / keyblade framing.
+World-space scale-burst companion + brief CardMaker droplet spray, layered
+with CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
+not ink). Wired from DistributedCorruptToon.announceDefeat so Ink Smudge /
+Sludge Brute / Balloon Snare deaths read as a Toontown gag splat — never KH /
+keyblade framing.
 """
 
 from math import cos, pi, sin
@@ -20,6 +22,7 @@ from direct.interval.IntervalGlobal import (
 )
 
 from toontown.corruption import CorruptionGlobals
+from toontown.corruption.CorruptDeathCreamFleckFx import DeathCreamFleckBurst
 
 
 def deathPopLook(archetype):
@@ -79,6 +82,7 @@ class DeathPopSplat(object):
         self._droplets = []
         self._ringNP = None
         self._sfx = None
+        self._creamFlecks = None
 
     def play(self, pos, archetype=None, parent=None):
         """Spawn splat at `pos` (render space). Returns started Sequence or None."""
@@ -108,6 +112,14 @@ class DeathPopSplat(object):
 
         self._playSfx(look, origin, parentNP)
 
+        # Sunny cream / pastel fleck layer — purity chips on the ink splat.
+        try:
+            cream = DeathCreamFleckBurst()
+            cream.play(pos, archetype=archetype, parent=parentNP)
+            self._creamFlecks = cream
+        except Exception:
+            self._creamFlecks = None
+
         if not parts:
             return None
 
@@ -126,6 +138,13 @@ class DeathPopSplat(object):
             except Exception:
                 pass
             self._ival = None
+        cream = self._creamFlecks
+        self._creamFlecks = None
+        if cream is not None:
+            try:
+                cream.clear()
+            except Exception:
+                pass
         if self._ringNP is not None:
             try:
                 if not self._ringNP.isEmpty():

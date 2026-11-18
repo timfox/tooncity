@@ -101,7 +101,18 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Melee hits on Ink Overlord flash OverlordMagentaInkSplashFx (magenta /
 # crimson, phase-retinted); Overlord death layers splash with DeathPop.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
-# ink/sludge/balloon droplet spray); purity pop + pollution drop.
+# ink/sludge/balloon droplet spray + CorruptDeathCreamFleckFx sunny
+# cream / pastel flecks); purity pop + pollution drop.
+```
+
+## Death cream fleck burst demo
+
+```
+~spawncorrupt 1
+~hackslash 0
+# Land F / LMB until defeat — CorruptDeathPopFx ink splat layers with
+# sunny cream / pastel flecks (CorruptDeathCreamFleckFx). Not ink.
+# DEATH_CREAM_FLECK_ENABLED = False drops flecks only.
 ```
 
 ## Ink Smudge telegraph / splash demo
