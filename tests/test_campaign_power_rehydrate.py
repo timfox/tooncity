@@ -268,20 +268,28 @@ class CampaignPowerRehydrateTests(unittest.TestCase):
 
         self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', src)
         self.assertIn('applyPowerBump', src)
+        self.assertIn('_applyReclaimPower', src)
+        self.assertIn('_syncedReclaimCount', src)
+        self.assertIn('_powerHydrated', src)
         sync_idx = src.find('def _onCampaignProgressSync')
         self.assertGreater(sync_idx, 0)
-        sync_win = src[sync_idx:sync_idx + 500]
+        sync_win = src[sync_idx:sync_idx + 900]
         self.assertIn('reclaimCount', sync_win)
         self.assertIn('_localReclaimCount', sync_win)
+        self.assertIn('_syncedReclaimCount', sync_win)
         self.assertIn('applyPowerBump', sync_win)
         # Silent rehydrate — no celebration plate on login sync.
         self.assertNotIn('_celebrate', sync_win)
 
-        # Live reclaim path still bumps from _localReclaimCount.
+        # Live reclaim path bumps via idempotent helper; sync-before-purity
+        # absorbs AI absolute instead of stacking a blind +=1.
         purity_idx = src.find('def _onPurityRestore')
-        purity_win = src[purity_idx:purity_idx + 400]
-        self.assertIn('_localReclaimCount += 1', purity_win)
-        self.assertIn('applyPowerBump(self._localReclaimCount)', purity_win)
+        purity_win = src[purity_idx:purity_idx + 700]
+        self.assertIn('_applyReclaimPower', purity_win)
+        self.assertIn('_syncedReclaimCount', purity_win)
+        self.assertIn('synced > self._localReclaimCount', purity_win)
+        self.assertIn('self._localReclaimCount + 1', purity_win)
+        self.assertNotIn('_localReclaimCount += 1', purity_win)
 
     def test_globals_document_reclaim_on_sync(self):
         src = _read('toontown/campaign/CampaignGlobals.py')

@@ -1261,21 +1261,25 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertGreater(self.camp.STREET_CLEAR_LAFF, 0)
         self.assertIn('_awardStreetClearRewards', ai_src)
         self.assertIn('awardStreetClearReward', ai_src)
-        # Login rehydrate (#349): Handoff silent-applies AI reclaimCount.
+        # Login rehydrate (#349) + sync/purity dedupe: silent AI reclaimCount.
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('applyPowerBump', handoff_src)
+        self.assertIn('_applyReclaimPower', handoff_src)
         sync_idx = handoff_src.find('def _onCampaignProgressSync')
         self.assertGreater(sync_idx, 0)
-        sync_win = handoff_src[sync_idx:sync_idx + 500]
+        sync_win = handoff_src[sync_idx:sync_idx + 1100]
         self.assertIn('reclaimCount', sync_win)
         self.assertIn('_localReclaimCount', sync_win)
+        self.assertIn('_syncedReclaimCount', sync_win)
         self.assertIn('applyPowerBump', sync_win)
         self.assertNotIn('_celebrate', sync_win)
         purity_idx = handoff_src.find('def _onPurityRestore')
         self.assertGreater(purity_idx, 0)
-        purity_win = handoff_src[purity_idx:purity_idx + 500]
-        self.assertIn('_localReclaimCount += 1', purity_win)
-        self.assertIn('applyPowerBump(self._localReclaimCount)', purity_win)
+        purity_win = handoff_src[purity_idx:purity_idx + 1100]
+        # Idempotent dedupe vs progress sync (#349 race) — no blind +=1.
+        self.assertIn('_applyReclaimPower', purity_win)
+        self.assertIn('self._localReclaimCount + 1', purity_win)
+        self.assertNotIn('_localReclaimCount += 1', purity_win)
         self.assertIn('rewardLine', purity_win)
         self.assertIn('_streetClearRewardLine', purity_win)
 
