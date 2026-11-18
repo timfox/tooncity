@@ -3129,7 +3129,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'FINALE_BETRAYAL_SETTLE_OVERSHOOT',
                 'FINALE_BETRAYAL_SETTLE_REST_SEC',
                 'FINALE_BETRAYAL_SUB_COLOR',
-                'FINALE_BETRAYAL_CUE_COLOR'):
+                'FINALE_BETRAYAL_CUE_COLOR',
+                'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED',
+                'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT',
+                'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC'):
             self.assertIn(
                 betrayal_key, campaign_names,
                 msg='CampaignGlobals missing %s' % betrayal_key)
@@ -3138,6 +3141,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_showBetrayalHandoff', handoff_src)
         self.assertIn('betrayalHandoff', handoff_src)
         self.assertIn('FINALE_BETRAYAL_SETTLE_OVERSHOOT', handoff_src)
+        self.assertIn('FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT', handoff_src)
         # Victory/confetti Oswald twist sting — bittersweet chips on betrayal.
         for twist_key in (
                 'VICTORY_TWIST_CONFETTI_ENABLED',
@@ -3159,6 +3163,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         finale_fx_src = _read('toontown/campaign/FinalePhaseFx.py')
         self.assertIn('ensureCampaignHandoffClient', finale_fx_src)
         self.assertIn('betrayal handoff', camp_magic_l)
+        self.assertIn('cream hose settle', camp_magic_l)
         self.assertIn('confetti twist sting', camp_magic_l)
         betrayal_cue = campaign_assigns.get('FINALE_BETRAYAL_HANDOFF_CUE') or ''
         if isinstance(betrayal_cue, list):

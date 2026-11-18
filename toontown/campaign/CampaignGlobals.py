@@ -816,6 +816,16 @@ FINALE_BETRAYAL_SETTLE_OVERSHOOT = (0.86, 1.0, 1.22, 0.10)
 FINALE_BETRAYAL_SETTLE_REST_SEC = 0.16
 FINALE_BETRAYAL_SUB_COLOR = (1.0, 0.78, 0.62, 1.0)
 FINALE_BETRAYAL_CUE_COLOR = (1.0, 0.88, 0.52, 1.0)
+# Brief cream hose settle after betrayal title settle (#212 deepen).
+# Outward overshoot → rest so the twist handoff plate lands juicier —
+# Punchline tip (#227) / Silly almost-confess tip (#232) cream hose twin
+# on the finale betrayal banner only. Juicier than tip settles (climax).
+# FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED = False drops this cream
+# settle only (hose pop + betrayal settle + cream edge remain).
+# No keyblades / KH branding.
+FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED = True
+FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT = (1.12, 1.0, 1.18, 0.08)  # sx, sy, sz, sec
+FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC = 0.13
 
 # Victory/confetti sting on Oswald twist (VictoryTwistConfettiSting).
 # Fires with the betrayal handoff plate (#212) after sunny #82 cream swell
