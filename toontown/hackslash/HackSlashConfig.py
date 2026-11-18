@@ -537,6 +537,31 @@ DODGE_CANCEL_WINDOW_SEC = 0.40
 # Buffer F/LMB pressed during early dodge; fire when the cancel window opens.
 DODGE_CANCEL_BUFFER = True
 
+# Dodge-cancel cream wash flash — soft aspect2d veil the instant F/LMB cancels
+# late-dodge recovery into stretch-punch (#186) so Shift→F reads clearly.
+# SoftLock FOV / dodge-trail / hurt-stagger cream wash grammar. Snappier than
+# dodge-trail settle wash; quieter than hit-connect wash. Cream/pastel only.
+# Toggle DODGE_CANCEL_CREAM_WASH_ENABLED = False drops the cancel flash.
+DODGE_CANCEL_CREAM_WASH_ENABLED = True
+DODGE_CANCEL_CREAM_WASH_DELAY_SEC = 0.0  # fire on cancel — no settle lag
+DODGE_CANCEL_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+DODGE_CANCEL_CREAM_WASH_PEAK = 0.11
+DODGE_CANCEL_CREAM_WASH_MID = 0.055
+DODGE_CANCEL_CREAM_WASH_IN_SEC = 0.03
+DODGE_CANCEL_CREAM_WASH_PULSE_SEC = 0.05
+DODGE_CANCEL_CREAM_WASH_HOLD_SEC = 0.02
+DODGE_CANCEL_CREAM_WASH_OUT_SEC = 0.18
+DODGE_CANCEL_CREAM_WASH_BIN = 28  # with dodge-trail wash; under soft-lock pulse
+
+
+def dodgeCancelCreamWashPeakAtSec(delay=None, inSec=None):
+    """Seconds from cancel until cream wash flash reaches peak alpha."""
+    if delay is None:
+        delay = DODGE_CANCEL_CREAM_WASH_DELAY_SEC
+    if inSec is None:
+        inSec = DODGE_CANCEL_CREAM_WASH_IN_SEC
+    return max(0.0, float(delay)) + max(0.0, float(inSec))
+
 # Perfect-dodge counter → melee. When dodge i-frames eat a CorruptToon
 # telegraph, open a short rewarded cancel window into the next stretch-punch
 # opener (damage bump + snappy rate). Builds on DODGE_CANCEL_* (#186) and
@@ -991,7 +1016,8 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Stretch punches: F/LMB  |  Shift/X dodge→F  |  perfect dodge→F counter  |  '
+    'Stretch punches: F/LMB  |  Shift/X dodge→F cream flash  |  '
+    'perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash→F/Shift  |  '
     'Tab/` soft-lock cycle pulse  |  hit soft-lock aim  |  ~melee'
 )

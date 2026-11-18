@@ -6,6 +6,7 @@ Slice 1: stretch punches, short combo window, soft nearest-hostile targeting.
 
 from .MeleeCombat import MeleeCombatController
 from .HackSlashConfig import (
+    dodgeCancelCreamWashPeakAtSec,
     finisherFovPunchKeys,
     hurtStaggerCreamWashPeakAtSec,
     hurtStaggerTotalSec,
@@ -28,6 +29,7 @@ from .SoftTarget import (
 )
 from .DemoHostile import DemoHostile
 from . import HitJuice
+from .DodgeCancelCreamWashFx import DodgeCancelCreamWashPulse
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 from .DodgeIFrameCreamWashFx import DodgeIFrameCreamWashPulse
@@ -49,6 +51,7 @@ from .SoftLockReticleFx import SoftLockReticleFx
 
 __all__ = [
     'MeleeCombatController',
+    'dodgeCancelCreamWashPeakAtSec',
     'finisherFovPunchKeys',
     'hurtStaggerCreamWashPeakAtSec',
     'hurtStaggerTotalSec',
@@ -72,6 +75,7 @@ __all__ = [
     'CreamHangCreamWashPulse',
     'CreamHangSparkleFx',
     'CreamSlamFlashFx',
+    'DodgeCancelCreamWashPulse',
     'DodgePerfectFx',
     'DodgeTrailFx',
     'DodgeIFrameCreamWashPulse',
