@@ -149,7 +149,7 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # Melee hits on Snare flash SnareStringSnapSplashFx (cheap amber string-snap);
 # Snare death layers splash with CorruptDeathPopFx.
 # Gunk Gagster lob land flashes a teal puddle ring plus
-# GagsterPuddleCreamSplashFx (deepened cream splash beyond #238 + thicker
+# GagsterPuddleCreamSplashFx (deepened cream splash beyond #276 + thicker
 # flat puddle-plane cream bloom + wider settle aftershock) so the trap
 # impact reads juicier after the telegraph puddle warn — distinct from
 # Smudge radial hose / Brute vertical drip / Snare whip.

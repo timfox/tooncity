@@ -58,7 +58,7 @@ SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
 composes with string / death / idle looks). Gunk Gagster wind-ups also flash
 GagsterPuddleTelegraphFx (teal bounce-pie charge + cream/ink ground puddle
 warn at the lob landing). Gunk Gagster puddle land / splash also fires
-GagsterPuddleCreamSplashFx (deepened cream splash beyond #238 + thicker
+GagsterPuddleCreamSplashFx (deepened cream splash beyond #276 + thicker
 flat puddle-plane cream bloom + wider settle aftershock — sunny cream/
 pastel juice on the trap impact; distinct from Smudge radial hose / Brute
 vertical drip / Snare whip; telegraph cream warn aftershock grammar). Ink Overlord phase telegraphs also flash
