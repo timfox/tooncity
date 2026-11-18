@@ -21,7 +21,9 @@ and a delayed soft cream wash pulse with a residual cream aftershock
 (flecks + soft halo); it clears before the Oswald twist / FinalePhaseFx
 reveal so the bittersweet sting stays intact. When Silly finale betrayal
 reveal fires (oswaldRevealBanner), a dedicated betrayal handoff plate
-hose-pops the twist copy — complements almost-confess tip (#207).
+hose-pops the twist copy — complements almost-confess tip (#207) — and a
+short victory/confetti sting (VictoryTwistConfettiSting) lands the hollow
+cheer that Oswald caused the corruption.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -67,6 +69,10 @@ from toontown.campaign.OswaldTrustCreamWashFx import (
 from toontown.campaign.VictoryCreamWashFx import (
     clearVictoryCreamWash,
     playVictoryCreamWash,
+)
+from toontown.campaign.VictoryTwistConfettiSting import (
+    clearVictoryTwistConfettiSting,
+    playVictoryTwistConfettiSting,
 )
 
 # Celebration timing — readable rubber-hose reclaim beat, not a flash toast.
@@ -334,6 +340,15 @@ class CampaignHandoffClient(DirectObject):
             # still owns flash/shadow/aftershock; plate owns readable copy.
             try:
                 playFinaleRevealCreamEdge()
+            except Exception:
+                pass
+            # Short bittersweet victory/confetti sting — hollow cheer that
+            # lands Oswald caused the corruption (#82 swell already cleared).
+            try:
+                origin = getattr(
+                    CampaignGlobals, 'VICTORY_TWIST_CONFETTI_ORIGIN',
+                    (0.0, 0.0, 0.34))
+                playVictoryTwistConfettiSting(origin=origin)
             except Exception:
                 pass
         elif creamSwell:
@@ -648,6 +663,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearVictoryCreamSwell()
+        except Exception:
+            pass
+        try:
+            clearVictoryTwistConfettiSting()
         except Exception:
             pass
         try:

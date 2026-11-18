@@ -785,6 +785,44 @@ FINALE_BETRAYAL_SETTLE_REST_SEC = 0.16
 FINALE_BETRAYAL_SUB_COLOR = (1.0, 0.78, 0.62, 1.0)
 FINALE_BETRAYAL_CUE_COLOR = (1.0, 0.88, 0.52, 1.0)
 
+# Victory/confetti sting on Oswald twist (VictoryTwistConfettiSting).
+# Fires with the betrayal handoff plate (#212) after sunny #82 cream swell
+# has cleared — quieter, bittersweet cream + warm coral chips that land
+# the truth (Oswald caused the corruption). Not a second triumphant
+# carnival; not the victory cream swell. Distinct from FinaleCreamAftershock
+# flash/ring (#86). No keyblades / KH branding.
+VICTORY_TWIST_CONFETTI_ENABLED = True
+VICTORY_TWIST_CONFETTI_DELAY_SEC = 0.18  # after plate hose-pop starts
+VICTORY_TWIST_CONFETTI_ORIGIN = (0.0, 0.0, 0.34)  # under betrayal plate
+# Above cream edge (56) / aftershock (58); under title bin (62+) read.
+VICTORY_TWIST_CONFETTI_BIN = 61
+VICTORY_TWIST_CONFETTI_FLASH_COLOR = (1.0, 0.88, 0.72, 1.0)  # warm cream
+VICTORY_TWIST_CONFETTI_FLASH_PEAK = 0.16
+VICTORY_TWIST_CONFETTI_FLASH_IN_SEC = 0.05
+VICTORY_TWIST_CONFETTI_FLASH_HOLD_SEC = 0.05
+VICTORY_TWIST_CONFETTI_FLASH_OUT_SEC = 0.36
+VICTORY_TWIST_CONFETTI_COUNT = 9
+VICTORY_TWIST_CONFETTI_SIZE = 0.024
+VICTORY_TWIST_CONFETTI_DRIFT = 0.48
+VICTORY_TWIST_CONFETTI_FALL = 0.18  # hollow settle, not carnival lift
+VICTORY_TWIST_CONFETTI_SEC = 0.72
+VICTORY_TWIST_CONFETTI_COLORS = (
+    (1.0, 0.94, 0.78, 0.90),   # soft cream
+    (1.0, 0.82, 0.58, 0.88),   # warm coral
+    (1.0, 0.72, 0.48, 0.86),   # twist peach
+    (0.98, 0.90, 0.62, 0.88),  # pastel gold
+    (1.0, 0.68, 0.52, 0.84),   # hollow cheer blush
+)
+VICTORY_TWIST_CONFETTI_STREAK_COUNT = 3
+VICTORY_TWIST_CONFETTI_STREAK_SIZE = 0.012
+VICTORY_TWIST_CONFETTI_STREAK_DRIFT = 0.38
+VICTORY_TWIST_CONFETTI_STREAK_SEC = 0.58
+VICTORY_TWIST_CONFETTI_STREAK_COLORS = (
+    (1.0, 0.96, 0.82, 0.82),
+    (1.0, 0.78, 0.55, 0.80),
+    (1.0, 0.88, 0.66, 0.78),
+)
+
 # Oswald shadow flash — rubber-hose silhouette on the reveal sting.
 # Trusted lead shape → ink shadow that sells the twist. Campaign-owned
 # tunables (keep out of corruption/ while ink-drip ships). No KH branding.
