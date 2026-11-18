@@ -2554,7 +2554,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SmudgeHitCreamWashPulse', corrupt_src)
         self.assertIn('__playSmudgeHitCreamWash', corrupt_src)
 
-        # Smudge hit cream splash deepen — juicier mid-body cream + hose smears.
+        # Smudge hit cream splash deepen past #259 — thicker hose + juicier settle.
         self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_SPLASH_ENABLED'))
         self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_SPLASH_LOOK'))
         self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED'))
@@ -2565,10 +2565,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         smudge_cream_look = cg.SMUDGE_HIT_CREAM_SPLASH_LOOK
         self.assertEqual(
             smudge_cream_look.get('id'), 'smudge-hit-cream-splash')
-        self.assertGreaterEqual(int(smudge_cream_look.get('fleckCount', 0)), 6)
-        self.assertGreaterEqual(int(smudge_cream_look.get('smearCount', 0)), 3)
+        self.assertGreaterEqual(int(smudge_cream_look.get('fleckCount', 0)), 7)
+        self.assertGreaterEqual(int(smudge_cream_look.get('smearCount', 0)), 4)
         self.assertGreaterEqual(
-            int(getattr(cg, 'SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT', 0)), 5)
+            float(smudge_cream_look.get('smearSpread', 0)), 1.05)
+        self.assertGreaterEqual(
+            int(getattr(cg, 'SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT', 0)), 6)
+        self.assertGreaterEqual(
+            int(getattr(cg, 'SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COUNT', 0)), 3)
         smudge_cream_id = str(smudge_cream_look.get('id', '')).lower()
         self.assertNotIn('keyblade', smudge_cream_id)
         self.assertNotIn('kingdom hearts', smudge_cream_id)
@@ -2594,6 +2598,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SmudgeHitCreamSplashFx', smudge_corr_init)
         self.assertIn('radial cream hose', smudge_reclaim_md)
         self.assertIn('cream hose smears', smudge_corr_init)
+        self.assertIn('beyond #259', smudge_corr_init)
+        self.assertIn('beyond #259', smudge_reclaim_md)
 
         # Dodge i-frame cream wash deepen past #228 — juicier wash + richer
         # aftershock after first i-frame pulse so invuln windows still read.
