@@ -323,8 +323,11 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 ~spawncorrupt 1 40 1
 # or ~spawnbrute 1 40 1
 ~hackslash 0
-# Brute: green squash + spit-gob telegraph pop (BruteSpitTelegraphFx)
-# + ink drip + squirt SFX, then ink blob on hit. Spit land also fires
+# Brute AI: hold-plant spit is a real traveling projectile (aim snapshotted
+# at wind-up; trail chip + land splash) — dodge out during flight. Close
+# range swaps to a heavier slam secondary (tank, not tinted Smudge smack).
+# AV: green squash + spit-gob telegraph pop (BruteSpitTelegraphFx)
+# + ink drip + squirt SFX, then ink blob on spit land. Spit land also fires
 # BruteSpitCreamSplashFx (deepened cream splash beyond #264 + thicker
 # vertical cream drip filaments + heavier downward cream aftershock) so
 # the green tank spit reads juicier after the telegraph — distinct from

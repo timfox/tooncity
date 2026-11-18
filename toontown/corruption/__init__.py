@@ -2,7 +2,8 @@
 
 CorruptToons prefer ink-tinted Toon Actor / DNA silhouettes (card fallback),
 chase, and telegraph attacks: Ink Smudge purple melee wind-up, Sludge Brute
-green spit telegraph + traveling ink blob on hit, Balloon Snare amber
+green spit telegraph + AI traveling spit projectile (trail/land splash) with
+close slam secondary + client ink blob on land, Balloon Snare amber
 string-lash + vine zip, Gunk Gagster teal gag-lob puddle trap. Between
 telegraphs, IdleInkDripFx plays sparse ambient rubber-hose ink
 drips (archetype-tinted pollution presence) layered with

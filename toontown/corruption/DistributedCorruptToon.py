@@ -1050,7 +1050,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             blob.setColor(color[0], color[1], color[2], color[3])
             blob.setBin('fixed', 40)
             blob.setDepthWrite(False)
-            travel = float(CorruptionGlobals.BRUTE_SPIT_BLOB_TRAVEL)
+            # Match AI spit projectile travel so land AV tracks flight time.
+            travel = float(getattr(
+                CorruptionGlobals, 'BRUTE_SPIT_TRAVEL_SEC',
+                CorruptionGlobals.BRUTE_SPIT_BLOB_TRAVEL))
             self._spitBlobNP = blob
             self._spitBlobIval = Sequence(
                 Parallel(

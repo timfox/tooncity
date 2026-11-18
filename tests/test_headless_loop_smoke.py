@@ -331,6 +331,15 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertEqual(cg.archetypeDefaultName(archetype_id), expected)
             self.assertIn(archetype_id, cg.ARCHETYPE_STATS)
 
+        # Sludge Brute — traveling spit projectile + close slam secondary
+        # (not instant long-range smack / tinted Smudge).
+        brute = cg.ARCHETYPE_STATS[cg.ARCHETYPE_BRUTE]
+        self.assertEqual(brute.get('attackMove'), 'spit')
+        self.assertGreater(float(brute.get('spitMaxRange', 0)), 8.0)
+        self.assertGreater(float(brute.get('slamMeleeRange', 0)), 2.0)
+        self.assertTrue(cg.BRUTE_SPIT_PROJECTILE_ENABLED)
+        self.assertTrue(cg.BRUTE_SLAM_SECONDARY_ENABLED)
+
         # Gunk Gagster (#191) — distinct gag-lob puddle kit (not Smudge rename).
         gagster = cg.ARCHETYPE_STATS[cg.ARCHETYPE_GAGSTER]
         self.assertEqual(gagster.get('attackMove'), 'gag_lob')
