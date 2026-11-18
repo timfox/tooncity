@@ -10,8 +10,11 @@ class PollutionManagerAI(DistributedObjectAI):
 
     Incomplete reclaim leaves a street *contested*: residual ink slowly
     re-creeps toward POLLUTION_RECREEP_CAP so neighborhoods fight back.
-    Fully reclaimed / pure streets stay *secured* (no auto re-ink). Active
-    reclaim pauses re-creep via STREET_RECLAIMING.
+    Fully reclaimed streets are *purity-locked* (STREET_SECURED + lock set):
+    re-creep and pollution rises cannot undo a finished reclaim. Active
+    reclaim pauses re-creep via STREET_RECLAIMING and clears the lock so
+    seed pollution can land. Ambient never-stained SECURED zones are not
+    locked until they hit pure / markStreetSecured.
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManagerAI')
@@ -22,6 +25,8 @@ class PollutionManagerAI(DistributedObjectAI):
         self.zonePollution = {}
         # zoneId -> STREET_SECURED / STREET_RECLAIMING / STREET_CONTESTED
         self.streetStatus = {}
+        # Finished-reclaim zones — refuse pollution rises until reclaiming.
+        self._purityLocked = set()
         # Zones that already got the rubber-hose re-creep whisper this episode.
         self._recreepAnnounced = set()
         self._recreepTaskName = None
@@ -34,11 +39,22 @@ class PollutionManagerAI(DistributedObjectAI):
         return self.streetStatus.get(
             int(zoneId), CorruptionGlobals.STREET_SECURED)
 
+    def isPurityLocked(self, zoneId):
+        """True after a finished reclaim until reclaiming / contested clears it."""
+        return int(zoneId) in self._purityLocked
+
     def setPollution(self, zoneId, level):
         """Set absolute pollution for a zone and broadcast to interested clients."""
         zoneId = int(zoneId)
         clamped = CorruptionGlobals.clampPollution(level)
         previous = self.getPollution(zoneId)
+        # Finished reclaim lock — refuse re-stain (re-creep / ~pollute rises).
+        if CorruptionGlobals.streetPurityLockBlocksRise(
+                self.isPurityLocked(zoneId), clamped, previous):
+            self.notify.debug(
+                'zone %s purity-locked; refuse pollution rise %.3f -> %.3f' % (
+                    zoneId, previous, clamped))
+            return previous
         self.zonePollution[zoneId] = clamped
         self.d_setZonePollution(zoneId, clamped)
         if clamped != previous:
@@ -47,7 +63,7 @@ class PollutionManagerAI(DistributedObjectAI):
         if clamped <= CorruptionGlobals.POLLUTION_PURE and previous > CorruptionGlobals.POLLUTION_PURE:
             # Hook for slice 3 reclaim / purity restore FX.
             messenger.send('pollutionReclaimed', [zoneId])
-            # Pure streets stay pure — lock out auto re-ink.
+            # Pure streets stay pure — lock out auto re-ink + rises.
             self.markStreetSecured(zoneId)
         return clamped
 
@@ -73,17 +89,24 @@ class PollutionManagerAI(DistributedObjectAI):
         return self.adjustPollution(zoneId, -abs(float(amount)))
 
     def markStreetSecured(self, zoneId):
-        """Full reclaim / pure street — no auto re-ink."""
+        """Full reclaim / pure street — purity-lock; no auto re-ink or rises."""
         zoneId = int(zoneId)
         self.streetStatus[zoneId] = CorruptionGlobals.STREET_SECURED
+        self._purityLocked.add(zoneId)
         self._recreepAnnounced.discard(zoneId)
+        # Force pure while locked so a finished reclaim cannot keep residual ink.
+        if self.getPollution(zoneId) > CorruptionGlobals.POLLUTION_PURE:
+            self.zonePollution[zoneId] = CorruptionGlobals.POLLUTION_PURE
+            self.d_setZonePollution(zoneId, CorruptionGlobals.POLLUTION_PURE)
         self._refreshRecreepTask()
-        self.notify.debug('zone %s street secured (no re-creep)' % zoneId)
+        self.notify.debug(
+            'zone %s street secured + purity-locked (no re-creep)' % zoneId)
 
     def markStreetReclaiming(self, zoneId):
-        """Active reclaim packs — pause re-creep while the fight is on."""
+        """Active reclaim packs — pause re-creep; clear lock so seed can land."""
         zoneId = int(zoneId)
         self.streetStatus[zoneId] = CorruptionGlobals.STREET_RECLAIMING
+        self._purityLocked.discard(zoneId)
         self._recreepAnnounced.discard(zoneId)
         self._refreshRecreepTask()
         self.notify.debug('zone %s street reclaiming (re-creep paused)' % zoneId)
@@ -92,6 +115,7 @@ class PollutionManagerAI(DistributedObjectAI):
         """Incomplete reclaim bail-out — residual ink may slowly re-creep."""
         zoneId = int(zoneId)
         self.streetStatus[zoneId] = CorruptionGlobals.STREET_CONTESTED
+        self._purityLocked.discard(zoneId)
         self._recreepAnnounced.discard(zoneId)
         self._refreshRecreepTask()
         self.notify.debug(
@@ -140,9 +164,11 @@ class PollutionManagerAI(DistributedObjectAI):
             return Task.done
 
         anyContested = False
-        contested = CorruptionGlobals.STREET_CONTESTED
         for zoneId, status in list(self.streetStatus.items()):
-            if status != contested:
+            # Secured / reclaiming / purity-locked never re-ink; contested only.
+            if not CorruptionGlobals.streetAllowsRecreep(status):
+                continue
+            if self.isPurityLocked(zoneId):
                 continue
             anyContested = True
             level = self.getPollution(zoneId)
@@ -152,12 +178,14 @@ class PollutionManagerAI(DistributedObjectAI):
             nxt = CorruptionGlobals.pollutionRecreepStep(level)
             if nxt <= level:
                 continue
-            self.setPollution(zoneId, nxt)
-            # Avoid markStreetSecured side-effects if somehow capped at pure.
+            applied = self.setPollution(zoneId, nxt)
+            # Lock / no-op rise — skip whisper.
+            if applied <= level:
+                continue
             if zoneId not in self._recreepAnnounced:
                 self._recreepAnnounced.add(zoneId)
                 self._announceRecreep(zoneId)
-                messenger.send('pollutionRecreeping', [zoneId, nxt])  # noqa: F821
+                messenger.send('pollutionRecreeping', [zoneId, applied])  # noqa: F821
 
         if not anyContested:
             self._recreepTaskName = None
@@ -179,6 +207,7 @@ class PollutionManagerAI(DistributedObjectAI):
     def delete(self):
         self._stopRecreepTask()
         self.streetStatus.clear()
+        self._purityLocked.clear()
         self._recreepAnnounced.clear()
         DistributedObjectAI.delete(self)
 

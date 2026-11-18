@@ -169,6 +169,7 @@ class PollutionRecreepTest(unittest.TestCase):
                 'markStreetSecured',
                 'markStreetReclaiming',
                 'markStreetContested',
+                'isPurityLocked',
                 '_ensureRecreepTask',
                 '__recreepTick',
                 '_announceRecreep'):
@@ -178,6 +179,8 @@ class PollutionRecreepTest(unittest.TestCase):
         self.assertIn('pollutionRecreepStep', src)
         self.assertIn('POLLUTION_RECREEP_MSG', src)
         self.assertIn('pollutionRecreeping', src)
+        self.assertIn('_purityLocked', src)
+        self.assertIn('streetPurityLockBlocksRise', src)
 
     def test_reclaim_director_marks_incomplete_vs_secured(self):
         src = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')
@@ -196,6 +199,13 @@ class PollutionRecreepTest(unittest.TestCase):
         complete_snip = src[complete_idx:complete_idx + 900]
         self.assertIn('markStreetSecured', complete_snip)
         self.assertNotIn('markStreetContested', complete_snip)
+        # Unlock purity lock before seeding so finished streets can restart.
+        start_idx = src.find('def start(')
+        self.assertGreater(start_idx, 0)
+        start_snip = src[start_idx:stop_idx]
+        self.assertLess(
+            start_snip.find('markStreetReclaiming'),
+            start_snip.find('setPollution'))
 
 
 def main() -> int:

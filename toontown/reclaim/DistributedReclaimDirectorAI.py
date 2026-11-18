@@ -162,11 +162,12 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
         pollutionMgr = getattr(self.air, 'pollutionManager', None)
         if pollutionMgr is not None:
-            pollutionMgr.setPollution(
-                self.reclaimZoneId, self._seedPollution)
-            # Pause incomplete-reclaim re-creep while packs are live.
+            # Clear purity lock + pause re-creep *before* seeding ink so a
+            # finished-reclaim lock cannot refuse the start pollution rise.
             if hasattr(pollutionMgr, 'markStreetReclaiming'):
                 pollutionMgr.markStreetReclaiming(self.reclaimZoneId)
+            pollutionMgr.setPollution(
+                self.reclaimZoneId, self._seedPollution)
 
         self.b_setFinalePhase(finalePhase or 0)
         self.b_setMaxWaves(self._maxPacks)

@@ -12,6 +12,7 @@ WaveClearCreamWashPulse vocabulary).
 
 Mid-wave purity pressure (director tip): brief contested rim warn flash when
 purity stalls or ink pressure rises — rubber-hose urgency after re-creep #194.
+Full reclaim secured lock: brief cream/green rim confirm that purity is locked.
 """
 
 from math import cos, pi, sin
@@ -220,6 +221,28 @@ class PurityMeterHud(object):
             Wait(max(0.05, hold)),
             Func(self._onPressureWarnDone),
             name='reclaimPurityMeterPressureWarn',
+        )
+        self._warnIval.start()
+
+    def confirmSecured(self):
+        """Brief cream/green rim confirm when finished reclaim purity locks."""
+        if not getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_ENABLED', True):
+            return
+        if self._rimNP is None or self._rimNP.isEmpty():
+            return
+        self._clearPressureWarn()
+        lockColor = getattr(
+            ReclaimGlobals, 'SECURED_LOCK_RIM_COLOR',
+            (0.55, 1.0, 0.72, 0.88))
+        hold = float(getattr(ReclaimGlobals, 'SECURED_LOCK_RIM_SEC', 0.85))
+        try:
+            self._rimNP.setColor(*lockColor)
+        except Exception:
+            return
+        self._warnIval = Sequence(
+            Wait(max(0.05, hold)),
+            Func(self._onPressureWarnDone),
+            name='reclaimPurityMeterSecuredConfirm',
         )
         self._warnIval.start()
 

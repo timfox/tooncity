@@ -175,6 +175,15 @@ POLLUTION_RECREEP_MSG = (
     "Whoa — that ink's creeping back! Finish the reclaim before this "
     'street goes goopy again!'
 )
+# After a finished reclaim, PollutionManagerAI purity-locks the street so
+# setPollution rises / re-creep cannot undo full purity. Ambient never-stained
+# streets stay SECURED without this lock (still accept ~pollute). Toggle
+# STREET_PURITY_LOCK_ENABLED = False soft-opens rises on locked streets only;
+# re-creep still skips SECURED / RECLAIMING via streetAllowsRecreep.
+STREET_PURITY_LOCK_ENABLED = True
+STREET_PURITY_LOCK_MSG = (
+    "Street's secured — that ink can't creep back!"
+)
 
 # Purity-complete fog cream dissolve — sunny cream/pastel lift of street fog
 # when purityRestoreFx fires. Matches POLLUTION_FOG_CLEAR_SEC density ramp
@@ -1936,6 +1945,24 @@ def streetAllowsRecreep(status):
         return int(status) == STREET_CONTESTED
     except (TypeError, ValueError):
         return False
+
+
+def streetPurityLockBlocksRise(locked, newLevel, currentLevel, enabled=None):
+    """True when a finished-reclaim purity lock should refuse a pollution rise.
+
+    ``locked`` is AI bookkeeping (PollutionManagerAI._purityLocked), not the
+    default STREET_SECURED status for never-stained zones.
+    """
+    if enabled is None:
+        enabled = STREET_PURITY_LOCK_ENABLED
+    if not enabled or not locked:
+        return False
+    try:
+        nxt = float(newLevel)
+        cur = float(currentLevel)
+    except (TypeError, ValueError):
+        return False
+    return nxt > cur
 
 
 def pollutionRecreepStep(level, perTick=None, cap=None):

@@ -84,6 +84,11 @@ class Pollute(MagicWord):
         if mgr is None:
             return 'PollutionManager is not running on this AI.'
         zoneId = toon.zoneId
+        if (hasattr(mgr, 'isPurityLocked') and mgr.isPurityLocked(zoneId)
+                and getattr(CorruptionGlobals, 'STREET_PURITY_LOCK_ENABLED', True)):
+            return (
+                'Zone %s is purity-locked after reclaim — ink can't creep back. '
+                'Start a reclaim (~startreclaim) to unlock.' % zoneId)
         if absolute:
             level = mgr.setPollution(zoneId, amount)
             return 'Zone %s pollution set to %.3f.' % (zoneId, level)
