@@ -757,6 +757,50 @@ SILHOUETTE_CREAM_RIM_LOOK = {
     'binSort': SILHOUETTE_CREAM_RIM_BIN,
 }
 
+# Idle cream drip sparkle flecks — soft sunny chips twinkling along the
+# IdleCreamDripContrastFx drip path between telegraphs (client only).
+# Compose lift/period via IdleCreamDripSparkleFx.idleCreamDripSparkleLook
+# → idleCreamDripLook; fleck size/timing borrows silhouette cream rim (#114)
+# sparkle grammar. Distinct from falling drips and silhouette rim orbit:
+# tighter radius near cream drip angles, twinkle pop scale. Not ink-colored.
+# IDLE_CREAM_DRIP_SPARKLE_ENABLED = False drops sparkles only (cream drip stays).
+IDLE_CREAM_DRIP_SPARKLE_ENABLED = True
+IDLE_CREAM_DRIP_SPARKLE_BIN = 43
+IDLE_CREAM_DRIP_SPARKLE_COLORS = (
+    (1.0, 0.97, 0.82, 0.82),  # sunny cream
+    (1.0, 0.96, 0.62, 0.76),  # butter
+    (1.0, 0.9, 0.78, 0.72),   # soft peach pastel
+    (0.98, 0.94, 0.88, 0.68),  # warm parchment
+)
+IDLE_CREAM_DRIP_SPARKLE_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+IDLE_CREAM_DRIP_SPARKLE_LOOK = {
+    'id': 'idle-cream-drip-sparkle',
+    # lift / period composed with idleCreamDripLook when played; fallbacks below.
+    'lift': 2.05,
+    'periodSec': 1.48,
+    'periodScale': 0.58,
+    'settleSec': 0.55,
+    'settleBias': -0.18,
+    'fleckCount': 2,
+    'fleckHalf': 0.07,
+    'fleckHalfScale': 0.78,
+    'sparkleRadius': 0.42,
+    'dripBias': 0.18,
+    'fleckDist': 0.22,
+    'fleckLift': 0.18,
+    'fleckSec': 0.36,
+    'fleckSecScale': 0.85,
+    'fleckStagger': 0.035,
+    'fleckColors': IDLE_CREAM_DRIP_SPARKLE_COLORS,
+    'fleckEndColors': IDLE_CREAM_DRIP_SPARKLE_END_COLORS,
+    'binSort': IDLE_CREAM_DRIP_SPARKLE_BIN,
+}
+
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
 BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)
