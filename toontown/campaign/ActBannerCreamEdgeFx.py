@@ -11,7 +11,7 @@ Soft cream border strips + tip flecks that frame:
 Handoff / victory / finale-reveal cream-sparkle paths also rise cream
 sparkle flecks along the cream frame (wave-edge #113 twin). Hood handoff
 cream edge also arms a deepened rubber-hose scale settle (overshoot →
-rest → micro rebound → rest) after the peak — juicier past #240 — so
+rest → micro rebound → rest) after the peak — juicier past #271 — so
 Loopy→Punchline→Silly transitions land carnival-juicy — Oswald trust
 banner settle (#76) twin, distinct from tip/title cream hose settles.
 Act-enter, Oswald trust settle,
@@ -171,7 +171,7 @@ class ActBannerCreamEdgeFx(object):
 
         Armed when SETTLE_OVERSHOOT is configured (handoff path). Optional
         SETTLE_REBOUND adds a second micro bounce so Loopy→Punchline→Silly
-        handoffs read juicier past #240. Missing / disabled settle returns
+        handoffs read juicier past #271. Missing / disabled settle returns
         None so other cream-edge paths stay unchanged.
         """
         if not self._cfg('SETTLE_ENABLED', True):
@@ -186,7 +186,7 @@ class ActBannerCreamEdgeFx(object):
             return None
         if overSec <= 0.0:
             return None
-        restSec = float(self._cfg('SETTLE_REST_SEC', 0.09))
+        restSec = float(self._cfg('SETTLE_REST_SEC', 0.10))
         restPt = Point3(1.0, 1.0, 1.0)
         overPt = Point3(float(ox), float(oy), float(oz))
         try:
@@ -201,7 +201,7 @@ class ActBannerCreamEdgeFx(object):
             LerpScaleInterval(
                 edgeRoot, max(0.01, restSec), restPt, blendType='easeIn'),
         ]
-        # Optional micro rebound — handoff cream edge deepen (past #240).
+        # Optional micro rebound — handoff cream edge deepen (past #271).
         rebound = self._cfg('SETTLE_REBOUND', None)
         if rebound:
             try:
@@ -211,7 +211,7 @@ class ActBannerCreamEdgeFx(object):
                 reboundSec = 0.0
                 rx = ry = rz = 1.0
             if reboundSec > 0.0:
-                reboundRest = float(self._cfg('SETTLE_REBOUND_REST_SEC', 0.09))
+                reboundRest = float(self._cfg('SETTLE_REBOUND_REST_SEC', 0.10))
                 reboundPt = Point3(float(rx), float(ry), float(rz))
                 steps.extend([
                     LerpScaleInterval(

@@ -457,28 +457,32 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('half-truth', magic_l)
 
     def test_handoff_cream_edge_settle_tunables(self):
-        """Loopy→Punchline→Silly handoff cream edge settle juicier past #240."""
+        """Loopy→Punchline→Silly handoff cream edge settle juicier past #271."""
         camp = self.camp
         self.assertTrue(camp.HANDOFF_CREAM_EDGE_SETTLE_ENABLED)
         over = camp.HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT
         self.assertEqual(len(over), 4)
-        self.assertGreaterEqual(float(over[3]), 0.10)
-        self.assertGreaterEqual(float(over[0]), 1.10)
-        self.assertGreaterEqual(float(over[2]), 1.15)
+        self.assertGreaterEqual(float(over[3]), 0.11)
+        self.assertGreaterEqual(float(over[0]), 1.12)
+        self.assertGreaterEqual(float(over[2]), 1.18)
         self.assertGreaterEqual(
-            float(camp.HANDOFF_CREAM_EDGE_SETTLE_REST_SEC), 0.09)
+            float(camp.HANDOFF_CREAM_EDGE_SETTLE_REST_SEC), 0.10)
         rebound = camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND
         self.assertEqual(len(rebound), 4)
-        self.assertGreaterEqual(float(rebound[0]), 1.04)
-        self.assertGreaterEqual(float(rebound[2]), 1.06)
-        self.assertGreaterEqual(float(rebound[3]), 0.055)
+        self.assertGreaterEqual(float(rebound[0]), 1.05)
+        self.assertGreaterEqual(float(rebound[2]), 1.08)
+        self.assertGreaterEqual(float(rebound[3]), 0.06)
         self.assertGreaterEqual(
-            float(camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC), 0.09)
-        self.assertGreaterEqual(float(camp.HANDOFF_CREAM_WASH_DELAY_SEC), 0.54)
-        # Distinct from tip hose (#227/#256) and betrayal hose (#235/#260).
+            float(camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC), 0.10)
+        self.assertGreaterEqual(float(camp.HANDOFF_CREAM_WASH_DELAY_SEC), 0.58)
+        self.assertGreaterEqual(float(camp.HANDOFF_CREAM_WASH_PEAK), 0.16)
+        # Distinct from tip hose / betrayal hose / victory twist.
         self.assertNotEqual(
             tuple(over),
             tuple(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT))
+        self.assertNotEqual(
+            tuple(over),
+            tuple(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT))
         self.assertNotEqual(
             tuple(over),
             tuple(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT))
@@ -489,12 +493,12 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('_settleScalePart', edge_src)
         self.assertIn('SETTLE_OVERSHOOT', edge_src)
         self.assertIn('SETTLE_REBOUND', edge_src)
-        self.assertIn('past #240', edge_src)
+        self.assertIn('past #271', edge_src)
         magic_l = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'MagicWords.py'
         ).read_text(encoding='utf-8').lower()
-        self.assertIn('juicier deepened edge settle', magic_l)
+        self.assertIn('juicier deepened edge settle past #271', magic_l)
 
     def test_punchline_tip_cream_hose_settle_tunables(self):
         """#198 / #227 / #256 deepen — Punchline tip juicier cream hose + rebound."""

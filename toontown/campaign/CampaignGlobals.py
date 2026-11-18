@@ -650,38 +650,39 @@ HANDOFF_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.90)
 HANDOFF_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 HANDOFF_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.38)
 # Brief rubber-hose scale settle after handoff cream edge peak (#124 /
-# #222 / #240 deepen). Juicier overshoot → rest → micro rebound → rest
-# past #240 so Loopy→Punchline→Silly neighborhood transitions read
+# #222 / #240 / #271 deepen). Juicier overshoot → rest → micro rebound →
+# rest past #271 so Loopy→Punchline→Silly neighborhood transitions read
 # carnival-juicy and the cream frame lands readable — Oswald trust banner
 # settle (#76) twin on the carnival edge. Distinct from Punchline tip
-# cream hose (#227/#256) and finale betrayal cream hose (#235/#260) —
+# cream hose (#227/#256/#284), Silly tip / almost-confess hose
+# (#232/#279/#294), and finale betrayal cream hose (#235/#260/#288) —
 # those settle tip/title bars; this settles the sunny edge frame only.
 # HANDOFF_CREAM_EDGE_SETTLE_ENABLED = False drops settle only (edge +
 # sparkle + wash remain). No keyblades / KH branding.
 HANDOFF_CREAM_EDGE_SETTLE_ENABLED = True
-HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT = (1.10, 1.0, 1.16, 0.10)  # juicier than #240 (1.08/1.13/0.09)
-HANDOFF_CREAM_EDGE_SETTLE_REST_SEC = 0.09  # was 0.08 @ #240
-HANDOFF_CREAM_EDGE_SETTLE_REBOUND = (1.04, 1.0, 1.07, 0.055)  # juicier micro bounce past #240
-HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC = 0.09  # was 0.08 @ #240
+HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT = (1.12, 1.0, 1.18, 0.11)  # juicier than #271 (1.10/1.16/0.10)
+HANDOFF_CREAM_EDGE_SETTLE_REST_SEC = 0.10  # was 0.09 @ #271
+HANDOFF_CREAM_EDGE_SETTLE_REBOUND = (1.05, 1.0, 1.08, 0.06)  # juicier micro bounce past #271
+HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC = 0.10  # was 0.09 @ #271
 
 # Soft cream wash pulse after handoff cream edge / sparkle (#124/#99).
 # Perfect-dodge / melee hit / victory / Oswald-trust cream wash grammar —
 # delayed two-beat aspect2d veil on Loopy→Punchline (and act) carnival
 # handoffs only. Soft under edge strips (bin 55) / plate (60); cream /
-# pastel only. A touch quieter / shorter than victory wash (#138) —
-# handoffs fire more often. Wash delay tracks the juicier edge settle
-# past #240. Oswald trust / finale-reveal wash live separately; phase
-# stays wash-free here. HANDOFF_CREAM_WASH_ENABLED = False drops wash
-# only (carnival + sparkle + edge remain). No keyblades / KH branding.
+# pastel only. Still shorter hang than victory wash (#138) — handoffs
+# fire more often. Wash delay tracks the juicier edge settle past #271.
+# Oswald trust / finale-reveal wash live separately; phase stays
+# wash-free here. HANDOFF_CREAM_WASH_ENABLED = False drops wash only
+# (carnival + sparkle + edge remain). No keyblades / KH branding.
 HANDOFF_CREAM_WASH_ENABLED = True
-HANDOFF_CREAM_WASH_DELAY_SEC = 0.55  # after play; after juicier edge settle past #240
+HANDOFF_CREAM_WASH_DELAY_SEC = 0.60  # after play; after juicier edge settle past #271
 HANDOFF_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-HANDOFF_CREAM_WASH_PEAK = 0.15  # soft bump with settle deepen
-HANDOFF_CREAM_WASH_MID = 0.09
+HANDOFF_CREAM_WASH_PEAK = 0.16  # soft bump with settle deepen past #271
+HANDOFF_CREAM_WASH_MID = 0.10
 HANDOFF_CREAM_WASH_IN_SEC = 0.07
-HANDOFF_CREAM_WASH_PULSE_SEC = 0.13
+HANDOFF_CREAM_WASH_PULSE_SEC = 0.14
 HANDOFF_CREAM_WASH_HOLD_SEC = 0.10
-HANDOFF_CREAM_WASH_OUT_SEC = 0.42  # rides with handoff glitter hang (~0.68)
+HANDOFF_CREAM_WASH_OUT_SEC = 0.44  # rides with handoff glitter hang (~0.68)
 # Under cream edge (55) / plate (60); soft veil settle beat.
 HANDOFF_CREAM_WASH_BIN = 54
 
