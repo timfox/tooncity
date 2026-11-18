@@ -82,7 +82,17 @@ COMBO_COUNTER_COLORS = (
 LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more
 LAUNCH_HEIGHT = (0.0, 1.85, 3.1)
 LAUNCH_UP_SEC = (0.0, 0.12, 0.16)
-LAUNCH_HANG_SEC = (0.0, 0.06, 0.14)
+# Readable rubber-hose hang/float at apex before fall (hover + squash + sparkle).
+LAUNCH_HANG_SEC = (0.0, 0.18, 0.28)
+LAUNCH_HANG_HOVER = (0.0, 0.28, 0.45)
+LAUNCH_HANG_SQUASH = (1.45, 1.45, 0.48, 0.07)
+LAUNCH_HANG_STRETCH = (0.65, 0.65, 1.55, 0.1)
+LAUNCH_HANG_SPARK_COUNT = 5
+LAUNCH_HANG_SPARK_SIZE = 0.16
+LAUNCH_HANG_SPARK_DRIFT = 0.75
+LAUNCH_HANG_SPARK_LIFT = 0.4
+LAUNCH_HANG_SPARK_SEC = 0.24
+LAUNCH_HANG_SPARK_COLOR = (1.0, 0.95, 0.55, 0.95)
 LAUNCH_DOWN_SEC = (0.0, 0.16, 0.22)
 # Local toon hop cue on finisher so the juggle reads as a shared air beat.
 FINISHER_SELF_HOP = 1.15

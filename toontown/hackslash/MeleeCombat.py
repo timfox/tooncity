@@ -48,6 +48,7 @@ class MeleeCombatController(DirectObject):
         self._flashIval = None
         self._flashNP = None
         self._launchIval = None
+        self._launchSparkNodes = []
         self._dodgeIval = None
         self._iframeUntil = 0.0
         self._dodgeReadyAt = 0.0
@@ -490,7 +491,7 @@ class MeleeCombatController(DirectObject):
         self._comboHits = 0
 
     def _playLauncher(self, target, hitIndex):
-        """Upward juggle with hang time — clearer mid/finisher stretch pop."""
+        """Upward juggle with readable rubber-hose hang/float before fall."""
         self._clearLaunch()
         try:
             node = target
@@ -505,21 +506,44 @@ class MeleeCombatController(DirectObject):
         upSec = self._launchTiming(HackSlashConfig.LAUNCH_UP_SEC, hitIndex)
         hangSec = self._launchTiming(HackSlashConfig.LAUNCH_HANG_SEC, hitIndex)
         downSec = self._launchTiming(HackSlashConfig.LAUNCH_DOWN_SEC, hitIndex)
+        hoverAmp = self._launchTiming(HackSlashConfig.LAUNCH_HANG_HOVER, hitIndex)
         peak = Point3(start[0], start[1], start[2] + lift)
         stretch = (
             Point3(0.7, 0.7, 1.65)
             if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1
             else Point3(0.75, 0.75, 1.55))
+        hangIval = HitJuice.buildLaunchHangInterval(
+            node, peak, hangSec, hoverAmp, stretch,
+            name=self.avatar.uniqueName('hackslashLaunchHang'))
+
+        def startHangSparks():
+            try:
+                parent = render  # noqa: F821
+            except Exception:
+                parent = None
+            sparkIval, sparkNodes = HitJuice.spawnHangSparks(
+                peak, parent=parent,
+                name=self.avatar.uniqueName('hackslashHangSparks'))
+            self._launchSparkNodes = sparkNodes
+            if sparkIval is not None:
+                try:
+                    sparkIval.start()
+                except Exception:
+                    HitJuice.clearHangSparks(sparkNodes)
+                    self._launchSparkNodes = []
+
         self._launchIval = Sequence(
             Parallel(
                 LerpPosInterval(node, upSec, peak),
                 LerpScaleInterval(node, upSec, stretch),
             ),
-            Wait(hangSec),
+            Func(startHangSparks),
+            hangIval,
             Parallel(
                 LerpPosInterval(node, downSec, start),
                 LerpScaleInterval(node, downSec, Point3(1.0, 1.0, 1.0)),
             ),
+            Func(self._clearLaunchSparks),
             name=self.avatar.uniqueName('hackslashLaunch'),
         )
         self._launchIval.start()
@@ -575,6 +599,10 @@ class MeleeCombatController(DirectObject):
         )
         self._selfHopIval.start()
 
+    def _clearLaunchSparks(self):
+        HitJuice.clearHangSparks(self._launchSparkNodes)
+        self._launchSparkNodes = []
+
     def _clearLaunch(self):
         if self._launchIval:
             try:
@@ -582,6 +610,7 @@ class MeleeCombatController(DirectObject):
             except Exception:
                 pass
             self._launchIval = None
+        self._clearLaunchSparks()
 
     def _onCorruptHitPlayer(self, corrupt=None):
         """Readable i-frame / dodge window after a CorruptToon smack."""
