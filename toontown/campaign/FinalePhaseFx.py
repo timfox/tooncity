@@ -245,8 +245,9 @@ class FinalePhaseFxClient(DirectObject):
         """Soft cream residual after the reveal sting lands.
 
         Cream aftershock (#86) + quieter cream edge frame (#133) + soft
-        cream wash pulse (#145/#141/#138 twin) — Oswald-twist path only;
-        mid-campaign stays edge/wash-free of spoilers.
+        cream wash pulse + delayed wash aftershock (#149/#168 twin) —
+        Oswald-twist path only; mid-campaign stays edge/wash-free of
+        spoilers.
         """
         try:
             playFinaleCreamAftershock()
@@ -256,8 +257,10 @@ class FinalePhaseFxClient(DirectObject):
             playFinaleRevealCreamEdge()
         except Exception:
             pass
-        # Soft cream wash pulse after cream edge (#133) — trust / handoff /
-        # victory wash grammar (#145/#141/#138). Twist residual only.
+        # Soft cream wash pulse + delayed cream aftershock after cream edge
+        # (#133) — trust / handoff / victory wash + victory wash aftershock
+        # grammar (#145/#141/#138/#168). Twist residual only; wash client
+        # owns the flecks/halo residual.
         try:
             playFinaleRevealCreamWash()
         except Exception:

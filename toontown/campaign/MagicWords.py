@@ -21,7 +21,8 @@ class StartCampaign(MagicWord):
         'pulse + cream aftershock; victory reveal sting: Oswald caused the '
         'corruption — banner '
         '+ rubber-hose silhouette shadow flash + FOV/SFX + soft cream '
-        'aftershock framed by cream edge + soft cream wash pulse). Toontown '
+        'aftershock framed by cream edge + soft cream wash pulse + cream '
+        'aftershock). Toontown '
         'spiritual-sequel fantasy — no keyblades. '
         'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER

@@ -709,8 +709,8 @@ FINALE_REVEAL_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.10)
 # Quieter / shorter than victory wash (#138) so the truth sting stays
 # bittersweet; rides with aftershock fleck hang (~0.85s). Mid-campaign
 # trust / handoff / victory stay on their own wash modules.
-# FINALE_REVEAL_CREAM_WASH_ENABLED = False drops wash only (aftershock +
-# edge remain). No keyblades / KH branding.
+# FINALE_REVEAL_CREAM_WASH_ENABLED = False drops wash (+ wash aftershock)
+# only (sting aftershock + edge remain). No keyblades / KH branding.
 FINALE_REVEAL_CREAM_WASH_ENABLED = True
 FINALE_REVEAL_CREAM_WASH_DELAY_SEC = 0.40  # after play; after edge peak
 FINALE_REVEAL_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -722,6 +722,34 @@ FINALE_REVEAL_CREAM_WASH_HOLD_SEC = 0.10
 FINALE_REVEAL_CREAM_WASH_OUT_SEC = 0.42  # soft residual settle under twist
 # Under cream edge (56) / aftershock (58); soft veil settle beat.
 FINALE_REVEAL_CREAM_WASH_BIN = 54
+
+# Delayed cream aftershock after finale reveal cream wash (#149). Victory
+# cream wash aftershock grammar (#168) / entry / purity-complete (#132/#136)
+# — quieter flecks settle downward with a soft cream halo under held twist
+# copy. Oswald-twist path only; owned by FinaleRevealCreamWashFx (separate
+# from sting FinaleCreamAftershockFx #86). Quieter than victory wash
+# aftershock so the truth sting stays bittersweet.
+# FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_ENABLED = False drops wash aftershock
+# only (wash + sting aftershock + edge remain). No keyblades / KH branding.
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_ENABLED = True
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.22  # after wash starts
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.08)  # under twist
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_COUNT = 6
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_SIZE = 0.016
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_DRIFT = 0.30
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_FALL = 0.24
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_SEC = 0.36
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.78)
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+# Above wash veil (54); below cream edge (56) / sting aftershock (58).
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_BIN = 55
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.48
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_START = 0.28
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.18
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.30
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.13
+FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 STATE_IDLE = 0
 STATE_ACTIVE = 1

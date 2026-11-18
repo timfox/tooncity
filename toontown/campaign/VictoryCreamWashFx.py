@@ -13,10 +13,10 @@ creamSwell (victory path only) beside the cream edge. Act-enter wash
 lives in ActBannerCreamWashFx; Punchline tip wash lives in
 PunchlineTipCreamWashFx; Silly tip wash lives in SillyTipCreamWashFx;
 handoff carnival wash lives in HandoffCreamWashFx; Oswald trust wash
-lives in OswaldTrustCreamWashFx; finale-reveal wash lives in
-FinaleRevealCreamWashFx. Clears before Oswald twist / FinalePhaseFx
-reveal. Client only. Toontown spiritual sequel — no keyblades / no KH
-branding.
+lives in OswaldTrustCreamWashFx; finale-reveal wash (+ its own wash
+aftershock) lives in FinaleRevealCreamWashFx. Clears before Oswald twist
+/ FinalePhaseFx reveal. Client only. Toontown spiritual sequel — no
+keyblades / no KH branding.
 """
 
 from math import cos, pi
