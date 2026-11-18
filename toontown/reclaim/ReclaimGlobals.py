@@ -20,6 +20,33 @@ WAVE_HP_SCALE = 0.18
 WAVE_SPAWN_DELAY = 1.4
 WAVE_MAX_EXTRA = 3
 
+# Elite last-wave combat modifiers — real HP / damage buffs (not composition-only).
+# STREET_PACKS waveModifiers mark Loopy / Punchline finale scripts as elite.
+ELITE_HP_MULT = 1.35
+ELITE_DAMAGE_MULT = 1.4
+ELITE_NAME_PREFIX = 'Elite '
+# Damage keys scaled on elite packs (archetype attack / secondary hits).
+ELITE_DAMAGE_STAT_KEYS = (
+    'attackDamage',
+    'dashDamage',
+    'splatDamage',
+    'slamDamage',
+    'spitTrailDamage',
+    'lungeDamage',
+    'burstDamage',
+    'surgeDamage',
+)
+
+# Between-wave ambush: short delayed pack after a cleared wave, before the
+# next scripted beat. Fills the blank WAVE_SPAWN_DELAY gap with a real beat.
+AMBUSH_DELAY = 0.55
+AMBUSH_FORWARD = 4.5
+AMBUSH_NAME_PREFIX = 'Ambush '
+AMBUSH_BANNER = 'AMBUSH!'
+AMBUSH_BANNER_HOLD_SEC = 1.85
+AMBUSH_BANNER_COLOR = (1.0, 0.55, 0.32, 1.0)
+AMBUSH_SUB_BANNER_COLOR = (1.0, 0.82, 0.62, 1.0)
+
 # Sludge Brute mix for default reclaim (Ink Smudge stays majority).
 # Wave 1 = pure Smudge; later waves introduce ~⅓ tanks.
 BRUTE_WAVE_START = 2
@@ -93,6 +120,9 @@ _STREET_PACK_START_KEYS = (
     'snareFraction', 'snareWaveStart', 'snareName',
     'gagsterFraction', 'gagsterWaveStart', 'gagsterName',
     'waveScripts',
+    # Elite HP/damage mods + between-wave ambush beats (not composition-only).
+    'waveModifiers',
+    'ambushBeats',
     # Silly Overlord: start P1 rain; HP-threshold promotes mid-fight P2.
     'finalePhase',
     'overlordP2HpFrac',
@@ -158,6 +188,14 @@ STREET_PACKS = {
             ('snare', 'ink', 'brute', 'ink'),
             ('snare', 'ink', 'brute', 'snare', 'ink'),
         ),
+        # Wave 4 elite: HP / damage buff (not composition-only tokens).
+        'waveModifiers': {
+            4: {'elite': True},
+        },
+        # After wave 3 clears — Snare ambush before the elite mix.
+        'ambushBeats': {
+            3: ('snare',),
+        },
         'bannerStart': 'OSWALD: RECLAIM LOOPY LANE!',
         'bannerStartSub': (
             'Explore the inky street — then stretch-punch '
@@ -179,7 +217,7 @@ STREET_PACKS = {
         'statusLabel': 'INK',
     },
     # Act 2 — Punchline Place sludge street (second hood).
-    # Scripted beats: Snare-front + Gagster lob → Gagster swarm → Brute pair
+        # Scripted beats: Snare-front + Gagster lob → Gagster swarm → Brute pair
     # → elite mix. Gunk Gagster is a real fourth archetype (not a Smudge rename).
     ToontownGlobals.PunchlinePlace: {
         'packId': 'punchline-sludge',
@@ -204,6 +242,14 @@ STREET_PACKS = {
             ('snare', 'gagster', 'brute', 'brute', 'ink'),
             ('snare', 'gagster', 'gagster', 'brute', 'snare', 'ink'),
         ),
+        # Wave 4 elite: HP / damage buff (not composition-only tokens).
+        'waveModifiers': {
+            4: {'elite': True},
+        },
+        # After wave 3 clears — Gagster + Snare ambush before the elite mix.
+        'ambushBeats': {
+            3: ('gagster', 'snare'),
+        },
         'bannerStart': 'OSWALD: RECLAIM PUNCHLINE PLACE!',
         'bannerStartSub': (
             'Explore the sludge street — then stretch-punch '
@@ -1217,8 +1263,9 @@ def streetPackParams(zoneId):
     """Kwargs for DistributedReclaimDirectorAI.start() from STREET_PACKS.
 
     Loopy / Punchline / Silly return scripted waveScripts (Smudge tutorial,
-    Snare-front sludge, Overlord swell) plus fraction fallbacks. Empty dict
-    → caller keeps module defaults.
+    Snare-front sludge, Overlord swell) plus fraction fallbacks, and — on
+    Loopy / Punchline — waveModifiers (elite HP/damage) + ambushBeats.
+    Empty dict → caller keeps module defaults.
     """
     pack = streetPack(zoneId)
     if not pack:
@@ -1308,6 +1355,149 @@ def resolveWaveScript(waveScripts, waveIndex):
     if not script:
         return None
     return script
+
+
+def resolveWaveModifiers(waveModifiers, waveIndex):
+    """Return modifier dict for a 1-based wave, or None.
+
+    Keys may be int or str. Empty / missing → no elite buffs.
+    """
+    if not waveModifiers:
+        return None
+    wave = max(1, int(waveIndex))
+    raw = None
+    if isinstance(waveModifiers, dict):
+        raw = waveModifiers.get(wave)
+        if raw is None:
+            raw = waveModifiers.get(str(wave))
+    if not isinstance(raw, dict) or not raw:
+        return None
+    return dict(raw)
+
+
+def waveIsElite(mods):
+    """True when mods mark a real elite combat buff (HP and/or damage)."""
+    if not mods:
+        return False
+    if mods.get('elite'):
+        return True
+    try:
+        if float(mods.get('hpMult', 1.0)) != 1.0:
+            return True
+    except (TypeError, ValueError):
+        pass
+    try:
+        if float(mods.get('damageMult', 1.0)) != 1.0:
+            return True
+    except (TypeError, ValueError):
+        pass
+    return False
+
+
+def waveHpMult(mods):
+    """HP multiplier for a wave modifier dict (elite default or explicit)."""
+    if not mods:
+        return 1.0
+    if 'hpMult' in mods:
+        try:
+            return max(0.1, float(mods['hpMult']))
+        except (TypeError, ValueError):
+            return 1.0
+    if mods.get('elite'):
+        return float(ELITE_HP_MULT)
+    return 1.0
+
+
+def waveDamageMult(mods):
+    """Damage multiplier for a wave modifier dict (elite default or explicit)."""
+    if not mods:
+        return 1.0
+    if 'damageMult' in mods:
+        try:
+            return max(0.1, float(mods['damageMult']))
+        except (TypeError, ValueError):
+            return 1.0
+    if mods.get('elite'):
+        return float(ELITE_DAMAGE_MULT)
+    return 1.0
+
+
+def applyElitePackHp(baseHp, mods):
+    """Scale pack-slot HP by elite / explicit hpMult."""
+    hp = max(1, int(baseHp or 1))
+    mult = waveHpMult(mods)
+    if mult == 1.0:
+        return hp
+    return max(1, int(round(hp * mult)))
+
+
+def applyElitePackName(name, mods):
+    """Prefix elite display names (skip when already tagged)."""
+    if not waveIsElite(mods):
+        return name
+    text = str(name or '')
+    prefix = str(mods.get('namePrefix') or ELITE_NAME_PREFIX)
+    if text.startswith(prefix):
+        return text
+    return '%s%s' % (prefix, text)
+
+
+def applyWaveDamageMultToStats(stats, mods):
+    """Return a new stats dict with damage keys scaled by waveDamageMult.
+
+    Scales attackDamage plus secondary kit damages (dash / slam / spit trail
+    / splat / …). Non-damage keys pass through unchanged.
+    """
+    base = dict(stats or {})
+    mult = waveDamageMult(mods)
+    if mult == 1.0:
+        return base
+    out = dict(base)
+    for key in ELITE_DAMAGE_STAT_KEYS:
+        if key not in out:
+            continue
+        try:
+            value = float(out[key])
+        except (TypeError, ValueError):
+            continue
+        out[key] = max(1, int(round(value * mult)))
+    return out
+
+
+def resolveAmbushBeat(ambushBeats, clearedWave):
+    """Return normalized ambush composition after clearedWave, or None.
+
+    ambushBeats is a 1-based dict keyed by the wave that just cleared
+    ({3: ('snare',)}). Tokens match WAVE_SCRIPT_TOKENS.
+    """
+    if not ambushBeats:
+        return None
+    wave = max(1, int(clearedWave))
+    raw = None
+    if isinstance(ambushBeats, dict):
+        raw = ambushBeats.get(wave)
+        if raw is None:
+            raw = ambushBeats.get(str(wave))
+    if raw is None:
+        return None
+    if isinstance(raw, (str, bytes)) or not hasattr(raw, '__iter__'):
+        raw = (raw,)
+    script = [normalizeWaveScriptToken(token) for token in raw]
+    if not script:
+        return None
+    return script
+
+
+def ambushOswaldTip(clearedWave, zoneId=None):
+    """Oswald tip under the ambush banner (between-wave beat)."""
+    zone = int(zoneId or 0)
+    if zone == ToontownGlobals.LoopyLane:
+        return 'Oswald: flanks! Balloon Snare ambush — then the elite mix!'
+    if zone == ToontownGlobals.PunchlinePlace:
+        return (
+            'Oswald: flanks! Gagster & Snare ambush — '
+            'elite sludge next!')
+    return 'Oswald: ambush after wave %s — stay sharp!' % int(clearedWave)
 
 
 def streetBannerStart(zoneId, finalePhase=0):
@@ -1432,6 +1622,11 @@ def waveAnnounceTitle(waveIndex, maxWaves, zoneId=None, finalePhase=0):
     wave = max(1, int(waveIndex))
     total = max(1, int(maxWaves))
     inbound = waveInboundLabel(zoneId=zoneId, finalePhase=finalePhase)
+    pack = streetPack(zoneId)
+    mods = resolveWaveModifiers(
+        (pack or {}).get('waveModifiers'), wave)
+    if waveIsElite(mods) and int(finalePhase or 0) < 1:
+        inbound = 'Elite packs inbound'
     return WAVE_BANNER_FMT % (wave, total, inbound)
 
 
@@ -1440,6 +1635,15 @@ def waveOswaldTip(waveIndex, maxWaves, zoneId=None, packCount=0):
     wave = max(1, int(waveIndex))
     total = max(1, int(maxWaves))
     zone = int(zoneId or 0)
+    pack = streetPack(zone)
+    mods = resolveWaveModifiers(
+        (pack or {}).get('waveModifiers'), wave)
+    if waveIsElite(mods):
+        tip = 'Oswald: elite pack — tougher ink, harder hits!'
+        count = int(packCount or 0)
+        if count > 0:
+            return '%s  ·  pack of %s' % (tip, count)
+        return tip
     if zone == ToontownGlobals.LoopyLane:
         tips = OSWALD_WAVE_TIPS_LOOPY
     elif zone == ToontownGlobals.PunchlinePlace:
@@ -1469,9 +1673,18 @@ def waveAnnounceColors(zoneId=None):
 
 
 def waveClearedOswaldTip(waveIndex, zoneId=None):
-    """Brief Oswald beat between waves (Loopy / Punchline / Silly flavor)."""
+    """Brief Oswald beat between waves (Loopy / Punchline / Silly flavor).
+
+    When an ambushBeat follows this cleared wave, foreshadow the flank
+    ambush instead of a blank pause tip.
+    """
     wave = int(waveIndex)
     zone = int(zoneId or 0)
+    pack = streetPack(zone)
+    ambush = resolveAmbushBeat(
+        (pack or {}).get('ambushBeats'), wave)
+    if ambush:
+        return ambushOswaldTip(wave, zoneId=zone)
     if zone == ToontownGlobals.LoopyLane:
         return 'Oswald tips his ears — next Loopy pack soon'
     if zone == ToontownGlobals.PunchlinePlace:

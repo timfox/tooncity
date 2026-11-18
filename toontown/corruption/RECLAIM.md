@@ -101,17 +101,20 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 
 - **Loopy street pack** (`ReclaimGlobals.STREET_PACKS` / `loopy-smudge`, zone `2200`):
   scripted Smudge tutorial → Brute intro → Snare joins → mixed elite
-  (seed 0.55, maxPacks 4). PlayEntry tip reads explore → fight → reclaim;
-  warm ink-yellow start banner.
+  (seed 0.55, maxPacks 4). Wave 4 carries real elite HP/damage modifiers;
+  after wave 3 a Snare ambush beat fills the between-wave pause. PlayEntry
+  tip reads explore → fight → reclaim; warm ink-yellow start banner.
 - Loopy campaign **C** mirrors that ramp across 3 waves (`ACTS` `waveScripts`);
   fraction fields stay `0` as fallback only.
 - **Punchline street pack** (`punchline-sludge`, zone `2300`):
   scripted Snare-front + Gunk Gagster lob → Gagster swarm → Brute pair → elite
-  (seed 0.70, maxPacks 4). Gunk Gagster is a real fourth archetype (teal
-  gag-lob puddle trap), not a Smudge rename. Combat role AI preserves that
-  mix after spawn (Snare flanks, Gagster kites the lob ring, Brute holds/
-  plants for spit) instead of every unit nearest-chasing into one scrum.
-  PlayEntry tip reads explore → fight → reclaim; start banner is gag-green.
+  (seed 0.70, maxPacks 4). Wave 4 elite HP/damage modifiers + Gagster/Snare
+  ambush after wave 3 (not composition-only). Gunk Gagster is a real fourth
+  archetype (teal gag-lob puddle trap), not a Smudge rename. Combat role AI
+  preserves that mix after spawn (Snare flanks, Gagster kites the lob ring,
+  Brute holds/plants for spit) instead of every unit nearest-chasing into
+  one scrum. PlayEntry tip reads explore → fight → reclaim; start banner is
+  gag-green.
 - Punchline campaign ACTS `waveScripts` stay the source of truth for **C**;
   STREET_PACKS mirrors so discoverable auto-reclaim matches the second-hood beat.
 - **Silly street pack** (`silly-overlord`, zone `2100`): Overlord-only scripts

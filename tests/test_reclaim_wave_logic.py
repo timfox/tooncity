@@ -418,6 +418,30 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         # Start kwargs keep scripts for the whole reclaim session.
         self.assertIn('self._waveScripts = waveScripts', src)
 
+    def test_street_pack_elite_modifiers_and_ambush_beats(self):
+        """Loopy / Punchline last waves carry real elite + ambush tables."""
+        rg, cg = self.rg, self.cg
+        for zone in (LOOPY, PUNCHLINE):
+            pack = rg.STREET_PACKS[zone]
+            self.assertIn('waveModifiers', pack)
+            self.assertIn('ambushBeats', pack)
+            mods = rg.resolveWaveModifiers(pack['waveModifiers'], 4)
+            self.assertTrue(rg.waveIsElite(mods))
+            ambush = rg.resolveAmbushBeat(pack['ambushBeats'], 3)
+            self.assertTrue(ambush)
+            self.assertTrue(all(
+                a in (
+                    cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE,
+                    cg.ARCHETYPE_SNARE, cg.ARCHETYPE_GAGSTER)
+                for a in ambush))
+        params = rg.streetPackParams(LOOPY)
+        self.assertEqual(
+            params['waveModifiers'],
+            rg.STREET_PACKS[LOOPY]['waveModifiers'])
+        self.assertEqual(
+            params['ambushBeats'],
+            rg.STREET_PACKS[LOOPY]['ambushBeats'])
+
 
 if __name__ == '__main__':
     unittest.main()
