@@ -4,8 +4,9 @@
 Loads CorruptionGlobals without Panda3D. Asserts interrupt tunables + pure
 isMeleeInterruptibleTelegraph helper, and AI wiring on
 DistributedCorruptToonAI (__maybeInterruptMeleeTelegraph from
-takeHackSlashDamage). Extends snare-style mid-telegraph cancel — not cream
-FX, not Overlord P1. Dedicated counter windows live in
+takeHackSlashDamage). Extends snare-style mid-telegraph cancel for Punchline
+kits — not cream FX. Overlord rain/slam/surge interrupt lives in
+test_melee_interrupt_overlord.py. Dedicated counter windows live in
 test_brute_gagster_counter_windows.py.
 
 Run from repo root:
@@ -124,12 +125,11 @@ class MeleeInterruptBruteGagsterTest(unittest.TestCase):
         # Gagster lob yes.
         self.assertTrue(fn(gagster, 'gag_lob'))
         self.assertFalse(fn(gagster, 'smack'))
-        # Smudge / Overlord rain-surge moves / Oswald stay out of this PR.
+        # Smudge dash/splat + Oswald stay commit-through here.
+        # Overlord rain/slam/surge interrupt is covered by
+        # test_melee_interrupt_overlord.py (shared helper).
         self.assertFalse(fn(ink, 'ink_dash'))
         self.assertFalse(fn(ink, 'ink_splat'))
-        self.assertFalse(fn(ink, 'rain'))
-        self.assertFalse(fn(ink, 'ink_surge'))
-        self.assertFalse(fn(ink, 'slam'))
         self.assertFalse(
             fn(self.cg.ARCHETYPE_CORRUPT_OSWALD, 'betrayal_lunge'))
 
