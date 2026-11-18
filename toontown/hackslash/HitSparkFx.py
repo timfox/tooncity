@@ -1,10 +1,10 @@
 """Rubber-hose cream/ink fleck sparkles on melee hit connect.
 
 Client juice when a stretch-punch lands: short cream spark streaks + ink
-flecks burst at the hit, then a delayed cream spark aftershock settles —
-layered with the existing impact squash silhouette. Cream aftershock is
-pastel-only (no ink). Toontown spiritual-sequel tone only — no keyblades /
-no KH branding.
+flecks burst at the hit, then a delayed cream spark aftershock, then a soft
+cream wash pulse — layered with the existing impact squash silhouette.
+Cream aftershock + wash are pastel-only (no ink). Toontown spiritual-sequel
+tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -23,10 +23,11 @@ from direct.interval.IntervalGlobal import (
 
 from . import HackSlashConfig
 from . import HitJuice
+from .HitSparkCreamWashFx import HitSparkCreamWashPulse
 
 
 class HitSparkFx(object):
-    """Owns one short world-space cream/ink spark burst + cream aftershock."""
+    """Owns spark burst + cream aftershock + cream wash pulse."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -34,9 +35,10 @@ class HitSparkFx(object):
         self._fleckIval = None
         self._nodes = []
         self._haloNP = None
+        self._creamWash = None
 
     def play(self, origin=None, hitIndex=0, parent=None):
-        """Spawn cream/ink flecks + delayed cream aftershock.
+        """Spawn cream/ink flecks + cream aftershock + delayed cream wash.
 
         Returns started Sequence or None. `origin` is render-space; defaults
         to the local avatar at HIT_SPARK_LIFT.
@@ -86,31 +88,70 @@ class HitSparkFx(object):
         aftershock = self._buildAftershock(parentNP, origin, hitIndex)
         if aftershock is not None:
             # Fleck Parallel already started; hold its lifetime beside aftershock.
-            self._ival = Sequence(
-                Parallel(
-                    Wait(fleckSec + 0.02),
-                    aftershock,
-                ),
-                Func(self.clear),
-                name=self.avatar.uniqueName('hackslashHitSpark'),
+            burst = Parallel(
+                Wait(fleckSec + 0.02),
+                aftershock,
             )
         else:
-            self._ival = Sequence(
-                Wait(fleckSec + 0.02),
-                Func(self.clear),
-                name=self.avatar.uniqueName('hackslashHitSpark'),
-            )
+            burst = Wait(fleckSec + 0.02)
+
+        # Soft cream wash pulse after cream aftershock — perfect-dodge grammar.
+        washHold = 0.0
+        try:
+            wash = HitSparkCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+                # Hold teardown beside delayed wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        HackSlashConfig, 'HIT_SPARK_CREAM_WASH_DELAY_SEC',
+                        0.36))
+                    + float(getattr(
+                        HackSlashConfig, 'HIT_SPARK_CREAM_WASH_IN_SEC',
+                        0.05))
+                    + float(getattr(
+                        HackSlashConfig, 'HIT_SPARK_CREAM_WASH_PULSE_SEC',
+                        0.09))
+                    + float(getattr(
+                        HackSlashConfig, 'HIT_SPARK_CREAM_WASH_HOLD_SEC',
+                        0.06))
+                    + float(getattr(
+                        HackSlashConfig, 'HIT_SPARK_CREAM_WASH_OUT_SEC',
+                        0.34))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        hold = [burst]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
+        self._ival = Sequence(
+            Parallel(*hold),
+            Func(self.clear),
+            name=self.avatar.uniqueName('hackslashHitSpark'),
+        )
         self._ival.start()
         return self._ival
 
     def clear(self):
-        """Stop the burst/aftershock and remove every fleck/halo node."""
+        """Stop burst/aftershock/wash and remove every fleck/halo/wash node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         if self._fleckIval is not None:
             try:
                 self._fleckIval.pause()
