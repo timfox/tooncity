@@ -272,6 +272,17 @@ ACTS = (
                 ('ink', 'ink'),
                 ('ink', 'ink', 'ink'),
             ),
+            # Between-swell Smudge ambush + elite later Unleashed swells
+            # beside addWaveStart Smudge adds. Do NOT set overlordP2HpFrac
+            # here — intentional C asymmetry (story P2 restart + twist).
+            'waveModifiers': {
+                2: {'elite': True},
+                3: {'elite': True},
+            },
+            'ambushBeats': {
+                1: ('ink', 'ink'),
+                2: ('ink', 'ink'),
+            },
             # Smudge adds on wave 2+ — arena pressure beside Unleashed AI.
             'addWaveStart': 2,
             'addCount': 2,

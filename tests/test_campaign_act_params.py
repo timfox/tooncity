@@ -211,6 +211,11 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(params['snareFraction'], 0.0)
         self.assertEqual(params['gagsterFraction'], 0.0)
         self.assertEqual(params.get('waveScripts'), phase2.get('waveScripts'))
+        # P2 elite/ambush tables replace P1 via params.update(phase2).
+        self.assertEqual(
+            params.get('waveModifiers'), phase2.get('waveModifiers'))
+        self.assertEqual(
+            params.get('ambushBeats'), phase2.get('ambushBeats'))
         # P2 is strictly harder than P1 on the key combat scalars.
         self.assertGreater(params['corruptHp'], act['corruptHp'])
         self.assertGreater(params['packSize'], act['packSize'])
@@ -227,6 +232,17 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertTrue(phase2.get('transitionSting'))
         self.assertTrue(phase2.get('waveScripts'))
         self.assertEqual(len(phase2['waveScripts']), 3)
+        # Elite later Unleashed swells + between-swell ambush beside adds.
+        self.assertIn('waveModifiers', phase2)
+        self.assertIn('ambushBeats', phase2)
+        self.assertEqual(
+            phase2['waveModifiers'],
+            {2: {'elite': True}, 3: {'elite': True}})
+        self.assertEqual(
+            phase2['ambushBeats'],
+            {1: ('ink', 'ink'), 2: ('ink', 'ink')})
+        # Intentional C asymmetry — no mid-fight HP promote on story P2.
+        self.assertNotIn('overlordP2HpFrac', phase2)
 
     def test_acts_align_with_street_packs_on_shared_keys(self):
         """Campaign C and discoverable auto-reclaim share hood fantasy scalars."""
@@ -324,6 +340,25 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(p2.get('addWaveStart'), 2)
         self.assertEqual(p2.get('addCount'), 2)
         self.assertEqual(p2.get('addName'), 'Ink Smudge')
+        # P2 elite/ambush resolve beside Unleashed adds (not P1 tables).
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(p2['waveModifiers'], 2)))
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(p2['waveModifiers'], 3)))
+        self.assertIsNone(
+            rg.resolveWaveModifiers(p2['waveModifiers'], 1))
+        self.assertEqual(
+            rg.resolveAmbushBeat(p2['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveAmbushBeat(p2['ambushBeats'], 2),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertIsNone(rg.resolveAmbushBeat(p2['ambushBeats'], 3))
+        self.assertNotEqual(p2['waveModifiers'], p1['waveModifiers'])
+        self.assertNotEqual(p2['ambushBeats'], p1['ambushBeats'])
+        self.assertIsNone(p2.get('overlordP2HpFrac'))
 
     def test_acts_elite_and_ambush_mirror_street_packs(self):
         """Campaign C path carries elite/ambush tables (gap #1+#6)."""
@@ -355,6 +390,24 @@ class CampaignActParamsTest(unittest.TestCase):
             [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
         # C Silly P2 asymmetry: no mid-fight HP promote on ACTS.
         self.assertIsNone(finale.get('overlordP2HpFrac'))
+
+        # Story P2 owns its own elite/ambush tables beside Unleashed adds.
+        p2 = resolve_act_params(self.acts_by_id['finale'], 1)
+        self.assertEqual(p2['finalePhase'], 2)
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(p2['waveModifiers'], 2)))
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(p2['waveModifiers'], 3)))
+        self.assertEqual(
+            rg.resolveAmbushBeat(p2['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveAmbushBeat(p2['ambushBeats'], 2),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertEqual(p2.get('addWaveStart'), 2)
+        self.assertIsNone(p2.get('overlordP2HpFrac'))
 
     def test_campaign_director_passes_elite_and_ambush(self):
         """CampaignDirectorAI._actParams / start wire elite + ambush kwargs."""
