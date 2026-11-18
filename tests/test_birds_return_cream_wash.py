@@ -2,8 +2,10 @@
 """Behavioral headless tests for TTC birds-return cream wash helpers.
 
 Loads pure helpers from BirdsReturnCreamWashFx via AST extraction (no
-Panda3D). Covers polluted→pure flip gate + wash timing so the cream
-veil lands with pure-street birds return (#55) on the hub.
+Panda3D). Covers polluted→pure flip gate + deepened wash timing /
+rising chirp aftershock so the cream veil lands juicier with pure-street
+birds return (#55) on the hub — distinct from crumb pip (#241) / fog
+rim (#236) / original veil-only wash (#226).
 
 Run from repo root:
   python3 tests/test_birds_return_cream_wash.py
@@ -40,6 +42,24 @@ def _extract_pure_helpers():
         'BIRDS_RETURN_CREAM_WASH_COLOR',
         'BIRDS_RETURN_CREAM_WASH_DEBOUNCE_SEC',
         'BIRDS_RETURN_CREAM_WASH_AUDIO_THRESHOLD',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_ENABLED',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_COUNT',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SEC',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SIZE',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_RISE',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SPREAD',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_ORIGIN',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_COLOR',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_END_COLOR',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_BIN',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_HALF',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_START',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_PEAK',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_SEC',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA',
+        'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_COLOR',
     }
     keep = []
     for node in tree.body:
@@ -75,7 +95,7 @@ def _extract_pure_helpers():
 
 
 class BirdsReturnCreamWashTest(unittest.TestCase):
-    """Pure helper + AST wiring for TTC birds-return cream wash."""
+    """Pure helper + AST wiring for deepened TTC birds-return cream wash."""
 
     @classmethod
     def setUpClass(cls):
@@ -94,6 +114,10 @@ class BirdsReturnCreamWashTest(unittest.TestCase):
         self.assertLess(params['peak'], 0.18)
         self.assertGreater(params['mid'], 0.0)
         self.assertLess(params['mid'], params['peak'])
+        # Cream deepen: juicier than original #226 veil (peak 0.10 / mid 0.055).
+        self.assertGreaterEqual(params['peak'], 0.12)
+        self.assertGreaterEqual(params['mid'], 0.065)
+        self.assertGreaterEqual(params['holdSec'], 0.12)
         # Land during birds fade-in (~0.55s), not before chirps start.
         self.assertGreaterEqual(params['delaySec'], 0.25)
         self.assertLessEqual(params['delaySec'], 0.65)
@@ -110,6 +134,31 @@ class BirdsReturnCreamWashTest(unittest.TestCase):
         self.assertGreaterEqual(color[1], 0.9)
         self.assertGreaterEqual(color[2], 0.7)
         self.assertGreater(color[2], 0.5)
+
+    def test_aftershock_rising_chirp_deepen(self):
+        params = self._params()
+        self.assertTrue(params['aftershockEnabled'])
+        self.assertGreaterEqual(params['aftershockDelaySec'], 0.12)
+        self.assertLessEqual(params['aftershockDelaySec'], 0.28)
+        self.assertGreaterEqual(params['aftershockCount'], 4)
+        self.assertLessEqual(params['aftershockCount'], 8)
+        self.assertGreater(params['aftershockRise'], 0.0)
+        self.assertGreater(params['aftershockSpread'], 0.0)
+        # Skyward halo peak distinct from crumb pip 1.48 / fog rim 1.16.
+        self.assertGreaterEqual(params['aftershockHaloPeak'], 1.0)
+        self.assertLess(params['aftershockHaloPeak'], 1.40)
+        self.assertNotAlmostEqual(
+            params['aftershockHaloPeak'], 1.48, places=2)
+        self.assertNotAlmostEqual(
+            params['aftershockHaloPeak'], 1.16, places=2)
+        self.assertGreater(params['aftershockHaloPeakAlpha'], 0.0)
+        self.assertLess(params['aftershockHaloPeakAlpha'], 0.22)
+        # Rising chirp residual — not combat settle fall grammar.
+        self.assertIn('AFTERSHOCK_RISE', self.fx_src)
+        self.assertIn('_spawnChirpFleck', self.fx_src)
+        self.assertIn('safezone-birds-return-cream-wash-chirp', self.fx_src)
+        self.assertIn('safezone-birds-return-cream-wash-sky-halo', self.fx_src)
+        self.assertNotIn('AFTERSHOCK_FALL', self.fx_src)
 
     def test_should_play_on_polluted_to_pure_flip(self):
         should = self._should
@@ -137,8 +186,13 @@ class BirdsReturnCreamWashTest(unittest.TestCase):
         for needle in (
                 'CardMaker',
                 'LerpColorScaleInterval',
+                'Parallel',
                 'safezone-birds-return-cream-wash',
-                'BIRDS_RETURN_CREAM_WASH_PEAK'):
+                'BIRDS_RETURN_CREAM_WASH_PEAK',
+                'BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_ENABLED',
+                '_buildAftershock',
+                '_spawnChirpFleck',
+                '_spawnAftershockHalo'):
             self.assertIn(needle, self.fx_src, msg='missing %s' % needle)
         src_l = self.fx_src.lower()
         self.assertNotIn('keyblade', src_l)

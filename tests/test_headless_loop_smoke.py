@@ -3286,6 +3286,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         birds_wash_rel = 'toontown/safezone/BirdsReturnCreamWashFx.py'
         _assert_module_file(birds_wash_rel)
         birds_wash_names = _class_and_func_names(_module_ast(birds_wash_rel))
+        birds_wash_src = _read(birds_wash_rel)
         for birds_sym in (
                 'birdsReturnCreamWashParams',
                 'shouldPlayBirdsReturnCreamWash',
@@ -3295,6 +3296,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertIn(
                 birds_sym, birds_wash_names,
                 msg='BirdsReturnCreamWashFx missing %s' % birds_sym)
+        # Cream deepen: rising chirp flecks + sky halo (not #241 / #236 / #226).
+        self.assertIn('BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_ENABLED', birds_wash_src)
+        self.assertIn('_spawnChirpFleck', birds_wash_src)
+        self.assertIn('safezone-birds-return-cream-wash-sky-halo', birds_wash_src)
         self.assertIn('_cueBirdsReturnCreamWash', crumb_src)
         self.assertIn('playBirdsReturnCreamWash', crumb_src)
         playground_src = _read('toontown/safezone/TTPlayground.py')
