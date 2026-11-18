@@ -552,8 +552,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         (flecks + halo) + settle cream wash. ReclaimCheer + CheerCreamSparkleFx
         layer pitch swell cream flecks + delayed cream aftershock + soft cream
         wash pulse. After celebration lands, PurityMeterHud.settleComplete
-        juicily hose-settles the full meter with settling pure-cream flecks
-        so the finish reads juicier.
+        juicily hose-settles the full meter with richer settling pure-cream
+        flecks so the finish reads juicier still (past #248).
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -610,11 +610,11 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._restoreIval.start()
 
     def __hoseSettlePurityMeterComplete(self):
-        """After celebration, hose-settle the meter so the finish reads juicier.
+        """After celebration, hose-settle the meter so finish reads juicier still.
 
-        Deepened soft tall stretch→settle + settling pure cream (#225 deepen)
-        — not wave-start squash + rising cream (#239) and not secured-lock
-        green soft scale + tip-near sparkle (#243).
+        Further-deepened soft tall stretch→settle + richer settling pure cream
+        (past #248) — not wave-start squash + rising cream (#239) and not
+        secured-lock green soft scale + tip-near sparkle (#243 / #261).
         """
         if self._purityMeter is not None:
             try:
@@ -623,9 +623,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 pass
         # Re-arm HUD hide after settle rim hold (meter stayed up through restore).
         rimSec = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.36))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.42))
         hold = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC', 0.65))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC', 0.72))
         self.__cancelSecuredHudHold()
         try:
             taskMgr.doMethodLater(  # noqa: F821
