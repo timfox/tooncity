@@ -3,12 +3,14 @@
 World-space CardMaker juice that fires when the teal gag-lob puddle lands —
 sunny cream / pastel contrast against the teal GAGSTER_PUDDLE_* trap so the
 impact reads juicy after the telegraph puddle warn (#197). Deepened ground-
-trap juice: juicier splat/flecks, a flat cream bloom on the puddle plane, then
-a wider settling aftershock (halo + residual flecks) — distinct from Smudge
-hit cream splash (#231, mid-body) and Brute spit cream splash (#223). Same
-residual grammar as telegraph cream warn aftershock (#121) / Snare counter
-cream splash (#214). Wired from DistributedCorruptToon.__playGagPuddle.
-Client only. Toontown spiritual sequel — no keyblades / no KH branding.
+trap juice beyond #238: juicier splat/flecks, a thicker flat cream bloom on
+the puddle plane, then a wider settling aftershock (halo + residual flecks)
+— distinct from Smudge hit cream deepen (#259, radial hose), Brute spit
+cream deepen (#264, vertical drip), and Snare counter cream deepen (#269,
+horizontal whip). Same residual grammar as telegraph cream warn aftershock
+(#121) / Snare counter cream splash (#214). Wired from
+DistributedCorruptToon.__playGagPuddle. Client only. Toontown spiritual
+sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -36,12 +38,12 @@ def gagsterPuddleCreamSplashLook():
     puddleSec = float(getattr(CorruptionGlobals, 'GAGSTER_PUDDLE_SEC', 0.28))
     look.setdefault(
         'delaySec',
-        puddleSec * float(look.get('delayScale', 0.22)))
+        puddleSec * float(look.get('delayScale', 0.15)))
     # Ground trap — low lift above the flat puddle ring.
     look.setdefault(
         'lift',
         float(getattr(
-            CorruptionGlobals, 'GAGSTER_PUDDLE_CREAM_SPLASH_LIFT', 0.42)))
+            CorruptionGlobals, 'GAGSTER_PUDDLE_CREAM_SPLASH_LIFT', 0.52)))
     look.setdefault(
         'binSort',
         int(getattr(
@@ -74,7 +76,7 @@ class GagsterPuddleCreamSplash(object):
         try:
             origin = Point3(pos[0], pos[1], pos[2] + float(look['lift']))
         except Exception:
-            origin = Point3(0, 0, float(look.get('lift', 0.42)))
+            origin = Point3(0, 0, float(look.get('lift', 0.52)))
 
         if delay is None:
             delay = float(look.get(
@@ -141,7 +143,7 @@ class GagsterPuddleCreamSplash(object):
     def _spawnSplat(self, parentNP, origin, look):
         """Tiny billboard cream blob — puddle-land readability core."""
         try:
-            half = float(look.get('splatHalf', 0.26))
+            half = float(look.get('splatHalf', 0.36))
             cm = CardMaker('gagster-puddle-cream-splash-core')
             cm.setFrame(-half, half, -half * 0.92, half * 0.92)
             splat = parentNP.attachNewNode(cm.generate())
@@ -153,15 +155,15 @@ class GagsterPuddleCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'GAGSTER_PUDDLE_CREAM_SPLASH_COLOR',
-                    (1.0, 0.97, 0.82, 0.94)))
+                    (1.0, 0.97, 0.82, 0.98)))
             splat.setColor(color[0], color[1], color[2], color[3])
             splat.setColorScale(1, 1, 1, 0)
-            splat.setScale(0.32)
+            splat.setScale(0.3)
             splat.setBin('fixed', int(look.get('binSort', 40)))
             splat.setDepthWrite(False)
             self._nodes.append(splat)
 
-            rimHalf = half * float(look.get('rimScale', 1.3))
+            rimHalf = half * float(look.get('rimScale', 1.45))
             cmRim = CardMaker('gagster-puddle-cream-splash-rim')
             cmRim.setFrame(-rimHalf, rimHalf, -rimHalf * 0.9, rimHalf * 0.9)
             rim = parentNP.attachNewNode(cmRim.generate())
@@ -173,37 +175,37 @@ class GagsterPuddleCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'GAGSTER_PUDDLE_CREAM_SPLASH_RIM_COLOR',
-                    (1.0, 0.98, 0.88, 0.7)))
+                    (1.0, 0.98, 0.88, 0.82)))
             rim.setColor(rimColor[0], rimColor[1], rimColor[2], rimColor[3])
             rim.setColorScale(1, 1, 1, 0)
-            rim.setScale(0.28)
+            rim.setScale(0.26)
             rim.setBin('fixed', int(look.get('binSort', 40)) - 1)
             rim.setDepthWrite(False)
             self._nodes.append(rim)
 
-            peak = float(look.get('splatPeak', 1.55))
-            sec = float(look.get('splatSec', 0.16))
-            peakA = float(look.get('peakAlpha', 0.94))
+            peak = float(look.get('splatPeak', 2.0))
+            sec = float(look.get('splatSec', 0.2))
+            peakA = float(look.get('peakAlpha', 0.98))
             return Parallel(
                 Sequence(
                     LerpColorScaleInterval(
-                        splat, sec * 0.25, Vec4(1, 1, 1, peakA),
+                        splat, sec * 0.22, Vec4(1, 1, 1, peakA),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        splat, sec * 0.75, Vec4(1, 1, 1, 0),
+                        splat, sec * 0.78, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(splat, sec, peak, blendType='easeOut'),
                 Sequence(
                     LerpColorScaleInterval(
-                        rim, sec * 0.2, Vec4(1, 1, 1, 0.65),
+                        rim, sec * 0.18, Vec4(1, 1, 1, 0.7),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        rim, sec * 0.8, Vec4(1, 1, 1, 0),
+                        rim, sec * 0.82, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(
-                    rim, sec, peak * 1.14, blendType='easeOut'),
+                    rim, sec, peak * 1.18, blendType='easeOut'),
             )
         except Exception:
             return None
@@ -211,8 +213,9 @@ class GagsterPuddleCreamSplash(object):
     def _spawnGroundBloom(self, parentNP, origin, look):
         """Flat cream bloom on the puddle plane — ground-trap land cue.
 
-        Distinct from Smudge mid-body billboard splash and Brute spit spray:
-        lies on the trap ring (setP -90) and blooms as the teal puddle lands.
+        Distinct from Smudge mid-body radial hose (#259), Brute vertical drip
+        (#264), and Snare horizontal whip (#269): lies on the trap ring
+        (setP -90) and blooms thicker beyond #238 as the teal puddle lands.
         """
         if not look.get(
                 'bloomEnabled',
@@ -225,16 +228,16 @@ class GagsterPuddleCreamSplash(object):
                 'bloomHalf',
                 getattr(
                     CorruptionGlobals,
-                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_HALF', 0.72)))
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_HALF', 0.85)))
             cm = CardMaker('gagster-puddle-cream-splash-bloom')
             cm.setFrame(-half, half, -half, half)
             bloom = parentNP.attachNewNode(cm.generate())
             # Sit just under the billboard splat lift on the puddle plane.
             bloomLift = float(getattr(
-                CorruptionGlobals, 'GAGSTER_PUDDLE_CREAM_SPLASH_LIFT', 0.48))
+                CorruptionGlobals, 'GAGSTER_PUDDLE_CREAM_SPLASH_LIFT', 0.52))
             bloom.setPos(
                 origin[0], origin[1],
-                origin[2] - bloomLift + 0.06)
+                origin[2] - bloomLift + 0.05)
             bloom.setP(-90)
             bloom.setTransparency(TransparencyAttrib.MAlpha)
             color = look.get(
@@ -242,10 +245,10 @@ class GagsterPuddleCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_COLOR',
-                    (1.0, 0.97, 0.84, 0.7)))
+                    (1.0, 0.97, 0.84, 0.76)))
             bloom.setColor(color[0], color[1], color[2], color[3])
             bloom.setColorScale(1, 1, 1, 0)
-            bloom.setScale(0.35)
+            bloom.setScale(0.32)
             bloom.setBin('fixed', int(look.get('binSort', 40)) - 1)
             bloom.setDepthWrite(False)
             self._nodes.append(bloom)
@@ -254,24 +257,24 @@ class GagsterPuddleCreamSplash(object):
                 'bloomPeak',
                 getattr(
                     CorruptionGlobals,
-                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK', 2.05)))
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK', 2.35)))
             sec = float(look.get(
                 'bloomSec',
                 getattr(
                     CorruptionGlobals,
-                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_SEC', 0.28)))
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_SEC', 0.3)))
             peakA = float(look.get(
                 'bloomPeakAlpha',
                 getattr(
                     CorruptionGlobals,
-                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK_ALPHA', 0.55)))
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK_ALPHA', 0.65)))
             return Parallel(
                 Sequence(
                     LerpColorScaleInterval(
-                        bloom, sec * 0.28, Vec4(1, 1, 1, peakA),
+                        bloom, sec * 0.24, Vec4(1, 1, 1, peakA),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        bloom, sec * 0.72, Vec4(1, 1, 1, 0),
+                        bloom, sec * 0.76, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(bloom, sec, peak, blendType='easeOut'),
@@ -282,32 +285,32 @@ class GagsterPuddleCreamSplash(object):
     def _spawnFleck(self, parentNP, origin, look, index, count):
         """Outward cream fleck — telegraph cream warn / puddle warn cousin."""
         try:
-            angle = (2.0 * pi * index) / max(1, count) + (0.16 * (index % 3))
-            dist = float(look.get('fleckDist', 1.05)) * (
-                0.55 + 0.16 * (index % 4))
+            angle = (2.0 * pi * index) / max(1, count) + (0.14 * (index % 3))
+            dist = float(look.get('fleckDist', 1.5)) * (
+                0.55 + 0.18 * (index % 4))
             lift = float(look.get('fleckLift', 0.42)) * (
-                0.4 + 0.18 * (index % 3))
+                0.38 + 0.2 * (index % 3))
             end = Point3(
                 origin[0] + sin(angle) * dist,
                 origin[1] + cos(angle) * dist,
                 origin[2] + lift,
             )
-            half = float(look.get('fleckHalf', 0.1))
+            half = float(look.get('fleckHalf', 0.13))
             if index % 2 == 0:
                 cm = CardMaker(
                     'gagster-puddle-cream-splash-fleck-%s' % index)
                 cm.setFrame(-half, half, -half * 0.9, half * 0.9)
-                startScale = Point3(0.35, 0.35, 0.35)
-                midScale = Point3(1.15, 1.15, 0.55)
-                endScale = Point3(1.45, 1.45, 0.12)
+                startScale = Point3(0.32, 0.32, 0.32)
+                midScale = Point3(1.22, 1.22, 0.58)
+                endScale = Point3(1.55, 1.55, 0.1)
             else:
                 cm = CardMaker(
                     'gagster-puddle-cream-splash-streak-%s' % index)
                 cm.setFrame(
-                    -half * 0.32, half * 0.32, -half * 1.45, half * 1.45)
-                startScale = Point3(0.28, 0.28, 0.6)
-                midScale = Point3(0.5, 0.5, 1.35)
-                endScale = Point3(1.2, 0.2, 0.14)
+                    -half * 0.3, half * 0.3, -half * 1.55, half * 1.55)
+                startScale = Point3(0.26, 0.26, 0.62)
+                midScale = Point3(0.52, 0.52, 1.45)
+                endScale = Point3(1.3, 0.18, 0.12)
             fleck = parentNP.attachNewNode(cm.generate())
             fleck.setPos(origin)
             fleck.setBillboardPointEye()
@@ -315,22 +318,22 @@ class GagsterPuddleCreamSplash(object):
             colors = look.get('fleckColors') or getattr(
                 CorruptionGlobals,
                 'GAGSTER_PUDDLE_CREAM_SPLASH_FLECK_COLORS',
-                ((1.0, 0.97, 0.82, 0.9),))
+                ((1.0, 0.97, 0.82, 0.96),))
             color = colors[index % len(colors)]
             fleck.setColor(color[0], color[1], color[2], color[3])
             fleck.setScale(startScale)
             fleck.setBin('fixed', int(look.get('binSort', 40)) + 1)
             fleck.setDepthWrite(False)
             self._nodes.append(fleck)
-            travel = float(look.get('fleckSec', 0.22))
-            delay = 0.01 * index
+            travel = float(look.get('fleckSec', 0.28))
+            delay = 0.009 * index
             return Sequence(
                 Wait(delay),
                 Parallel(
                     LerpPosInterval(fleck, travel, end, blendType='easeOut'),
                     Sequence(
-                        LerpScaleInterval(fleck, travel * 0.45, midScale),
-                        LerpScaleInterval(fleck, travel * 0.55, endScale),
+                        LerpScaleInterval(fleck, travel * 0.42, midScale),
+                        LerpScaleInterval(fleck, travel * 0.58, endScale),
                     ),
                     LerpColorScaleInterval(
                         fleck, travel, Vec4(1, 1, 1, 0), blendType='easeIn'),
@@ -347,7 +350,7 @@ class GagsterPuddleCreamSplash(object):
             return None
         delay = float(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DELAY_SEC', 0.16))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DELAY_SEC', 0.12))
         parts = []
 
         if getattr(
@@ -359,10 +362,10 @@ class GagsterPuddleCreamSplash(object):
 
         creamCount = max(0, int(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT', 3)))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT', 6)))
         streakCount = max(0, int(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COUNT', 1)))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COUNT', 3)))
         for i in range(creamCount):
             part = self._spawnAftershockSpark(
                 parentNP, origin, i, creamCount, elongated=False)
@@ -384,19 +387,19 @@ class GagsterPuddleCreamSplash(object):
     def _spawnAftershockHalo(self, parentNP, origin):
         half = float(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_HALF', 0.48))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_HALF', 0.68))
         startScale = float(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_START', 0.3))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_START', 0.28))
         peakScale = float(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK', 1.55))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK', 1.9))
         sec = float(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_SEC', 0.3))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_SEC', 0.36))
         peakA = float(getattr(
             CorruptionGlobals,
-            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.22))
+            'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.3))
         r, g, b, _a = getattr(
             CorruptionGlobals,
             'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_COLOR',
@@ -498,14 +501,14 @@ class GagsterPuddleCreamSplash(object):
         except Exception:
             return None
 
-        # Settle mostly sideways / slightly down onto the puddle plane.
+        # Wider sideways settle onto the puddle plane (beyond #238 residual).
         end = Point3(
-            origin[0] + cos(angle) * drift * 0.6,
-            origin[1] + sin(angle) * drift * 0.6,
-            origin[2] - fall - 0.06 * (index % 3))
-        peak = size * (1.15 + 0.08 * (index % 2))
+            origin[0] + cos(angle) * drift * 0.65,
+            origin[1] + sin(angle) * drift * 0.65,
+            origin[2] - fall - 0.07 * (index % 3))
+        peak = size * (1.22 + 0.1 * (index % 2))
         self._nodes.append(spark)
-        stagger = 0.02 * (index % 3)
+        stagger = 0.018 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(
@@ -516,10 +519,10 @@ class GagsterPuddleCreamSplash(object):
                     spark, max(0.01, sec), end, blendType='easeIn'),
                 Sequence(
                     LerpScaleInterval(
-                        spark, max(0.01, sec * 0.4), peak,
+                        spark, max(0.01, sec * 0.38), peak,
                         blendType='easeOut'),
                     LerpScaleInterval(
-                        spark, max(0.01, sec * 0.6), 0.12,
+                        spark, max(0.01, sec * 0.62), 0.1,
                         blendType='easeIn'),
                 ),
             ),
