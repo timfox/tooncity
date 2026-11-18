@@ -9,7 +9,9 @@ fades as the tip bar appears. Tip bar and act-enter flash banners play a
 short rubber-hose scale pop when they land. Early/mid Oswald trusted
 reclaim-lead act banners add a soft settle bounce after that pop.
 Punchline Place Act 2 uses a campaign-owned entry tip (Brute/Snare cues,
-trusted Oswald lead) with a slightly punchier tip hose pop + trust settle
+trusted Oswald lead) with a slightly punchier tip hose pop + trust settle.
+Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
+trusted Oswald lead) with a slightly heavier tip hose pop + trust settle
 (FinalePhaseFx twist stays separate — no KH branding).
 """
 
@@ -126,11 +128,14 @@ class PlayEntryClient(DirectObject):
         face = _face()
         tipHose = None
         # Campaign ACTS entryTip wins (Punchline Act 2 Brute/Snare + Oswald
-        # trusted lead). Else STREET_PACK tip; finale keeps Overlord vs line.
+        # trusted lead; Silly Act 3 Ink Overlord + Oswald trusted lead).
+        # Else STREET_PACK tip; finale without entryTip keeps Overlord vs line.
         if act and act.get('entryTip'):
             tip = act['entryTip']
             if act.get('id') == 'punchline':
                 tipHose = 'punchline'
+            elif act.get('id') == 'finale':
+                tipHose = 'silly'
         else:
             pack = ReclaimGlobals.streetPack(zoneId)
             if pack and pack.get('playEntryTip'):
@@ -428,8 +433,9 @@ class PlayEntryClient(DirectObject):
         """Build flat squash → tall stretch → settle Sequence (does not start).
 
         tipHose='punchline' uses Act 2 Punchline tunables + Oswald-trust
-        settle bounce (matches act-banner trust settle). Default path keeps
-        the shared PLAY_ENTRY_TIP_* hose pop.
+        settle bounce. tipHose='silly' uses Act 3 Silly Overlord tunables +
+        the same trust settle (Oswald stays trusted on this tip — no twist).
+        Default path keeps the shared PLAY_ENTRY_TIP_* hose pop.
         """
         if tipNP is None:
             return None
@@ -439,6 +445,8 @@ class PlayEntryClient(DirectObject):
         except Exception:
             return None
         settle = float(CampaignGlobals.PLAY_ENTRY_TIP_SCALE)
+        trustOvershootAttr = None
+        trustRestAttr = None
         if tipHose == 'punchline':
             sx, sy, sz, squashSec = getattr(
                 CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SQUASH',
@@ -450,6 +458,21 @@ class PlayEntryClient(DirectObject):
                 CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SETTLE_SEC',
                 CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC))
             trustSettle = True
+            trustOvershootAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
+            trustRestAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC'
+        elif tipHose == 'silly':
+            sx, sy, sz, squashSec = getattr(
+                CampaignGlobals, 'SILLY_ACT_TIP_POP_SQUASH',
+                CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH)
+            tx, ty, tz, stretchSec = getattr(
+                CampaignGlobals, 'SILLY_ACT_TIP_POP_STRETCH',
+                CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH)
+            settleSec = float(getattr(
+                CampaignGlobals, 'SILLY_ACT_TIP_POP_SETTLE_SEC',
+                CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC))
+            trustSettle = True
+            trustOvershootAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
+            trustRestAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'
         else:
             sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH
             tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH
@@ -472,12 +495,12 @@ class PlayEntryClient(DirectObject):
         ]
         if trustSettle:
             ox, oy, oz, overSec = getattr(
-                CampaignGlobals, 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT',
+                CampaignGlobals, trustOvershootAttr,
                 getattr(
                     CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT',
                     (0.90, 1.0, 1.14, 0.07)))
             restSec = float(getattr(
-                CampaignGlobals, 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC',
+                CampaignGlobals, trustRestAttr,
                 getattr(
                     CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_REST_SEC',
                     0.09)))
