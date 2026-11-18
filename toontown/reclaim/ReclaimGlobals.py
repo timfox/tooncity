@@ -219,6 +219,19 @@ WAVE_ANNOUNCE_CREAM_EDGE_FLECK_COLOR = (1.0, 0.96, 0.62, 0.9)
 WAVE_ANNOUNCE_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
 # Flecks cluster near the wave plate (banner ~z 0.78).
 WAVE_ANNOUNCE_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.72)
+# StreetSparkle-style cream sparkle flecks layered on the cream edge pulse.
+# Rising chip/cross glitter along the top cream frame — quieter than full-purity
+# StreetSparkle (#77); tip flecks (#87) stay as the short drift cousins.
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ENABLED = True
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_COUNT = 8
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SIZE = 0.018
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_RISE = 0.30
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SPREAD = 1.10
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SEC = 0.36
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.98, 0.72, 0.90)
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.55, 0.0)
+# Along the top cream strip (edge ~z 1.0 - EDGE); below tip-fleck origin.
+WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.68)
 
 # Persistent reclaim purity meter (aspect2d bar: pollution → purity fill).
 # Empty bar = street still inky; fills warm as packs clear pollution.
