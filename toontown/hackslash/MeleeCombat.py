@@ -545,8 +545,9 @@ class MeleeCombatController(DirectObject):
                 name=self.avatar.uniqueName('hackslashComboFlecks'))
             self._comboFleckIval = fleckIval
             self._comboFleckNodes = flecks
-            # Cream sparkle + delayed cream aftershock + cream wash on the tick.
-            # Wash owned by HitJuice / ComboCounterCreamWashPulse.
+            # Cream sparkle + delayed cream aftershock + cream wash + wash
+            # aftershock on the tick. Wash/aftershock owned by HitJuice /
+            # ComboCounterCreamWashPulse.
             creamIval, creamNodes = HitJuice.spawnComboCreamSparkles(
                 fleckOrigin, parent=parent,
                 name=self.avatar.uniqueName('hackslashComboCream'))
