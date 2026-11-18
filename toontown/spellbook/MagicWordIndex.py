@@ -854,3 +854,10 @@ try:
 except Exception:
     pass
 
+# Discoverable play prompts + auto melee on campaign streets (client only).
+try:
+    from toontown.campaign.PlayEntry import ensurePlayEntryClient
+    ensurePlayEntryClient()
+except Exception:
+    pass
+

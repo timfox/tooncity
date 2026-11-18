@@ -51,3 +51,50 @@ class PollutionManagerAI(DistributedObjectAI):
         if amount is None:
             amount = CorruptionGlobals.POLLUTION_PER_DEFEAT
         return self.adjustPollution(zoneId, -abs(float(amount)))
+
+    def requestStreetEvent(self, eventType):
+        """Player-facing entry: start reclaim (0) or campaign act (1) in sender zone."""
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        if toon is None:
+            return
+        eventType = int(eventType)
+        if eventType == 1:
+            try:
+                from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+                msg = getCampaignDirector(self.air).startCampaign(toon)
+            except Exception:
+                self.notify.warning('requestStreetEvent campaign failed')
+                return
+        else:
+            try:
+                from toontown.reclaim import ReclaimGlobals
+                from toontown.reclaim.DistributedReclaimDirectorAI import (
+                    DistributedReclaimDirectorAI)
+                zoneId = int(toon.zoneId)
+                directors = getattr(self.air, 'reclaimDirectors', None)
+                if directors is None:
+                    directors = {}
+                    self.air.reclaimDirectors = directors
+                existing = directors.get(zoneId)
+                if existing is not None and not existing.isDeleted():
+                    if existing.state == ReclaimGlobals.STATE_ACTIVE:
+                        return
+                    existing.requestDelete()
+                    directors.pop(zoneId, None)
+                director = DistributedReclaimDirectorAI(self.air, zoneId=zoneId)
+                director.generateWithRequired(zoneId)
+                directors[zoneId] = director
+                director.start(
+                    zoneId,
+                    (toon.getX(), toon.getY(), toon.getZ()),
+                    toon.getH())
+                msg = 'Reclaim started in zone %s' % zoneId
+            except Exception:
+                self.notify.warning('requestStreetEvent reclaim failed')
+                return
+        try:
+            if hasattr(toon, 'd_setSystemMessage'):
+                toon.d_setSystemMessage(0, str(msg)[:200])
+        except Exception:
+            pass
