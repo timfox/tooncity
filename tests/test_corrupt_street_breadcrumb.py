@@ -5,8 +5,9 @@ Loads pure helpers from CorruptStreetBreadcrumb via AST extraction (no
 Panda3D). Covers streetNeedsBreadcrumb pollution/seed rules used by hub
 discoverability (#192), placemarker notice-pulse timing (#211), cream
 deepen mid-settle + local halo on that pulse (#230), placemarker cream
-rim deepen (juicier halo + mid hold + rebound; ≠ #250 / #230), the
-distinct tunnel-mouth crumb-trail pulse (#216), crumb pulse cream deepen
+rim deepen (#252; ≠ #250 / #230), placemarker cream deepen past #252
+(brighter halo / longer hold / punchier rebound), the distinct
+tunnel-mouth crumb-trail pulse (#216), crumb pulse cream deepen
 (mid-settle + pip #241), crumb pip cream deepen (juicier pip + mid hold
 + rebound; ≠ #252 / #250 / #241), playground pollution fog edge breath
 (#221), fog-edge cream deepen (cream mid-settle + rim #236), and fog
@@ -388,6 +389,49 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         self.assertNotIn('rimHoldSec', cream)
         self.assertNotIn('rimRebound', cream)
         self.assertNotIn('birdsChirpFlecks', crumb_cream)
+
+    def test_placemarker_pulse_cream_deepen_past_252(self):
+        """Past-#252 deepen — brighter halo / longer hold / punchier rebound."""
+        cream = self._cream()
+        fog_cream = self._fog_cream()
+        crumb_cream = self._crumb_cream()
+        # Still local halo rim rebound — not fog / crumb / fullscreen / birds.
+        self.assertTrue(cream['haloRimRebound'])
+        self.assertFalse(cream['fogRim'])
+        self.assertFalse(cream['birdsChirpFlecks'])
+        self.assertFalse(cream['fullscreenWash'])
+        # Floors past merged #252 rim deepen knobs.
+        self.assertGreater(cream['creamMidSec'], 0.10)
+        self.assertLessEqual(cream['creamMidSec'], 0.16)
+        self.assertGreater(cream['haloPeakAlpha'], 0.44)
+        self.assertLess(cream['haloPeakAlpha'], 0.55)
+        self.assertGreater(cream['haloMidAlpha'], 0.22)
+        self.assertLess(cream['haloMidAlpha'], cream['haloPeakAlpha'])
+        self.assertGreater(cream['haloScalePeak'], 1.38)
+        self.assertLess(cream['haloScalePeak'], crumb_cream['pipScalePeak'])
+        self.assertGreater(cream['haloHalfW'], 2.70)
+        self.assertGreater(cream['haloHalfH'], 0.68)
+        self.assertGreater(cream['haloHoldSec'], 0.07)
+        self.assertLess(cream['haloHoldSec'], fog_cream['rimHoldSec'])
+        self.assertGreater(
+            cream['haloReboundScale'], 1.10)
+        self.assertLess(
+            cream['haloReboundScale'], crumb_cream['pipReboundScale'])
+        self.assertGreater(cream['haloReboundSec'], 0.06)
+        self.assertLess(cream['haloReboundSec'], fog_cream['rimReboundSec'])
+        self.assertGreater(cream['haloReboundAlpha'], 0.14)
+        self.assertLess(cream['haloReboundAlpha'], cream['haloMidAlpha'])
+        # Warmer text cream peak than #252 (B softer / G creamier).
+        hi = cream['highlight']
+        mid = cream['creamMid']
+        self.assertLess(hi[2], 0.50)
+        self.assertGreaterEqual(hi[1], 0.95)
+        self.assertGreater(mid[2], 0.74)
+        # Distinctness vs crumb pip / fog rim vocabulary stays package-local.
+        self.assertNotIn('pipHoldSec', cream)
+        self.assertNotIn('rimHoldSec', cream)
+        self.assertNotIn('haloHoldSec', crumb_cream)
+        self.assertNotIn('haloHoldSec', fog_cream)
 
     def test_street_breadcrumb_pulse_params_distinct(self):
         placemarker = self._pulse()
