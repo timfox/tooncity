@@ -9,9 +9,11 @@ PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
 Oswald cheer/lead subtitle, framed by a soft cream edge pulse and a
 delayed soft cream wash pulse (no carnival / no twist spoilers). Loopy
-and Punchline clears arm mid-act trust fracture: off-tone cheer copy +
-cooler cream edge that settles into soft shadow flecks (still no Silly
-twist spoilers). Act
+PlayEntry arms a mid-act unease approach tip (smile sticks a rubbery
+half-beat) before Punchline handoff while early street entry stays
+trusted. Loopy and Punchline clears arm mid-act trust fracture: off-tone
+cheer copy + cooler cream edge that settles into soft shadow flecks
+(still no Silly twist spoilers). Act
 handoffs fire a short confetti / streamer + cream-sparkle pop
 (CampaignHandoffConfetti) framed by a soft cream edge pulse with a
 juicier deepened rubber-hose scale settle past #271 (overshoot → rest →

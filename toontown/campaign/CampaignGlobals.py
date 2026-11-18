@@ -40,6 +40,14 @@ ACTS = (
             ('snare', 'ink', 'brute'),
         ),
         'banner': 'Act 1 — Oswald calls for help! Corruption stains Loopy Lane!',
+        # Mid-act Loopy approach tip (PlayEntry, after trusted street entry):
+        # Oswald still the helper — smile sticks a rubbery half-beat —
+        # foreshadow only before Punchline handoff (no Silly twist spoilers /
+        # no "Oswald caused it"). Early entry tip stays sunny STREET_PACK.
+        'approachTip': (
+            'Oswald: smile sticks a rubbery half-beat — '
+            '"Ink\'s stubborn today—" then tips his ears: keep reclaiming!  |  '
+            'F fight Smudges  |  Shift dodge  |  C campaign'),
         # Client celebration copy (title / Oswald tip / next-street cue).
         # Mid-act trust fracture: still a cheer, smile holds a rubbery beat
         # too long — foreshadow only (no Silly twist spoilers).
@@ -321,6 +329,11 @@ SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.13  # was 0.12 @ #279
 # replaces the entry tip (PlayEntry). Longer than SILLY_AUTO_RECLAIM so
 # the explore / entry foreshadow beat lands first.
 SILLY_APPROACH_TIP_DELAY_SEC = 3.85
+# Delay after Loopy Lane enter before the mid-act unease tip replaces the
+# trusted street entry tip (PlayEntry). Longer than LOOPY_AUTO_RECLAIM so
+# Oswald trust stays intact early; Punchline entryTip deepens the beat.
+# No cream hose / wash deepen — copy + fracture tipHose settle only.
+LOOPY_APPROACH_TIP_DELAY_SEC = 3.45
 
 # Soft cream wash pulse + delayed cream aftershock after Silly Act 3 tip
 # hose pop (#95) / Overlord foreshadow / almost-confess tip (#200 / #251 /

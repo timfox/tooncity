@@ -832,6 +832,21 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'keyblade', 'kingdom hearts', 'caused the corruption', 'sora'):
             self.assertNotIn(banned, approach_l)
             self.assertNotIn(banned, str(finale_tip).lower())
+        # Loopy mid-act unease approach tip (before Punchline handoff).
+        loopy_act = next(a for a in acts if a.get('id') == 'loopy')
+        loopy_approach = loopy_act.get('approachTip') or ''
+        if isinstance(loopy_approach, list):
+            loopy_approach = ''.join(str(part) for part in loopy_approach)
+        loopy_approach_l = str(loopy_approach).lower()
+        self.assertIn('rubbery half-beat', loopy_approach_l)
+        self.assertFalse(bool(loopy_act.get('entryTip')))
+        self.assertIn('LOOPY_APPROACH_TIP_DELAY_SEC', campaign_names)
+        self.assertIn('_armLoopyApproachTip', play_src)
+        self.assertIn('_showLoopyApproachTip', play_src)
+        self.assertIn("tipHose == 'loopy'", play_src)
+        for banned in (
+                'keyblade', 'kingdom hearts', 'caused the corruption', 'sora'):
+            self.assertNotIn(banned, loopy_approach_l)
 
         # Reclaim cheer cream sparkle flecks (#98) — mid-screen flecks with pitch swell.
         cheer_sparkle_rel = 'toontown/reclaim/CheerCreamSparkleFx.py'
@@ -3602,6 +3617,13 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertTrue(finale_act.get('entryTipUnease'))
         self.assertIn('_armSillyApproachTip', play_src)
         self.assertIn('SILLY_APPROACH_TIP_DELAY_SEC', campaign_names)
+        # Loopy mid-act unease tip before Punchline handoff (trust intact early).
+        loopy_mid_tip = (loopy_act or {}).get('approachTip') or ''
+        if isinstance(loopy_mid_tip, list):
+            loopy_mid_tip = ''.join(str(part) for part in loopy_mid_tip)
+        self.assertIn('rubbery half-beat', str(loopy_mid_tip).lower())
+        self.assertIn('_armLoopyApproachTip', play_src)
+        self.assertIn('LOOPY_APPROACH_TIP_DELAY_SEC', campaign_names)
 
         # Finale betrayal handoff banner — hose-pop plate when reveal fires.
         self.assertTrue(finale_act.get('betrayalHandoff'))

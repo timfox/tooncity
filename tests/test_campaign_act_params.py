@@ -379,6 +379,60 @@ class CampaignActParamsTest(unittest.TestCase):
             self.assertGreaterEqual(
                 camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC, sunny_hold)
 
+    def test_loopy_approach_unease_tip(self):
+        """Loopy mid-act approach tip foreshadows before Punchline handoff."""
+        camp = self.camp
+        loopy = self.acts_by_id['loopy']
+        punch = self.acts_by_id['punchline']
+        # Early Act 1 entry stays trusted STREET_PACK tip (no campaign entryTip).
+        self.assertFalse(bool(loopy.get('entryTip')))
+        approach = loopy.get('approachTip') or ''
+        self.assertIn('rubbery half-beat', approach.lower())
+        self.assertIn('ink', approach.lower())
+        self.assertIn('reclaim', approach.lower())
+        self.assertIn('smudge', approach.lower())
+        # Lighter than Punchline "half-beat off" / Silly almost-confess.
+        self.assertNotIn('half-beat off', approach.lower())
+        self.assertNotIn('almost confess', approach.lower())
+        # Punchline entryTip still deepens the Act 1 mid-act beat.
+        punch_tip = punch.get('entryTip') or ''
+        self.assertIn('half-beat off', punch_tip.lower())
+        for banned in (
+                'keyblade', 'kingdom hearts', 'caused the corruption',
+                'his all along', 'betrayed', 'villain', 'sora'):
+            self.assertNotIn(banned, approach.lower())
+        self.assertGreater(camp.LOOPY_APPROACH_TIP_DELAY_SEC, 0.0)
+        self.assertGreaterEqual(
+            camp.LOOPY_APPROACH_TIP_DELAY_SEC,
+            1.55)  # after Loopy auto-reclaim explore beat
+        play_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'PlayEntry.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('_armLoopyApproachTip', play_src)
+        self.assertIn('_showLoopyApproachTip', play_src)
+        self.assertIn('_cancelLoopyApproachTip', play_src)
+        self.assertIn('LOOPY_APPROACH_TIP_DELAY_SEC', play_src)
+        self.assertIn("tipHose == 'loopy'", play_src)
+        self.assertIn("loopyAct.get('trustFracture')", play_src)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', play_src)
+        # No cream hose/wash deepen on Loopy tipHose path.
+        tip_idx = play_src.find('def _tipHosePopInterval')
+        loopy_idx = play_src.find("tipHose == 'loopy'", tip_idx)
+        punch_idx = play_src.find("tipHose == 'punchline'", tip_idx)
+        self.assertGreater(loopy_idx, 0)
+        self.assertGreater(punch_idx, loopy_idx)
+        loopy_snip = play_src[loopy_idx:punch_idx]
+        self.assertNotIn('CREAM_HOSE', loopy_snip)
+        self.assertNotIn('CREAM_WASH', loopy_snip)
+        magic_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8')
+        magic_l = magic_src.lower()
+        self.assertIn('loopy mid-act unease tip', magic_l)
+        self.assertIn('rubbery half-beat', magic_l)
+
     def test_punchline_tip_uses_fracture_settle(self):
         """#198 — Punchline tipHose reads trustFracture settle when armed."""
         play_src = (
