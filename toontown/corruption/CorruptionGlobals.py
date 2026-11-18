@@ -3855,10 +3855,12 @@ def resolveBossHpBarFinalePhase(finalePhase=0, name=''):
 def isSoftLockPrioritySubject(archetype=0, name='', finalePhase=0):
     """True when soft-lock should prefer this hostile over pack adds.
 
-    Corrupted Oswald (archetype) and Ink Overlord (name tokens and/or
-    per-toon finalePhase). Callers must pass the hostile's own
-    finalePhase — never reclaim-director street phase alone, or P2
-    Smudge adds would steal priority from the Overlord.
+    Corrupted Oswald (archetype), Ink Overlord (name tokens and/or
+    per-toon finalePhase), and Elite/Ambush-prefixed pack hostiles
+    (``Elite `` / ``Ambush `` rename tokens from ReclaimGlobals). Callers
+    must pass the hostile's own finalePhase — never reclaim-director
+    street phase alone, or P2 Smudge adds would steal priority from the
+    Overlord.
     """
     try:
         aid = int(archetype)
@@ -3868,6 +3870,12 @@ def isSoftLockPrioritySubject(archetype=0, name='', finalePhase=0):
         return True
     text = (name or '').lower()
     if 'overlord' in text or 'unleashed' in text:
+        return True
+    # Elite / Ambush pack rename prefixes — permanent soft-lock prefer so
+    # mid-wave elite/ambush scrums do not glue onto nearer fodder. Matches
+    # ReclaimGlobals.ELITE_NAME_PREFIX / AMBUSH_NAME_PREFIX without importing
+    # reclaim (avoids CorruptionGlobals ↔ ReclaimGlobals cycle).
+    if text.startswith('elite ') or text.startswith('ambush '):
         return True
     return normalizeFinalePhase(finalePhase) >= 1
 

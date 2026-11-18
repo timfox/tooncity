@@ -206,6 +206,11 @@ class SoftLockBossPriorityTest(unittest.TestCase):
         self.assertTrue(subject(cg.ARCHETYPE_INK, finalePhase=2))
         self.assertFalse(subject(
             cg.ARCHETYPE_INK, name='Ink Smudge', finalePhase=0))
+        # Elite / Ambush pack rename prefixes — permanent soft-lock prefer.
+        self.assertTrue(subject(
+            cg.ARCHETYPE_INK, name='Elite Ink Smudge'))
+        self.assertTrue(subject(
+            cg.ARCHETYPE_BRUTE, name='Ambush Sludge Brute'))
         # Gate is independent of boss HP bar HUD toggle.
         prev = cg.BOSS_HP_BAR_ENABLED
         try:
@@ -213,6 +218,8 @@ class SoftLockBossPriorityTest(unittest.TestCase):
             self.assertTrue(subject(cg.ARCHETYPE_CORRUPT_OSWALD))
             self.assertTrue(subject(
                 cg.ARCHETYPE_INK, name='Ink Overlord'))
+            self.assertTrue(subject(
+                cg.ARCHETYPE_INK, name='Elite Ink Smudge'))
         finally:
             cg.BOSS_HP_BAR_ENABLED = prev
 
