@@ -26,6 +26,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.finalePhase = 0
         self._bannerNP = None
         self._subBannerNP = None
+        self._telegraphCueNP = None
         self._hintNP = None
         self._statusNP = None
         self._demoHintNP = None
@@ -38,6 +39,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         DistributedObject.DistributedObject.generate(self)
         base.cr.reclaimDirector = self
         self.accept('pollutionChanged', self.__onPollutionChanged)
+        # Overlord wind-up cue (P1 magenta vs P2 crimson) from CorruptToon AV.
+        self.accept('finaleTelegraphCue', self.__onFinaleTelegraphCue)
 
     def announceGenerate(self):
         DistributedObject.DistributedObject.announceGenerate(self)
@@ -178,11 +181,20 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             hold=1.4)
 
     def announceReclaimComplete(self):
+        self.__hideTelegraphCue()
         self.__showBanner(
             ReclaimGlobals.BANNER_COMPLETE, (0.55, 1.0, 0.7, 1.0),
             hold=3.4, pop=True)
-        self.__showSubBanner(
-            ReclaimGlobals.BANNER_COMPLETE_SUB, (0.85, 1.0, 0.9, 1.0), hold=3.4)
+        # Finale P2 clear: purity cheer + soft Oswald-twist tease (copy only).
+        if self.finalePhase >= 2:
+            self.__showSubBanner(
+                CampaignGlobals.FINALE_TWIST_TEASE,
+                CampaignGlobals.FINALE_TWIST_TEASE_COLOR,
+                hold=3.8)
+        else:
+            self.__showSubBanner(
+                ReclaimGlobals.BANNER_COMPLETE_SUB, (0.85, 1.0, 0.9, 1.0),
+                hold=3.4)
         self.__playRestoreFx()
         self.__hideStatusHud()
         self.__hideDemoHint()
@@ -253,6 +265,47 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             self._subBannerNP.removeNode()
         self._subBannerNP = None
 
+    def __finaleStatusColor(self):
+        if self.finalePhase >= 2:
+            return (1.0, 0.55, 0.45, 1.0)
+        if self.finalePhase == 1:
+            return (1.0, 0.7, 1.0, 1.0)
+        return (0.95, 0.88, 1.0, 1.0)
+
+    def __onFinaleTelegraphCue(self, phaseIndex, cueText, cueColor):
+        """Brief phase-colored wind-up chip during Overlord telegraphs."""
+        if self.state != ReclaimGlobals.STATE_ACTIVE:
+            return
+        if int(getattr(self, 'finalePhase', 0) or 0) < 1:
+            return
+        self.__showTelegraphCue(str(cueText), tuple(cueColor), hold=0.85)
+
+    def __showTelegraphCue(self, text, color, hold=0.85):
+        self.__hideTelegraphCue()
+        tn = TextNode('reclaim-finale-telegraph-cue')
+        tn.setText(text)
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(*color)
+        tn.setShadow(0.05, 0.05)
+        tn.setShadowColor(0, 0, 0, 0.8)
+        np = aspect2d.attachNewNode(tn)  # noqa: F821
+        np.setScale(0.055)
+        np.setPos(0, 0, 0.68)
+        self._telegraphCueNP = np
+        taskMgr.doMethodLater(  # noqa: F821
+            hold, self.__telegraphCueTimeout,
+            self.uniqueName('reclaim-finale-telegraph-cue'))
+
+    def __telegraphCueTimeout(self, task):
+        self.__hideTelegraphCue()
+        return task.done
+
+    def __hideTelegraphCue(self):
+        taskMgr.remove(self.uniqueName('reclaim-finale-telegraph-cue'))  # noqa: F821
+        if self._telegraphCueNP is not None and not self._telegraphCueNP.isEmpty():
+            self._telegraphCueNP.removeNode()
+        self._telegraphCueNP = None
+
     def __showStatusHud(self):
         """Persistent player-facing reclaim status (wave / corruption / pack)."""
         wave = max(self.waveIndex, 1 if self.state == ReclaimGlobals.STATE_ACTIVE else 0)
@@ -262,43 +315,50 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             self.pollutionHint * 100.0,
             self.packAlive)
         if self.finalePhase >= 1:
-            text = 'Overlord P%s  |  %s' % (self.finalePhase, text)
+            phaseLabel = CampaignGlobals.FINALE_PHASE_HUD.get(
+                self.finalePhase, 'OVERLORD · P%s' % self.finalePhase)
+            text = '%s  |  %s' % (phaseLabel, text)
+        statusColor = self.__finaleStatusColor()
         if self._statusNP is not None and not self._statusNP.isEmpty():
-            self._statusNP.node().setText(text)
-            return
-        tn = TextNode('reclaim-status')
-        tn.setText(text)
-        tn.setAlign(TextNode.ACenter)
-        statusColor = (0.95, 0.88, 1.0, 1.0)
-        if self.finalePhase >= 2:
-            statusColor = (1.0, 0.55, 0.45, 1.0)
-        elif self.finalePhase == 1:
-            statusColor = (1.0, 0.7, 1.0, 1.0)
-        tn.setTextColor(*statusColor)
-        tn.setShadow(0.04, 0.04)
-        tn.setShadowColor(0, 0, 0, 0.75)
-        np = aspect2d.attachNewNode(tn)
-        np.setScale(0.042)
-        np.setPos(0, 0, 0.62)
-        self._statusNP = np
+            node = self._statusNP.node()
+            node.setText(text)
+            node.setTextColor(*statusColor)
+        else:
+            tn = TextNode('reclaim-status')
+            tn.setText(text)
+            tn.setAlign(TextNode.ACenter)
+            tn.setTextColor(*statusColor)
+            tn.setShadow(0.04, 0.04)
+            tn.setShadowColor(0, 0, 0, 0.75)
+            np = aspect2d.attachNewNode(tn)  # noqa: F821
+            np.setScale(0.042)
+            np.setPos(0, 0, 0.62)
+            self._statusNP = np
 
         # Keep a compact corruption readout as a secondary cue.
         hint = ReclaimGlobals.POLLUTION_HINT_FMT % (self.pollutionHint * 100.0)
+        hintColor = (
+            (0.95, 0.45, 0.4, 1.0) if self.finalePhase >= 2
+            else (0.85, 0.5, 0.95, 1.0) if self.finalePhase == 1
+            else (0.75, 0.55, 0.95, 1.0))
         if self._hintNP is not None and not self._hintNP.isEmpty():
-            self._hintNP.node().setText(hint)
+            hnode = self._hintNP.node()
+            hnode.setText(hint)
+            hnode.setTextColor(*hintColor)
         else:
             htn = TextNode('reclaim-pollution-hint')
             htn.setText(hint)
             htn.setAlign(TextNode.ACenter)
-            htn.setTextColor(0.75, 0.55, 0.95, 1.0)
+            htn.setTextColor(*hintColor)
             htn.setShadow(0.04, 0.04)
             htn.setShadowColor(0, 0, 0, 0.7)
-            hnp = aspect2d.attachNewNode(htn)
+            hnp = aspect2d.attachNewNode(htn)  # noqa: F821
             hnp.setScale(0.036)
             hnp.setPos(0, 0, 0.56)
             self._hintNP = hnp
 
     def __hideStatusHud(self):
+        self.__hideTelegraphCue()
         if self._statusNP is not None and not self._statusNP.isEmpty():
             self._statusNP.removeNode()
         self._statusNP = None

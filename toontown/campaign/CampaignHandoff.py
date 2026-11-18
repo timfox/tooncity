@@ -76,9 +76,17 @@ class CampaignHandoffClient(DirectObject):
         return None, None
 
     def _onVictory(self, reclaimCount=0):
+        # Purity first; soft Oswald-twist tease keeps room for later dialogue.
         self._flash(
             'CAMPAIGN VICTORY!  Toon City is pure',
             Vec4(1.0, 0.95, 0.45, 1))
+        tease = getattr(CampaignGlobals, 'FINALE_TWIST_TEASE', '')
+        if tease:
+            self._flash(
+                tease,
+                Vec4(*getattr(
+                    CampaignGlobals, 'FINALE_TWIST_TEASE_COLOR',
+                    (0.85, 0.75, 1.0, 1.0))))
 
     def _onPhase(self, phaseIndex, message):
         # Skip duplicate flash when FinalePhaseFx / reclaim banners already

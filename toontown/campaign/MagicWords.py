@@ -11,7 +11,8 @@ class StartCampaign(MagicWord):
     advancedDesc = (
         'Uses CampaignDirector + ReclaimDirector. Loopy → Punchline → '
         'Silly two-phase Ink Overlord finale (magenta rise → crimson unleash '
-        'with FOV/flash sting). Pair with ~hackslash 0.')
+        'with FOV/flash sting; Oswald twist tease on victory). '
+        'Toontown spiritual-sequel fantasy — no keyblades. Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]

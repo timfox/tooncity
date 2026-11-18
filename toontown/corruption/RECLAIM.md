@@ -95,12 +95,17 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ## Ink Overlord finale phases
 
 Silly Street campaign (`~advancecampaign force` to skip ahead, then
-`~startcampaign` on zone `2100`):
+`~startcampaign` on zone `2100`). Toontown spiritual-sequel framing — KH combat
+feel only, **no keyblades**. Victory leaves room for an Oswald twist tease
+(he caused the corruption); full dialogue is out of scope here.
 
-1. **Phase 1 — Rising**: magenta telegraph squash/stretch, larger Overlord scale,
-   HUD shows `Overlord P1`.
+1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
+   SFX, HUD `OVERLORD · P1 RISE`, wind-up chip `P1 MAGENTA SWELL`.
 2. Clear packs → purity beat → director restarts **Phase 2**.
-3. **Phase 2 — Unleashed**: crimson telegraphs, hotter hit flash, FOV + fullscreen
-   ink slam transition sting (`announceFinalePhaseTransition`).
-4. Clear again → campaign victory.
+3. **Phase 2 — Unleashed**: crimson telegraphs (wider squash / taller stretch) +
+   phase-two SFX, hotter hit flash, FOV + fullscreen ink slam transition sting
+   (`announceFinalePhaseTransition`), HUD `OVERLORD · P2 UNLEASHED`, wind-up
+   chip `P2 CRIMSON FURY`.
+4. Clear again → campaign victory + soft twist tease
+   (`CampaignGlobals.FINALE_TWIST_TEASE`).
 

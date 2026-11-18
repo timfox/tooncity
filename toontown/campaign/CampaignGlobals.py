@@ -1,4 +1,8 @@
-"""Act table for the KH×Toontown multi-hood reclaim campaign."""
+"""Act table for the Toontown spiritual-sequel reclaim campaign.
+
+Combat feel borrows KH-style readability (telegraphs, lock-on, combos) —
+no keyblades. Protagonist Oswald; end-game twist: he caused the corruption.
+"""
 
 from toontown.toonbase import ToontownGlobals
 
@@ -11,7 +15,7 @@ POWER_BUMP_PER_RECLAIM = 0.08
 POWER_BUMP_MAX = 0.40
 
 # Escalating reclaim acts: explore → fight → reclaim → next hood.
-# Finale uses a two-phase Ink Overlord fight.
+# Finale = two-phase Ink Overlord; leave copy room for Oswald twist beat.
 ACTS = (
     {
         'id': 'loopy',
@@ -60,6 +64,7 @@ ACTS = (
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
         'banner': 'Finale Phase 1 — The Ink Overlord rises on Silly Street!',
+        # Victory copy stays purity-first; Oswald twist lands via FINALE_TWIST_TEASE.
         'handoff': 'Toon City is saved! Purity restored across every neighborhood.',
         'finale': True,
         # Client-readable phase index (1-based) for reclaim director / telegraphs.
@@ -86,9 +91,17 @@ FINALE_PHASE_BANNER = {
     2: 'INK OVERLORD UNLEASHED',
 }
 FINALE_PHASE_SUB = {
-    1: 'Magenta ink swell — read the wind-up!',
-    2: 'Crimson ink fury — bigger telegraphs, hotter hits!',
+    1: 'Magenta swell — tall rubber wind-up + rise SFX!',
+    2: 'Crimson fury — wider squash, hotter slam + phase-2 sting!',
 }
+# Compact HUD phase labels (status strip + telegraph cue).
+FINALE_PHASE_HUD = {
+    1: 'OVERLORD · P1 RISE',
+    2: 'OVERLORD · P2 UNLEASHED',
+}
+# Soft twist tease after P2 clear — room for Oswald-caused-it beat (no full dialogue).
+FINALE_TWIST_TEASE = '…but who stained the ink first?'
+FINALE_TWIST_TEASE_COLOR = (0.85, 0.75, 1.0, 1.0)
 
 STATE_IDLE = 0
 STATE_ACTIVE = 1
