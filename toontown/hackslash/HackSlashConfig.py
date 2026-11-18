@@ -573,6 +573,21 @@ FINISHER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.2
 FINISHER_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.96, 0.78, 1.0)
 FINISHER_CREAM_AFTERSHOCK_BIN = 58
 
+# Finisher cream wash pulse — soft aspect2d veil after cream aftershock
+# (#122). Perfect-dodge / melee-hit / dodge-trail cream wash grammar.
+# After hang (0.24) + aftershock (0.18) = 0.42; wash at 0.60. Cream/pastel
+# only. Toggle FINISHER_CREAM_WASH_ENABLED = False drops wash only.
+FINISHER_CREAM_WASH_ENABLED = True
+FINISHER_CREAM_WASH_DELAY_SEC = 0.60  # after play; after aftershock (0.42)
+FINISHER_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+FINISHER_CREAM_WASH_PEAK = 0.12
+FINISHER_CREAM_WASH_MID = 0.07
+FINISHER_CREAM_WASH_IN_SEC = 0.06
+FINISHER_CREAM_WASH_PULSE_SEC = 0.10
+FINISHER_CREAM_WASH_HOLD_SEC = 0.08
+FINISHER_CREAM_WASH_OUT_SEC = 0.40
+FINISHER_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
+
 # Player hit-react when a CorruptToon lands a smack (scale juice + tiny hitstop).
 PLAYER_HIT_REACT_SQUASH = (1.75, 1.75, 0.38, 0.06)
 PLAYER_HIT_REACT_STRETCH = (0.68, 0.68, 1.42, 0.1)

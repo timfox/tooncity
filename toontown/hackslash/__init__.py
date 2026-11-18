@@ -13,6 +13,7 @@ from .DodgeTrailFx import DodgeTrailFx
 from .DodgeTrailCreamWashFx import DodgeTrailCreamWashPulse
 from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
+from .FinisherCreamWashFx import FinisherCreamWashPulse
 from .HitSparkFx import HitSparkFx
 from .HitSparkCreamWashFx import HitSparkCreamWashPulse
 from .HitStopFx import HitStopFx
@@ -31,6 +32,7 @@ __all__ = [
     'DodgePerfectFx',
     'DodgeTrailFx',
     'DodgeTrailCreamWashPulse',
+    'FinisherCreamWashPulse',
     'HitSparkFx',
     'HitSparkCreamWashPulse',
     'HitStopFx',
