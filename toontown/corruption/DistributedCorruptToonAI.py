@@ -14,7 +14,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     """Hostile corrupt toon: chase, telegraphed smack, defeat → pollution reclaim.
 
     Ink Overlord (finalePhase 1/2) uses phase combat instead of Smudge chase:
-    P1 ink-rain AoE, P2 enrage rain + close slam. Street archetypes unchanged.
+    P1 ink-rain AoE, P2 enrage rain + close slam. Street archetypes use role
+    AI (Gagster kite, Brute hold, Snare flank) so wave-script pack intent
+    survives after combat starts — not all nearest-chase.
 
     Air-juggle hang stuns chase/attack on the AI so cancel→slam is not just
     client juice under multi-enemy pressure.
@@ -276,7 +278,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.again
 
         if dist <= CorruptionGlobals.AGGRO_RANGE:
-            self.__chaseToward(target)
+            # Role AI: Gagster kite / Brute hold / Snare flank (Smudge chase).
+            self.__roleMoveToward(target)
         return Task.again
 
     def __engageRange(self):
@@ -324,21 +327,75 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return 9999.0
         return math.sqrt(dx * dx + dy * dy)
 
+    def __roleMoveToward(self, target):
+        """Move with archetype role AI so pack scripts keep combat identity.
+
+        Overlord / disabled / Smudge / Oswald → nearest chase. Gagster kites
+        the lob ring, Brute plants in spit range, Snare approaches on a flank.
+        """
+        if self._isOverlord() or not getattr(
+                CorruptionGlobals, 'ROLE_AI_ENABLED', True):
+            self.__chaseToward(target)
+            return
+        role = CorruptionGlobals.archetypeCombatRole(self.archetype)
+        if role == CorruptionGlobals.ROLE_CHASE:
+            self.__chaseToward(target)
+            return
+        try:
+            sx = float(self.getX())
+            sy = float(self.getY())
+            tx = float(target.getX())
+            ty = float(target.getY())
+        except Exception:
+            return
+        side = CorruptionGlobals.snareFlankSide(getattr(self, 'doId', 0))
+        gx, gy, action = CorruptionGlobals.roleMoveGoal(
+            role, sx, sy, tx, ty, flankSide=side)
+        if action == 'hold':
+            # Face the toon while planted so spit / lob telegraphs read.
+            self.__faceTowardXY(tx, ty)
+            return
+        speedScale = CorruptionGlobals.roleMoveSpeedScale(role, action)
+        self.__moveTowardXY(gx, gy, speedScale=speedScale)
+
     def __chaseToward(self, target):
+        """Legacy nearest-chase — straight at the toon (Smudge / Overlord)."""
         try:
             tx, ty = target.getX(), target.getY()
+        except Exception:
+            return
+        self.__moveTowardXY(tx, ty, speedScale=1.0)
+
+    def __faceTowardXY(self, tx, ty):
+        """Rotate toward a planar point without translating (hold plant)."""
+        try:
             x, y, z = self.getX(), self.getY(), self.getZ()
         except Exception:
             return
-        dx = tx - x
-        dy = ty - y
+        dx = float(tx) - x
+        dy = float(ty) - y
+        if (dx * dx + dy * dy) < 1e-6:
+            return
+        heading = -math.degrees(math.atan2(dx, dy))
+        self.setH(heading)
+        self.sendUpdate('setXYZH', [x, y, z, heading])
+
+    def __moveTowardXY(self, tx, ty, speedScale=1.0):
+        """Step toward planar (tx, ty) using chaseSpeed * speedScale."""
+        try:
+            x, y, z = self.getX(), self.getY(), self.getZ()
+        except Exception:
+            return
+        dx = float(tx) - x
+        dy = float(ty) - y
         dist = math.sqrt(dx * dx + dy * dy)
         if dist < 0.05:
             return
         chase = float(self._stats.get('chaseSpeed', CorruptionGlobals.CHASE_SPEED))
-        step = chase * CorruptionGlobals.AI_TICK_DT
+        scale = max(0.05, float(speedScale or 1.0))
+        step = chase * scale * CorruptionGlobals.AI_TICK_DT
         if step >= dist:
-            nx, ny = tx, ty
+            nx, ny = float(tx), float(ty)
         else:
             nx = x + dx / dist * step
             ny = y + dy / dist * step

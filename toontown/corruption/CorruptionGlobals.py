@@ -156,6 +156,145 @@ ATTACK_COOLDOWN = 1.75
 # Client death pop (~0.4s body + ~0.45s splat) must finish before AI delete.
 DEFEAT_DELETE_DELAY = 0.95
 
+# ---------------------------------------------------------------------------
+# Archetype role AI — pack composition after combat starts.
+#
+# Wave scripts place Snare-front / Gagster lob / Brute rear, but every unit
+# independently nearest-chasing collapses that intent into the same scrum.
+# Role AI keeps street archetypes distinct during chase (not cream FX):
+#   Gagster → kite (hold lob ring / backpedal when pressed)
+#   Brute   → hold (plant in spit range; sluggish close)
+#   Snare   → flank (approach via perpendicular offset, then lash)
+# Smudge / Corrupted Oswald / Overlord stay plain chase. ROLE_AI_ENABLED =
+# False restores legacy nearest-chase for all archetypes.
+# Wired from DistributedCorruptToonAI.__roleMoveToward / __moveTowardXY.
+# ---------------------------------------------------------------------------
+ROLE_AI_ENABLED = True
+ROLE_CHASE = 'chase'
+ROLE_KITE = 'kite'
+ROLE_HOLD = 'hold'
+ROLE_FLANK = 'flank'
+
+# Gunk Gagster kite — stand off on a lob ring; retreat when the toon closes.
+GAGSTER_KITE_PREFERRED = 9.5  # ring radius (near meleeRange 8.5)
+GAGSTER_KITE_BAND = 1.4  # half-width comfort band around preferred
+GAGSTER_KITE_RETREAT_SPEED_SCALE = 1.2  # snappier backpedal than lob approach
+
+# Sludge Brute hold — plant once inside hold range; slow approach otherwise.
+BRUTE_HOLD_RANGE = 7.8  # stop chasing (spit-ready plant; near meleeRange 6.0)
+BRUTE_HOLD_CHASE_SPEED_SCALE = 0.55  # sluggish close so tank doesn't race Snare
+
+# Balloon Snare flank — close via perpendicular offset, then engage for lash.
+SNARE_FLANK_OFFSET = 5.5  # planar flank radius around the toon
+SNARE_FLANK_CLOSE_DIST = 11.0  # beyond this, close in before committing to flank
+SNARE_FLANK_SPEED_SCALE = 1.05  # slight zip on the flank arc
+
+
+def archetypeCombatRole(archetype):
+    """Return role-AI mode for a street archetype (chase/kite/hold/flank).
+
+    Overlord combat is gated separately by finalePhase — callers should skip
+    role AI when ``_isOverlord()``. Unknown ids clamp via normalizeArchetype.
+    """
+    if not ROLE_AI_ENABLED:
+        return ROLE_CHASE
+    aid = normalizeArchetype(archetype)
+    if aid == ARCHETYPE_GAGSTER:
+        return ROLE_KITE
+    if aid == ARCHETYPE_BRUTE:
+        return ROLE_HOLD
+    if aid == ARCHETYPE_SNARE:
+        return ROLE_FLANK
+    return ROLE_CHASE
+
+
+def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
+                 holdRange=None, flankOffset=None, flankCloseDist=None,
+                 flankSide=1):
+    """Planar (gx, gy, action) for role-aware chase.
+
+    ``action`` is one of ``chase`` / ``approach`` / ``retreat`` / ``hold`` /
+    ``flank``. ``hold`` means stay put (gx, gy == sx, sy). Default / unknown
+    roles chase straight at the toon.
+    """
+    role = str(role or ROLE_CHASE)
+    sx = float(sx)
+    sy = float(sy)
+    tx = float(tx)
+    ty = float(ty)
+    dx = sx - tx
+    dy = sy - ty
+    dist = (dx * dx + dy * dy) ** 0.5
+
+    if role == ROLE_KITE:
+        if preferred is None:
+            preferred = GAGSTER_KITE_PREFERRED
+        if band is None:
+            band = GAGSTER_KITE_BAND
+        preferred = max(0.5, float(preferred))
+        band = max(0.0, float(band))
+        if dist < 1e-6:
+            return (tx + preferred, ty, 'retreat')
+        ux = dx / dist
+        uy = dy / dist
+        gx = tx + ux * preferred
+        gy = ty + uy * preferred
+        if dist < preferred - band:
+            return (gx, gy, 'retreat')
+        if dist > preferred + band:
+            return (gx, gy, 'approach')
+        return (sx, sy, 'hold')
+
+    if role == ROLE_HOLD:
+        if holdRange is None:
+            holdRange = BRUTE_HOLD_RANGE
+        holdRange = max(0.5, float(holdRange))
+        if dist <= holdRange:
+            return (sx, sy, 'hold')
+        return (tx, ty, 'approach')
+
+    if role == ROLE_FLANK:
+        if flankOffset is None:
+            flankOffset = SNARE_FLANK_OFFSET
+        if flankCloseDist is None:
+            flankCloseDist = SNARE_FLANK_CLOSE_DIST
+        flankOffset = max(0.5, float(flankOffset))
+        flankCloseDist = max(flankOffset, float(flankCloseDist))
+        side = 1.0 if float(flankSide) >= 0.0 else -1.0
+        # Far out: close first so flank doesn't orbit at aggro edge.
+        if dist > flankCloseDist or dist < 1e-6:
+            return (tx, ty, 'approach')
+        # Perpendicular to toon→self: (-dy, dx) / (dy, -dx).
+        ux = dx / dist
+        uy = dy / dist
+        gx = tx + (-uy) * side * flankOffset
+        gy = ty + (ux) * side * flankOffset
+        return (gx, gy, 'flank')
+
+    # Plain chase (Smudge / Oswald / disabled).
+    return (tx, ty, 'chase')
+
+
+def roleMoveSpeedScale(role, action=None):
+    """Chase-speed multiplier for a role action (1.0 = archetype chaseSpeed)."""
+    role = str(role or ROLE_CHASE)
+    action = str(action or '')
+    if role == ROLE_KITE and action == 'retreat':
+        return float(GAGSTER_KITE_RETREAT_SPEED_SCALE)
+    if role == ROLE_HOLD:
+        return float(BRUTE_HOLD_CHASE_SPEED_SCALE)
+    if role == ROLE_FLANK:
+        return float(SNARE_FLANK_SPEED_SCALE)
+    return 1.0
+
+
+def snareFlankSide(doId):
+    """Stable left/right flank side from doId so packs split around the toon."""
+    try:
+        return 1 if (int(doId) % 2 == 0) else -1
+    except (TypeError, ValueError):
+        return 1
+
 # Visual ink / sickly palette (not classic cog gray).
 CORRUPT_TINT = (0.22, 0.05, 0.32, 0.92)
 CORRUPT_TINT_HOT = (0.55, 0.12, 0.75, 1.0)
