@@ -5,8 +5,9 @@ auto-arm melee, auto-start reclaim packs (no ~spawncorrupt), show prompts,
 bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
 
 On polluted ACTS street enter: brief rubber-hose ink edge vignette that
-fades as the tip bar appears. Tip bar itself plays a short rubber-hose
-scale pop when it lands (Toontown spiritual sequel — no KH branding).
+fades as the tip bar appears. Tip bar and act-enter flash banners play a
+short rubber-hose scale pop when they land (Toontown spiritual sequel —
+no KH branding).
 """
 
 from panda3d.core import (
@@ -191,9 +192,15 @@ class PlayEntryClient(DirectObject):
         try:
             av.enableHackSlashMelee(spawnHostiles=False)
             self._armedZone = zoneId
-            # Keep #33 stretch-punch combat framing (no keyblade / KH copy).
-            self._flashBanner(
-                '%s: STRETCH PUNCHES — Press F / LMB' % _face())
+            # Act-enter banner first (hose-pop); stretch-punch stays on tip.
+            act = self._actForZone(zoneId)
+            banner = act.get('banner') if act else None
+            if banner:
+                self._flashBanner(banner)
+            else:
+                # Keep #33 stretch-punch combat framing (no keyblade / KH copy).
+                self._flashBanner(
+                    '%s: STRETCH PUNCHES — Press F / LMB' % _face())
         except Exception:
             pass
 
@@ -461,7 +468,38 @@ class PlayEntryClient(DirectObject):
             self._tipNP.removeNode()
         self._tipNP = None
 
+    def _bannerHosePopInterval(self, bannerNP):
+        """Flat squash → tall stretch → settle for act-enter flash banners."""
+        if bannerNP is None:
+            return None
+        try:
+            if bannerNP.isEmpty():
+                return None
+        except Exception:
+            return None
+        settle = float(CampaignGlobals.PLAY_ENTRY_BANNER_SCALE)
+        sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_BANNER_POP_SQUASH
+        tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_BANNER_POP_STRETCH
+        settleSec = float(CampaignGlobals.PLAY_ENTRY_BANNER_POP_SETTLE_SEC)
+        settlePt = Point3(settle, settle, settle)
+        squashPt = Point3(settle * sx, settle * sy, settle * sz)
+        stretchPt = Point3(settle * tx, settle * ty, settle * tz)
+        try:
+            bannerNP.setScale(settlePt)
+        except Exception:
+            return None
+        return Sequence(
+            LerpScaleInterval(
+                bannerNP, float(squashSec), squashPt, blendType='easeOut'),
+            LerpScaleInterval(
+                bannerNP, float(stretchSec), stretchPt, blendType='easeOut'),
+            LerpScaleInterval(
+                bannerNP, settleSec, settlePt, blendType='easeIn'),
+            name='playEntryBannerHosePop',
+        )
+
     def _flashBanner(self, text):
+        """Act-enter / reclaim cue flash with tip-matched rubber-hose pop."""
         self._clearFlash()
         tn = TextNode('play-entry-flash')
         tn.setText(text)
@@ -470,15 +508,26 @@ class PlayEntryClient(DirectObject):
         tn.setShadow(0.05, 0.05)
         tn.setShadowColor(0, 0, 0, 0.8)
         np = aspect2d.attachNewNode(tn)  # noqa: F821
-        np.setScale(0.06)
-        np.setPos(0, 0, 0.72)
+        settle = float(CampaignGlobals.PLAY_ENTRY_BANNER_SCALE)
+        pos = CampaignGlobals.PLAY_ENTRY_BANNER_POS
+        np.setScale(settle)
+        np.setPos(float(pos[0]), float(pos[1]), float(pos[2]))
+        np.setTransparency(TransparencyAttrib.MAlpha)
         np.setColorScale(1, 1, 1, 0)
         self._flashNP = np
+        fadeIn = float(CampaignGlobals.PLAY_ENTRY_BANNER_FADE_IN_SEC)
+        hold = float(CampaignGlobals.PLAY_ENTRY_BANNER_HOLD_SEC)
+        fadeOut = float(CampaignGlobals.PLAY_ENTRY_BANNER_FADE_OUT_SEC)
+        land = [LerpColorScaleInterval(np, fadeIn, Vec4(1, 1, 1, 1))]
+        hose = self._bannerHosePopInterval(np)
+        if hose is not None:
+            land.append(hose)
         self._flashIval = Sequence(
-            LerpColorScaleInterval(np, 0.15, Vec4(1, 1, 1, 1)),
-            Wait(2.4),
-            LerpColorScaleInterval(np, 0.35, Vec4(1, 1, 1, 0)),
+            Parallel(*land),
+            Wait(hold),
+            LerpColorScaleInterval(np, fadeOut, Vec4(1, 1, 1, 0)),
             Func(self._clearFlash),
+            name='playEntryFlashBanner',
         )
         self._flashIval.start()
 
