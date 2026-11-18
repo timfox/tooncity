@@ -8,14 +8,16 @@ among sticky-range hostiles during stretch-punch melee — KH-feel targeting
 without KH branding / keyblades.
 
 Auto-acquire (and fresh Tab with no lock) prefers Ink Overlord /
-Corrupted Oswald over nearer pack Smudge adds. Sticky hold also yields
-from glued adds when a priority Overlord/Oswald enters the acquire cone
-so climax and twist fights do not stay stuck on trash. Manual Tab/`
-with an existing lock on a pack add jumps to Overlord/Oswald in the
-cycle cone instead of yaw-orbiting through Smudge trash.
+Corrupted Oswald / Elite / Ambush-prefixed pack hostiles over nearer
+fodder. Sticky hold also yields from glued adds when a priority subject
+enters the acquire cone so climax, twist, elite, and ambush fights do
+not stay stuck on trash. Manual Tab/` with an existing lock on a
+pack add jumps to Overlord/Oswald in the cycle cone (also Elite /
+Ambush) instead of yaw-orbiting through Smudge trash.
 
-Between-wave ambush also briefly prefers Ambush-prefixed flanks when
-reclaimAmbushSpawn fires a soft-lock prefer pulse (expire sticky + window).
+Between-wave ambush also pulses soft-lock prefer on reclaimAmbushSpawn
+(expire sticky glue) so mid-fight flanks steal focus immediately; Ambush
+names stay permanent priority via isSoftLockPrioritySubject either way.
 """
 
 import math
@@ -26,8 +28,9 @@ from . import HackSlashConfig
 def softLockAcquireRank(dist, priority=False):
     """Sort key for soft-lock acquire — lower wins.
 
-    Priority subjects (Overlord / Corrupted Oswald) sort before pack adds;
-    nearest wins within the same tier. Pure helper for headless tests.
+    Priority subjects (Overlord / Corrupted Oswald / Elite / Ambush)
+    sort before pack fodder; nearest wins within the same tier. Pure
+    helper for headless tests.
     """
     return (0 if priority else 1, float(dist))
 
@@ -84,11 +87,12 @@ def pickSoftLockAcquire(scoredRows):
 
 def shouldStickyYieldToPriority(
         lockedIsPriority, hasPriorityCandidate, enabled=None):
-    """True when sticky hold on a pack add should yield to Overlord/Oswald.
+    """True when sticky hold on fodder should yield to a priority subject.
 
     Sticky still glues onto the current target when already on a priority
-    subject, when no priority candidate is in the acquire cone, or when
-    TARGET_PRIORITY_ENABLED is off. Pure helper for headless tests.
+    subject (Overlord / Oswald / Elite / Ambush), when no priority
+    candidate is in the acquire cone, or when TARGET_PRIORITY_ENABLED is
+    off. Pure helper for headless tests.
     """
     if enabled is None:
         enabled = HackSlashConfig.TARGET_PRIORITY_ENABLED
@@ -101,13 +105,14 @@ def shouldStickyYieldToPriority(
 
 def shouldCyclePreferPriority(
         lockedIsPriority, hasPriorityCandidate, enabled=None):
-    """True when Tab/` with an existing lock should jump to Overlord/Oswald.
+    """True when Tab/` with an existing lock should jump to priority.
 
-    Cycle still yaw-orbits when already locked on a priority subject, when
-    no priority candidate is in the cycle cone, or when
-    TARGET_PRIORITY_ENABLED is off. Pure helper for headless tests —
-    pairs with sticky yield so manual cycle-with-lock does not step through
-    Smudge trash during climax/twist.
+    Cycle still yaw-orbits when already locked on a priority subject
+    (Overlord / Oswald / Elite / Ambush), when no priority candidate is
+    in the cycle cone, or when TARGET_PRIORITY_ENABLED is off. Pure
+    helper for headless tests — pairs with sticky yield so manual
+    cycle-with-lock does not step through Smudge trash during climax /
+    twist / elite / ambush scrums.
     """
     if enabled is None:
         enabled = HackSlashConfig.TARGET_PRIORITY_ENABLED
@@ -438,10 +443,12 @@ class SoftTargetFinder:
         return best
 
     def _isPriorityTarget(self, target):
-        """True for Ink Overlord / Corrupted Oswald soft-lock preference.
+        """True for Overlord / Oswald / Elite / Ambush soft-lock preference.
 
-        Also True for Ambush-prefixed names while a reclaimAmbushSpawn
-        prefer pulse window is live (mid-fight flank cue).
+        Permanent prefer comes from CorruptionGlobals.isSoftLockPrioritySubject
+        (name prefixes + Overlord/Oswald gates). reclaimAmbushSpawn also
+        arms a brief Ambush prefer pulse that expires sticky glue so
+        mid-fight flanks can steal focus immediately.
         """
         if target is None:
             return False
@@ -457,8 +464,9 @@ class SoftTargetFinder:
                 name = str(getattr(target, 'name', '') or '')
         except Exception:
             name = ''
-        # Brief ambush prefer pulse — Ambush flanks score priority mid-fight
-        # without permanent Elite/Ambush soft-lock prefer (separate deepen).
+        # Brief ambush prefer pulse — sticky expire + Ambush flank boost
+        # on reclaimAmbushSpawn. Permanent Elite/Ambush prefer also lives
+        # in isSoftLockPrioritySubject below (always-on name prefixes).
         if self.isAmbushPreferActive() and isAmbushPreferName(name):
             return True
         try:
