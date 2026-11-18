@@ -9,12 +9,14 @@ Soft cream border strips + tip flecks that frame:
   * Finale reveal cream aftershock banners (#86) — TC-136
 
 Handoff / victory / finale-reveal cream-sparkle paths also rise cream
-sparkle flecks along the cream frame (wave-edge #113 twin). Act-enter,
-Oswald trust settle, handoff carnival, victory cheer, and finale reveal
-also arm a delayed soft cream wash pulse (ActBannerCreamWashFx /
-OswaldTrustCreamWashFx / HandoffCreamWashFx / VictoryCreamWashFx /
-FinaleRevealCreamWashFx; melee / perfect-dodge wash twins) under this
-edge. Oswald trust wash, victory wash, and finale-reveal wash also own
+sparkle flecks along the cream frame (wave-edge #113 twin). Hood handoff
+cream edge also arms a brief rubber-hose scale settle (overshoot → rest)
+after the peak so Loopy→Punchline→Silly transitions land readable —
+Oswald trust banner settle (#76) twin. Act-enter, Oswald trust settle,
+handoff carnival, victory cheer, and finale reveal also arm a delayed
+soft cream wash pulse (ActBannerCreamWashFx / OswaldTrustCreamWashFx /
+HandoffCreamWashFx / VictoryCreamWashFx / FinaleRevealCreamWashFx;
+melee / perfect-dodge wash twins) under this edge. Oswald trust wash, victory wash, and finale-reveal wash also own
 a delayed cream aftershock (flecks + soft halo; trust wash aftershock /
 finale #176 / victory #168 / entry / purity-complete #132/#136 twin).
 Punchline Act 2 tip hose (#91) and Silly Act 3 tip hose (#95) arm their
@@ -150,6 +152,10 @@ class ActBannerCreamEdgeFx(object):
         # Handoff / victory cream-sparkle banners also rise cream glitter.
         if self._cfgPrefix in _SPARKLE_CFGS:
             parts.extend(self._spawnEdgeSparkles(parent))
+        # Optional overshoot → rest scale settle (handoff cream edge settle).
+        settlePart = self._settleScalePart(edgeRoot, delaySec=inSec)
+        if settlePart is not None:
+            parts.append(settlePart)
         tag = _IVAL_BY_CFG.get(self._cfgPrefix, 'actBanner')
         self._edgeIval = Sequence(
             Parallel(*parts),
@@ -157,6 +163,41 @@ class ActBannerCreamEdgeFx(object):
             name='%sCreamEdgePulse' % tag,
         )
         self._edgeIval.start()
+
+    def _settleScalePart(self, edgeRoot, delaySec=0.0):
+        """Brief overshoot → rest scale settle after cream edge peak.
+
+        Armed when SETTLE_OVERSHOOT is configured (handoff path). Missing /
+        disabled settle returns None so other cream-edge paths stay unchanged.
+        """
+        if not self._cfg('SETTLE_ENABLED', True):
+            return None
+        over = self._cfg('SETTLE_OVERSHOOT', None)
+        if not over:
+            return None
+        try:
+            ox, oy, oz, overSec = over
+            overSec = float(overSec)
+        except Exception:
+            return None
+        if overSec <= 0.0:
+            return None
+        restSec = float(self._cfg('SETTLE_REST_SEC', 0.09))
+        restPt = Point3(1.0, 1.0, 1.0)
+        overPt = Point3(float(ox), float(oy), float(oz))
+        try:
+            edgeRoot.setScale(restPt)
+        except Exception:
+            return None
+        tag = _IVAL_BY_CFG.get(self._cfgPrefix, 'actBanner')
+        return Sequence(
+            Wait(max(0.0, float(delaySec))),
+            LerpScaleInterval(
+                edgeRoot, max(0.01, overSec), overPt, blendType='easeOut'),
+            LerpScaleInterval(
+                edgeRoot, max(0.01, restSec), restPt, blendType='easeIn'),
+            name='%sCreamEdgeSettle' % tag,
+        )
 
     def _buildEdgeRoot(self, parent):
         """Four cream edge strips — sunny frame, open center for the banner."""
@@ -488,7 +529,7 @@ def clearOswaldTrustFractureCreamEdge():
 
 
 def playHandoffCreamEdge():
-    """Fire cream edge on hood handoff cream-sparkle carnival banners."""
+    """Fire cream edge + brief settle on hood handoff carnival banners."""
     _sharedHandoff().play()
 
 

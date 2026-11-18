@@ -586,6 +586,15 @@ HANDOFF_CREAM_EDGE_SPARKLE_SEC = 0.40
 HANDOFF_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.90)
 HANDOFF_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 HANDOFF_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.38)
+# Brief rubber-hose scale settle after handoff cream edge peak (#124).
+# Overshoot → rest so Loopy→Punchline→Silly neighborhood transitions
+# read juicier and the cream frame lands readable — Oswald trust banner
+# settle (#76) twin on the carnival edge. HANDOFF_CREAM_EDGE_SETTLE_ENABLED
+# = False drops settle only (edge + sparkle + wash remain). No keyblades /
+# KH branding.
+HANDOFF_CREAM_EDGE_SETTLE_ENABLED = True
+HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT = (1.05, 1.0, 1.08, 0.07)  # sx, sy, sz, sec
+HANDOFF_CREAM_EDGE_SETTLE_REST_SEC = 0.10
 
 # Soft cream wash pulse after handoff cream edge / sparkle (#124/#99).
 # Perfect-dodge / melee hit / victory / Oswald-trust cream wash grammar —

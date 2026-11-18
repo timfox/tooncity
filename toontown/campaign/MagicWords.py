@@ -21,7 +21,7 @@ class StartCampaign(MagicWord):
         'Oswald almost confesses an uneasy half-truth (no twist spoil); act '
         'handoffs: carnival '
         'confetti / cream sparkle / '
-        'edge + soft cream wash pulse; P1 magenta rise / P2 crimson unleash '
+        'edge settle + soft cream wash pulse; P1 magenta rise / P2 crimson unleash '
         'telegraphs + ink crown silhouette flash + FOV/flash sting; purity '
         'victory cheer: cream swell / sparkle / edge + soft cream wash '
         'pulse + cream aftershock; victory reveal sting: Oswald caused the '
