@@ -383,9 +383,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         # Gunk-only gate on telegraph announce (not Smudge/Brute/Snare).
         self.assertIn('isGagster and not look', corrupt_src)
         self.assertGreater(corrupt_src.count('__clearGagsterTelegraphPuddle'), 2)
-        # Gunk Gagster puddle land cream deepen beyond #238 — juicier trap
+        # Gunk Gagster puddle land cream deepen beyond #276 — juicier trap
         # impact (thicker ground bloom + wider aftershock; distinct from
-        # Smudge #259 / Brute #264 / Snare #269).
+        # Smudge #283 / Brute #289 / Snare #293).
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED'))
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_LOOK'))
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED'))
@@ -395,11 +395,11 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIs(cg.GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED, True)
         cream_look = cg.GAGSTER_PUDDLE_CREAM_SPLASH_LOOK
         self.assertEqual(cream_look.get('id'), 'gagster-puddle-cream-splash')
-        self.assertGreaterEqual(int(cream_look.get('fleckCount', 0)), 7)
+        self.assertGreaterEqual(int(cream_look.get('fleckCount', 0)), 8)
         self.assertTrue(cream_look.get('bloomEnabled'))
-        self.assertGreaterEqual(float(cream_look.get('bloomHalf', 0)), 0.8)
+        self.assertGreaterEqual(float(cream_look.get('bloomHalf', 0)), 0.95)
         self.assertGreaterEqual(
-            int(cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT), 6)
+            int(cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT), 7)
         cream_look_id = str(cream_look.get('id', '')).lower()
         self.assertNotIn('keyblade', cream_look_id)
         self.assertNotIn('kingdom hearts', cream_look_id)
