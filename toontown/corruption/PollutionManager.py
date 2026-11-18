@@ -19,6 +19,10 @@ class PollutionManager(DistributedObject.DistributedObject):
     complete, fog cream-dissolves (sunny pastel tint + flecks) via
     PollutionFogCreamDissolveFx and hood prop tint cream-fades via
     PollutionHoodTintCreamFadeFx while the density clear ramp still runs.
+
+    Incomplete reclaim re-creep is AI-authored (PollutionManagerAI contested
+    streets); this client only presents the rising setZonePollution via the
+    same density ramp / prop tint / street-audio hooks — pure stays clear.
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManager')

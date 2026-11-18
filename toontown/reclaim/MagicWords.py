@@ -78,7 +78,10 @@ class StartReclaim(MagicWord):
 class StopReclaim(MagicWord):
     aliases = ['stopreclaim', 'endreclaim', 'cancelreclaim']
     desc = 'Stop the active reclaim director in the invoker zone.'
-    advancedDesc = 'Deletes spawned reclaim CorruptToons and clears director state.'
+    advancedDesc = (
+        'Deletes spawned reclaim CorruptToons and clears director state. '
+        'Bailing mid-reclaim marks the street contested so residual ink '
+        'slowly re-creeps (pure / finished streets stay secured).')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]
@@ -94,7 +97,9 @@ class StopReclaim(MagicWord):
         director.stop()
         director.requestDelete()
         directors.pop(zoneId, None)
-        return 'Reclaim stopped in zone %s.' % zoneId
+        return (
+            'Reclaim stopped in zone %s — unfinished streets slowly re-ink!'
+            % zoneId)
 
 
 def registerReclaimMagicWords():

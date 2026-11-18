@@ -66,5 +66,8 @@ PollutionHoodTintCreamFadeFx cream-fades hood prop tint toward sunny cream
 instead of snapping clear (HOOD_TINT_CREAM_FADE_*; same clear window). Street
 music crossfades to a darker encounter bed while polluted and back to the
 hood bed on purity restore (PollutionStreetAudio; pairs with reclaim
-cheer/sting), plus a short rubber-hose birds ambient bed fade-in.
+cheer/sting), plus a short rubber-hose birds ambient bed fade-in. Bail out of
+an unfinished reclaim and PollutionManagerAI marks the street contested —
+residual ink slowly re-creeps (POLLUTION_RECREEP_*); secured / pure streets
+stay clean.
 """

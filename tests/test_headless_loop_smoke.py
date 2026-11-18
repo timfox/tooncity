@@ -310,6 +310,11 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         pollution_src = _read('toontown/corruption/PollutionManagerAI.py')
         self.assertIn('STATE_ACTIVE', pollution_src)
         self.assertIn('startCampaign', pollution_src)
+        # Incomplete-reclaim re-creep — contested streets slowly re-ink.
+        self.assertIn('markStreetContested', pollution_src)
+        self.assertIn('markStreetSecured', pollution_src)
+        self.assertIn('markStreetReclaiming', pollution_src)
+        self.assertIn('pollutionRecreepStep', pollution_src)
 
     def test_corrupt_archetypes_registered(self):
         cg = self.corruption
@@ -687,6 +692,33 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('PollutionFogCreamDissolveFx', pollution_src)
         self.assertIn('beginCreamDissolve', pollution_src)
         self.assertIn('setCreamDissolveBlend', pollution_src)
+
+        # Incomplete-reclaim re-creep — pure stays pure; contested slowly re-inks.
+        for recreep_key in (
+                'STREET_SECURED',
+                'STREET_RECLAIMING',
+                'STREET_CONTESTED',
+                'POLLUTION_RECREEP_ENABLED',
+                'POLLUTION_RECREEP_TICK_SEC',
+                'POLLUTION_RECREEP_PER_TICK',
+                'POLLUTION_RECREEP_CAP',
+                'POLLUTION_RECREEP_MSG'):
+            self.assertTrue(
+                hasattr(cg, recreep_key),
+                msg='CorruptionGlobals missing %s' % recreep_key)
+        self.assertTrue(
+            hasattr(cg, 'pollutionRecreepStep'),
+            msg='CorruptionGlobals missing pollutionRecreepStep')
+        self.assertTrue(
+            hasattr(cg, 'streetAllowsRecreep'),
+            msg='CorruptionGlobals missing streetAllowsRecreep')
+        self.assertEqual(cg.pollutionRecreepStep(0.0), cg.POLLUTION_PURE)
+        self.assertGreater(cg.pollutionRecreepStep(0.3), 0.3)
+        director_ai_src = _read(
+            'toontown/reclaim/DistributedReclaimDirectorAI.py')
+        self.assertIn('markStreetContested', director_ai_src)
+        self.assertIn('markStreetSecured', director_ai_src)
+        self.assertIn('markStreetReclaiming', director_ai_src)
 
         # Dodge roll cream sparkle flecks (#101) — glitter along smear trail.
         for dodge_sparkle_key in (

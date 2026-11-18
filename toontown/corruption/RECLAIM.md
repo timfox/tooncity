@@ -15,6 +15,8 @@ Sections below remain **debug / magic-word** fallbacks.
 1. `PollutionManager` holds per-zone pollution `0..1` (pure → polluted).
 2. `~startreclaim` generates a `DistributedReclaimDirector` in the invoker zone,
    seeds partial pollution, and spawns escalating CorruptToon waves (size/HP grow).
+   Director marks the street `STREET_RECLAIMING` so incomplete-reclaim re-creep
+   pauses while packs are live.
 3. Melee (`~hackslash 0`) soft-targets CorruptToons; `applyHackSlashHit` →
    `requestHackSlashHit` → AI `takeHackSlashDamage`.
 4. Defeats lower pollution via `PollutionManagerAI.onCorruptToonDefeated`.
@@ -39,6 +41,13 @@ Sections below remain **debug / magic-word** fallbacks.
    `PurityBurstFx` + fog cream dissolve + `ReclaimCheer` local Happy/wave +
    rubber-hose cheer pitch swell + nearby nudge). Mid-reclaim wave clears fire a
    quieter pitch swell + light bounce via `reclaimWaveCleared`.
+   Complete marks the street `STREET_SECURED` — pure stays pure (no auto re-ink).
+6. Bail mid-reclaim (`~stopreclaim` / director stop while `STATE_ACTIVE`) marks the
+   street `STREET_CONTESTED`. Residual ink slowly re-creeps via
+   `PollutionManagerAI` (`POLLUTION_RECREEP_*`) toward `POLLUTION_RECREEP_CAP`;
+   fog / tint / street audio follow the rising `setZonePollution`. A one-shot
+   rubber-hose whisper warns toons still on the street. Pure / secured streets
+   never auto-stain.
 
 ## Discoverable play (preferred)
 
