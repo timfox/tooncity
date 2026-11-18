@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for Gunk Gagster puddle telegraph warn (#197).
+"""Behavioral headless tests for Gunk Gagster puddle telegraph + cream splash.
 
 Imports CorruptionGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-GAGSTER_TELEGRAPH_PUDDLE_LOOK teal/cream warn fields and AST wiring on
-GagsterPuddleTelegraphFx + DistributedCorruptToon (Gunk-only play/clear).
+GAGSTER_TELEGRAPH_PUDDLE_LOOK teal/cream warn fields (#197), puddle-land cream
+splash aftershock tunables, and AST wiring on GagsterPuddleTelegraphFx /
+GagsterPuddleCreamSplashFx + DistributedCorruptToon (Gunk-only play/clear).
 
 Run from repo root:
   python3 tests/test_gagster_telegraph_warn.py
@@ -149,6 +150,59 @@ class GagsterTelegraphWarnTest(unittest.TestCase):
         self.assertIn('localAvatar', play_snip)
         # Clear on defeat / disable paths (string presence is enough headless).
         self.assertGreater(src.count('__clearGagsterTelegraphPuddle'), 2)
+
+    def test_puddle_cream_splash_tunables(self):
+        self.assertTrue(self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED)
+        self.assertTrue(self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED)
+        self.assertGreaterEqual(
+            self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_DELAY_SEC, 0.0)
+        self.assertGreater(self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_LIFT, 0.0)
+        look = self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_LOOK
+        self.assertEqual(look.get('id'), 'gagster-puddle-cream-splash')
+        self.assertGreater(int(look.get('fleckCount', 0)), 0)
+        look_id = str(look.get('id', '')).lower()
+        self.assertNotIn('keyblade', look_id)
+        self.assertNotIn('kingdom hearts', look_id)
+        # Cream / pastel — not teal ink puddle colors.
+        color = self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_COLOR
+        self.assertGreaterEqual(float(color[0]), 0.9)
+        self.assertGreaterEqual(float(color[1]), 0.9)
+        self.assertGreaterEqual(float(color[2]), 0.55)
+        self.assertGreater(
+            self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DELAY_SEC, 0.0)
+        self.assertGreater(self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT, 0)
+
+    def test_cream_splash_fx_module_and_wiring(self):
+        rel = 'toontown/corruption/GagsterPuddleCreamSplashFx.py'
+        self.assertTrue((REPO_ROOT / rel).is_file())
+        names = _class_and_func_names(_module_ast(rel))
+        self.assertIn('GagsterPuddleCreamSplash', names)
+        self.assertIn('gagsterPuddleCreamSplashLook', names)
+        methods = _class_method_names(
+            _module_ast(rel), 'GagsterPuddleCreamSplash')
+        for name in (
+                'play', 'clear', '_spawnSplat', '_spawnFleck',
+                '_buildAftershock'):
+            self.assertIn(
+                name, methods,
+                msg='GagsterPuddleCreamSplash missing %s' % name)
+        src = _read(rel)
+        self.assertIn('GAGSTER_PUDDLE_CREAM_SPLASH_LOOK', src)
+        self.assertIn('_buildAftershock', src)
+        wire = _read('toontown/corruption/DistributedCorruptToon.py')
+        self.assertIn('GagsterPuddleCreamSplash', wire)
+        self.assertIn('__playGagsterPuddleCreamSplash', wire)
+        self.assertIn('__clearGagsterPuddleCreamSplash', wire)
+        # Fire from puddle land (after telegraph warn), not wind-up alone.
+        puddle_idx = wire.find('def __playGagPuddle')
+        self.assertGreater(puddle_idx, 0)
+        puddle_snip = wire[puddle_idx:puddle_idx + 2200]
+        self.assertIn('__playGagsterPuddleCreamSplash(landPos)', puddle_snip)
+        self.assertGreater(wire.count('__clearGagsterPuddleCreamSplash'), 2)
+        init_src = _read('toontown/corruption/__init__.py')
+        self.assertIn('GagsterPuddleCreamSplashFx', init_src)
+        reclaim = _read('toontown/corruption/RECLAIM.md')
+        self.assertIn('GagsterPuddleCreamSplashFx', reclaim)
 
 
 def main() -> int:
