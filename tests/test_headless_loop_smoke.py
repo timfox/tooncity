@@ -2573,6 +2573,39 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             self.assertNotIn(banned, hint_l)
 
+        # Finisher slam FOV punch + settle — deepen slam connect impact after
+        # air-juggle→slam (#196); rubber-hose undershoot then rest (no KH).
+        for fov_settle_key in (
+                'FINISHER_FOV_PUNCH',
+                'FINISHER_FOV_IN_SEC',
+                'FINISHER_FOV_OUT_SEC',
+                'FINISHER_FOV_SETTLE',
+                'FINISHER_FOV_SETTLE_SEC'):
+            self.assertIn(
+                fov_settle_key, config_names,
+                msg='HackSlashConfig missing finisher FOV settle %s' % (
+                    fov_settle_key,))
+        fov_punch = config_assigns.get('FINISHER_FOV_PUNCH')
+        fov_settle = config_assigns.get('FINISHER_FOV_SETTLE')
+        fov_settle_sec = config_assigns.get('FINISHER_FOV_SETTLE_SEC')
+        self.assertIsInstance(fov_punch, float)
+        self.assertIsInstance(fov_settle, float)
+        self.assertIsInstance(fov_settle_sec, float)
+        self.assertGreater(fov_punch, 0.0)
+        self.assertGreater(fov_settle, 0.0)
+        self.assertLess(fov_settle, fov_punch)
+        self.assertGreater(fov_settle_sec, 0.0)
+        self.assertIn(
+            'finisherFovPunchKeys', config_funcs,
+            msg='HackSlashConfig missing finisherFovPunchKeys')
+        self.assertIn(
+            '_playFinisherFovPunch', melee_methods,
+            msg='MeleeCombatController missing _playFinisherFovPunch')
+        self.assertIn('finisherFovPunchKeys', melee_src)
+        self.assertIn('FINISHER_FOV_SETTLE', melee_src)
+        self.assertIn('finisherFovPunchKeys', hack_init_src)
+        self.assertIn('FOV punch + settle', magic_src)
+
         # Hub tip discoverability (#184) — Oswald + Loopy + C, no magic words.
         hub_tip_node = _toplevel_value(self.campaign_tree, 'HUB_TIP')
         hub_tip = _literal(hub_tip_node)

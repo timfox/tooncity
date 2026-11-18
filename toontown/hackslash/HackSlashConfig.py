@@ -42,11 +42,34 @@ HITSTOP_ENABLED = True
 HITSTOP_SEC = (0.05, 0.065, 0.12)
 HITSTOP_FREEZE_ANIMS = True
 
-# Camera FOV punch on finisher (degrees added, then restored).
-# Slightly hotter than mid-combo so the stretch-punch slam reads.
-FINISHER_FOV_PUNCH = 16.0
-FINISHER_FOV_IN_SEC = 0.05
-FINISHER_FOV_OUT_SEC = 0.2
+# Camera FOV punch + settle on finisher slam connect (degrees).
+# Punch widens the lens, out drops into a brief rubber-hose undershoot,
+# then settle eases back to base — juicier slam impact after air-juggle
+# cancel→slam (#196) without KH branding. Soft-lock FOV yields while this runs.
+FINISHER_FOV_PUNCH = 17.5
+FINISHER_FOV_IN_SEC = 0.045
+FINISHER_FOV_OUT_SEC = 0.12
+# Degrees *below* base during the settle undershoot (0 disables settle beat).
+FINISHER_FOV_SETTLE = 3.0
+FINISHER_FOV_SETTLE_SEC = 0.14
+
+
+def finisherFovPunchKeys(baseFov, punch=None, settle=None):
+    """Return (base, peak, trough, rest) FOV degrees for slam punch+settle.
+
+    Pure helper for MeleeCombatController._playFinisherFovPunch and headless
+    tests. trough is base - settle (undershoot); rest is always base.
+    """
+    base = float(baseFov)
+    if punch is None:
+        punch = FINISHER_FOV_PUNCH
+    if settle is None:
+        settle = FINISHER_FOV_SETTLE
+    punch = max(0.0, float(punch))
+    settle = max(0.0, float(settle))
+    peak = base + punch
+    trough = base - settle
+    return (base, peak, trough, base)
 
 # Optional brief camera shake on finisher (applied after soft-lock each tick).
 # Keep amplitude small — cartoon thud, not earthquake.
