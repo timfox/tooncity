@@ -2140,6 +2140,34 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         corrupt_src = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('IdleCreamWashPulse', corrupt_src)
 
+        # Dodge → melee cancel window — late-dodge cancel into stretch-punch.
+        # Combat-feel timing (not cream FX): early roll lockout + buffer +
+        # cancel-into-melee helpers on MeleeCombatController.
+        for dodge_cancel_key in (
+                'DODGE_CANCEL_ENABLED',
+                'DODGE_CANCEL_START_SEC',
+                'DODGE_CANCEL_WINDOW_SEC',
+                'DODGE_CANCEL_BUFFER'):
+            self.assertIn(
+                dodge_cancel_key, config_names,
+                msg='HackSlashConfig missing dodge cancel %s' % dodge_cancel_key)
+        melee_tree = _module_ast('toontown/hackslash/MeleeCombat.py')
+        melee_methods = _class_method_names(melee_tree, 'MeleeCombatController')
+        for dodge_cancel_method in (
+                '_armDodgeCancelWindow',
+                '_clearDodgeCancelWindow',
+                '_isInDodgeCancelLockout',
+                'isDodgeCancelOpen',
+                '_cancelDodgeIntoMelee',
+                '_flushDodgeCancelBuffer'):
+            self.assertIn(
+                dodge_cancel_method, melee_methods,
+                msg='MeleeCombatController missing %s' % dodge_cancel_method)
+        melee_src = _read('toontown/hackslash/MeleeCombat.py')
+        self.assertIn('DODGE_CANCEL_ENABLED', melee_src)
+        self.assertIn('hackslash-dodge-cancel', melee_src)
+        self.assertIn('dodge→F', _read('toontown/hackslash/HackSlashConfig.py'))
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)

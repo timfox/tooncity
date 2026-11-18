@@ -59,6 +59,11 @@ class MeleeCombatController(DirectObject):
         self._dodgeIFrameUntil = 0.0
         self._dodgeReadyAt = 0.0
         self._dodging = False
+        # Dodge → melee cancel window (armed on Shift/X; see HackSlashConfig).
+        self._dodgeCancelArmed = False
+        self._dodgeCancelOpenAt = 0.0
+        self._dodgeCancelUntil = 0.0
+        self._dodgeAttackBuffered = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
         self._hitStop = HitStopFx(avatar)
@@ -101,6 +106,7 @@ class MeleeCombatController(DirectObject):
         self._dodgeIFrameUntil = 0.0
         self._dodgeReadyAt = 0.0
         self._dodging = False
+        self._clearDodgeCancelWindow()
         self._comboHits = 0
         self.avatar.hackSlashDemoHostiles = getattr(
             self.avatar, 'hackSlashDemoHostiles', []) or []
@@ -143,6 +149,7 @@ class MeleeCombatController(DirectObject):
         self._clearHitFlash()
         self._clearLaunch()
         self._clearDodge()
+        self._clearDodgeCancelWindow()
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
@@ -208,6 +215,8 @@ class MeleeCombatController(DirectObject):
     def _tick(self, task):
         if not self.enabled:
             return Task.done
+        # Flush buffered F/LMB once the dodge → melee cancel window opens.
+        self._flushDodgeCancelBuffer()
         target = self.targetFinder.acquire()
         snapped = self.targetFinder.didSnap()
         if target is not None:
@@ -346,13 +355,29 @@ class MeleeCombatController(DirectObject):
         # Presenting a pie — don't overlap classic toss.
         if getattr(self.avatar, 'tossPieStart', None) is not None:
             return
+
+        # Dodge → melee cancel: early roll is locked (optional buffer); once the
+        # cancel window opens, F/LMB aborts remaining dodge recovery into a
+        # fresh stretch-punch so Shift→F combo flow reads clean.
+        fromDodgeCancel = False
+        if getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True):
+            if self._isInDodgeCancelLockout():
+                if getattr(HackSlashConfig, 'DODGE_CANCEL_BUFFER', True):
+                    self._dodgeAttackBuffered = True
+                return
+            if self.isDodgeCancelOpen():
+                self._cancelDodgeIntoMelee()
+                fromDodgeCancel = True
+
         if self.busy and not self.comboWindowOpen:
             return
 
         messenger.send('wakeup')  # noqa: F821
-        if self.comboWindowOpen and self.comboIndex < HackSlashConfig.COMBO_LENGTH:
+        if (not fromDodgeCancel and self.comboWindowOpen and
+                self.comboIndex < HackSlashConfig.COMBO_LENGTH):
             hitIndex = self.comboIndex
         else:
+            # Dodge cancel always starts a fresh string (clearer combo flow).
             hitIndex = 0
             self.comboIndex = 0
 
@@ -772,7 +797,21 @@ class MeleeCombatController(DirectObject):
         now = globalClock.getFrameTime()  # noqa: F821
         if now < self._dodgeReadyAt:
             return
-        self._dodging = True
+        # Interrupt an in-flight swing so dodge owns the beat, then the
+        # cancel window can reopen into a fresh stretch-punch.
+        if self.busy:
+            self._finishSwing()
+            self.busy = False
+            self.comboWindowOpen = False
+            self.comboIndex = 0
+            self._restoreScale()
+            try:
+                if not getattr(
+                        self.avatar.controlManager.currentControls,
+                        'isAirborne', 0):
+                    self.avatar.setAnimState('Happy', 1.0)
+            except Exception:
+                pass
         self._dodgeReadyAt = now + HackSlashConfig.DODGE_COOLDOWN_SEC
         self._iframeUntil = now + HackSlashConfig.DODGE_IFRAME_SEC
         self._dodgeIFrameUntil = self._iframeUntil
@@ -794,9 +833,13 @@ class MeleeCombatController(DirectObject):
                 end = start + forward * HackSlashConfig.DODGE_DISTANCE
         except Exception:
             self._dodging = False
+            self._clearDodgeCancelWindow()
             return
         sx, sy, sz, squashSec = HackSlashConfig.DODGE_SQUASH
         self._clearDodge()
+        # _clearDodge drops the flag; re-assert for the live roll + lockout.
+        self._dodging = True
+        self._armDodgeCancelWindow(now)
         self._dodgeIval = Parallel(
             Sequence(
                 LerpPosInterval(
@@ -825,6 +868,86 @@ class MeleeCombatController(DirectObject):
         except Exception:
             pass
 
+    def _armDodgeCancelWindow(self, now=None):
+        """Arm the late-dodge cancel-into-melee window from dodge start."""
+        self._dodgeAttackBuffered = False
+        if not getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True):
+            self._clearDodgeCancelWindow()
+            return
+        if now is None:
+            now = globalClock.getFrameTime()  # noqa: F821
+        start = float(getattr(HackSlashConfig, 'DODGE_CANCEL_START_SEC', 0.16))
+        window = float(
+            getattr(HackSlashConfig, 'DODGE_CANCEL_WINDOW_SEC', 0.40))
+        self._dodgeCancelArmed = True
+        self._dodgeCancelOpenAt = now + max(0.0, start)
+        self._dodgeCancelUntil = self._dodgeCancelOpenAt + max(0.0, window)
+
+    def _clearDodgeCancelWindow(self):
+        self._dodgeCancelArmed = False
+        self._dodgeCancelOpenAt = 0.0
+        self._dodgeCancelUntil = 0.0
+        self._dodgeAttackBuffered = False
+
+    def _isInDodgeCancelLockout(self):
+        """True during early dodge commitment before cancel-into-melee opens."""
+        if not getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True):
+            return False
+        if not self._dodgeCancelArmed:
+            return False
+        now = globalClock.getFrameTime()  # noqa: F821
+        return now < self._dodgeCancelOpenAt
+
+    def isDodgeCancelOpen(self):
+        """True while F/LMB may cancel dodge recovery into a stretch-punch."""
+        if not getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True):
+            return False
+        if not self._dodgeCancelArmed:
+            return False
+        now = globalClock.getFrameTime()  # noqa: F821
+        return self._dodgeCancelOpenAt <= now < self._dodgeCancelUntil
+
+    def _cancelDodgeIntoMelee(self):
+        """Abort remaining dodge recovery so a stretch-punch can own the beat.
+
+        Pauses the dodge ival in place (does not finish the dash) so the
+        cancel lands where the toon is — clearer Shift→F rubber-hose flow.
+        """
+        self._dodgeAttackBuffered = False
+        self._clearDodgeCancelWindow()
+        if self._dodgeIval:
+            try:
+                self._dodgeIval.pause()
+            except Exception:
+                pass
+            self._dodgeIval = None
+        self._dodging = False
+        try:
+            self._dodgeTrail.stop(clearGhosts=False)
+        except Exception:
+            pass
+        try:
+            self.avatar.setScale(1.0, 1.0, 1.0)
+        except Exception:
+            pass
+        messenger.send('hackslash-dodge-cancel', [self.avatar])  # noqa: F821
+
+    def _flushDodgeCancelBuffer(self):
+        """Fire a buffered F/LMB once the dodge → melee cancel window opens."""
+        if not self._dodgeAttackBuffered:
+            return
+        if self.isDodgeCancelOpen():
+            self._dodgeAttackBuffered = False
+            self._onAttackPressed()
+            return
+        # Window expired (or never armed) — drop the buffer.
+        if self._dodgeCancelArmed:
+            now = globalClock.getFrameTime()  # noqa: F821
+            if now >= self._dodgeCancelUntil:
+                self._clearDodgeCancelWindow()
+        else:
+            self._dodgeAttackBuffered = False
+
     def _finishDodge(self):
         self._dodging = False
         self._dodgeIval = None
@@ -836,6 +959,13 @@ class MeleeCombatController(DirectObject):
             self.avatar.setScale(1.0, 1.0, 1.0)
         except Exception:
             pass
+        # Cancel window may still be open past dash end (into i-frame settle).
+        # Expire arming only after the window closes — handled in buffer flush
+        # / attack path; if nothing is buffered and window already passed, drop.
+        if self._dodgeCancelArmed:
+            now = globalClock.getFrameTime()  # noqa: F821
+            if now >= self._dodgeCancelUntil:
+                self._clearDodgeCancelWindow()
 
     def _clearDodge(self):
         if self._dodgeIval:
