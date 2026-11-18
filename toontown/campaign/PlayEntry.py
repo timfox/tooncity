@@ -156,8 +156,8 @@ class PlayEntryClient(DirectObject):
         name = act['name'] if act else 'this street'
         face = _face()
         tipHose = None
-        # Campaign ACTS entryTip wins (Punchline Act 2 Brute/Snare + Oswald
-        # trusted lead; Silly Act 3 Ink Overlord + Oswald trusted lead).
+        # Campaign ACTS entryTip wins (Punchline Act 2 sludge mix + Oswald
+        # unease tip; Silly Act 3 Ink Overlord + cheer-feels-wrong foreshadow).
         # Else STREET_PACK tip; finale without entryTip keeps Overlord vs line.
         if act and act.get('entryTip'):
             tip = act['entryTip']
@@ -522,9 +522,10 @@ class PlayEntryClient(DirectObject):
         tipHose='punchline' uses Act 2 Punchline tunables + Oswald-trust
         settle bounce. When the Punchline act carries trustFracture (#190
         deepen), settle holds a rubbery beat longer (unease tip). tipHose=
-        'silly' uses Act 3 Silly Overlord tunables + the same trust settle
-        (Oswald stays trusted on this tip — no twist). Default path keeps
-        the shared PLAY_ENTRY_TIP_* hose pop.
+        'silly' uses Act 3 Silly Overlord tunables + trust settle; when the
+        finale act carries entryTipUnease, settle holds the longer fracture
+        beat (cheer feels wrong — Overlord foreshadow, no twist spoil).
+        Default path keeps the shared PLAY_ENTRY_TIP_* hose pop.
         """
         if tipNP is None:
             return None
@@ -570,8 +571,19 @@ class PlayEntryClient(DirectObject):
                 CampaignGlobals, 'SILLY_ACT_TIP_POP_SETTLE_SEC',
                 CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC))
             trustSettle = True
-            trustOvershootAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
-            trustRestAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'
+            # Silly Overlord entry unease: longer fracture settle when armed.
+            # Tip-only — finale must not set trustFracture (victory sunny).
+            sillyAct = None
+            for act in getattr(CampaignGlobals, 'ACTS', ()):
+                if act.get('id') == 'finale':
+                    sillyAct = act
+                    break
+            if sillyAct is not None and sillyAct.get('entryTipUnease'):
+                trustOvershootAttr = 'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT'
+                trustRestAttr = 'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC'
+            else:
+                trustOvershootAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
+                trustRestAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'
         else:
             sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH
             tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH
