@@ -30,6 +30,13 @@ class TTPlayground(Playground.Playground):
             refreshOswaldPresenceHub()
         except Exception:
             pass
+        # Post-betrayal hub stain confront placemarker (fog + plaza label).
+        try:
+            from toontown.campaign.HubStainConfront import (
+                refreshHubStainConfront)
+            refreshHubStainConfront()
+        except Exception:
+            pass
 
     def exit(self):
         CorruptStreetBreadcrumb.stopCorruptStreetBreadcrumbs()
@@ -37,6 +44,12 @@ class TTPlayground(Playground.Playground):
             from toontown.campaign.OswaldPresence import (
                 stopOswaldPresenceClient)
             stopOswaldPresenceClient()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.HubStainConfront import (
+                stopHubStainConfront)
+            stopHubStainConfront()
         except Exception:
             pass
         Playground.Playground.exit(self)

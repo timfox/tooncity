@@ -12,6 +12,28 @@ from toontown.toonbase import ToontownGlobals
 HUB_ZONE = ToontownGlobals.ToontownCentral
 HUB_NAME = 'Toontown Central'
 PROTAGONIST = 'Oswald'
+# Post-betrayal hub stain (HubStain / CampaignDirectorAI): after finale
+# victory while Corrupted Oswald chase is still pending, TTC receives
+# authored pollution fog so the hub is not a pristine sunny plaza.
+# Chase clear / replay wipe washes it. Gameplay world consequence — not
+# cream FX, not OswaldPresence deepen. HUB_STAIN_ENABLED = False drops
+# hub pollution only (betrayal chase / epilogue tips remain).
+# No keyblades / KH branding.
+HUB_STAIN_ENABLED = True
+HUB_STAIN_POLLUTION = 0.42  # readable fog; under street seed caps
+HUB_STAIN_MSG = (
+    "Oswald's ink reaches Toon Central — the hub is stained!")
+HUB_STAIN_CLEAR_MSG = (
+    "Toon Central's stain lifts — purity holds at the hub.")
+# Plaza confront placemarker when hub is stained (HubStainConfront).
+# Complements pollution fog — not OswaldPresence trusted-face deepen.
+# HUB_STAIN_CONFRONT_ENABLED = False drops placemarker + tip only (fog remains).
+HUB_STAIN_CONFRONT_ENABLED = True
+HUB_STAIN_CONFRONT_LABEL = "Oswald's stain"
+HUB_STAIN_CONFRONT_TIP = (
+    "Oswald's ink stains the plaza — wash the betrayal chase!  |  "
+    'F fight  |  C campaign')
+HUB_STAIN_CONFRONT_FORWARD = 5.5
 # Alias used by handoff / PlayEntry celebration UX.
 RECLAIM_FACE = PROTAGONIST
 

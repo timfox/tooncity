@@ -6,6 +6,12 @@ from direct.task import Task
 
 from toontown.campaign import CampaignGlobals
 from toontown.campaign import CampaignProgressSave
+from toontown.campaign.HubStain import (
+    clearHubStain,
+    hubStainClearMsg,
+    hubStainZone,
+    syncHubStain,
+)
 from toontown.campaign.OswaldBetrayalChase import (
     chaseClearMsg,
     chaseDelaySec,
@@ -85,6 +91,9 @@ class CampaignDirectorAI(DirectObject):
         # Mirror unlock / victory / chaseCleared to the client so hub tip +
         # OswaldPresence match story state after relog (not session-only).
         self._pushProgressToClient(toon)
+        # Hub stain is process-local pollution — re-apply after relog when
+        # victory still has an uncleared chase (quiet: no re-whisper).
+        self._syncHubStain(tell=False)
         return True
 
     def _persistForToon(self, toon=None):
@@ -188,6 +197,9 @@ class CampaignDirectorAI(DirectObject):
             self._finalePhase = 0
             self.chaseCleared = 0
             self._cancelOswaldBetrayalChase()
+            # Force-wash hub now — state is still VICTORY until ACTIVE below,
+            # so syncHubStain would otherwise re-apply the betrayal fog.
+            clearHubStain(self.air)
             # Replay wipe must stick across the next relog.
             self._persistForToon(toon)
 
@@ -404,6 +416,36 @@ class CampaignDirectorAI(DirectObject):
             % (getattr(toon, 'doId', None), zoneId))
         return True
 
+    def _syncHubStain(self, tell=False, toon=None):
+        """Apply / clear TTC hub pollution from victory + chaseCleared."""
+        if toon is None:
+            toon = self._toonFromLast()
+        whisper = None
+        if tell and toon is not None:
+            def whisper(msg, _toon=toon):
+                self._tellToon(_toon, msg)
+        wantedBefore = bool(
+            self.state == CampaignGlobals.STATE_VICTORY
+            and int(getattr(self, 'chaseCleared', 0) or 0) == 0)
+        # Capture prior hub pollution so wash whisper only fires on a real clear.
+        priorLevel = 0.0
+        pollutionMgr = getattr(self.air, 'pollutionManager', None)
+        if pollutionMgr is not None:
+            try:
+                priorLevel = float(pollutionMgr.getPollution(hubStainZone()))
+            except Exception:
+                priorLevel = 0.0
+        wanted = syncHubStain(
+            self.air,
+            self.state,
+            chaseCleared=int(getattr(self, 'chaseCleared', 0) or 0),
+            tellToon=whisper if (tell and wantedBefore) else None)
+        if tell and toon is not None and not wanted and priorLevel > 0.0:
+            clearMsg = hubStainClearMsg()
+            if clearMsg:
+                self._tellToon(toon, clearMsg)
+        return wanted
+
     def _cancelOswaldBetrayalChase(self):
         if self._oswaldChaseTask is not None:
             try:
@@ -504,6 +546,8 @@ class CampaignDirectorAI(DirectObject):
             toon = self._toonFromLast()
         # Persist chase-clear so relog status / epilogue know the soft-end.
         self.chaseCleared = 1
+        # Wash TTC hub stain — chase copy said "wash the stain."
+        self._syncHubStain(tell=True, toon=toon)
         self._persistForToon(toon)
         self._tellToon(toon, chaseClearMsg())
         if bool(getattr(CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True)):
@@ -558,6 +602,8 @@ class CampaignDirectorAI(DirectObject):
             messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
             # Gameplay payload: short corrupted-Oswald chase after betrayal.
             self._scheduleOswaldBetrayalChase(toon, zoneId)
+            # TTC hub fog / confront while chase pending (HubStain).
+            self._syncHubStain(tell=True, toon=toon)
             return
 
         nextIndex = self.actIndex + 1
@@ -576,6 +622,7 @@ class CampaignDirectorAI(DirectObject):
         else:
             self.state = CampaignGlobals.STATE_VICTORY
             self._activeZoneId = None
+            self._syncHubStain(tell=True, toon=toon)
             self._persistForToon(toon)
             self._tellToon(toon, handoff)
             messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
