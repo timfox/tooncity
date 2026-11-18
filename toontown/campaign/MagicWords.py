@@ -11,9 +11,10 @@ class StartCampaign(MagicWord):
     advancedDesc = (
         'Uses CampaignDirector + ReclaimDirector. Oswald leads Loopy → '
         'Punchline → Silly two-phase Ink Overlord finale (P1 magenta rise / '
-        'P2 crimson unleash telegraphs + FOV/flash sting; victory twist: '
-        'Oswald caused the corruption). Toontown spiritual-sequel fantasy — '
-        'no keyblades. Pair with ~hackslash 0.')
+        'P2 crimson unleash telegraphs + FOV/flash sting; victory reveal '
+        'sting: Oswald caused the corruption — banner + FOV/SFX). '
+        'Toontown spiritual-sequel fantasy — no keyblades. '
+        'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]

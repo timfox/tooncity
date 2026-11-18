@@ -273,6 +273,18 @@ FINALE_STING_FLASH_COLOR = (1.15, 0.2, 0.55, 1.0)
 FINALE_STING_RENDER_PEAK = (1.85, 0.35, 1.15, 1.0)
 FINALE_STING_RENDER_HOLD = (1.35, 0.45, 0.75, 1.0)
 
+# Oswald reveal sting — colder ink wash after Silly finale victory / twist.
+# Existing Toontown SFX only (optional if asset missing in stripped checkouts).
+OSWALD_REVEAL_FOV_PUNCH = 14.0
+OSWALD_REVEAL_FOV_IN = 0.1
+OSWALD_REVEAL_FOV_OUT = 0.55
+OSWALD_REVEAL_FLASH_PEAK = 0.78
+OSWALD_REVEAL_FLASH_COLOR = (0.95, 0.22, 0.38, 1.0)
+OSWALD_REVEAL_RENDER_PEAK = (1.55, 0.28, 0.42, 1.0)
+OSWALD_REVEAL_RENDER_HOLD = (1.25, 0.38, 0.48, 1.0)
+OSWALD_REVEAL_SFX = 'phase_4/audio/sfx/tt_s_prp_sillyMeterPhaseTwo.ogg'
+OSWALD_REVEAL_SFX_VOLUME = 0.82
+
 # Polluted vs pure street music beds (existing Toontown BGM — no new assets).
 # Encounter bed lives in phase_3.5 with street loaders, so TT streets can play it.
 POLLUTED_STREET_MUSIC = 'phase_3.5/audio/bgm/encntr_general_bg.ogg'
