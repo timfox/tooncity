@@ -2,8 +2,9 @@
 
 World-space cream brackets over the sticky soft-lock target. On acquire/snap,
 plays a short squash → stretch → settle hose pop plus cream/ink accent flecks,
-an expanding cream pulse ring, a soft delayed cream wash pulse, and a brief
-FOV punch. Toontown spiritual-sequel tone only — no keyblades / no KH branding.
+an expanding cream pulse ring, a soft delayed cream wash pulse, a brief FOV
+punch, and a soft FOV cream wash after the lens kick. Toontown spiritual-sequel
+tone only — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec4
@@ -20,10 +21,11 @@ from direct.interval.LerpInterval import LerpFunc
 from . import HackSlashConfig
 from . import HitJuice
 from .SoftLockCreamWashFx import SoftLockCreamWashPulse
+from .SoftLockFovCreamWashFx import SoftLockFovCreamWashPulse
 
 
 class SoftLockReticleFx(object):
-    """Owns soft-lock reticle, snap pop, accents, pulse ring, wash, FOV."""
+    """Owns soft-lock reticle, snap pop, accents, pulse, wash, FOV + FOV wash."""
 
     def __init__(self, avatar, hitStop=None, beforeFov=None, fovBusy=None):
         self.avatar = avatar
@@ -41,18 +43,20 @@ class SoftLockReticleFx(object):
         self._pulseIval = None
         self._pulseNP = None
         self._creamWash = None
+        self._fovCreamWash = None
         self._fovIval = None
         self._baseFov = None
         self._pendingFov = False
 
     def clear(self):
-        """Stop juice and remove reticle + accents + pulse ring + wash."""
+        """Stop juice and remove reticle + accents + pulse ring + washes."""
         self._pendingFov = False
         self.restoreFov()
         self._clearPop()
         self._clearAccents()
         self._clearPulseRing()
         self._clearCreamWash()
+        self._clearFovCreamWash()
         self._target = None
         if self._root is not None:
             try:
@@ -70,6 +74,7 @@ class SoftLockReticleFx(object):
         self._clearAccents()
         self._clearPulseRing()
         self._clearCreamWash()
+        self._clearFovCreamWash()
         self._target = None
         if self._root is not None:
             try:
@@ -109,6 +114,7 @@ class SoftLockReticleFx(object):
         self._clearAccents()
         self._clearPulseRing()
         self._clearCreamWash()
+        self._clearFovCreamWash()
         settle = float(HackSlashConfig.SOFT_LOCK_RETICLE_SETTLE_SCALE)
         self._popIval = HitJuice.playSoftLockReticlePop(
             self._root, settle,
@@ -218,6 +224,27 @@ class SoftLockReticleFx(object):
         except Exception:
             pass
 
+    def _armFovCreamWash(self):
+        """Arm one delayed aspect2d cream wash per soft-lock FOV punch."""
+        try:
+            wash = SoftLockFovCreamWashPulse()
+            if wash.play() is not None:
+                self._fovCreamWash = wash
+            else:
+                self._fovCreamWash = None
+        except Exception:
+            self._fovCreamWash = None
+
+    def _clearFovCreamWash(self):
+        wash = self._fovCreamWash
+        self._fovCreamWash = None
+        if wash is None:
+            return
+        try:
+            wash.clear()
+        except Exception:
+            pass
+
     def cancelPendingFov(self):
         """Drop a deferred soft-lock FOV punch (e.g. finisher took the lens)."""
         self._pendingFov = False
@@ -307,6 +334,10 @@ class SoftLockReticleFx(object):
             name=self.avatar.uniqueName('hackslashSoftLockFovPunch'),
         )
         self._fovIval.start()
+        # Soft FOV cream wash after lens kick — reticle/juggle aspect2d grammar.
+        # SoftLockFovCreamWashPulse owns the veil; armed here so HitStopFx
+        # deferred FOV still gets wash when it flushes.
+        self._armFovCreamWash()
 
     def restoreFov(self):
         """Cancel soft-lock FOV ival and restore the captured base FOV."""

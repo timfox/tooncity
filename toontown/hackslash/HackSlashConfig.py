@@ -89,6 +89,21 @@ SOFT_LOCK_FOV_PUNCH = 5.5
 SOFT_LOCK_FOV_IN_SEC = 0.04
 SOFT_LOCK_FOV_OUT_SEC = 0.12
 
+# Soft-lock FOV cream wash pulse — soft aspect2d veil after FOV punch (#74).
+# Reticle cream wash (#155) / juggle cream wash (#150) grammar. Quieter than
+# reticle wash; armed when FOV punch actually plays (incl. HitStopFx flush).
+# SOFT_LOCK_FOV_CREAM_WASH_ENABLED = False drops wash only.
+SOFT_LOCK_FOV_CREAM_WASH_ENABLED = True
+SOFT_LOCK_FOV_CREAM_WASH_DELAY_SEC = 0.22  # after FOV start; past in+out (~0.16)
+SOFT_LOCK_FOV_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+SOFT_LOCK_FOV_CREAM_WASH_PEAK = 0.07
+SOFT_LOCK_FOV_CREAM_WASH_MID = 0.04
+SOFT_LOCK_FOV_CREAM_WASH_IN_SEC = 0.05
+SOFT_LOCK_FOV_CREAM_WASH_PULSE_SEC = 0.07
+SOFT_LOCK_FOV_CREAM_WASH_HOLD_SEC = 0.04
+SOFT_LOCK_FOV_CREAM_WASH_OUT_SEC = 0.26
+SOFT_LOCK_FOV_CREAM_WASH_BIN = 27  # under reticle wash (28) / soft-lock pulse
+
 # Soft-lock acquire cream pulse ring — expanding pastel cream ring on snap.
 # Layers with SoftLockReticleFx hose pop + accents + FOV punch (#52/#74).
 # Cream/pastel only — no ink, no keyblades / no KH branding.
