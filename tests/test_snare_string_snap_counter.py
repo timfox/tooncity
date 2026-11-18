@@ -129,13 +129,14 @@ class SnareStringSnapCounterTest(unittest.TestCase):
         look = self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK
         self.assertEqual(
             look.get('id'), 'snare-string-counter-cream-splash')
-        # Deepened string-snap splash vs #214 baseline (3 flecks / 3 aftershock).
-        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 5)
-        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.65)
-        self.assertGreaterEqual(float(look.get('fleckDist', 0)), 1.15)
+        # Beyond #245 string-snap deepen (was 5 flecks / 2 whips / 4 aftershock).
+        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 6)
+        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.8)
+        self.assertGreaterEqual(float(look.get('splatHalf', 0)), 0.3)
+        self.assertGreaterEqual(float(look.get('fleckDist', 0)), 1.3)
         self.assertTrue(look.get('whipEnabled'))
-        self.assertGreaterEqual(int(look.get('whipCount', 0)), 2)
-        self.assertGreater(float(look.get('whipSpread', 0)), 0.0)
+        self.assertGreaterEqual(int(look.get('whipCount', 0)), 3)
+        self.assertGreaterEqual(float(look.get('whipSpread', 0)), 1.25)
         look_id = str(look.get('id', '')).lower()
         self.assertNotIn('keyblade', look_id)
         self.assertNotIn('kingdom hearts', look_id)
@@ -150,15 +151,15 @@ class SnareStringSnapCounterTest(unittest.TestCase):
         self.assertGreaterEqual(float(whip[2]), 0.55)
         self.assertGreater(
             self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC, 0.0)
-        # Deepened string residual — juicier than #214; distinct from Gunk bloom.
+        # Wider sideways string residual beyond #245; distinct from Gunk bloom.
         self.assertGreaterEqual(
-            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT, 4)
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT, 5)
         self.assertGreaterEqual(
-            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT, 2)
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT, 3)
         self.assertGreaterEqual(
-            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT, 0.8)
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT, 0.95)
         self.assertGreaterEqual(
-            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF, 0.5)
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF, 0.58)
         # Distinct from Gunk puddle / Smudge hit cream splash ids.
         self.assertNotEqual(
             look.get('id'),
