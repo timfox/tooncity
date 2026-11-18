@@ -311,6 +311,20 @@ STREET_WASH_LERP_SEC = 0.32
 STREET_WASH_ADVANCE_SEC = 0.42
 STREET_WASH_CLEAR_SEC = 0.55
 
+# Purity-complete cream wash pulse (StreetColorWash veil grammar).
+# Full-screen soft cream pop on purityRestoreFx, layered under StreetSparkleFx
+# horizon glitter. Progressive wash still soft-clears separately. Sunny pastel
+# only — no KH blue. Above progressive wash (28); below sparkle (50).
+PURITY_COMPLETE_CREAM_WASH_ENABLED = True
+PURITY_COMPLETE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)
+PURITY_COMPLETE_CREAM_WASH_BIN = 40
+PURITY_COMPLETE_CREAM_WASH_PEAK = 0.28
+PURITY_COMPLETE_CREAM_WASH_MID = 0.16
+PURITY_COMPLETE_CREAM_WASH_IN_SEC = 0.07
+PURITY_COMPLETE_CREAM_WASH_PULSE_SEC = 0.12
+PURITY_COMPLETE_CREAM_WASH_HOLD_SEC = 0.10
+PURITY_COMPLETE_CREAM_WASH_OUT_SEC = 0.55
+
 # Full-purity / reclaim-complete street sparkle (horizon cream glitter).
 # Layers with StreetColorWash soft-clear + PurityBurstFx FOV/rays; bigger than
 # wave cream burst (#73). Sunny Toontown cream only — no KH blue / keyblades.
