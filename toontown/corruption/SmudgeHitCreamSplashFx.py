@@ -2,14 +2,16 @@
 
 World-space CardMaker juice that fires on Smudge melee hit beside
 SmudgeInkSplashFx (#75) purple ink — sunny cream / pastel contrast so basic
-corrupt packs read juicier. Immediate cream splat/flecks, then a soft settling
-aftershock (halo + residual flecks) matching telegraph cream warn aftershock
-grammar (#121) / Brute spit cream splash (#223) / Gunk puddle cream splash
-(#218) / Snare counter cream splash (#214). Soft under purple splash; cream /
-pastel only (not ink). Wired from DistributedCorruptToon hit reaction beside
-SmudgeInkSplash + SmudgeHitCreamWashFx (hit path only — death keeps splash +
-death cream wash). Client only. Toontown spiritual sequel — no keyblades /
-no KH branding.
+corrupt packs read juicier. Deepened mid-body hit juice: juicier splat/flecks,
+radial cream hose smears (SmudgeInkSplashFx punch-smear cousin), then a wider
+settling aftershock (halo + residual flecks) — distinct from Snare counter
+cream deepen (#245, horizontal whip), Brute spit cream deepen (#249, vertical
+drip), and Gunk puddle cream deepen (#238, flat ground bloom). Same residual
+grammar as telegraph cream warn aftershock (#121). Soft under purple splash;
+cream / pastel only (not ink). Wired from DistributedCorruptToon hit reaction
+beside SmudgeInkSplash + SmudgeHitCreamWashFx (hit path only — death keeps
+splash + death cream wash). Client only. Toontown spiritual sequel — no
+keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -95,6 +97,17 @@ class SmudgeHitCreamSplash(object):
         splat = self._spawnSplat(parentNP, origin, look)
         if splat is not None:
             parts.append(splat)
+
+        smearCount = max(0, int(look.get('smearCount', 0)))
+        if look.get(
+                'smearEnabled',
+                getattr(
+                    CorruptionGlobals,
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_ENABLED', True)):
+            for i in range(smearCount):
+                part = self._spawnHoseSmear(parentNP, origin, look, i)
+                if part is not None:
+                    parts.append(part)
 
         fleckCount = max(0, int(look.get('fleckCount', 0)))
         for i in range(fleckCount):
@@ -208,6 +221,101 @@ class SmudgeHitCreamSplash(object):
                 ),
                 LerpScaleInterval(
                     rim, sec, peak * 1.14, blendType='easeOut'),
+            )
+        except Exception:
+            return None
+
+    def _spawnHoseSmear(self, parentNP, origin, look, index):
+        """Radial cream hose smear — mid-body punch-smear cue.
+
+        Distinct from Snare horizontal whip filaments (#245), Brute vertical
+        drip filaments (#249), and Gunk flat puddle-plane bloom (#238):
+        outward cream smear matching purple SmudgeInkSplashFx punch-smear
+        grammar so pack hits read as rubber-hose cream against ink.
+        """
+        try:
+            side = -1.0 if (index % 2) == 0 else 1.0
+            t = 0.42 + 0.22 * (index // 2)
+            # Radial mid-body bias — punch-smear cousin, not sideways whip.
+            angle = (pi * 0.4) + side * (0.32 + 0.18 * index)
+            spread = float(look.get(
+                'smearSpread',
+                getattr(
+                    CorruptionGlobals,
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_SPREAD', 0.95)))
+            end = Point3(
+                origin[0] + cos(angle) * spread * t,
+                origin[1] + sin(angle) * spread * 0.5,
+                origin[2] + 0.06 + sin(pi * 0.22 * index) * 0.22,
+            )
+            half = float(look.get(
+                'smearHalf',
+                getattr(
+                    CorruptionGlobals,
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_HALF', 0.1)))
+            cm = CardMaker(
+                'smudge-hit-cream-splash-smear-%s' % index)
+            # Soft elongated frame — cream hose smear, not whip / drip / bloom.
+            cm.setFrame(-half, half, -half * 1.1, half * 1.1)
+            smear = parentNP.attachNewNode(cm.generate())
+            start = Point3(
+                origin[0] + side * 0.05,
+                origin[1] + 0.04,
+                origin[2] + 0.04 * ((index % 3) - 1),
+            )
+            smear.setPos(start)
+            smear.setBillboardPointEye()
+            smear.setTransparency(TransparencyAttrib.MAlpha)
+            color = look.get(
+                'smearColor',
+                getattr(
+                    CorruptionGlobals,
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_COLOR',
+                    (1.0, 0.97, 0.84, 0.92)))
+            tint = 0.9 + 0.08 * (index % 3)
+            smear.setColor(
+                min(1.4, color[0] * tint),
+                min(1.4, color[1] * tint),
+                min(1.4, color[2] * tint),
+                color[3])
+            smear.setColorScale(1, 1, 1, 0)
+            smear.setScale(Point3(0.5, 0.5, 0.65))
+            smear.setBin('fixed', int(look.get('binSort', 46)) + 1)
+            smear.setDepthWrite(False)
+            self._nodes.append(smear)
+            travel = float(look.get(
+                'smearSec',
+                getattr(
+                    CorruptionGlobals,
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_SEC', 0.22)))
+            peakA = float(look.get(
+                'smearPeakAlpha',
+                getattr(
+                    CorruptionGlobals,
+                    'SMUDGE_HIT_CREAM_SPLASH_SMEAR_PEAK_ALPHA',
+                    0.9)))
+            delay = 0.012 * index
+            return Sequence(
+                Wait(delay),
+                Parallel(
+                    LerpPosInterval(smear, travel, end, blendType='easeOut'),
+                    Sequence(
+                        LerpScaleInterval(
+                            smear, travel * 0.4, Point3(1.2, 0.7, 1.3),
+                            blendType='easeOut'),
+                        LerpScaleInterval(
+                            smear, travel * 0.6, Point3(0.35, 0.25, 1.55),
+                            blendType='easeIn'),
+                    ),
+                    Sequence(
+                        LerpColorScaleInterval(
+                            smear, travel * 0.22, Vec4(1, 1, 1, peakA),
+                            blendType='easeOut'),
+                        LerpColorScaleInterval(
+                            smear, travel * 0.78, Vec4(1, 1, 1, 0),
+                            blendType='easeIn'),
+                    ),
+                ),
             )
         except Exception:
             return None

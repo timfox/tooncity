@@ -2481,16 +2481,21 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SmudgeHitCreamWashPulse', corrupt_src)
         self.assertIn('__playSmudgeHitCreamWash', corrupt_src)
 
-        # Smudge hit cream splash aftershock — deepen pack juice beside purple splash.
+        # Smudge hit cream splash deepen — juicier mid-body cream + hose smears.
         self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_SPLASH_ENABLED'))
         self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_SPLASH_LOOK'))
         self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED'))
+        self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_SPLASH_SMEAR_ENABLED'))
         self.assertIs(cg.SMUDGE_HIT_CREAM_SPLASH_ENABLED, True)
         self.assertIs(cg.SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED, True)
+        self.assertIs(cg.SMUDGE_HIT_CREAM_SPLASH_SMEAR_ENABLED, True)
         smudge_cream_look = cg.SMUDGE_HIT_CREAM_SPLASH_LOOK
         self.assertEqual(
             smudge_cream_look.get('id'), 'smudge-hit-cream-splash')
-        self.assertGreater(int(smudge_cream_look.get('fleckCount', 0)), 0)
+        self.assertGreaterEqual(int(smudge_cream_look.get('fleckCount', 0)), 6)
+        self.assertGreaterEqual(int(smudge_cream_look.get('smearCount', 0)), 3)
+        self.assertGreaterEqual(
+            int(getattr(cg, 'SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT', 0)), 5)
         smudge_cream_id = str(smudge_cream_look.get('id', '')).lower()
         self.assertNotIn('keyblade', smudge_cream_id)
         self.assertNotIn('kingdom hearts', smudge_cream_id)
@@ -2504,6 +2509,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             _module_ast(smudge_cream_fx_rel), 'SmudgeHitCreamSplash')
         self.assertIn('play', smudge_cream_fx_methods)
         self.assertIn('clear', smudge_cream_fx_methods)
+        self.assertIn('_spawnHoseSmear', smudge_cream_fx_methods)
         self.assertIn('_buildAftershock', smudge_cream_fx_methods)
         self.assertIn('SmudgeHitCreamSplash', corrupt_src)
         self.assertIn('__playSmudgeHitCreamSplash', corrupt_src)
@@ -2513,6 +2519,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         smudge_corr_init = _read('toontown/corruption/__init__.py')
         self.assertIn('SmudgeHitCreamSplashFx', smudge_reclaim_md)
         self.assertIn('SmudgeHitCreamSplashFx', smudge_corr_init)
+        self.assertIn('radial cream hose', smudge_reclaim_md)
+        self.assertIn('cream hose smears', smudge_corr_init)
 
         # Dodge i-frame cream wash (#166 deepen) — stronger wash + aftershock
         # after first i-frame pulse so invuln windows read clearly.
