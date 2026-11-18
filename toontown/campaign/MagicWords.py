@@ -9,10 +9,11 @@ class StartCampaign(MagicWord):
     aliases = ['startcampaign', 'campaignstart', 'begincampaign']
     desc = 'Start or resume the multi-neighborhood reclaim campaign act.'
     advancedDesc = (
-        'Uses CampaignDirector + ReclaimDirector. Loopy → Punchline → '
-        'Silly two-phase Ink Overlord finale (magenta rise → crimson unleash '
-        'with FOV/flash sting; Oswald twist tease on victory). '
-        'Toontown spiritual-sequel fantasy — no keyblades. Pair with ~hackslash 0.')
+        'Uses CampaignDirector + ReclaimDirector. Oswald leads Loopy → '
+        'Punchline → Silly two-phase Ink Overlord finale (P1 magenta rise / '
+        'P2 crimson unleash telegraphs + FOV/flash sting; victory twist: '
+        'Oswald caused the corruption). Toontown spiritual-sequel fantasy — '
+        'no keyblades. Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]

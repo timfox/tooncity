@@ -42,22 +42,22 @@ STATE_NAMES = {
     STATE_COMPLETE: 'complete',
 }
 
-# Client feedback copy.
-BANNER_START = 'RECLAIM THIS STREET!'
+# Client feedback copy — Oswald is the trusted reclaim lead (twist at finale).
+BANNER_START = 'OSWALD: RECLAIM THIS STREET!'
 BANNER_PACK = 'Corrupt pack inbound!'
 BANNER_COMPLETE = 'PURITY RESTORED!'
-BANNER_COMPLETE_SUB = 'Neighborhood cheer returns!'
+BANNER_COMPLETE_SUB = 'Oswald tips his ears — neighborhood cheer returns!'
 BANNER_WAVE_CLEARED = 'Wave cleared — hold the street!'
 POLLUTION_HINT_FMT = 'Corruption  %.0f%%'
 STATUS_FMT = 'Wave %s/%s  |  Corruption %.0f%%  |  Pack %s'
 DEMO_HINT = (
-    'Reclaim: clear Corrupt Toons with melee (~hackslash 0)  |  '
+    'Oswald: clear Corrupt Toons with melee (~hackslash 0)  |  '
     '~stopreclaim to end'
 )
 # Finale pack banners keep the street reading as a boss fight.
 FINALE_PACK_BANNER = {
-    1: 'Ink Overlord swell!',
-    2: 'Unleashed ink tide!',
+    1: 'Ink Overlord swell — Oswald holds the line!',
+    2: "Unleashed ink tide — Oswald's cheer rings hollow!",
 }
 
 # Reclaim-complete purity burst (HUD overlay + sting).

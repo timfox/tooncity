@@ -1,7 +1,8 @@
-"""Discoverable KH×Toontown loop entry — no magic-word memorization required.
+"""Discoverable Toon City loop entry — no magic-word memorization required.
 
-On campaign streets: auto-arm melee, auto-start reclaim packs (no ~spawncorrupt),
-show prompts, bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
+Oswald leads the reclaim fantasy in tip/banner copy. On campaign streets:
+auto-arm melee, auto-start reclaim packs (no ~spawncorrupt), show prompts,
+bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
 """
 
 from panda3d.core import TextNode, Vec4
@@ -85,9 +86,14 @@ class PlayEntryClient(DirectObject):
         self._armMelee(zoneId)
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
-        self._showTip(
-            'CORRUPTION on %s — packs incoming  |  F fight  |  Shift dodge  |  C campaign'
-            % name)
+        tip = (
+            'Oswald: CORRUPTION on %s — packs incoming  |  '
+            'F fight  |  Shift dodge  |  C campaign' % name)
+        if act and act.get('finale'):
+            tip = (
+                'Oswald vs the Ink Overlord on %s  |  '
+                'F fight  |  Shift dodge  |  C campaign' % name)
+        self._showTip(tip)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
@@ -112,7 +118,7 @@ class PlayEntryClient(DirectObject):
         try:
             av.enableHackSlashMelee(spawnHostiles=False)
             self._armedZone = zoneId
-            self._flashBanner('MELEE ARMED — Press F / LMB')
+            self._flashBanner('Oswald: MELEE ARMED — Press F / LMB')
         except Exception:
             pass
 
@@ -139,7 +145,7 @@ class PlayEntryClient(DirectObject):
         if self._reclaimLive:
             return task.done
         self._requestReclaim()
-        self._flashBanner('CORRUPT PACKS INCOMING — Fight!')
+        self._flashBanner('Oswald: CORRUPT PACKS INCOMING — Fight!')
         return task.done
 
     def _onReclaimStart(self, *args):
@@ -151,11 +157,18 @@ class PlayEntryClient(DirectObject):
                 av.enableHackSlashMelee(spawnHostiles=False)
             except Exception:
                 pass
-        self._flashBanner('RECLAIM LIVE — Clear Corrupt Toons with F!')
+        self._flashBanner('Oswald: RECLAIM LIVE — Clear Corrupt Toons with F!')
 
     def _onPurity(self, zoneId):
         self._reclaimLive = False
-        self._flashBanner('STREET PURIFIED — Head to the next hood!')
+        zoneId = int(zoneId) if zoneId is not None else None
+        act = self._actForZone(zoneId) if zoneId is not None else None
+        if act and act.get('finale'):
+            self._flashBanner(
+                "STREET CLEAR — Oswald's smile feels… wrong")
+        else:
+            self._flashBanner(
+                'Oswald: STREET PURIFIED — Head to the next hood!')
 
     def _requestReclaim(self):
         if self._reclaimLive:
