@@ -38,7 +38,10 @@ Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
 rubber-hose string-lash pop) and, after the string reads, arm a short
 string-snap counter window into melee (SNARE_STRING_COUNTER_*; synchs
 with hackslash perfect-dodge counter; mid-telegraph melee interrupts
-the wind-up). Balloon Snare hits and deaths also flash
+the wind-up). Successful string-snap punish/counter hits also flash
+SnareStringCounterCreamSplashFx (brief cream splash + delayed cream
+aftershock — sunny cream/pastel juice on the rewarded window; telegraph
+cream warn aftershock grammar). Balloon Snare hits and deaths also flash
 SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
 composes with string / death / idle looks). Gunk Gagster wind-ups also flash
 GagsterPuddleTelegraphFx (teal bounce-pie charge + cream/ink ground puddle

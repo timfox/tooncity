@@ -4,8 +4,10 @@ Cheap world-space CardMaker juice so tagged / popped Snares stay scannable
 beside Smudges and Brutes. Composes palette / motion cues from
 BalloonSnareTelegraphFx (amber string/tip), CorruptDeathPopFx (radial flecks),
 and IdleInkDripFx (soft falling drip). Wired from DistributedCorruptToon hit
-reaction + announceDefeat for ARCHETYPE_SNARE only. Toontown spiritual sequel
-only — no keyblades / no KH branding.
+reaction + announceDefeat for ARCHETYPE_SNARE only. Successful string-snap
+counter punish layers SnareStringCounterCreamSplashFx (cream splash +
+aftershock) beside this amber snap. Toontown spiritual sequel only — no
+keyblades / no KH branding.
 """
 
 from math import cos, pi, sin

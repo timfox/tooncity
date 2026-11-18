@@ -118,6 +118,42 @@ class SnareStringSnapCounterTest(unittest.TestCase):
         self.assertAlmostEqual(arm_at(now, 0.0), now)
         self.assertAlmostEqual(until(armed, 0.25), armed + 0.25)
 
+    def test_config_cream_splash_tunables(self):
+        self.assertTrue(self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED)
+        self.assertTrue(self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED)
+        self.assertGreater(
+            self.cfg.SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC, 0.0)
+        self.assertGreaterEqual(
+            self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_DELAY_SEC, 0.0)
+        look = self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK
+        self.assertEqual(
+            look.get('id'), 'snare-string-counter-cream-splash')
+        self.assertGreater(int(look.get('fleckCount', 0)), 0)
+        look_id = str(look.get('id', '')).lower()
+        self.assertNotIn('keyblade', look_id)
+        self.assertNotIn('kingdom hearts', look_id)
+        # Cream / pastel — not amber ink splash colors.
+        color = self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_COLOR
+        self.assertGreaterEqual(float(color[0]), 0.9)
+        self.assertGreaterEqual(float(color[1]), 0.9)
+        self.assertGreaterEqual(float(color[2]), 0.55)
+
+    def test_cream_splash_eligible_helper(self):
+        eligible = self.cfg.isSnareStringCounterCreamSplashEligible
+        grace = self.cfg.SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC
+        until = 10.0
+        self.assertFalse(eligible(False, until, 9.5))
+        self.assertTrue(eligible(True, until, 9.5))
+        # Inside counter window.
+        self.assertTrue(eligible(True, until, until - 0.01))
+        # Past window but inside hit-grace (late stretch-punch contact).
+        self.assertTrue(eligible(True, until, until + grace * 0.5))
+        # Past window + grace — no cream.
+        self.assertFalse(eligible(True, until, until + grace))
+        self.assertFalse(eligible(True, until, until + grace + 0.05))
+        self.assertTrue(eligible(True, until, until + 0.1, grace=0.2))
+        self.assertFalse(eligible(True, until, until + 0.1, grace=0.05))
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(

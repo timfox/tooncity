@@ -36,6 +36,8 @@ from toontown.corruption.OverlordTelegraphPunchFx import (
 from toontown.corruption.SmudgeHitCreamWashFx import SmudgeHitCreamWashPulse
 from toontown.corruption.SmudgeInkSplashFx import SmudgeInkSplash
 from toontown.corruption.SmudgeInkTelegraphFx import SmudgeInkTelegraphFist
+from toontown.corruption.SnareStringCounterCreamSplashFx import (
+    SnareStringCounterCreamSplash)
 from toontown.corruption.SnareStringSnapSplashFx import SnareStringSnapSplash
 
 
@@ -108,7 +110,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._overlordHitCreamWash = None
         self._snareTelegraphString = None
         self._snareStringSnapSplash = None
+        self._snareStringCounterCreamSplash = None
         self._snareStringCounterTask = None
+        self._snareStringCounterArmed = False
+        self._snareStringCounterUntil = 0.0
         self._bruteTelegraphSpit = None
         self._bruteSludgeSplash = None
         self._smudgeTelegraphInk = None
@@ -202,6 +207,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
+        self.__clearSnareStringCounterCreamSplash()
         self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
@@ -1284,6 +1290,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
+        self.__clearSnareStringCounterCreamSplash()
         self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
@@ -1872,6 +1879,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
         Client-only cue — MeleeCombat listens and reuses the perfect-dodge
         counter opener path so telegraph punish and dodge punish rhyme.
+        Tracks local juice eligibility so a successful counter hit can fire
+        cream splash / aftershock without leaving corruption/.
         """
         self.__clearSnareStringSnapCounter()
         if not getattr(
@@ -1887,6 +1896,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
         def _fire(task=None):
             self._snareStringCounterTask = None
+            try:
+                now = globalClock.getFrameTime()  # noqa: F821
+            except Exception:
+                now = 0.0
+            self._snareStringCounterArmed = True
+            self._snareStringCounterUntil = (
+                CorruptionGlobals.snareStringCounterUntil(now, window))
             try:
                 messenger.send(event, [self, window])  # noqa: F821
             except Exception:
@@ -1915,6 +1931,57 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._snareStringCounterTask = None
+        self._snareStringCounterArmed = False
+        self._snareStringCounterUntil = 0.0
+
+    def __consumeSnareStringCounterCreamSplash(self):
+        """If string-snap counter juice is live, play cream splash and spend it.
+
+        Returns True when cream splash armed. Hit-grace covers stretch-punch
+        contact that lands just after the rewarded F window expires.
+        """
+        if not getattr(
+                CorruptionGlobals,
+                'SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED', True):
+            return False
+        try:
+            now = globalClock.getFrameTime()  # noqa: F821
+        except Exception:
+            now = 0.0
+        armed = bool(getattr(self, '_snareStringCounterArmed', False))
+        until = float(getattr(self, '_snareStringCounterUntil', 0.0) or 0.0)
+        eligible = CorruptionGlobals.isSnareStringCounterCreamSplashEligible(
+            armed, until, now)
+        # Spend eligibility either way so only the first rewarded hit juices.
+        self._snareStringCounterArmed = False
+        self._snareStringCounterUntil = 0.0
+        if not eligible:
+            return False
+        self.__playSnareStringCounterCreamSplash()
+        return True
+
+    def __playSnareStringCounterCreamSplash(self, pos=None):
+        """Cream splash + delayed aftershock — successful string-snap counter."""
+        if self.getArchetype() != CorruptionGlobals.ARCHETYPE_SNARE:
+            return
+        self.__clearSnareStringCounterCreamSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = SnareStringCounterCreamSplash()
+        self._snareStringCounterCreamSplash = splash
+        splash.play(pos)
+
+    def __clearSnareStringCounterCreamSplash(self):
+        splash = getattr(self, '_snareStringCounterCreamSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._snareStringCounterCreamSplash = None
 
     def __playBruteTelegraphSpit(self):
         """Green spit-gob telegraph pop — Sludge Brute wind-ups only."""
@@ -2190,6 +2257,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 Func(self.__resumeSilhouetteCreamWash),
             ).start()
         # Balloon Snare: cheap amber splash so tagged Snares read vs pack.
+        # Successful string-snap counter punish also fires cream splash /
+        # aftershock so the rewarded window feels juicy (#203 juice).
         elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_SNARE:
             self.__pauseIdleInkDrip()
             self.__pauseIdleCreamDrip()
@@ -2199,6 +2268,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__pauseSilhouetteCreamSparkle()
             self.__pauseSilhouetteCreamWash()
             self.__playSnareStringSnapSplash(kind='hit')
+            self.__consumeSnareStringCounterCreamSplash()
             Sequence(
                 Wait(0.26),
                 Func(self.__resumeIdleInkDrip),
