@@ -508,8 +508,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         StreetSparkleFx adds horizon cream glitter on purityRestoreFx
         (composes with StreetColorWash soft-clear + wave cream burst).
         PurityCompleteCreamWashFx pulses a StreetColorWash-style cream veil
-        under that sparkle. ReclaimCheer + CheerCreamSparkleFx layer pitch
-        swell cream flecks + delayed cream aftershock.
+        under that sparkle and owns a delayed cream aftershock (flecks + halo).
+        ReclaimCheer + CheerCreamSparkleFx layer pitch swell cream flecks +
+        delayed cream aftershock.
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
