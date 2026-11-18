@@ -7,7 +7,7 @@ soft cream wash pulse after the edge sparkle — do not restage flash/ring
 there.
 Wave-clear cream shimmer hang (WaveClearCreamShimmerFx) follows this burst
 as a delayed residual layer, then a quieter cream aftershock, then a soft
-cream wash pulse — do not restage flash/ring there.
+cream wash pulse + cream sparkle flecks — do not restage flash/ring there.
 
 Layers with ReclaimCheer pitch swell and StreetColorWash — never stomps hood
 geom tint / fog / full purity FOV punch. Toontown spiritual-sequel tone only —
