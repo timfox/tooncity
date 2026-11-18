@@ -875,3 +875,10 @@ try:
 except Exception:
     pass
 
+# Purity restore camera punch + aspect2d juice (client only).
+try:
+    from toontown.reclaim.PurityBurstFx import ensurePurityBurstFxClient
+    ensurePurityBurstFxClient()
+except Exception:
+    pass
+

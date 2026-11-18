@@ -58,20 +58,38 @@ FINALE_PACK_BANNER = {
 
 # Reclaim-complete purity burst (HUD overlay + sting).
 # Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.
-PURITY_BURST_PEAK_ALPHA = 0.72
-PURITY_BURST_IN_SEC = 0.08
-PURITY_BURST_HOLD_SEC = 0.12
-PURITY_BURST_OUT_SEC = 0.55
+PURITY_BURST_PEAK_ALPHA = 0.78
+PURITY_BURST_IN_SEC = 0.07
+PURITY_BURST_HOLD_SEC = 0.14
+PURITY_BURST_OUT_SEC = 0.58
 PURITY_BURST_COLOR = (1.0, 1.0, 0.82, 1.0)
-PURITY_RING_PEAK_SCALE = 2.4
-PURITY_RING_SEC = 0.55
-PURITY_BANNER_POP_SCALE = 0.13
-PURITY_BANNER_POP_SEC = 0.18
+PURITY_RING_PEAK_SCALE = 2.55
+PURITY_RING_SEC = 0.52
+PURITY_BANNER_POP_SCALE = 0.14
+PURITY_BANNER_POP_SEC = 0.16
 # Existing toon SFX — light celebration sting, optional if asset missing.
 PURITY_STING_SFX = 'phase_4/audio/sfx/AA_sound_whistle.ogg'
-PURITY_STING_VOLUME = 0.85
+PURITY_STING_VOLUME = 0.9
 # Second cheer beat (jump) layered by ReclaimCheer client.
 PURITY_CHEER_SFX = 'phase_3.5/audio/sfx/AV_jump_2.ogg'
+
+# KH-style camera punch on purity restore (between finisher 12° and finale 18°).
+PURITY_FOV_PUNCH = 15.0
+PURITY_FOV_IN_SEC = 0.07
+PURITY_FOV_OUT_SEC = 0.38
+# Soft camera pull-back / lift (local camera space units).
+PURITY_CAM_PULL = 0.85
+PURITY_CAM_LIFT = 0.22
+PURITY_CAM_IN_SEC = 0.09
+PURITY_CAM_OUT_SEC = 0.42
+# Extra aspect2d juice layered by PurityBurstFx (rays / outer ring / sparks).
+PURITY_OUTER_RING_PEAK = 3.1
+PURITY_OUTER_RING_SEC = 0.7
+PURITY_RAY_COUNT = 8
+PURITY_RAY_PEAK_ALPHA = 0.55
+PURITY_RAY_SEC = 0.48
+PURITY_SPARK_COUNT = 10
+PURITY_SPARK_SEC = 0.42
 
 WAVE_BANNER_FMT = 'Wave %s/%s — %s'
 WAVE_LABELS = (

@@ -330,10 +330,16 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
         Overlay flash/ring stay on aspect2d so hood geom prop tint / fog
         grade (PollutionPropTint / PollutionManager) are never stomped.
+        Camera FOV punch + rays/sparks live in PurityBurstFx (messenger).
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
         self.__clearPurityBurstOverlay()
+        try:
+            from toontown.reclaim.PurityBurstFx import ensurePurityBurstFxClient
+            ensurePurityBurstFxClient()
+        except Exception:
+            pass
         messenger.send('purityRestoreFx', [self.reclaimZoneId])
         messenger.send('purityRestoreSting', [self.reclaimZoneId])
         messenger.send('npcCheerStub', [self.reclaimZoneId])
@@ -342,16 +348,16 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         # Stronger two-beat wash: bright lift, then warm settle.
         self._restoreIval = Sequence(
             Parallel(
-                LerpColorScaleInterval(render, 0.1, Vec4(1.7, 1.75, 1.45, 1.0)),
+                LerpColorScaleInterval(render, 0.09, Vec4(1.85, 1.9, 1.5, 1.0)),
                 Func(messenger.send, 'purityBurstPulse', [self.reclaimZoneId, 1]),
             ),
-            LerpColorScaleInterval(render, 0.28, Vec4(1.25, 1.35, 1.1, 1.0)),
+            LerpColorScaleInterval(render, 0.26, Vec4(1.3, 1.4, 1.12, 1.0)),
             Parallel(
-                LerpColorScaleInterval(render, 0.5, Vec4(1.08, 1.16, 1.0, 1.0)),
+                LerpColorScaleInterval(render, 0.48, Vec4(1.1, 1.18, 1.02, 1.0)),
                 Func(messenger.send, 'purityBurstPulse', [self.reclaimZoneId, 2]),
             ),
-            Wait(0.4),
-            LerpColorScaleInterval(render, 0.75, Vec4(1, 1, 1, 1)),
+            Wait(0.35),
+            LerpColorScaleInterval(render, 0.7, Vec4(1, 1, 1, 1)),
             Func(render.clearColorScale),
             Func(self.__clearPurityBurstOverlay),
             Func(messenger.send, 'purityRestoreSettled', [self.reclaimZoneId]),
