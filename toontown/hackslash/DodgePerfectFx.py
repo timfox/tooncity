@@ -2,8 +2,8 @@
 
 Client juice when Shift/X dodge i-frames eat a CorruptToon telegraph hit
 (or a near-miss while those i-frames are live). Warm cream stars + ink
-flecks, then a delayed cream star aftershock — Toontown spiritual-sequel
-tone only, no keyblades / no KH branding.
+flecks, then a delayed cream star aftershock, then a soft cream wash
+pulse — Toontown spiritual-sequel tone only, no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -21,19 +21,21 @@ from direct.interval.IntervalGlobal import (
 )
 
 from . import HackSlashConfig
+from .PerfectDodgeCreamWashFx import PerfectDodgeCreamWashPulse
 
 
 class DodgePerfectFx(object):
-    """Owns a short world-space sparkle burst + cream star aftershock."""
+    """Owns sparkle burst + cream star aftershock + cream wash pulse."""
 
     def __init__(self, avatar):
         self.avatar = avatar
         self._ival = None
         self._nodes = []
         self._haloNP = None
+        self._creamWash = None
 
     def play(self, parent=None):
-        """Spawn star/ink pop + delayed cream aftershock at the avatar.
+        """Spawn star/ink pop + cream aftershock + delayed cream wash.
 
         Returns started Sequence or None.
         """
@@ -76,8 +78,42 @@ class DodgePerfectFx(object):
         else:
             burst = Parallel(*parts)
 
+        # Soft cream wash pulse after cream aftershock — entry/purity grammar.
+        washHold = 0.0
+        try:
+            wash = PerfectDodgeCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+                # Hold teardown beside delayed wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_DELAY_SEC',
+                        0.40))
+                    + float(getattr(
+                        HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_IN_SEC',
+                        0.06))
+                    + float(getattr(
+                        HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_PULSE_SEC',
+                        0.10))
+                    + float(getattr(
+                        HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_HOLD_SEC',
+                        0.08))
+                    + float(getattr(
+                        HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_OUT_SEC',
+                        0.40))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        hold = [burst]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
         self._ival = Sequence(
-            burst,
+            Parallel(*hold),
             Func(self.clear),
             name=self.avatar.uniqueName('hackslashPerfectDodge'),
         )
@@ -85,13 +121,20 @@ class DodgePerfectFx(object):
         return self._ival
 
     def clear(self):
-        """Stop the burst/aftershock and remove every star/fleck/halo node."""
+        """Stop burst/aftershock/wash and remove every star/fleck/halo/wash."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         if self._haloNP is not None:
             self._retireNode(self._haloNP)
             self._haloNP = None

@@ -14,6 +14,7 @@ from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
 from .HitSparkFx import HitSparkFx
 from .HitStopFx import HitStopFx
+from .PerfectDodgeCreamWashFx import PerfectDodgeCreamWashPulse
 from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
 
@@ -29,6 +30,7 @@ __all__ = [
     'DodgeTrailFx',
     'HitSparkFx',
     'HitStopFx',
+    'PerfectDodgeCreamWashPulse',
     'SlamDustFx',
     'SoftLockReticleFx',
 ]
