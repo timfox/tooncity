@@ -1195,6 +1195,229 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         entry_wash_src = _read(entry_wash_rel)
         self.assertIn('ENTRY_CREAM_WASH_AFTERSHOCK_ENABLED', entry_wash_src)
 
+        # Finale reveal cream edge (#133) — cream frame on Oswald reveal aftershock.
+        act_edge_names = _class_and_func_names(_module_ast(act_edge_rel))
+        self.assertIn('playFinaleRevealCreamEdge', act_edge_names)
+        self.assertIn('clearFinaleRevealCreamEdge', act_edge_names)
+        for finale_edge_key in (
+                'FINALE_REVEAL_CREAM_EDGE_ENABLED',
+                'FINALE_REVEAL_CREAM_EDGE_COLOR',
+                'FINALE_REVEAL_CREAM_EDGE_PEAK',
+                'FINALE_REVEAL_CREAM_EDGE_FLECK_COUNT',
+                'FINALE_REVEAL_CREAM_EDGE_BIN',
+                'FINALE_REVEAL_CREAM_EDGE_SPARKLE_ENABLED'):
+            self.assertIn(
+                finale_edge_key, campaign_names,
+                msg='CampaignGlobals missing %s' % finale_edge_key)
+        finale_phase_src = _read('toontown/campaign/FinalePhaseFx.py')
+        self.assertIn('playFinaleRevealCreamEdge', finale_phase_src)
+        self.assertIn('clearFinaleRevealCreamEdge', finale_phase_src)
+
+        # Melee hit cream wash (#134) — soft wash after hit-spark cream aftershock.
+        hit_wash_rel = 'toontown/hackslash/HitSparkCreamWashFx.py'
+        _assert_module_file(hit_wash_rel)
+        hit_wash_names = _class_and_func_names(_module_ast(hit_wash_rel))
+        self.assertIn('HitSparkCreamWashPulse', hit_wash_names)
+        hit_wash_methods = _class_method_names(
+            _module_ast(hit_wash_rel), 'HitSparkCreamWashPulse')
+        self.assertIn('play', hit_wash_methods)
+        self.assertIn('clear', hit_wash_methods)
+        for hit_wash_key in (
+                'HIT_SPARK_CREAM_WASH_ENABLED',
+                'HIT_SPARK_CREAM_WASH_DELAY_SEC',
+                'HIT_SPARK_CREAM_WASH_COLOR',
+                'HIT_SPARK_CREAM_WASH_PEAK',
+                'HIT_SPARK_CREAM_WASH_MID',
+                'HIT_SPARK_CREAM_WASH_BIN'):
+            self.assertIn(
+                hit_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % hit_wash_key)
+        hit_spark_src = _read('toontown/hackslash/HitSparkFx.py')
+        self.assertIn('HitSparkCreamWashPulse', hit_spark_src)
+        self.assertIn('HitSparkCreamWashPulse', hack_init)
+
+        # Telegraph cream sparkle (#135) — rising flecks on telegraph cream warn.
+        tel_sparkle_rel = 'toontown/corruption/CorruptTelegraphCreamSparkleFx.py'
+        _assert_module_file(tel_sparkle_rel)
+        tel_sparkle_names = _class_and_func_names(_module_ast(tel_sparkle_rel))
+        self.assertIn('TelegraphCreamSparkles', tel_sparkle_names)
+        self.assertIn('telegraphCreamSparkleLook', tel_sparkle_names)
+        tel_sparkle_methods = _class_method_names(
+            _module_ast(tel_sparkle_rel), 'TelegraphCreamSparkles')
+        self.assertIn('play', tel_sparkle_methods)
+        self.assertIn('_spawnFleck', tel_sparkle_methods)
+        self.assertTrue(
+            hasattr(cg, 'TELEGRAPH_CREAM_SPARKLE_LOOK'),
+            msg='CorruptionGlobals missing TELEGRAPH_CREAM_SPARKLE_LOOK')
+        self.assertEqual(
+            cg.TELEGRAPH_CREAM_SPARKLE_LOOK.get('id'), 'telegraph-cream-sparkle')
+        self.assertTrue(
+            hasattr(cg, 'TELEGRAPH_CREAM_SPARKLE_ENABLED'),
+            msg='CorruptionGlobals missing TELEGRAPH_CREAM_SPARKLE_ENABLED')
+        self.assertIn('TelegraphCreamSparkles', corrupt_src)
+        self.assertIn('__playTelegraphCreamSparkle', corrupt_src)
+
+        # Purity-complete cream aftershock (#136) — delayed residual after wash pulse.
+        purity_wash_methods = _class_method_names(
+            _module_ast(purity_wash_rel), 'PurityCompleteCreamWashFxClient')
+        self.assertIn('_buildAftershock', purity_wash_methods)
+        self.assertIn('_spawnAftershockHalo', purity_wash_methods)
+        self.assertIn('_spawnAftershockFleck', purity_wash_methods)
+        for purity_complete_as_key in (
+                'PURITY_COMPLETE_CREAM_AFTERSHOCK_ENABLED',
+                'PURITY_COMPLETE_CREAM_AFTERSHOCK_DELAY_SEC',
+                'PURITY_COMPLETE_CREAM_AFTERSHOCK_COUNT',
+                'PURITY_COMPLETE_CREAM_AFTERSHOCK_COLOR',
+                'PURITY_COMPLETE_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'PURITY_COMPLETE_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                purity_complete_as_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % purity_complete_as_key)
+        purity_wash_src = _read(purity_wash_rel)
+        self.assertIn('PURITY_COMPLETE_CREAM_AFTERSHOCK_ENABLED', purity_wash_src)
+
+        # (#137 was prior headless smoke through #132 — no new juice symbols.)
+
+        # Victory cream wash (#138) — soft wash after victory cream edge.
+        victory_wash_rel = 'toontown/campaign/VictoryCreamWashFx.py'
+        _assert_module_file(victory_wash_rel)
+        victory_wash_names = _class_and_func_names(_module_ast(victory_wash_rel))
+        self.assertIn('VictoryCreamWashPulse', victory_wash_names)
+        self.assertIn('playVictoryCreamWash', victory_wash_names)
+        self.assertIn('clearVictoryCreamWash', victory_wash_names)
+        victory_wash_methods = _class_method_names(
+            _module_ast(victory_wash_rel), 'VictoryCreamWashPulse')
+        self.assertIn('play', victory_wash_methods)
+        self.assertIn('clear', victory_wash_methods)
+        for victory_wash_key in (
+                'VICTORY_CREAM_WASH_ENABLED',
+                'VICTORY_CREAM_WASH_DELAY_SEC',
+                'VICTORY_CREAM_WASH_COLOR',
+                'VICTORY_CREAM_WASH_PEAK',
+                'VICTORY_CREAM_WASH_MID',
+                'VICTORY_CREAM_WASH_BIN'):
+            self.assertIn(
+                victory_wash_key, campaign_names,
+                msg='CampaignGlobals missing %s' % victory_wash_key)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('playVictoryCreamWash', handoff_src)
+        self.assertIn('creamSwell=True', handoff_src)
+
+        # Dodge cream wash (#139) — soft wash after dodge cream aftershock.
+        dodge_wash_rel = 'toontown/hackslash/DodgeTrailCreamWashFx.py'
+        _assert_module_file(dodge_wash_rel)
+        dodge_wash_names = _class_and_func_names(_module_ast(dodge_wash_rel))
+        self.assertIn('DodgeTrailCreamWashPulse', dodge_wash_names)
+        dodge_wash_methods = _class_method_names(
+            _module_ast(dodge_wash_rel), 'DodgeTrailCreamWashPulse')
+        self.assertIn('play', dodge_wash_methods)
+        self.assertIn('clear', dodge_wash_methods)
+        for dodge_wash_key in (
+                'DODGE_TRAIL_CREAM_WASH_ENABLED',
+                'DODGE_TRAIL_CREAM_WASH_DELAY_SEC',
+                'DODGE_TRAIL_CREAM_WASH_COLOR',
+                'DODGE_TRAIL_CREAM_WASH_PEAK',
+                'DODGE_TRAIL_CREAM_WASH_MID',
+                'DODGE_TRAIL_CREAM_WASH_BIN'):
+            self.assertIn(
+                dodge_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % dodge_wash_key)
+        dodge_trail_src = _read('toontown/hackslash/DodgeTrailFx.py')
+        self.assertIn('DodgeTrailCreamWashPulse', dodge_trail_src)
+        self.assertIn('DodgeTrailCreamWashPulse', hack_init)
+
+        # Death cream sparkle (#140) — rising flecks on death cream fleck burst.
+        death_sparkle_rel = 'toontown/corruption/CorruptDeathCreamSparkleFx.py'
+        _assert_module_file(death_sparkle_rel)
+        death_sparkle_names = _class_and_func_names(_module_ast(death_sparkle_rel))
+        self.assertIn('DeathCreamSparkles', death_sparkle_names)
+        self.assertIn('deathCreamSparkleLook', death_sparkle_names)
+        death_sparkle_methods = _class_method_names(
+            _module_ast(death_sparkle_rel), 'DeathCreamSparkles')
+        self.assertIn('play', death_sparkle_methods)
+        self.assertIn('_spawnFleck', death_sparkle_methods)
+        self.assertTrue(
+            hasattr(cg, 'DEATH_CREAM_SPARKLE_LOOK'),
+            msg='CorruptionGlobals missing DEATH_CREAM_SPARKLE_LOOK')
+        self.assertEqual(
+            cg.DEATH_CREAM_SPARKLE_LOOK.get('id'), 'death-cream-sparkle')
+        self.assertTrue(
+            hasattr(cg, 'DEATH_CREAM_SPARKLE_ENABLED'),
+            msg='CorruptionGlobals missing DEATH_CREAM_SPARKLE_ENABLED')
+        death_pop_src = _read('toontown/corruption/CorruptDeathPopFx.py')
+        self.assertIn('DeathCreamSparkles', death_pop_src)
+        self.assertIn('CorruptDeathCreamSparkleFx', death_pop_src)
+
+        # Handoff cream wash (#141) — soft wash after handoff cream edge.
+        handoff_wash_rel = 'toontown/campaign/HandoffCreamWashFx.py'
+        _assert_module_file(handoff_wash_rel)
+        handoff_wash_names = _class_and_func_names(_module_ast(handoff_wash_rel))
+        self.assertIn('HandoffCreamWashPulse', handoff_wash_names)
+        self.assertIn('playHandoffCreamWash', handoff_wash_names)
+        self.assertIn('clearHandoffCreamWash', handoff_wash_names)
+        handoff_wash_methods = _class_method_names(
+            _module_ast(handoff_wash_rel), 'HandoffCreamWashPulse')
+        self.assertIn('play', handoff_wash_methods)
+        self.assertIn('clear', handoff_wash_methods)
+        for handoff_wash_key in (
+                'HANDOFF_CREAM_WASH_ENABLED',
+                'HANDOFF_CREAM_WASH_DELAY_SEC',
+                'HANDOFF_CREAM_WASH_COLOR',
+                'HANDOFF_CREAM_WASH_PEAK',
+                'HANDOFF_CREAM_WASH_MID',
+                'HANDOFF_CREAM_WASH_BIN'):
+            self.assertIn(
+                handoff_wash_key, campaign_names,
+                msg='CampaignGlobals missing %s' % handoff_wash_key)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('playHandoffCreamWash', handoff_src)
+        self.assertIn('confetti=True', handoff_src)
+
+        # Cheer cream wash (#142) — soft wash after cheer cream aftershock.
+        cheer_wash_rel = 'toontown/reclaim/CheerCreamWashFx.py'
+        _assert_module_file(cheer_wash_rel)
+        cheer_wash_names = _class_and_func_names(_module_ast(cheer_wash_rel))
+        self.assertIn('CheerCreamWashPulse', cheer_wash_names)
+        cheer_wash_methods = _class_method_names(
+            _module_ast(cheer_wash_rel), 'CheerCreamWashPulse')
+        self.assertIn('play', cheer_wash_methods)
+        self.assertIn('clear', cheer_wash_methods)
+        for cheer_wash_key in (
+                'CHEER_CREAM_WASH_ENABLED',
+                'CHEER_CREAM_WASH_DELAY_SEC',
+                'CHEER_CREAM_WASH_COLOR',
+                'CHEER_CREAM_WASH_PEAK',
+                'CHEER_CREAM_WASH_MID',
+                'CHEER_CREAM_WASH_BIN'):
+            self.assertIn(
+                cheer_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % cheer_wash_key)
+        cheer_sparkle_src = _read(cheer_sparkle_rel)
+        self.assertIn('CheerCreamWashPulse', cheer_sparkle_src)
+
+        # Finisher cream wash (#143) — soft wash after finisher cream aftershock.
+        finisher_wash_rel = 'toontown/hackslash/FinisherCreamWashFx.py'
+        _assert_module_file(finisher_wash_rel)
+        finisher_wash_names = _class_and_func_names(_module_ast(finisher_wash_rel))
+        self.assertIn('FinisherCreamWashPulse', finisher_wash_names)
+        finisher_wash_methods = _class_method_names(
+            _module_ast(finisher_wash_rel), 'FinisherCreamWashPulse')
+        self.assertIn('play', finisher_wash_methods)
+        self.assertIn('clear', finisher_wash_methods)
+        for finisher_wash_key in (
+                'FINISHER_CREAM_WASH_ENABLED',
+                'FINISHER_CREAM_WASH_DELAY_SEC',
+                'FINISHER_CREAM_WASH_COLOR',
+                'FINISHER_CREAM_WASH_PEAK',
+                'FINISHER_CREAM_WASH_MID',
+                'FINISHER_CREAM_WASH_BIN'):
+            self.assertIn(
+                finisher_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % finisher_wash_key)
+        slam_src = _read(slam_rel)
+        self.assertIn('FinisherCreamWashPulse', slam_src)
+        self.assertIn('FinisherCreamWashPulse', hack_init)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
