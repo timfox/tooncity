@@ -109,6 +109,12 @@ class PlayEntryClient(DirectObject):
             ensureCampaignHandoffClient()
         except Exception:
             pass
+        try:
+            from toontown.campaign.OswaldBetrayalChase import (
+                ensureOswaldBetrayalChaseClient)
+            ensureOswaldBetrayalChaseClient()
+        except Exception:
+            pass
         taskMgr.doMethodLater(2.0, self._bootZone, 'playEntryBoot')  # noqa: F821
 
     def destroy(self):

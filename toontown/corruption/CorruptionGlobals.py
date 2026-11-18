@@ -13,11 +13,13 @@ CORRUPT_TOON_DEFAULT_HP = 30
 CORRUPT_TOON_DEFAULT_NAME = 'Corrupt Toon'
 
 # Archetypes — Smudge melee, Brute spit tank, Balloon Snare zip/lash,
-# Gunk Gagster gag-lob puddle (Punchline fourth).
+# Gunk Gagster gag-lob puddle (Punchline fourth), Corrupted Oswald
+# (finale betrayal chase — short post-victory consequence fight).
 ARCHETYPE_INK = 0
 ARCHETYPE_BRUTE = 1
 ARCHETYPE_SNARE = 2
 ARCHETYPE_GAGSTER = 3
+ARCHETYPE_CORRUPT_OSWALD = 4
 ARCHETYPE_STATS = {
     ARCHETYPE_INK: {
         'name': 'Ink Smudge',
@@ -78,6 +80,22 @@ ARCHETYPE_STATS = {
         'puddleLingerTickDamage': 1,
         'puddleLingerSlowFactor': 0.55,
     },
+    # Finale betrayal chase: trusted Oswald turns ink-corrupt — fast chase
+    # arena smack (not Overlord phase combat; not a full new campaign act).
+    ARCHETYPE_CORRUPT_OSWALD: {
+        'name': 'Corrupted Oswald',
+        'hpScale': 1.35,
+        'defaultHp': 48,
+        'chaseSpeed': 12.2,
+        'meleeRange': 4.8,
+        'attackHitRange': 6.0,
+        'attackDamage': 3,
+        'telegraphDelay': 0.42,
+        'attackCooldown': 1.45,
+        'actorScale': 1.18,
+        # Crimson-shadow tint — reads as betrayal stain vs street purple ink.
+        'actorTint': (0.42, 0.08, 0.14, 1.0),
+    },
 }
 
 
@@ -114,6 +132,7 @@ ARCHETYPE_NAMES = {
     ARCHETYPE_BRUTE: 'Sludge Brute',
     ARCHETYPE_SNARE: 'Balloon Snare',
     ARCHETYPE_GAGSTER: 'Gunk Gagster',
+    ARCHETYPE_CORRUPT_OSWALD: 'Corrupted Oswald',
 }
 
 # Defeating one corrupt toon reduces local pollution by this amount.
@@ -791,6 +810,21 @@ TELEGRAPH_INK_DRIP_LOOK = {
         'dripColor': (0.12, 0.62, 0.7, 0.95),
         'streakColor': (0.35, 0.95, 0.98, 0.9),
     },
+    ARCHETYPE_CORRUPT_OSWALD: {
+        'id': 'betrayal-crimson-drip',
+        'lift': 2.2,
+        'splatHalf': 0.46,
+        'splatPeak': 1.95,
+        'splatSec': 0.2,
+        'splatColor': (0.92, 0.28, 0.32, 0.94),
+        'dripCount': 4,
+        'dripHalf': 0.16,
+        'dripSpread': 0.58,
+        'dripFall': 1.4,
+        'dripSec': 0.36,
+        'dripColor': (0.72, 0.12, 0.18, 0.95),
+        'streakColor': (1.05, 0.35, 0.42, 0.9),
+    },
 }
 
 # Telegraph cream / pastel warn flecks — sunny purity chips layered on
@@ -992,6 +1026,21 @@ IDLE_INK_DRIP_LOOK = {
         'dripStagger': 0.06,
         'dripColor': (0.1, 0.48, 0.55, 0.55),
         'streakColor': (0.22, 0.72, 0.78, 0.48),
+        'binSort': 39,
+    },
+    ARCHETYPE_CORRUPT_OSWALD: {
+        'id': 'betrayal-crimson-idle',
+        'lift': 2.1,
+        'periodSec': 1.95,
+        'settleSec': 0.48,
+        'dripCount': 2,
+        'dripHalf': 0.12,
+        'dripSpread': 0.4,
+        'dripFall': 0.98,
+        'dripSec': 0.52,
+        'dripStagger': 0.05,
+        'dripColor': (0.55, 0.1, 0.14, 0.55),
+        'streakColor': (0.82, 0.22, 0.28, 0.48),
         'binSort': 39,
     },
 }
@@ -1963,6 +2012,31 @@ DEATH_POP_LOOK = {
         'dropletColor': (0.15, 0.62, 0.7, 0.95),
         'sfx': 'phase_3.5/audio/sfx/AA_pie_throw_only.ogg',
         'sfxVolume': 0.78,
+    },
+    ARCHETYPE_CORRUPT_OSWALD: {
+        'id': 'betrayal-crimson-splat',
+        'burstScale': (1.95, 1.95, 1.85),
+        'pancakeScale': (2.55, 2.55, 0.1),
+        'vanishScale': (0.02, 0.02, 0.02),
+        'burstSec': 0.07,
+        'pancakeSec': 0.12,
+        'vanishSec': 0.18,
+        'burstColor': (2.35, 0.85, 0.75, 1.0),
+        'pancakeColor': (1.85, 0.45, 0.4, 1.0),
+        'fadeColor': (1.35, 0.85, 0.7, 0.0),
+        'lift': 1.45,
+        'ringHalf': 0.95,
+        'ringPeak': 2.85,
+        'ringSec': 0.33,
+        'ringColor': (0.85, 0.22, 0.28, 0.92),
+        'dropletCount': 9,
+        'dropletHalf': 0.28,
+        'dropletDist': 2.5,
+        'dropletLift': 1.15,
+        'dropletSec': 0.34,
+        'dropletColor': (0.72, 0.14, 0.2, 0.95),
+        'sfx': 'phase_3.5/audio/sfx/AV_collision.ogg',
+        'sfxVolume': 0.8,
     },
 }
 

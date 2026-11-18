@@ -2,8 +2,16 @@
 
 from direct.directnotify import DirectNotifyGlobal
 from direct.showbase.DirectObject import DirectObject
+from direct.task import Task
 
 from toontown.campaign import CampaignGlobals
+from toontown.campaign.OswaldBetrayalChase import (
+    chaseClearMsg,
+    chaseDelaySec,
+    chaseEnabled,
+    chaseSpawnMsg,
+    spawnCorruptOswald,
+)
 from toontown.reclaim import ReclaimGlobals
 from toontown.reclaim.DistributedReclaimDirectorAI import DistributedReclaimDirectorAI
 
@@ -23,14 +31,20 @@ class CampaignDirectorAI(DirectObject):
         self._activeZoneId = None
         self._finalePhase = 0
         self._lastToonId = None
+        self._oswaldChaseDoId = None
+        self._oswaldChaseTask = None
+        self._oswaldChaseWatch = None
         self.accept('neighborhoodReclaimed', self.__onNeighborhoodReclaimed)
 
     def statusText(self):
         if self.state == CampaignGlobals.STATE_VICTORY:
+            chaseNote = ''
+            if chaseEnabled():
+                chaseNote = ' Corrupted-Oswald chase after betrayal.'
             return (
                 'Campaign VICTORY — purity restored, but Oswald caused '
-                'the corruption! Reclaims: %s. Replay from %s / C on Loopy.'
-                % (self.reclaimCount, CampaignGlobals.HUB_NAME))
+                'the corruption!%s Reclaims: %s. Replay from %s / C on Loopy.'
+                % (chaseNote, self.reclaimCount, CampaignGlobals.HUB_NAME))
         act = CampaignGlobals.ACTS[min(
             self.actIndex, len(CampaignGlobals.ACTS) - 1)]
         unlocked = [
@@ -62,6 +76,7 @@ class CampaignDirectorAI(DirectObject):
             self.unlockedThrough = 0
             self.reclaimCount = 0
             self._finalePhase = 0
+            self._cancelOswaldBetrayalChase()
 
         self.state = CampaignGlobals.STATE_ACTIVE
         act = CampaignGlobals.ACTS[self.actIndex]
@@ -223,6 +238,111 @@ class CampaignDirectorAI(DirectObject):
             return None
         return self.air.doId2do.get(self._lastToonId)
 
+    def _cancelOswaldBetrayalChase(self):
+        if self._oswaldChaseTask is not None:
+            try:
+                taskMgr.remove(self._oswaldChaseTask)  # noqa: F821
+            except Exception:
+                pass
+            self._oswaldChaseTask = None
+        if self._oswaldChaseWatch is not None:
+            try:
+                taskMgr.remove(self._oswaldChaseWatch)  # noqa: F821
+            except Exception:
+                pass
+            self._oswaldChaseWatch = None
+        doId = self._oswaldChaseDoId
+        self._oswaldChaseDoId = None
+        if doId is None:
+            return
+        corrupt = self.air.doId2do.get(doId)
+        if corrupt is None:
+            return
+        try:
+            if not corrupt.isDeleted():
+                corrupt.requestDelete()
+        except Exception:
+            pass
+
+    def _scheduleOswaldBetrayalChase(self, toon, zoneId):
+        """After finale betrayal, field a short fightable Oswald chase."""
+        self._cancelOswaldBetrayalChase()
+        if not chaseEnabled():
+            return
+        if toon is None:
+            toon = self._toonFromLast()
+        if toon is None:
+            return
+        delay = chaseDelaySec()
+        self._oswaldChaseTask = 'campaign-oswald-betrayal-chase'
+        taskMgr.doMethodLater(  # noqa: F821
+            delay,
+            self.__spawnOswaldBetrayalChase,
+            self._oswaldChaseTask,
+            extraArgs=[int(getattr(toon, 'doId', 0) or 0), int(zoneId)],
+            appendTask=True)
+
+    def __spawnOswaldBetrayalChase(self, toonId, zoneId, task):
+        self._oswaldChaseTask = None
+        if not chaseEnabled():
+            return Task.done
+        toon = self.air.doId2do.get(int(toonId)) if toonId else None
+        if toon is None:
+            toon = self._toonFromLast()
+        if toon is None:
+            return Task.done
+        # Prefer the toon's live zone so a hub hop still fields nearby.
+        liveZone = int(getattr(toon, 'zoneId', 0) or 0) or int(zoneId)
+        corrupt = spawnCorruptOswald(self.air, toon, zoneId=liveZone)
+        if corrupt is None:
+            return Task.done
+        self._oswaldChaseDoId = getattr(corrupt, 'doId', None)
+        self._tellToon(toon, chaseSpawnMsg())
+        try:
+            messenger.send(  # noqa: F821
+                'oswaldBetrayalChase',
+                [liveZone, int(self._oswaldChaseDoId or 0)])
+        except Exception:
+            pass
+        # Watch for defeat so we can land a short clear beat.
+        self._oswaldChaseWatch = 'campaign-oswald-betrayal-chase-watch'
+        taskMgr.doMethodLater(  # noqa: F821
+            0.5,
+            self.__watchOswaldBetrayalChase,
+            self._oswaldChaseWatch,
+            extraArgs=[int(self._oswaldChaseDoId or 0),
+                       int(getattr(toon, 'doId', 0) or 0)],
+            appendTask=True)
+        self.notify.info(
+            'oswald betrayal chase spawned doId=%s zone=%s'
+            % (self._oswaldChaseDoId, liveZone))
+        return Task.done
+
+    def __watchOswaldBetrayalChase(self, doId, toonId, task):
+        if doId <= 0:
+            self._oswaldChaseWatch = None
+            self._oswaldChaseDoId = None
+            return Task.done
+        corrupt = self.air.doId2do.get(int(doId))
+        alive = (
+            corrupt is not None
+            and not getattr(corrupt, 'isDeleted', lambda: True)()
+            and not getattr(corrupt, '_defeated', False)
+            and int(getattr(corrupt, 'hp', 0) or 0) > 0)
+        if alive:
+            return Task.again
+        self._oswaldChaseWatch = None
+        self._oswaldChaseDoId = None
+        toon = self.air.doId2do.get(int(toonId)) if toonId else None
+        if toon is None:
+            toon = self._toonFromLast()
+        self._tellToon(toon, chaseClearMsg())
+        try:
+            messenger.send('oswaldBetrayalChaseCleared', [int(doId)])  # noqa: F821
+        except Exception:
+            pass
+        return Task.done
+
     def __onNeighborhoodReclaimed(self, zoneId):
         zoneId = int(zoneId)
         if self.state != CampaignGlobals.STATE_ACTIVE:
@@ -255,6 +375,8 @@ class CampaignDirectorAI(DirectObject):
             self._finalePhase = 0
             self._tellToon(toon, handoff)
             messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
+            # Gameplay payload: short corrupted-Oswald chase after betrayal.
+            self._scheduleOswaldBetrayalChase(toon, zoneId)
             return
 
         nextIndex = self.actIndex + 1
