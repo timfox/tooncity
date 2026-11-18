@@ -7,7 +7,8 @@ On purity advances: short squash→stretch→settle fill pop, matching pct tick,
 sunny cream flecks at the fill tip, StreetSparkle/EntryCream-style cream
 shimmer flecks along the filled bar, then a delayed cream aftershock
 (softer flecks settling downward + soft halo) — same residual grammar as
-cheer cream aftershock.
+cheer cream aftershock — then a soft cream wash pulse (CheerCreamWashPulse /
+WaveClearCreamWashPulse vocabulary).
 """
 
 from math import cos, pi, sin
@@ -31,6 +32,7 @@ from direct.interval.IntervalGlobal import (
 )
 
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.PurityFillCreamWashFx import PurityFillCreamWashPulse
 
 
 def _lerpColor(a, b, t):
@@ -57,6 +59,7 @@ class PurityMeterHud(object):
         self._shimmerNPs = []
         self._shimmerPlayIval = None
         self._haloNP = None
+        self._creamWash = None
         self._lastPopPurity = None
 
     def isShown(self):
@@ -204,7 +207,7 @@ class PurityMeterHud(object):
         return self._pctPopIval is not None and self._pctPopIval.isPlaying()
 
     def _popTick(self):
-        """Hose fill pop + pct tick + tip flecks + cream shimmer + aftershock."""
+        """Hose fill pop + pct tick + tip flecks + cream shimmer + aftershock + wash."""
         if self._fillNP is None or self._fillNP.isEmpty():
             return
         if (self._lastPopPurity is not None
@@ -334,7 +337,7 @@ class PurityMeterHud(object):
         self._fleckIval.start()
 
     def _spawnFillShimmerFlecks(self):
-        """Cream shimmer along fill + delayed cream aftershock residual."""
+        """Cream shimmer along fill + aftershock + delayed cream wash."""
         self._clearFillShimmer()
         if not getattr(ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_ENABLED', True):
             return
@@ -423,7 +426,7 @@ class PurityMeterHud(object):
         if not parts:
             return
 
-        # Shimmer Parallel starts immediately; aftershock rides beside it.
+        # Shimmer Parallel starts immediately; aftershock + wash ride beside it.
         shimmerIval = Parallel(*parts, name='reclaimPurityMeterFillShimmer')
         self._shimmerPlayIval = shimmerIval
         try:
@@ -434,20 +437,53 @@ class PurityMeterHud(object):
 
         aftershock = self._buildFillAftershock(halfW, fillW)
         if aftershock is not None:
-            self._shimmerIval = Sequence(
-                Parallel(
-                    Wait(sec + 0.04),
-                    aftershock,
-                ),
-                Func(self._clearFillShimmer),
-                name='reclaimPurityMeterFillShimmerSeq',
+            # Shimmer Parallel already started; hold its lifetime beside aftershock.
+            burst = Parallel(
+                Wait(sec + 0.04),
+                aftershock,
             )
         else:
-            self._shimmerIval = Sequence(
-                Wait(sec + 0.04),
-                Func(self._clearFillShimmer),
-                name='reclaimPurityMeterFillShimmerSeq',
-            )
+            burst = Wait(sec + 0.04)
+
+        # Soft cream wash pulse after cream aftershock — cheer / wave-clear grammar.
+        washHold = 0.0
+        try:
+            wash = PurityFillCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+                # Hold teardown beside delayed wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_METER_FILL_CREAM_WASH_DELAY_SEC', 0.40))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_METER_FILL_CREAM_WASH_IN_SEC', 0.05))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_METER_FILL_CREAM_WASH_PULSE_SEC', 0.09))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_METER_FILL_CREAM_WASH_HOLD_SEC', 0.06))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_METER_FILL_CREAM_WASH_OUT_SEC', 0.34))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        hold = [burst]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
+        self._shimmerIval = Sequence(
+            Parallel(*hold),
+            Func(self._clearFillShimmer),
+            name='reclaimPurityMeterFillShimmerSeq',
+        )
         self._shimmerIval.start()
 
     def _buildFillAftershock(self, halfW, fillW):
@@ -645,7 +681,7 @@ class PurityMeterHud(object):
         self._fleckNPs = []
 
     def _clearFillShimmer(self):
-        """Stop fill shimmer/aftershock and remove every cream fill node."""
+        """Stop fill shimmer/aftershock/wash and remove every cream fill node."""
         if self._shimmerIval is not None:
             try:
                 self._shimmerIval.pause()
@@ -658,6 +694,13 @@ class PurityMeterHud(object):
             except Exception:
                 pass
             self._shimmerPlayIval = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         if self._haloNP is not None:
             try:
                 if not self._haloNP.isEmpty():
