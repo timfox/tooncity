@@ -3019,6 +3019,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'streetNeedsBreadcrumb',
                 'placemarkerPulseParams',
                 'streetBreadcrumbPulseParams',
+                'playgroundFogEdgePulseParams',
                 'CorruptStreetBreadcrumb',
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
@@ -3034,6 +3035,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         # Distinct tunnel-mouth crumb trail pulse (playground-side cue).
         self.assertIn('_startCrumbPulseLoop', crumb_src)
         self.assertIn('_CRUMB_PULSE_GAP_SEC', crumb_src)
+        # Playground pollution fog edge breath (distinct from #211 / #216).
+        self.assertIn('_startFogPulseLoop', crumb_src)
+        self.assertIn('_FOG_PULSE_GAP_SEC', crumb_src)
+        self.assertIn('playgroundPollutionFogEdge', crumb_src)
         playground_src = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('ensureCorruptStreetBreadcrumbs', playground_src)
         self.assertIn('stopCorruptStreetBreadcrumbs', playground_src)
