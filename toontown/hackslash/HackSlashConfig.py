@@ -102,6 +102,21 @@ SOFT_LOCK_PULSE_RING_COLOR = (1.0, 0.96, 0.78, 0.95)
 SOFT_LOCK_PULSE_RING_END = (1.0, 0.92, 0.62, 0.0)
 SOFT_LOCK_PULSE_RING_BIN = 25
 
+# Soft-lock cream wash pulse — soft aspect2d veil after cream pulse ring
+# (#92). Combo / juggle / finisher / dodge cream wash grammar. Quieter settle
+# beat after acquire snap; cream/pastel only. Toggle
+# SOFT_LOCK_CREAM_WASH_ENABLED = False drops wash only.
+SOFT_LOCK_CREAM_WASH_ENABLED = True
+SOFT_LOCK_CREAM_WASH_DELAY_SEC = 0.36  # after snap; after pulse ring (0.24)
+SOFT_LOCK_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+SOFT_LOCK_CREAM_WASH_PEAK = 0.09
+SOFT_LOCK_CREAM_WASH_MID = 0.05
+SOFT_LOCK_CREAM_WASH_IN_SEC = 0.05
+SOFT_LOCK_CREAM_WASH_PULSE_SEC = 0.08
+SOFT_LOCK_CREAM_WASH_HOLD_SEC = 0.05
+SOFT_LOCK_CREAM_WASH_OUT_SEC = 0.30
+SOFT_LOCK_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
+
 # Brief aspect2d white flash on connect (beyond hitstop).
 HIT_FLASH_PEAK_ALPHA = 0.38
 HIT_FLASH_IN_SEC = 0.03
