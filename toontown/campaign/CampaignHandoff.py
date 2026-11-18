@@ -7,12 +7,12 @@ cue — not a single toast line. Finale victory keeps the Oswald twist beat.
 Title lands with the same squash→stretch→settle rubber-hose scale pop as
 PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
-Oswald cheer/lead subtitle, plus a soft cream edge pulse (act-enter cream
-edge twin). Act handoffs fire a short confetti / streamer pop
-(CampaignHandoffConfetti) — carnival reclaim juice, no KH / keyblade
-framing. Campaign victory fires a soft cream confetti swell on the purity
-cheer only; it clears before the Oswald twist / FinalePhaseFx reveal so
-the bittersweet sting stays intact.
+Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
++ cream-sparkle pop (CampaignHandoffConfetti) framed by a soft cream edge
+pulse tuned to the carnival glitter — no KH / keyblade framing. Campaign
+victory fires a soft cream confetti swell on the purity cheer only; it
+clears before the Oswald twist / FinalePhaseFx reveal so the bittersweet
+sting stays intact.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -29,7 +29,9 @@ from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
 from toontown.campaign.ActBannerCreamEdgeFx import (
+    clearHandoffCreamEdge,
     clearOswaldTrustBannerCreamEdge,
+    playHandoffCreamEdge,
     playOswaldTrustBannerCreamEdge,
 )
 from toontown.campaign.CampaignHandoffConfetti import (
@@ -244,10 +246,14 @@ class CampaignHandoffClient(DirectObject):
                 playHandoffConfetti(origin=origin)
             except Exception:
                 pass
-
-        if trustSettle:
-            # Soft cream edge frame with early/mid Oswald trust hose settle.
-            # Trusted-hero mid-campaign only — twist / reveal paths stay edge-free.
+            # Cream edge frame tuned to cream-sparkle carnival banners (#99).
+            # Early/mid trusted Oswald only — twist / victory / phase stay edge-free.
+            try:
+                playHandoffCreamEdge()
+            except Exception:
+                pass
+        elif trustSettle:
+            # Trust hose-settle without carnival — keep #117 trust cream edge.
             try:
                 playOswaldTrustBannerCreamEdge()
             except Exception:
@@ -453,6 +459,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearVictoryCreamSwell()
+        except Exception:
+            pass
+        try:
+            clearHandoffCreamEdge()
         except Exception:
             pass
         try:

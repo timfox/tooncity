@@ -303,6 +303,43 @@ HANDOFF_CREAM_SPARKLE_COLORS = (
     (1.0, 0.90, 0.74, 0.90),
 )
 
+# Cream edge pulse framing hood handoff cream-sparkle carnival banners (#99).
+# Composes act/trust cream edge (#110/#117) with handoff cream sparkle —
+# sunny frame around the Loopy→Punchline (and act) carnival pop. Tuned a
+# touch longer than trust settle edge so the frame rides with cream glitter
+# (~0.68s). Early/mid trusted Oswald only — twist / victory / phase paths
+# stay edge-free. No keyblades / KH branding.
+HANDOFF_CREAM_EDGE_ENABLED = True
+HANDOFF_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)
+HANDOFF_CREAM_EDGE = 0.28  # strip thickness in aspect2d units
+HANDOFF_CREAM_EDGE_PEAK = 0.40
+HANDOFF_CREAM_EDGE_PULSE = 0.26  # mid-beat alpha after peak
+HANDOFF_CREAM_EDGE_IN_SEC = 0.08
+HANDOFF_CREAM_EDGE_HOLD_SEC = 0.12
+HANDOFF_CREAM_EDGE_PULSE_SEC = 0.14
+HANDOFF_CREAM_EDGE_OUT_SEC = 0.48  # covers cream sparkle hang
+# Below handoff plate/title (60/62); above ink vignette (48); under sparkle (66).
+HANDOFF_CREAM_EDGE_BIN = 55
+HANDOFF_CREAM_EDGE_FLECK_COUNT = 7
+HANDOFF_CREAM_EDGE_FLECK_SIZE = 0.022
+HANDOFF_CREAM_EDGE_FLECK_DRIFT = 0.20
+HANDOFF_CREAM_EDGE_FLECK_SEC = 0.32
+HANDOFF_CREAM_EDGE_FLECK_COLOR = (1.0, 0.96, 0.62, 0.9)
+HANDOFF_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
+# Tip flecks near the handoff plate / carnival origin (~z 0.40).
+HANDOFF_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.40)
+# Rising cream-sparkle flecks along the cream edge (wave-edge #113 twin).
+# Uses handoff cream-sparkle warmth (#99); disable drops sparkles only.
+HANDOFF_CREAM_EDGE_SPARKLE_ENABLED = True
+HANDOFF_CREAM_EDGE_SPARKLE_COUNT = 8
+HANDOFF_CREAM_EDGE_SPARKLE_SIZE = 0.016
+HANDOFF_CREAM_EDGE_SPARKLE_RISE = 0.28
+HANDOFF_CREAM_EDGE_SPARKLE_SPREAD = 1.05
+HANDOFF_CREAM_EDGE_SPARKLE_SEC = 0.40
+HANDOFF_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.90)
+HANDOFF_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
+HANDOFF_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.38)
+
 # Campaign victory cream confetti swell (CampaignHandoffConfetti).
 # Soft rubber-hose cream burst on the purity cheer ("TOON CITY IS SAVED!")
 # only — clears before the Oswald twist / FinalePhaseFx reveal so the
