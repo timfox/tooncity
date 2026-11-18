@@ -117,7 +117,18 @@ CORRUPT_ARM_TINT = (0.12, 0.02, 0.18, 0.78)
 CORRUPT_ACTOR_TINT = (0.18, 0.06, 0.28, 1.0)
 CORRUPT_ACTOR_SCALE = 1.08
 CORRUPT_FOG_COLOR = (0.18, 0.12, 0.22)
-CORRUPT_FOG_EXP_MAX = 0.012
+# Peak exponential fog density at pollution 1.0 (readable street ink haze).
+CORRUPT_FOG_EXP_MAX = 0.022
+
+# Density ramp: presented fog/haze lerps toward zone pollution as packs rise/clear.
+# Ease-in curve (>1) keeps low corruption mild and high corruption thick.
+POLLUTION_FOG_DENSITY_CURVE = 1.35
+POLLUTION_FOG_RAMP_SEC = 0.55
+POLLUTION_FOG_CLEAR_SEC = 0.9
+POLLUTION_FOG_SNAP_DELTA = 0.02
+# Fullscreen aspect2d ink wash (behind purity burst bins 56–60).
+POLLUTION_HAZE_ALPHA_MAX = 0.30
+POLLUTION_HAZE_BIN = 25
 
 # Per-street ambient corruption look (branch zone ids).
 # fog: RGB base; fogExpScale: density multiplier vs CORRUPT_FOG_EXP_MAX
@@ -345,46 +356,85 @@ def hoodPollutionBias(zoneId):
     return HOOD_POLLUTION_BIAS.get(branchZoneForPollution(zoneId), _DEFAULT_HOOD_BIAS)
 
 
+def pollutionDensityFactor(level):
+    """Map pollution 0..1 → density factor with ease-in ramp curve."""
+    lvl = clampPollution(level)
+    if lvl <= POLLUTION_PURE:
+        return 0.0
+    curve = float(POLLUTION_FOG_DENSITY_CURVE)
+    if curve == 1.0:
+        return lvl
+    return lvl ** curve
+
+
+def pollutionFogRampDuration(fromLevel, toLevel):
+    """Seconds to lerp fog/haze between two pollution levels."""
+    a = clampPollution(fromLevel)
+    b = clampPollution(toLevel)
+    if abs(b - a) <= POLLUTION_FOG_SNAP_DELTA:
+        return 0.0
+    # Clearing to pure uses the longer settle so reclaim reads as fog lifting.
+    if b <= POLLUTION_PURE < a:
+        return float(POLLUTION_FOG_CLEAR_SEC)
+    # Scale mid-step ramps by delta so a 0.15 defeat isn't sluggish.
+    span = max(0.15, abs(b - a))
+    return float(POLLUTION_FOG_RAMP_SEC) * min(1.0, span / 0.25)
+
+
 def hoodFogColor(zoneId, level):
-    """Fog RGB scaled by pollution level for this hood."""
+    """Fog RGB scaled by pollution density factor for this hood."""
     bias = hoodPollutionBias(zoneId)
     fog = bias['fog']
-    lvl = clampPollution(level)
+    dens = pollutionDensityFactor(level)
     return (
-        fog[0] * (0.7 + 0.3 * lvl),
-        fog[1] * (0.75 + 0.25 * lvl),
+        fog[0] * (0.7 + 0.3 * dens),
+        fog[1] * (0.75 + 0.25 * dens),
         fog[2],
     )
 
 
 def hoodFogExpDensity(zoneId, level):
-    """Exponential fog density for this hood at pollution level."""
+    """Exponential fog density for this hood at pollution level (ramped)."""
     bias = hoodPollutionBias(zoneId)
-    return CORRUPT_FOG_EXP_MAX * float(bias.get('fogExpScale', 1.0)) * clampPollution(level)
+    return (
+        CORRUPT_FOG_EXP_MAX
+        * float(bias.get('fogExpScale', 1.0))
+        * pollutionDensityFactor(level))
+
+
+def hoodHazeAlpha(zoneId, level):
+    """Fullscreen ink-haze opacity for this hood at pollution level."""
+    dens = pollutionDensityFactor(level)
+    if dens <= 0.0:
+        return 0.0
+    # Slight hood thickener so Silly/Punchline read heavier than Loopy.
+    bias = hoodPollutionBias(zoneId)
+    scale = float(bias.get('fogExpScale', 1.0))
+    return min(0.55, POLLUTION_HAZE_ALPHA_MAX * dens * (0.85 + 0.15 * scale))
 
 
 def hoodColorGrade(zoneId, level):
     """Render color-scale RGB (alpha 1) for hood-specific sickly grade."""
     bias = hoodPollutionBias(zoneId)
     drop = bias['gradeDrop']
-    lvl = clampPollution(level)
+    dens = pollutionDensityFactor(level)
     return (
-        1.0 - (drop[0] * lvl),
-        1.0 - (drop[1] * lvl),
-        1.0 - (drop[2] * lvl),
+        1.0 - (drop[0] * dens),
+        1.0 - (drop[1] * dens),
+        1.0 - (drop[2] * dens),
     )
 
 
 def hoodPropTint(zoneId, level):
     """Street-geom multiply RGB for pollutionPropTint (1,1,1 when pure)."""
-    lvl = clampPollution(level)
-    if lvl <= POLLUTION_PURE:
+    dens = pollutionDensityFactor(level)
+    if dens <= POLLUTION_PURE:
         return (1.0, 1.0, 1.0)
     bias = hoodPollutionBias(zoneId)
     target = bias['propTint']
-    # Lerp white → hood prop tint by pollution.
+    # Lerp white → hood prop tint by density factor.
     return (
-        1.0 - (1.0 - target[0]) * lvl,
-        1.0 - (1.0 - target[1]) * lvl,
-        1.0 - (1.0 - target[2]) * lvl,
+        1.0 - (1.0 - target[0]) * dens,
+        1.0 - (1.0 - target[1]) * dens,
+        1.0 - (1.0 - target[2]) * dens,
     )

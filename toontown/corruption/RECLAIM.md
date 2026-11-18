@@ -19,9 +19,12 @@ Sections below remain **debug / magic-word** fallbacks.
    `requestHackSlashHit` → AI `takeHackSlashDamage`.
 4. Defeats lower pollution via `PollutionManagerAI.onCorruptToonDefeated`.
    HUD shows wave / corruption % / pack remaining; scene tint + fog react to pollution.
-   Fog / color grade / street-prop tint are **hood-specific** (Loopy purple ink,
-   Punchline sludge green-brown, Silly hot magenta) via `HOOD_POLLUTION_BIAS`
+   Fog / ink haze / color grade / street-prop tint are **hood-specific** (Loopy purple
+   ink, Punchline sludge green-brown, Silly hot magenta) via `HOOD_POLLUTION_BIAS`
    and `PollutionPropTint` (geom colorScale — does not stomp reclaim render bloom).
+   Density **ramps** with zone corruption: as packs thicken pollution, fog exp density
+   + aspect2d ink haze + hood tint intensity lerp up; as purity reclaims, they clear
+   (`POLLUTION_FOG_*` / `hoodFogExpDensity` / `hoodHazeAlpha` in PollutionManager).
    Street music crossfades via `PollutionStreetAudio`: polluted → darker
    `encntr_general_bg` bed; purity clear → bright hood bed + cheer/sting (#21).
 5. At `0.0`, director announces reclaim complete and client plays a stronger purity
