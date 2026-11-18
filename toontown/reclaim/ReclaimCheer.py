@@ -3,7 +3,8 @@
 Listens for reclaim purity / wave-clear messengers and plays a local Happy/wave
 beat plus a short rubber-hose cheer SFX with a pitch swell so the fantasy pays
 off beyond the aspect2d burst. Cream sparkle flecks + delayed cream aftershock
-(CheerCreamSparkleFx) arm with this client and layer on the same swell messengers.
++ soft cream wash pulse (CheerCreamSparkleFx / CheerCreamWashPulse) arm with
+this client and layer on the same swell messengers.
 """
 
 from panda3d.core import Point3
@@ -245,7 +246,7 @@ def ensureReclaimCheerClient():
         ensureEntryCreamWashPulseFxClient()
     except Exception:
         pass
-    # Cream flecks layered on pitch swell (same messengers as this client).
+    # Cream flecks + aftershock + wash layered on pitch swell (same messengers).
     try:
         from toontown.reclaim.CheerCreamSparkleFx import (
             ensureCheerCreamSparkleFxClient)

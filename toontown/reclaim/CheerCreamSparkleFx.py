@@ -5,9 +5,11 @@ visual twin of the audio swell on wave clear / purity restore. Matches
 StreetSparkle / EntryCreamShimmer chip style (cream/pastel only). A delayed
 cream aftershock (softer flecks settling downward + soft halo) follows the
 sparkle — same residual grammar as hang / perfect-dodge cream aftershock.
-Does not restage WaveCreamBurst flash/ring, WaveClearCreamShimmer hang,
-StreetSparkle horizon glitter, or purity FOV. Toontown spiritual-sequel
-tone only — no keyblades / no KH branding.
+A soft cream wash pulse then settles after the aftershock — HitSpark /
+PerfectDodge cream wash vocabulary. Does not restage WaveCreamBurst
+flash/ring, WaveClearCreamShimmer hang, StreetSparkle horizon glitter, or
+purity FOV. Toontown spiritual-sequel tone only — no keyblades / no KH
+branding.
 """
 
 from math import cos, pi, sin
@@ -26,10 +28,11 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.CheerCreamWashFx import CheerCreamWashPulse
 
 
 class CheerCreamSparkleFxClient(DirectObject):
-    """Listens for cheer messengers; owns cream flecks + delayed aftershock."""
+    """Listens for cheer messengers; owns flecks + aftershock + cream wash."""
 
     def __init__(self):
         DirectObject.__init__(self)
@@ -37,6 +40,7 @@ class CheerCreamSparkleFxClient(DirectObject):
         self._sparkleIval = None
         self._fleckNPs = []
         self._haloNP = None
+        self._creamWash = None
         self._lastSparkleT = -1.0
         # Same messengers as ReclaimCheer — layer flecks on the pitch swell.
         self.accept('npcCheerStub', self._onPurityCheer)
@@ -74,7 +78,7 @@ class CheerCreamSparkleFxClient(DirectObject):
         return False
 
     def playSparkle(self, full=True):
-        """Cream flecks timed with cheer pitch swell + delayed cream aftershock."""
+        """Cream flecks + aftershock + delayed cream wash on cheer swell."""
         if not getattr(ReclaimGlobals, 'CHEER_CREAM_SPARKLE_ENABLED', True):
             return
         self.clear()
@@ -126,20 +130,47 @@ class CheerCreamSparkleFxClient(DirectObject):
         aftershock = self._buildAftershock(parent, ox, oy, oz, full=full)
         if aftershock is not None:
             # Sparkle Parallel already started; hold its lifetime beside aftershock.
-            self._ival = Sequence(
-                Parallel(
-                    Wait(sec + 0.04),
-                    aftershock,
-                ),
-                Func(self.clear),
-                name='reclaimCheerCreamSparkle',
+            burst = Parallel(
+                Wait(sec + 0.04),
+                aftershock,
             )
         else:
-            self._ival = Sequence(
-                Wait(sec + 0.04),
-                Func(self.clear),
-                name='reclaimCheerCreamSparkle',
-            )
+            burst = Wait(sec + 0.04)
+
+        # Soft cream wash pulse after cream aftershock — hit / dodge grammar.
+        washHold = 0.0
+        try:
+            wash = CheerCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+                # Hold teardown beside delayed wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        ReclaimGlobals, 'CHEER_CREAM_WASH_DELAY_SEC', 0.40))
+                    + float(getattr(
+                        ReclaimGlobals, 'CHEER_CREAM_WASH_IN_SEC', 0.05))
+                    + float(getattr(
+                        ReclaimGlobals, 'CHEER_CREAM_WASH_PULSE_SEC', 0.09))
+                    + float(getattr(
+                        ReclaimGlobals, 'CHEER_CREAM_WASH_HOLD_SEC', 0.06))
+                    + float(getattr(
+                        ReclaimGlobals, 'CHEER_CREAM_WASH_OUT_SEC', 0.36))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        hold = [burst]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
+        self._ival = Sequence(
+            Parallel(*hold),
+            Func(self.clear),
+            name='reclaimCheerCreamSparkle',
+        )
         self._ival.start()
 
     def _spawnFlecks(self, parent, ox, oy, oz, binSort, count, rise, spread, sec):
@@ -362,13 +393,20 @@ class CheerCreamSparkleFxClient(DirectObject):
         )
 
     def clear(self):
-        """Stop sparkle/aftershock and remove every cream cheer node."""
+        """Stop sparkle/aftershock/wash and remove every cream cheer node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         if self._sparkleIval is not None:
             try:
                 self._sparkleIval.pause()
