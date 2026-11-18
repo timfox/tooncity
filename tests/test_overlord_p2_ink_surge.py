@@ -104,7 +104,7 @@ class OverlordP2InkSurgeTest(unittest.TestCase):
     def test_p2_combat_table_has_surge_kit(self):
         p1 = self.cg.overlordPhaseCombat(1)
         p2 = self.cg.overlordPhaseCombat(2)
-        self.assertEqual(p1['moveMode'], 'rain')
+        self.assertEqual(p1['moveMode'], 'rising')
         self.assertEqual(p2['moveMode'], 'enrage')
         for key in (
                 'surgeMaxRange', 'surgeDash', 'surgeStop', 'surgeHitRange',

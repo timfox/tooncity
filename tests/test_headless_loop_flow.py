@@ -374,7 +374,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         # Ink Overlord is finale-only (not a street ARCHETYPE_* id).
         self.assertEqual(cg.FINALE_PHASE_LOOK[1].get('id'), 'rising')
         self.assertEqual(cg.FINALE_PHASE_LOOK[2].get('id'), 'unleashed')
-        self.assertEqual(cg.OVERLORD_PHASE_COMBAT[1].get('moveMode'), 'rain')
+        self.assertEqual(cg.OVERLORD_PHASE_COMBAT[1].get('moveMode'), 'rising')
         self.assertEqual(cg.OVERLORD_PHASE_COMBAT[2].get('moveMode'), 'enrage')
         self.assertEqual(cg.overlordP2AddCount(1), 0)
         self.assertGreater(cg.overlordP2AddCount(2), 0)
