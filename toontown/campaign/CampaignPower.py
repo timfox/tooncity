@@ -6,6 +6,8 @@ campaign depth can ship without rewriting the combat package.
 Login / hydrate re-applies via CampaignHandoff._onCampaignProgressSync
 using AI-persisted reclaimCount (PollutionManager setCampaignProgress)
 so mid-campaign relog keeps the same melee scale as an unbroken session.
+Live purityRestore and progress sync share an idempotent watermark
+(max / absorb) so sync-before-purity cannot double-apply COMBO_DAMAGE.
 
 Street-clear rewards (jellybeans + laff toon-up, trophy-style copy) sit
 beside the power bump so reclaim payoff is thicker than COMBO_DAMAGE

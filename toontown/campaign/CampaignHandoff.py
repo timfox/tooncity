@@ -128,6 +128,13 @@ class CampaignHandoffClient(DirectObject):
         self._rootNP = None
         self._ival = None
         self._localReclaimCount = 0
+        # AI absolute reclaimCount mirrored via campaignProgressSync / PM.
+        # Kept separate so sync-before-purity can raise power without
+        # advancing the live local watermark ahead of purityRestore.
+        self._syncedReclaimCount = 0
+        # First progress sync this session adopts absolute reclaimCount
+        # (login hydrate). Later persist pushes only refresh _synced*.
+        self._powerHydrated = False
         self._finaleClears = 0
         self._betrayalArmed = False
         self._epilogueShown = False
@@ -158,16 +165,51 @@ class CampaignHandoffClient(DirectObject):
         if phase >= 1:
             self._finaleClears = max(self._finaleClears, phase - 1)
 
+    def _pollutionReclaimCount(self):
+        """Thin read of PollutionManager.campaignReclaimCount (0 if unknown)."""
+        try:
+            cr = getattr(base, 'cr', None)  # noqa: F821
+            if cr is None:
+                return 0
+            pm = getattr(cr, 'pollutionManager', None)
+            if pm is None:
+                return 0
+            return max(0, int(getattr(pm, 'campaignReclaimCount', 0) or 0))
+        except Exception:
+            return 0
+
+    def _applyReclaimPower(self, count):
+        """Idempotent COMBO_DAMAGE scale to an absolute reclaim watermark."""
+        count = max(0, int(count or 0))
+        self._localReclaimCount = max(self._localReclaimCount, count)
+        return applyPowerBump(self._localReclaimCount)
+
     def _onCampaignProgressSync(
             self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
-        """Silent power rehydrate from AI reclaimCount (login / persist push)."""
+        """Silent power rehydrate from AI reclaimCount (login / persist push).
+
+        First sync this session adopts the absolute count (login hydrate).
+        Later persist pushes refresh the synced watermark only — so a
+        sync-before-purity race cannot stack an extra live +=1 on top.
+        Power always matches max(local, synced).
+        """
         count = max(0, int(reclaimCount or 0))
-        self._localReclaimCount = count
-        applyPowerBump(count)
+        self._syncedReclaimCount = max(self._syncedReclaimCount, count)
+        if not self._powerHydrated:
+            self._localReclaimCount = count
+            self._powerHydrated = True
+        applyPowerBump(max(self._localReclaimCount, self._syncedReclaimCount))
 
     def _onPurityRestore(self, zoneId):
-        self._localReclaimCount += 1
-        mult = applyPowerBump(self._localReclaimCount)
+        # Live street clear: advance one, but absorb AI absolute when progress
+        # sync already landed for this clear (sync-before-purity dedupe).
+        self._powerHydrated = True
+        synced = max(self._syncedReclaimCount, self._pollutionReclaimCount())
+        if synced > self._localReclaimCount:
+            # Sync raced ahead — adopt absolute, do not stack +=1.
+            mult = self._applyReclaimPower(synced)
+        else:
+            mult = self._applyReclaimPower(self._localReclaimCount + 1)
         # Street-trophy jellybean / laff line — client mirror of AI award
         # (CampaignPower.awardStreetClearReward). Beyond COMBO_DAMAGE bump.
         rewardLine = self._streetClearRewardLine(zoneId)

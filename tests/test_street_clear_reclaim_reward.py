@@ -274,7 +274,8 @@ class StreetClearReclaimRewardTests(unittest.TestCase):
         purity_idx = handoff_src.find('def _onPurityRestore')
         self.assertGreater(purity_idx, 0)
         purity_win = handoff_src[purity_idx:purity_idx + 900]
-        self.assertIn('applyPowerBump', purity_win)
+        # Power bump via idempotent helper (deduped vs progress sync).
+        self.assertIn('_applyReclaimPower', purity_win)
         self.assertIn('rewardLine', purity_win)
         self.assertIn('_streetClearRewardLine', purity_win)
 
