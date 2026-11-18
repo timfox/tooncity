@@ -49,6 +49,9 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._addWaveStart = None
         self._addHp = None
         self._addName = None
+        # Silly street mid-fight Unleash (HP fraction of maxHp); None = off.
+        self._overlordP2HpFrac = None
+        self._streetP2Promoted = False
 
     def getState(self):
         return self.state
@@ -114,12 +117,15 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
               gagsterFraction=None, gagsterWaveStart=None, gagsterName=None,
               waveScripts=None,
               finalePhase=0, transitionSting=False,
-              addCount=None, addWaveStart=None, addHp=None, addName=None):
+              addCount=None, addWaveStart=None, addHp=None, addName=None,
+              overlordP2HpFrac=None):
         """Seed pollution and spawn the first escalating corrupt wave.
 
         Optional overrides support multi-act campaign difficulty,
         Sludge Brute / Balloon Snare / Gunk Gagster mix ratios, per-wave
         scripts, and Ink Overlord finale (phase combat + optional P2 adds).
+        overlordP2HpFrac arms Silly-street mid-fight Rising→Unleashed
+        without a campaign restart (slam kit + Smudge adds).
         """
         self.reclaimZoneId = int(zoneId)
         self._anchorPos = (
@@ -156,6 +162,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             None if addWaveStart is None else int(addWaveStart))
         self._addHp = None if addHp is None else int(addHp)
         self._addName = addName
+        if overlordP2HpFrac is None:
+            self._overlordP2HpFrac = None
+        else:
+            self._overlordP2HpFrac = float(overlordP2HpFrac)
+        self._streetP2Promoted = False
         self._clearPack(delete=True)
         self._packsSpawned = 0
         self._cancelWaveDelay()
@@ -207,6 +218,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._addWaveStart = None
         self._addHp = None
         self._addName = None
+        self._overlordP2HpFrac = None
+        self._streetP2Promoted = False
         self.b_setState(ReclaimGlobals.STATE_IDLE)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
         if wasActive:
@@ -227,6 +240,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             return Task.done
 
         self._prunePack()
+        self._maybePromoteStreetOverlordP2()
         self._syncPollutionHint()
         self.b_setPackAlive(len(self._pack))
 
@@ -422,8 +436,68 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
                 bruteCount, snareCount, gagsterCount, len(addSpawned),
                 self.finalePhase))
 
+    def _maybePromoteStreetOverlordP2(self):
+        """HP-threshold Rising→Unleashed for discoverable Silly street reclaim.
+
+        Campaign C still owns the story P2 restart + Oswald twist; this path
+        only flips combat (slam kit + Smudge adds) mid-fight.
+        """
+        if self._streetP2Promoted:
+            return
+        if int(self.finalePhase) != 1:
+            return
+        frac = self._overlordP2HpFrac
+        if frac is None:
+            return
+        for corrupt in self._pack:
+            if corrupt is None or corrupt.isDeleted():
+                continue
+            if getattr(corrupt, '_defeated', False):
+                continue
+            if not getattr(corrupt, '_isOverlord', lambda: False)():
+                continue
+            if ReclaimGlobals.overlordHpAtP2Threshold(
+                    getattr(corrupt, 'hp', 0),
+                    getattr(corrupt, 'maxHp', 0),
+                    frac):
+                self._promoteStreetOverlordP2()
+                return
+
+    def _promoteStreetOverlordP2(self):
+        """Flip director + living Overlords to Unleashed and spawn Smudge adds."""
+        if self._streetP2Promoted or int(self.finalePhase) >= 2:
+            self._streetP2Promoted = True
+            return
+        self._streetP2Promoted = True
+        self.b_setFinalePhase(2)
+        self.sendUpdate('announceFinalePhaseTransition', [2])
+        for corrupt in list(self._pack):
+            if corrupt is None or corrupt.isDeleted():
+                continue
+            if getattr(corrupt, '_defeated', False):
+                continue
+            if not getattr(corrupt, '_isOverlord', lambda: False)():
+                continue
+            promote = getattr(corrupt, 'promoteFinalePhase', None)
+            if callable(promote):
+                promote(2)
+            else:
+                corrupt.setFinalePhase(2)
+        wave = max(1, int(self._packsSpawned or self.waveIndex or 1))
+        heading = float(self._anchorH)
+        rad = math.radians(heading)
+        baseX, baseY, baseZ = self._anchorPos
+        addSpawned = self._spawnOverlordAdds(
+            wave, heading, rad, baseX, baseY, baseZ)
+        if addSpawned:
+            self._pack.extend(addSpawned)
+            self.b_setPackAlive(len(self._pack))
+            self.notify.debug(
+                'street Overlord HP-threshold P2 — spawned %s adds (wave %s)'
+                % (len(addSpawned), wave))
+
     def _spawnOverlordAdds(self, wave, heading, rad, baseX, baseY, baseZ):
-        """Spawn street Smudge adds beside Unleashed Overlord (P2 wave 2+)."""
+        """Spawn street Smudge adds beside Unleashed Overlord (P2 wave gate)."""
         if int(self.finalePhase) < 2:
             return []
         count = CorruptionGlobals.overlordP2AddCount(

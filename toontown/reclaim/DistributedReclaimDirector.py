@@ -34,6 +34,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.maxWaves = ReclaimGlobals.MAX_PACKS
         self.packAlive = 0
         self.finalePhase = 0
+        # Phase at reclaim start — street HP-threshold P2 must not spoil
+        # Oswald twist (campaign P2 restart starts already Unleashed).
+        self._startFinalePhase = 0
         self._bannerNP = None
         self._subBannerNP = None
         self._telegraphCueNP = None
@@ -147,6 +150,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     def announceReclaimStart(self):
         zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
+        self._startFinalePhase = int(self.finalePhase or 0)
         if self.finalePhase >= 1:
             title = CampaignGlobals.FINALE_PHASE_BANNER.get(
                 self.finalePhase, ReclaimGlobals.BANNER_START)
@@ -302,16 +306,21 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.__hideTelegraphCue()
         self.__stopPressureWatch()
         zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
+        # Complete copy follows reclaim *start* phase so street HP-threshold
+        # Unleash still uses Silly street victory (not campaign Unleashed clear).
+        bannerPhase = int(getattr(self, '_startFinalePhase', self.finalePhase) or 0)
         completeTitle = ReclaimGlobals.streetBannerComplete(
-            zoneId, finalePhase=self.finalePhase)
+            zoneId, finalePhase=bannerPhase)
         completeColor = (0.55, 1.0, 0.7, 1.0)
         if ReclaimGlobals.streetPackId(zoneId) == 'punchline-sludge':
             completeColor = (0.72, 0.92, 0.55, 1.0)
         self.__showBanner(
             completeTitle, completeColor,
             hold=3.4, pop=True)
-        # Finale P2 clear: purity cheer + soft Oswald-twist tease (copy only).
-        if self.finalePhase >= 2:
+        # Oswald twist tease only when reclaim *started* Unleashed (campaign
+        # P2 restart). Street HP-threshold P2 keeps Oswald trusted until C.
+        startedUnleashed = bannerPhase >= 2
+        if self.finalePhase >= 2 and startedUnleashed:
             self.__showSubBanner(
                 CampaignGlobals.FINALE_TWIST_TEASE,
                 CampaignGlobals.FINALE_TWIST_TEASE_COLOR,
@@ -327,7 +336,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         else:
             self.__showSubBanner(
                 ReclaimGlobals.streetBannerCompleteSub(
-                    zoneId, finalePhase=self.finalePhase),
+                    zoneId, finalePhase=bannerPhase),
                 (0.85, 1.0, 0.9, 1.0),
                 hold=3.4)
         # Secured purity-lock tip + meter rim before tearing down the HUD.

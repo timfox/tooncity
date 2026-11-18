@@ -107,6 +107,35 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def _isOverlord(self):
         return int(self.finalePhase) >= 1
 
+    def promoteFinalePhase(self, phase):
+        """Mid-fight Overlord phase promote (street HP-threshold Unleash).
+
+        Applies P2 combat stats and cancels an in-flight telegraph so the
+        next wind-up uses rain/slam enrage. Client AV reads phase from the
+        reclaim director — no DC finalePhase field required.
+        """
+        newPhase = CorruptionGlobals.normalizeFinalePhase(phase)
+        if newPhase < 1 or newPhase <= int(self.finalePhase):
+            return False
+        self.setFinalePhase(newPhase)
+        self.__interruptAttackForPhasePromote()
+        return True
+
+    def __interruptAttackForPhasePromote(self):
+        """Drop current telegraph so Unleashed kit owns the next beat."""
+        if not self._attacking:
+            return
+        self._attacking = False
+        self._puddleXY = None
+        try:
+            taskMgr.remove(self.uniqueName('corrupt-attack'))
+        except Exception:
+            pass
+        cool = float(self._stats.get(
+            'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN))
+        self._attackReadyAt = (
+            globalClock.getFrameTime() + max(0.15, cool * 0.35))  # noqa: F821
+
     def b_setHp(self, hp):
         self.setHp(hp)
         self.d_setHp(hp)

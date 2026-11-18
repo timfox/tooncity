@@ -64,7 +64,9 @@ DEMO_HINT = (
 # Punchline is the Act 2 explore → fight → reclaim beat: denser sludge,
 # Gunk Gagsters + Brutes + Balloon Snares from wave 1. Silly is the Act 3
 # Overlord finale street (Oswald still trusted — twist stays campaign P2
-# reveal). Campaign C still uses ACTS params; this table keeps discoverable
+# reveal). Discoverable Silly starts Rising (P1) then HP-thresholds into
+# Unleashed (P2 slam + adds) mid-fight without a campaign restart.
+# Campaign C still uses ACTS params; this table keeps discoverable
 # auto-reclaim matched to each hood fantasy. No keyblades / KH branding.
 # Keys match DistributedReclaimDirectorAI.start() kwargs (+ copy helpers).
 _STREET_PACK_START_KEYS = (
@@ -73,9 +75,15 @@ _STREET_PACK_START_KEYS = (
     'snareFraction', 'snareWaveStart', 'snareName',
     'gagsterFraction', 'gagsterWaveStart', 'gagsterName',
     'waveScripts',
-    # Silly Overlord street reclaim uses P1 rain AI (campaign owns P2).
+    # Silly Overlord: start P1 rain; HP-threshold promotes mid-fight P2.
     'finalePhase',
+    'overlordP2HpFrac',
+    'transitionSting',
+    'addCount', 'addWaveStart', 'addHp', 'addName',
 )
+# Default Overlord HP fraction that flips Silly street Rising → Unleashed.
+# STREET_PACKS may override per hood; None / omit disables the promote.
+OVERLORD_STREET_P2_HP_FRAC = 0.5
 # Optional per-wave archetype scripts (tokens or ints). When present for a
 # wave, composition + pack size follow the script; otherwise fractions +
 # WAVE_SIZE_BONUS keep the legacy escalate path. Tokens are Toontown-tone
@@ -195,7 +203,8 @@ STREET_PACKS = {
     },
     # Act 3 — Silly Street Ink Overlord finale (third hood).
     # Scripted Overlord beats only (no Brute / Snare) — twin swell on wave 2.
-    # Oswald stays the trusted lead; twist is campaign P2 only.
+    # Starts Rising (P1); HP-threshold Unleashes mid-fight (slam + Smudge adds).
+    # Oswald stays the trusted lead on street clear; twist is campaign P2 only.
     ToontownGlobals.SillyStreet: {
         'packId': 'silly-overlord',
         'name': 'Silly Street',
@@ -212,8 +221,15 @@ STREET_PACKS = {
             ('ink',),
             ('ink', 'ink'),
         ),
-        # P1 rising-rain combat AI (campaign phase2 owns Unleashed + adds).
+        # P1 rising-rain start; director promotes to P2 at overlordP2HpFrac.
         'finalePhase': 1,
+        'overlordP2HpFrac': OVERLORD_STREET_P2_HP_FRAC,
+        'transitionSting': True,
+        # Threshold may fire on wave 1 — allow adds immediately after promote.
+        'addWaveStart': 1,
+        'addCount': 2,
+        'addHp': 25,
+        'addName': 'Ink Smudge',
         'bannerStart': 'OSWALD: RECLAIM SILLY STREET!',
         'bannerStartSub': (
             'Explore the magenta ink — then stretch-punch '
@@ -1113,6 +1129,30 @@ def streetPackParams(zoneId):
         if key in pack:
             out[key] = pack[key]
     return out
+
+
+def overlordHpAtP2Threshold(hp, maxHp, frac):
+    """True when Overlord HP is at/below the street P2 promote fraction.
+
+    Used by DistributedReclaimDirectorAI for Silly discoverable Unleash
+    without a campaign restart. frac None / <=0 disables the check.
+    """
+    if frac is None:
+        return False
+    try:
+        threshold = float(frac)
+    except (TypeError, ValueError):
+        return False
+    if threshold <= 0.0:
+        return False
+    try:
+        cur = float(hp)
+        ceiling = float(maxHp)
+    except (TypeError, ValueError):
+        return False
+    if ceiling <= 0.0:
+        return False
+    return cur <= ceiling * threshold
 
 
 def normalizeWaveScriptToken(token):
