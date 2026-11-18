@@ -345,6 +345,27 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertTrue(hasattr(cg, 'GAGSTER_TELEGRAPH_CHARGE_COLOR'))
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_COLOR'))
         self.assertTrue(hasattr(cg, 'GAGSTER_LOB_ARC_Z'))
+        # Gunk Gagster telegraph / puddle warn juice — cream/ink landing warn.
+        self.assertTrue(hasattr(cg, 'GAGSTER_TELEGRAPH_PUDDLE_LOOK'))
+        puddle_look = cg.GAGSTER_TELEGRAPH_PUDDLE_LOOK
+        self.assertEqual(puddle_look.get('id'), 'teal-gag-puddle-warn')
+        self.assertIn('puddleInkColor', puddle_look)
+        self.assertIn('puddleCreamColor', puddle_look)
+        self.assertIn('pieColor', puddle_look)
+        gagster_fx_rel = 'toontown/corruption/GagsterPuddleTelegraphFx.py'
+        _assert_module_file(gagster_fx_rel)
+        gagster_fx_names = _class_and_func_names(_module_ast(gagster_fx_rel))
+        self.assertIn('GagsterPuddleTelegraphWarn', gagster_fx_names)
+        self.assertIn('gagsterTelegraphPuddleLook', gagster_fx_names)
+        gagster_fx_methods = _class_method_names(
+            _module_ast(gagster_fx_rel), 'GagsterPuddleTelegraphWarn')
+        self.assertIn('play', gagster_fx_methods)
+        self.assertIn('_buildPuddleWarn', gagster_fx_methods)
+        self.assertIn('_buildBouncePie', gagster_fx_methods)
+        corrupt_src = _read('toontown/corruption/DistributedCorruptToon.py')
+        self.assertIn('GagsterPuddleTelegraphWarn', corrupt_src)
+        self.assertIn('__playGagsterTelegraphPuddle', corrupt_src)
+        self.assertIn('__clearGagsterTelegraphPuddle', corrupt_src)
         ai_src = _read('toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('gag_lob', ai_src)
         self.assertIn('__resolveGagsterPuddle', ai_src)
