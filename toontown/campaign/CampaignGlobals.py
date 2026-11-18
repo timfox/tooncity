@@ -917,6 +917,10 @@ OSWALD_BETRAYAL_CHASE_CLEAR_MSG = (
     "Oswald's stain is washed — purity holds for real this time!")
 # Tip lands slightly after spawn so the enemy is already fielded.
 OSWALD_BETRAYAL_CHASE_TIP_DELAY_SEC = 0.35
+# C / hydrate mid-victory while chaseCleared=0 — resume, do not replay-wipe.
+OSWALD_BETRAYAL_CHASE_RESUME_MSG = (
+    'Oswald betrayal chase still pending — stain wash resumes! '
+    'Clear the chase, then C on Loopy to replay.')
 
 # Campaign epilogue after Corrupted Oswald chase clear (gameplay soft-end).
 # Client accepts oswaldBetrayalChaseCleared → CampaignHandoff plate + PlayEntry

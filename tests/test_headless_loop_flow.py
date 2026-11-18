@@ -787,9 +787,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn("corrupt._stats['attackMove']", chase_src)
 
         # Director schedules chase after finale; PlayEntry/Handoff accept clear.
+        # Pending chase (victory + chaseCleared=0) must resume on hydrate / C.
         director_src = _read('toontown/campaign/CampaignDirectorAI.py')
         self.assertIn('OswaldBetrayalChase', director_src)
+        self.assertIn('_resumePendingOswaldBetrayalChase', director_src)
+        self.assertIn('OSWALD_BETRAYAL_CHASE_RESUME_MSG', director_src)
         self.assertIn('campaignEpilogue', director_src)
+        self.assertTrue(camp.OSWALD_BETRAYAL_CHASE_RESUME_MSG)
         play_src = _read('toontown/campaign/PlayEntry.py')
         self.assertIn('ensureOswaldBetrayalChaseClient', play_src)
         self.assertIn("accept('oswaldBetrayalChaseCleared'", play_src)

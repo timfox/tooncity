@@ -75,9 +75,13 @@ class CampaignDirectorAI(DirectObject):
             # avatar's live unlockedThrough on this shared director).
             progress = CampaignProgressSave.defaultProgress()
         CampaignProgressSave.applyProgressToDirector(self, progress)
+        self._lastToonId = avId
         self.notify.debug(
             'hydrated campaign progress av=%s unlockedThrough=%s act=%s'
             % (avId, self.unlockedThrough, self.actIndex))
+        # Victory + uncleared chase must re-field after relog / hub return;
+        # persist alone does not keep the betrayal spawn alive.
+        self._resumePendingOswaldBetrayalChase(toon)
         return True
 
     def _persistForToon(self, toon=None):
@@ -143,6 +147,17 @@ class CampaignDirectorAI(DirectObject):
         self._lastToonId = getattr(toon, 'doId', None)
         self._hydrateFromToon(toon)
         if self.state == CampaignGlobals.STATE_VICTORY:
+            # Mid-victory with chase still pending: resume the betrayal
+            # chase — do not wipe unlocks / chaseCleared for a replay.
+            if self._resumePendingOswaldBetrayalChase(toon):
+                tip = getattr(
+                    CampaignGlobals, 'OSWALD_BETRAYAL_CHASE_RESUME_MSG', None)
+                if not tip:
+                    tip = (
+                        'Oswald betrayal chase still pending — stain wash '
+                        'resumes! Clear the chase, then C on Loopy to replay.')
+                return tip
+            # Chase already cleared (or disabled): full replay wipe.
             self.actIndex = 0
             self.unlockedThrough = 0
             self.reclaimCount = 0
@@ -321,6 +336,49 @@ class CampaignDirectorAI(DirectObject):
         if self._lastToonId is None:
             return None
         return self.air.doId2do.get(self._lastToonId)
+
+    def _pendingOswaldBetrayalChase(self):
+        """True when victory landed but Corrupted Oswald chase is uncleared."""
+        if self.state != CampaignGlobals.STATE_VICTORY:
+            return False
+        if int(getattr(self, 'chaseCleared', 0) or 0):
+            return False
+        return chaseEnabled()
+
+    def _resumePendingOswaldBetrayalChase(self, toon=None):
+        """Re-schedule betrayal chase after relog / hub / C mid-victory.
+
+        Persist stores STATE_VICTORY + chaseCleared=0 across logout, but the
+        chase task dies with the air process. Hydrate and startCampaign call
+        this so the stain-wash fight can finish before a replay wipe.
+        """
+        if not self._pendingOswaldBetrayalChase():
+            return False
+        if toon is None:
+            toon = self._toonFromLast()
+        if toon is None:
+            return False
+        # Already scheduled or live this process — leave it alone.
+        if (self._oswaldChaseTask is not None
+                or self._oswaldChaseDoId is not None):
+            return True
+        avId = getattr(toon, 'doId', None)
+        if avId is not None:
+            self._lastToonId = avId
+        zoneId = int(getattr(toon, 'zoneId', 0) or 0)
+        if zoneId <= 0:
+            # Fall back to finale street when zone is unknown.
+            for act in CampaignGlobals.ACTS:
+                if act.get('finale'):
+                    zoneId = int(act['zoneId'])
+                    break
+        if zoneId <= 0 and CampaignGlobals.ACTS:
+            zoneId = int(CampaignGlobals.ACTS[-1]['zoneId'])
+        self._scheduleOswaldBetrayalChase(toon, zoneId)
+        self.notify.info(
+            'resumed pending oswald betrayal chase av=%s zone=%s'
+            % (getattr(toon, 'doId', None), zoneId))
+        return True
 
     def _cancelOswaldBetrayalChase(self):
         if self._oswaldChaseTask is not None:
