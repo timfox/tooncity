@@ -81,6 +81,14 @@ SOFT_LOCK_ACCENT_CREAM_END = (1.0, 0.9, 0.45, 0.0)
 SOFT_LOCK_ACCENT_INK_COLOR = (0.22, 0.06, 0.28, 0.9)
 SOFT_LOCK_ACCENT_INK_END = (0.38, 0.1, 0.42, 0.0)
 
+# Soft-lock acquire FOV punch — brief rubber-hose kick when snap lands.
+# Milder/shorter than FINISHER_FOV_*; defers while HitStopFx is active so it
+# composes with connect freeze (#68) instead of fighting mid-hitstop FOV.
+SOFT_LOCK_FOV_ENABLED = True
+SOFT_LOCK_FOV_PUNCH = 5.5
+SOFT_LOCK_FOV_IN_SEC = 0.04
+SOFT_LOCK_FOV_OUT_SEC = 0.12
+
 # Brief aspect2d white flash on connect (beyond hitstop).
 HIT_FLASH_PEAK_ALPHA = 0.38
 HIT_FLASH_IN_SEC = 0.03
