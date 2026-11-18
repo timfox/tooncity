@@ -99,7 +99,7 @@ class PollutionManagerAI(DistributedObjectAI):
                 director = DistributedReclaimDirectorAI(self.air, zoneId=zoneId)
                 director.generateWithRequired(zoneId)
                 directors[zoneId] = director
-                # Hood street packs (Punchline sludge mix) deepen auto / R reclaim.
+                # Hood street packs (Loopy / Punchline / Silly) deepen auto / R.
                 packKwargs = ReclaimGlobals.streetPackParams(zoneId)
                 director.start(
                     zoneId,

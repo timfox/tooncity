@@ -108,7 +108,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             if sub:
                 self.__showSubBanner(sub, color, hold=2.8)
         else:
-            # Punchline STREET_PACK: gag-green reclaim plate + explore→fight sub.
+            # STREET_PACK start plate (Loopy ink / Punchline sludge / Silly).
             title = ReclaimGlobals.streetBannerStart(
                 zoneId, finalePhase=self.finalePhase)
             color = ReclaimGlobals.streetBannerStartColor(

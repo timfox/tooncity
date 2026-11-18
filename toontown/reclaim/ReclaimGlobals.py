@@ -56,6 +56,7 @@ DEMO_HINT = (
 )
 
 # Per-street reclaim packs for auto / R / ~startreclaim (PlayEntry path).
+# Loopy is the Act 1 tutorial street: Ink Smudge wave 1, later Brutes.
 # Punchline is the Act 2 explore → fight → reclaim beat: denser sludge,
 # Brutes + Balloon Snares from wave 1. Silly is the Act 3 Overlord finale
 # street (Oswald still trusted — twist stays campaign P2 reveal). Campaign C
@@ -68,6 +69,44 @@ _STREET_PACK_START_KEYS = (
     'snareFraction', 'snareWaveStart', 'snareName',
 )
 STREET_PACKS = {
+    # Act 1 — Loopy Lane ink street (first hood / melee tutorial).
+    # Smudge-first; Brutes (+ light Snares) from wave 2 — mirrors default
+    # reclaim mix so auto / R / ~startreclaim match the familiar Loopy beat.
+    ToontownGlobals.LoopyLane: {
+        'packId': 'loopy-smudge',
+        'name': 'Loopy Lane',
+        'seedPollution': 0.55,
+        'packSize': 3,
+        'maxPacks': 4,
+        'corruptHp': 30,
+        'corruptName': 'Ink Smudge',
+        # Wave 1 = pure Smudge; later waves introduce ~⅓ Brutes + light Snares.
+        'bruteFraction': 0.34,
+        'bruteWaveStart': 2,
+        'bruteName': 'Sludge Brute',
+        'snareFraction': 0.22,
+        'snareWaveStart': 2,
+        'snareName': 'Balloon Snare',
+        'bannerStart': 'OSWALD: RECLAIM LOOPY LANE!',
+        'bannerStartSub': (
+            'Explore the inky street — then stretch-punch '
+            'Ink Smudges with Oswald!'),
+        'bannerStartColor': (1.0, 0.92, 0.45, 1.0),
+        'bannerComplete': 'LOOPY LANE IS PURE!',
+        'bannerCompleteSub': (
+            'Oswald tips his ears — Punchline Place is next!'),
+        'demoHint': (
+            'Oswald: stretch-punch Ink Smudges  |  '
+            'F fight  |  C campaign'),
+        'playEntryTip': (
+            'Oswald: Loopy Lane — explore the ink  →  '
+            'F fight Smudges  →  reclaim  |  Shift dodge  |  C campaign'),
+        'autoFlash': (
+            'Oswald fields Loopy ink packs — Ink Smudges inbound!'),
+        'reclaimLiveFlash': (
+            'LOOPY RECLAIM LIVE — clear Ink Smudges with F!'),
+        'statusLabel': 'INK',
+    },
     # Act 2 — Punchline Place sludge street (second hood).
     ToontownGlobals.PunchlinePlace: {
         'packId': 'punchline-sludge',
@@ -294,9 +333,9 @@ def streetPackId(zoneId):
 def streetPackParams(zoneId):
     """Kwargs for DistributedReclaimDirectorAI.start() from STREET_PACKS.
 
-    Empty dict → caller keeps ReclaimGlobals defaults (Loopy-style Smudge
-    wave 1). Punchline returns Brute + Snare mix from wave 1. Silly returns
-    Ink Overlord-only finale spawn (no Brute / Snare).
+    Loopy returns Smudge-first with Brutes from wave 2. Punchline returns
+    Brute + Snare mix from wave 1. Silly returns Ink Overlord-only finale
+    spawn (no Brute / Snare). Empty dict → caller keeps module defaults.
     """
     pack = streetPack(zoneId)
     if not pack:
@@ -319,7 +358,7 @@ def streetBannerStart(zoneId, finalePhase=0):
 
 
 def streetBannerStartSub(zoneId, finalePhase=0):
-    """Optional start sub-banner (explore → fight beat for Punchline)."""
+    """Optional start sub-banner (explore → fight beat per street pack)."""
     if int(finalePhase or 0) >= 1:
         return ''
     pack = streetPack(zoneId)
