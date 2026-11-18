@@ -26,7 +26,8 @@ Sections below remain **debug / magic-word** fallbacks.
    + aspect2d ink haze + hood tint intensity lerp up; as purity reclaims, they clear
    (`POLLUTION_FOG_*` / `hoodFogExpDensity` / `hoodHazeAlpha` in PollutionManager).
    Street music crossfades via `PollutionStreetAudio`: polluted → darker
-   `encntr_general_bg` bed; purity clear → bright hood bed + cheer/sting (#21).
+   `encntr_general_bg` bed; purity clear → bright hood bed + cheer/sting (#21)
+   plus a short faded-in rubber-hose birds ambient return (`SZ_TC_bird*`).
 5. At `0.0`, director announces reclaim complete and client plays a stronger purity
    restore moment (banner + bloom + sting + FOV/camera punch + rays/sparks via
    `PurityBurstFx` + `ReclaimCheer` local Happy/wave + rubber-hose cheer pitch

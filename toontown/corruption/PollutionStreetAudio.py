@@ -2,14 +2,21 @@
 
 When a street is polluted, fade the bright neighborhood bed to a darker
 encounter bed (existing phase_3.5 BGM — no new binary assets). On reclaim /
-purity clear, fade back to the hood music so it pairs with cheer/sting #21.
+purity clear, fade back to the hood music so it pairs with cheer/sting #21,
+and fade in a short rubber-hose birds ambient bed (classic SZ_TC_bird SFX)
+that contrasts the polluted encounter bed.
 
 Uses a sequential fade-out / fade-in switch (musicManager is typically
-single-channel) rather than overlapping both tracks.
+single-channel) rather than overlapping both tracks. Birds ride a separate
+SFX channel so they can soft-layer over the returning hood music.
 """
 
+import random
+import time
+
 from direct.directnotify import DirectNotifyGlobal
-from direct.interval.IntervalGlobal import Func, LerpFunctionInterval, Sequence
+from direct.interval.IntervalGlobal import (
+    Func, LerpFunctionInterval, Parallel, Sequence, Wait)
 from panda3d.core import AudioSound
 
 from toontown.corruption import CorruptionGlobals
@@ -27,6 +34,11 @@ class PollutionStreetAudio:
         self._fadeIval = None
         self._zoneId = None
         self._suspendedForBattle = False
+        # Pure-street birds return bed (SFX, not musicManager).
+        self._birdSfx = None
+        self._birdsIval = None
+        self._birdsBed = None
+        self._lastBirdsT = -1.0
 
     def start(self):
         if self._active:
@@ -53,6 +65,7 @@ class PollutionStreetAudio:
         messenger.ignore('enterBattle', self)
         taskMgr.remove('pollution-street-audio-walk')
         self._finishFade()
+        self._stopBirds()
         self._stopPollutedMusic()
         self._pollutedMode = False
         self._suspendedForBattle = False
@@ -126,6 +139,7 @@ class PollutionStreetAudio:
         # Cog battles own music; park polluted bed until walk returns.
         self._suspendedForBattle = True
         self._finishFade()
+        self._stopBirds()
         self._stopPollutedMusic()
 
     def __pollWalkResume(self, task):
@@ -153,18 +167,22 @@ class PollutionStreetAudio:
             self._enterPure(restoreCrossfade=False)
 
     def __onPurityRestore(self, zoneId):
-        # Pair with ReclaimCheer / purity sting (#21): snappier bright return.
+        # Pair with ReclaimCheer / purity sting (#21): snappier bright return
+        # + birds ambient bed (even if music already flipped via pollutionChanged).
         self._zoneId = zoneId
         self._enterPure(restoreCrossfade=True)
+        self._startBirdsReturn(fromRestore=True)
 
     def __onLeftZone(self, *args):
         self._finishFade()
+        self._stopBirds()
         self._stopPollutedMusic()
         self._pollutedMode = False
         self._suspendedForBattle = False
         self._zoneId = None
 
     def _enterPolluted(self):
+        self._stopBirds()
         if self._inClassicBattle():
             self._pollutedMode = True
             self._suspendedForBattle = True
@@ -188,6 +206,10 @@ class PollutionStreetAudio:
             if restoreCrossfade
             else CorruptionGlobals.POLLUTION_AUDIO_CROSSFADE_SEC)
         self._fadeSwitchToPure(duration)
+        # Birds bed on the polluted→pure flip (purityRestore also calls this;
+        # debounce collapses the double fire).
+        if wasPolluted:
+            self._startBirdsReturn(fromRestore=restoreCrossfade)
 
     def _fadeVolume(self, music, startVol, endVol, duration):
         """Build a volume lerp interval for one music handle."""
@@ -299,3 +321,146 @@ class PollutionStreetAudio:
             steps.append(self._fadeVolume(street, 0.0, inVol, half))
         self._fadeIval = Sequence(*steps)
         self._fadeIval.start()
+
+    # --- Pure-street birds ambient return ---------------------------------
+
+    def _ensureBirdSfx(self):
+        if self._birdSfx is not None:
+            return self._birdSfx
+        loaded = []
+        for path in CorruptionGlobals.PURE_STREET_BIRDS_SFX:
+            try:
+                sfx = base.loader.loadSfx(path)
+            except Exception:
+                sfx = None
+            if sfx:
+                loaded.append(sfx)
+        if not loaded:
+            self.notify.debug('pure street birds SFX unavailable')
+        self._birdSfx = loaded
+        return loaded
+
+    def _stopBirds(self):
+        if self._birdsIval is not None:
+            try:
+                self._birdsIval.finish()
+            except Exception:
+                pass
+            self._birdsIval = None
+        bed = self._birdsBed
+        self._birdsBed = None
+        if bed is not None:
+            try:
+                bed.stop()
+            except Exception:
+                pass
+        birds = self._birdSfx or ()
+        for sfx in birds:
+            try:
+                sfx.stop()
+            except Exception:
+                pass
+
+    def _startBirdsReturn(self, fromRestore=False):
+        """Fade in a short cheerful birds bed after polluted→pure."""
+        if not self._active or self._inClassicBattle():
+            return
+        now = time.time()
+        debounce = float(CorruptionGlobals.PURE_STREET_BIRDS_DEBOUNCE_SEC)
+        if self._lastBirdsT >= 0.0 and (now - self._lastBirdsT) < debounce:
+            # Quiet purify bed already running — let reclaim restore upgrade it.
+            if not fromRestore or self._birdsIval is None:
+                return
+        birds = self._ensureBirdSfx()
+        if not birds:
+            return
+        self._lastBirdsT = now
+        self._stopBirds()
+
+        bed = birds[0]
+        self._birdsBed = bed
+        peak = float(CorruptionGlobals.PURE_STREET_BIRDS_VOLUME)
+        # Reclaim complete: slightly brighter / longer hold than quiet purify.
+        if fromRestore:
+            peak = min(1.0, peak * 1.12)
+            hold = float(CorruptionGlobals.PURE_STREET_BIRDS_HOLD_SEC) * 1.15
+        else:
+            hold = float(CorruptionGlobals.PURE_STREET_BIRDS_HOLD_SEC)
+        fadeIn = float(CorruptionGlobals.PURE_STREET_BIRDS_FADE_IN_SEC)
+        fadeOut = float(CorruptionGlobals.PURE_STREET_BIRDS_FADE_OUT_SEC)
+
+        def setBedVol(t, handle=bed, a=0.0, b=peak):
+            if handle is None:
+                return
+            try:
+                handle.setVolume(a + (b - a) * float(t))
+            except Exception:
+                pass
+
+        def startBed():
+            try:
+                bed.setLoop(1)
+                bed.setVolume(0.0)
+                base.playSfx(bed, looping=1, volume=0.0)
+                if bed.status() != AudioSound.PLAYING:
+                    bed.play()
+            except Exception:
+                try:
+                    bed.play()
+                except Exception:
+                    pass
+
+        def stopBed():
+            self._birdsBed = None
+            if bed is None:
+                return
+            try:
+                bed.stop()
+            except Exception:
+                pass
+
+        # Soft chirp sprinkles over the looping bed (rubber-hose return).
+        chirpTracks = []
+        extras = birds[1:] if len(birds) > 1 else birds
+        chirpCount = int(CorruptionGlobals.PURE_STREET_BIRDS_CHIRP_COUNT)
+        chirpVol = float(CorruptionGlobals.PURE_STREET_BIRDS_CHIRP_VOLUME)
+        if fromRestore:
+            chirpCount += 1
+            chirpVol = min(1.0, chirpVol * 1.1)
+        for i in range(max(0, chirpCount)):
+            sfx = extras[i % len(extras)]
+            delay = fadeIn * 0.35 + random.uniform(0.15, max(0.2, hold * 0.85))
+
+            def playChirp(handle=sfx, vol=chirpVol):
+                if handle is None:
+                    return
+                try:
+                    handle.setLoop(0)
+                    handle.setVolume(vol)
+                    base.playSfx(handle, volume=vol)
+                except Exception:
+                    try:
+                        handle.play()
+                    except Exception:
+                        pass
+
+            chirpTracks.append(Sequence(Wait(delay), Func(playChirp)))
+
+        bedTrack = Sequence(
+            Func(startBed),
+            LerpFunctionInterval(
+                setBedVol, fromData=0.0, toData=1.0,
+                duration=max(0.05, fadeIn)),
+            Wait(max(0.05, hold)),
+            LerpFunctionInterval(
+                lambda t, handle=bed, a=peak, b=0.0: setBedVol(
+                    t, handle=handle, a=a, b=b),
+                fromData=0.0, toData=1.0,
+                duration=max(0.05, fadeOut)),
+            Func(stopBed),
+        )
+        if chirpTracks:
+            self._birdsIval = Parallel(bedTrack, *chirpTracks)
+        else:
+            self._birdsIval = bedTrack
+        self._birdsIval.start()

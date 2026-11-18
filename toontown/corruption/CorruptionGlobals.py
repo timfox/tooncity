@@ -479,6 +479,23 @@ POLLUTION_AUDIO_CROSSFADE_SEC = 1.25
 # Snappier return so reclaim cheer / purity sting (#21) land together.
 POLLUTION_AUDIO_RESTORE_CROSSFADE_SEC = 0.85
 
+# Pure-street birds return — short rubber-hose ambient bed when pollution
+# clears (existing SZ playground bird chirps; no new assets / no KH branding).
+PURE_STREET_BIRDS_SFX = (
+    'phase_4/audio/sfx/SZ_TC_bird1.ogg',
+    'phase_4/audio/sfx/SZ_TC_bird2.ogg',
+    'phase_4/audio/sfx/SZ_TC_bird3.ogg',
+)
+PURE_STREET_BIRDS_VOLUME = 0.62
+PURE_STREET_BIRDS_FADE_IN_SEC = 0.55
+PURE_STREET_BIRDS_HOLD_SEC = 2.4
+PURE_STREET_BIRDS_FADE_OUT_SEC = 0.9
+# Collapse pollutionChanged + purityRestoreFx double-fires into one bed.
+PURE_STREET_BIRDS_DEBOUNCE_SEC = 2.5
+# Extra chirp sprinkles during the hold (rubber-hose cheerful return).
+PURE_STREET_BIRDS_CHIRP_COUNT = 3
+PURE_STREET_BIRDS_CHIRP_VOLUME = 0.48
+
 
 def finalePhaseLook(phaseIndex):
     """Return presentation dict for Ink Overlord phase, or None."""
