@@ -20,8 +20,9 @@ WAVE_HP_SCALE = 0.18
 WAVE_SPAWN_DELAY = 1.4
 WAVE_MAX_EXTRA = 3
 
-# Elite last-wave combat modifiers — real HP / damage buffs (not composition-only).
-# STREET_PACKS waveModifiers mark Loopy / Punchline finale scripts as elite.
+# Elite combat modifiers — real HP / damage buffs (not composition-only).
+# STREET_PACKS waveModifiers mark Loopy / Punchline last waves + Silly twin
+# swell as elite.
 ELITE_HP_MULT = 1.35
 ELITE_DAMAGE_MULT = 1.4
 ELITE_NAME_PREFIX = 'Elite '
@@ -38,7 +39,8 @@ ELITE_DAMAGE_STAT_KEYS = (
 )
 
 # Between-wave ambush: short delayed pack after a cleared wave, before the
-# next scripted beat. Fills the blank WAVE_SPAWN_DELAY gap with a real beat.
+# next scripted beat. Fills blank WAVE_SPAWN_DELAY gaps (including earlier
+# Loopy / Punchline waves + Silly between-swell) with a real beat.
 AMBUSH_DELAY = 0.55
 AMBUSH_FORWARD = 4.5
 AMBUSH_NAME_PREFIX = 'Ambush '
@@ -192,8 +194,11 @@ STREET_PACKS = {
         'waveModifiers': {
             4: {'elite': True},
         },
-        # After wave 3 clears — Snare ambush before the elite mix.
+        # Between-wave ambush beats fill blank 1→2 / 2→3 / 3→4 pauses.
+        # Wave 1 stays Smudge-only (tutorial); Snare tease after Brute intro.
         'ambushBeats': {
+            1: ('ink',),
+            2: ('snare',),
             3: ('snare',),
         },
         'bannerStart': 'OSWALD: RECLAIM LOOPY LANE!',
@@ -246,8 +251,11 @@ STREET_PACKS = {
         'waveModifiers': {
             4: {'elite': True},
         },
-        # After wave 3 clears — Gagster + Snare ambush before the elite mix.
+        # Between-wave ambush beats fill blank 1→2 / 2→3 / 3→4 pauses.
+        # Light Gagster → Snare tease → Gagster+Snare before elite mix.
         'ambushBeats': {
+            1: ('gagster',),
+            2: ('snare',),
             3: ('gagster', 'snare'),
         },
         'bannerStart': 'OSWALD: RECLAIM PUNCHLINE PLACE!',
@@ -274,6 +282,7 @@ STREET_PACKS = {
     # Act 3 — Silly Street Ink Overlord finale (third hood).
     # Scripted Overlord beats only (no Brute / Snare) — twin swell on wave 2.
     # Starts Rising (P1); HP-threshold Unleashes mid-fight (slam + Smudge adds).
+    # Between-swell: Smudge ambush after solo Overlord + elite twin swell.
     # Oswald stays the trusted lead on street clear; twist is campaign P2 only.
     ToontownGlobals.SillyStreet: {
         'packId': 'silly-overlord',
@@ -291,6 +300,14 @@ STREET_PACKS = {
             ('ink',),
             ('ink', 'ink'),
         ),
+        # Twin swell (wave 2): elite HP / damage buff under magenta pressure.
+        'waveModifiers': {
+            2: {'elite': True},
+        },
+        # After solo Overlord clears — Smudge ambush before twin swell.
+        'ambushBeats': {
+            1: ('ink', 'ink'),
+        },
         # P1 rising-rain start; director promotes to P2 at overlordP2HpFrac.
         'finalePhase': 1,
         'overlordP2HpFrac': OVERLORD_STREET_P2_HP_FRAC,
@@ -1263,9 +1280,9 @@ def streetPackParams(zoneId):
     """Kwargs for DistributedReclaimDirectorAI.start() from STREET_PACKS.
 
     Loopy / Punchline / Silly return scripted waveScripts (Smudge tutorial,
-    Snare-front sludge, Overlord swell) plus fraction fallbacks, and — on
-    Loopy / Punchline — waveModifiers (elite HP/damage) + ambushBeats.
-    Empty dict → caller keeps module defaults.
+    Snare-front sludge, Overlord swell) plus fraction fallbacks, plus
+    waveModifiers (elite HP/damage) + ambushBeats (earlier-wave + Silly
+    between-swell pressure). Empty dict → caller keeps module defaults.
     """
     pack = streetPack(zoneId)
     if not pack:
@@ -1489,15 +1506,36 @@ def resolveAmbushBeat(ambushBeats, clearedWave):
 
 
 def ambushOswaldTip(clearedWave, zoneId=None):
-    """Oswald tip under the ambush banner (between-wave beat)."""
+    """Oswald tip under the ambush banner (between-wave beat).
+
+    Wave-aware copy: earlier Loopy / Punchline ambushes foreshadow the next
+    scripted beat; Silly between-swell cues the twin Overlord pressure.
+    """
     zone = int(zoneId or 0)
+    wave = int(clearedWave)
     if zone == ToontownGlobals.LoopyLane:
+        if wave <= 1:
+            return 'Oswald: flanks! Ink Smudge ambush — hold the street!'
+        if wave == 2:
+            return (
+                'Oswald: flanks! Balloon Snare ambush — '
+                'Snare joins the next pack!')
         return 'Oswald: flanks! Balloon Snare ambush — then the elite mix!'
     if zone == ToontownGlobals.PunchlinePlace:
+        if wave <= 1:
+            return 'Oswald: flanks! Gagster ambush — sludge keeps coming!'
+        if wave == 2:
+            return (
+                'Oswald: flanks! Balloon Snare ambush — '
+                'keep punching the sludge!')
         return (
             'Oswald: flanks! Gagster & Snare ambush — '
             'elite sludge next!')
-    return 'Oswald: ambush after wave %s — stay sharp!' % int(clearedWave)
+    if zone == ToontownGlobals.SillyStreet:
+        return (
+            'Oswald: flanks! Smudge ambush between swells — '
+            'twin Overlord next!')
+    return 'Oswald: ambush after wave %s — stay sharp!' % wave
 
 
 def streetBannerStart(zoneId, finalePhase=0):

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Headless tests for elite wave modifiers + between-wave ambush beats.
 
-Gap: Loopy / Punchline last scripts were composition-only "elite mix".
-This suite locks real HP/damage modifiers, ambush composition helpers,
-STREET_PACKS wiring, and AST hooks on DistributedReclaimDirectorAI /
-client announceAmbushSpawn / toon.dc.
+Locks real HP/damage modifiers, earlier-wave ambush tables (beyond
+post-wave-3 only), Silly between-swell ambush/elite pressure, STREET_PACKS
+wiring, and AST hooks on DistributedReclaimDirectorAI / client
+announceAmbushSpawn / toon.dc.
 
 Run from repo root:
   python3 tests/test_elite_wave_modifiers_ambush.py
@@ -188,40 +188,81 @@ class EliteWaveModifiersAmbushTests(unittest.TestCase):
         self.assertTrue(rg.waveIsElite(loopy_mods))
         self.assertIsNone(
             rg.resolveWaveModifiers(loopy['waveModifiers'], 3))
-        loopy_ambush = rg.resolveAmbushBeat(loopy['ambushBeats'], 3)
-        self.assertEqual(loopy_ambush, [cg.ARCHETYPE_SNARE])
+        # Earlier-wave ambushes beyond post-wave-3 only.
+        self.assertEqual(
+            rg.resolveAmbushBeat(loopy['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveAmbushBeat(loopy['ambushBeats'], 2),
+            [cg.ARCHETYPE_SNARE])
+        self.assertEqual(
+            rg.resolveAmbushBeat(loopy['ambushBeats'], 3),
+            [cg.ARCHETYPE_SNARE])
 
         punch_mods = rg.resolveWaveModifiers(punch['waveModifiers'], 4)
         self.assertTrue(rg.waveIsElite(punch_mods))
-        punch_ambush = rg.resolveAmbushBeat(punch['ambushBeats'], 3)
         self.assertEqual(
-            punch_ambush, [cg.ARCHETYPE_GAGSTER, cg.ARCHETYPE_SNARE])
+            rg.resolveAmbushBeat(punch['ambushBeats'], 1),
+            [cg.ARCHETYPE_GAGSTER])
+        self.assertEqual(
+            rg.resolveAmbushBeat(punch['ambushBeats'], 2),
+            [cg.ARCHETYPE_SNARE])
+        self.assertEqual(
+            rg.resolveAmbushBeat(punch['ambushBeats'], 3),
+            [cg.ARCHETYPE_GAGSTER, cg.ARCHETYPE_SNARE])
 
-        # Silly Overlord street stays boss-scripted — no elite/ambush tables.
-        self.assertNotIn('waveModifiers', silly)
-        self.assertNotIn('ambushBeats', silly)
+        # Silly between-swell: Smudge ambush after solo + elite twin swell.
+        self.assertIn('waveModifiers', silly)
+        self.assertIn('ambushBeats', silly)
+        silly_mods = rg.resolveWaveModifiers(silly['waveModifiers'], 2)
+        self.assertTrue(rg.waveIsElite(silly_mods))
+        self.assertIsNone(
+            rg.resolveWaveModifiers(silly['waveModifiers'], 1))
+        self.assertEqual(
+            rg.resolveAmbushBeat(silly['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertIsNone(rg.resolveAmbushBeat(silly['ambushBeats'], 2))
 
         # streetPackParams forwards both keys for director.start().
-        loopy_params = rg.streetPackParams(LOOPY)
-        self.assertIn('waveModifiers', loopy_params)
-        self.assertIn('ambushBeats', loopy_params)
-        punch_params = rg.streetPackParams(PUNCHLINE)
-        self.assertIn('waveModifiers', punch_params)
-        self.assertIn('ambushBeats', punch_params)
+        for zone in (LOOPY, PUNCHLINE, SILLY):
+            params = rg.streetPackParams(zone)
+            self.assertIn('waveModifiers', params)
+            self.assertIn('ambushBeats', params)
+            self.assertEqual(
+                params['waveModifiers'],
+                rg.STREET_PACKS[zone]['waveModifiers'])
+            self.assertEqual(
+                params['ambushBeats'],
+                rg.STREET_PACKS[zone]['ambushBeats'])
 
     def test_wave_clear_tip_foreshadows_ambush(self):
         rg = self.rg
-        loopy_tip = rg.waveClearedOswaldTip(3, zoneId=LOOPY)
-        self.assertIn('ambush', loopy_tip.lower())
-        punch_tip = rg.waveClearedOswaldTip(3, zoneId=PUNCHLINE)
-        self.assertIn('ambush', punch_tip.lower())
-        # Waves without ambush keep the plain pause tip.
+        # Earlier waves + post-3 all foreshadow ambush on Loopy / Punchline.
+        for wave in (1, 2, 3):
+            loopy_tip = rg.waveClearedOswaldTip(wave, zoneId=LOOPY)
+            self.assertIn(
+                'ambush', loopy_tip.lower(),
+                msg='Loopy wave %s clear tip missing ambush' % wave)
+            punch_tip = rg.waveClearedOswaldTip(wave, zoneId=PUNCHLINE)
+            self.assertIn(
+                'ambush', punch_tip.lower(),
+                msg='Punchline wave %s clear tip missing ambush' % wave)
+        # Silly between-swell after solo Overlord.
+        silly_tip = rg.waveClearedOswaldTip(1, zoneId=SILLY)
+        self.assertIn('ambush', silly_tip.lower())
+        self.assertIn('swell', silly_tip.lower())
+        # Final Silly wave has no trailing ambush — plain pause tip.
         self.assertNotIn(
-            'ambush', rg.waveClearedOswaldTip(1, zoneId=LOOPY).lower())
-        ambush_tip = rg.ambushOswaldTip(3, zoneId=LOOPY)
-        self.assertIn('ambush', ambush_tip.lower())
-        self.assertNotIn('keyblade', ambush_tip.lower())
-        self.assertNotIn('kh', ambush_tip.lower())
+            'ambush', rg.waveClearedOswaldTip(2, zoneId=SILLY).lower())
+        # Wave-aware tips stay Toontown-tone (no KH).
+        for wave, zone in (
+                (1, LOOPY), (2, LOOPY), (3, LOOPY),
+                (1, PUNCHLINE), (3, PUNCHLINE),
+                (1, SILLY)):
+            tip = rg.ambushOswaldTip(wave, zoneId=zone)
+            self.assertIn('ambush', tip.lower())
+            self.assertNotIn('keyblade', tip.lower())
+            self.assertNotIn('kh', tip.lower())
 
     def test_elite_wave_announce_copy(self):
         rg = self.rg
@@ -232,6 +273,10 @@ class EliteWaveModifiersAmbushTests(unittest.TestCase):
         # Non-elite wave keeps inbound default tone.
         mid = rg.waveAnnounceTitle(2, 4, zoneId=LOOPY)
         self.assertNotIn('Elite', mid)
+        # Silly twin swell elite tip (discoverable street pack tables).
+        silly_tip = rg.waveOswaldTip(2, 2, zoneId=SILLY, packCount=2)
+        self.assertIn('elite', silly_tip.lower())
+        self.assertNotIn('keyblade', silly_tip.lower())
 
     def test_director_ai_wires_elite_and_ambush(self):
         src = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')

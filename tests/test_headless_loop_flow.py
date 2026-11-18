@@ -15,9 +15,10 @@ chaining the spiritual-sequel loop:
             (#339) + sticky yield (#347), Overlord P1 rising slam (#334) +
             move-id telegraph (#340), boss/chase HP bar (#331)
   reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
-            modifiers / between-wave ambush (#345), campaign progress client
-            sync on login (#333), CampaignPower reclaimCount rehydrate
-            (#349), campaignVictory client relay (#351)
+            modifiers / earlier-wave ambush + Silly between-swell (#345+),
+            campaign progress client sync on login (#333), CampaignPower
+            reclaimCount rehydrate (#349), campaignVictory client relay
+            (#351)
   twist   — betrayal chase + kit + chase resume (#330) + false-clear gate
             (#341) + mid-chase HP persist (#350) + Oswald telegraph/hit AV
             (#344) + chase-clear epilogue + hub stain (#336) + washed-plaza
@@ -991,8 +992,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn(cg.ARCHETYPE_GAGSTER, punch)
         self.assertEqual(silly, [cg.ARCHETYPE_INK])
 
-        # Elite last-wave buffs + between-wave ambush beats (#345) — not
-        # composition-only tokens on Loopy/Punchline street packs.
+        # Elite last-wave buffs + earlier-wave ambush beats + Silly
+        # between-swell pressure — not composition-only tokens.
         self.assertGreater(rg.ELITE_HP_MULT, 1.0)
         self.assertGreater(rg.ELITE_DAMAGE_MULT, 1.0)
         self.assertGreater(rg.AMBUSH_DELAY, 0.0)
@@ -1004,33 +1005,57 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(rg.waveIsElite(loopy_mods))
         self.assertEqual(rg.waveHpMult(loopy_mods), rg.ELITE_HP_MULT)
         self.assertEqual(
+            rg.resolveAmbushBeat(loopy_pack['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveAmbushBeat(loopy_pack['ambushBeats'], 2),
+            [cg.ARCHETYPE_SNARE])
+        self.assertEqual(
             rg.resolveAmbushBeat(loopy_pack['ambushBeats'], 3),
             [cg.ARCHETYPE_SNARE])
         punch_mods = rg.resolveWaveModifiers(punch_pack['waveModifiers'], 4)
         self.assertTrue(rg.waveIsElite(punch_mods))
         self.assertEqual(
+            rg.resolveAmbushBeat(punch_pack['ambushBeats'], 1),
+            [cg.ARCHETYPE_GAGSTER])
+        self.assertEqual(
             rg.resolveAmbushBeat(punch_pack['ambushBeats'], 3),
             [cg.ARCHETYPE_GAGSTER, cg.ARCHETYPE_SNARE])
-        # Silly Overlord street stays boss-scripted — no elite/ambush tables.
-        self.assertNotIn('waveModifiers', silly_pack)
-        self.assertNotIn('ambushBeats', silly_pack)
-        loopy_params = rg.streetPackParams(LOOPY)
-        self.assertIn('waveModifiers', loopy_params)
-        self.assertIn('ambushBeats', loopy_params)
+        # Silly between-swell ambush + elite twin swell tables.
+        self.assertIn('waveModifiers', silly_pack)
+        self.assertIn('ambushBeats', silly_pack)
+        silly_mods = rg.resolveWaveModifiers(silly_pack['waveModifiers'], 2)
+        self.assertTrue(rg.waveIsElite(silly_mods))
+        self.assertEqual(
+            rg.resolveAmbushBeat(silly_pack['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        for zone in (LOOPY, PUNCHLINE, SILLY):
+            params = rg.streetPackParams(zone)
+            self.assertIn('waveModifiers', params)
+            self.assertIn('ambushBeats', params)
         base_hp = 46
         elite_hp = rg.applyElitePackHp(base_hp, loopy_mods)
         self.assertGreater(elite_hp, base_hp)
         self.assertEqual(
             rg.applyElitePackName('Ink Smudge', loopy_mods),
             rg.ELITE_NAME_PREFIX + 'Ink Smudge')
+        self.assertIn('ambush', rg.waveClearedOswaldTip(1, zoneId=LOOPY).lower())
         self.assertIn('ambush', rg.waveClearedOswaldTip(3, zoneId=LOOPY).lower())
+        self.assertIn('ambush', rg.waveClearedOswaldTip(1, zoneId=SILLY).lower())
         self.assertIn('Elite', rg.waveAnnounceTitle(4, 4, zoneId=LOOPY))
+        self.assertIn('elite', rg.waveOswaldTip(2, 2, zoneId=SILLY).lower())
         self.assertIn('ambush', rg.ambushOswaldTip(3, zoneId=LOOPY).lower())
+        self.assertIn('ambush', rg.ambushOswaldTip(1, zoneId=SILLY).lower())
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             tip_blob = ' '.join([
+                rg.waveClearedOswaldTip(1, zoneId=LOOPY),
                 rg.waveClearedOswaldTip(3, zoneId=LOOPY),
+                rg.waveClearedOswaldTip(1, zoneId=SILLY),
+                rg.ambushOswaldTip(1, zoneId=LOOPY),
                 rg.ambushOswaldTip(3, zoneId=LOOPY),
+                rg.ambushOswaldTip(1, zoneId=SILLY),
                 rg.waveAnnounceTitle(4, 4, zoneId=LOOPY),
+                rg.waveOswaldTip(2, 2, zoneId=SILLY),
             ]).lower()
             self.assertNotIn(banned, tip_blob)
 
