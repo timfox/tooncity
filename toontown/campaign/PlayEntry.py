@@ -3,19 +3,24 @@
 Oswald leads the reclaim fantasy in tip/banner copy. On campaign streets:
 auto-arm melee, auto-start reclaim packs (no ~spawncorrupt), show prompts,
 bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
+
+On polluted ACTS street enter: brief rubber-hose ink edge vignette that
+fades as the tip bar appears (Toontown spiritual sequel — no KH branding).
 """
 
-from panda3d.core import TextNode, Vec4
+from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
 
 from direct.interval.IntervalGlobal import (
     Func,
     LerpColorScaleInterval,
+    Parallel,
     Sequence,
     Wait,
 )
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
+from toontown.corruption import CorruptionGlobals
 
 # Brief delay so zone + PollutionManager are ready before auto-fielding packs.
 AUTO_RECLAIM_DELAY_SEC = 1.35
@@ -33,8 +38,11 @@ class PlayEntryClient(DirectObject):
     def __init__(self):
         DirectObject.__init__(self)
         self._tipNP = None
+        self._tipIval = None
         self._flashNP = None
         self._flashIval = None
+        self._vignetteRoot = None
+        self._vignetteIval = None
         self._armedZone = None
         self._autoReclaimZone = None
         self._reclaimLive = False
@@ -70,6 +78,7 @@ class PlayEntryClient(DirectObject):
         self._cancelAutoReclaim()
         self._clearTip()
         self._clearFlash()
+        self._clearVignette()
         self.ignore('r')
         self.ignore('c')
 
@@ -91,6 +100,7 @@ class PlayEntryClient(DirectObject):
         self._reclaimLive = False
         if zoneId not in self._campaignZoneIds():
             self._clearTip()
+            self._clearVignette()
             self.ignore('r')
             self.ignore('c')
             self._armedZone = None
@@ -107,7 +117,12 @@ class PlayEntryClient(DirectObject):
             tip = (
                 '%s vs the Ink Overlord on %s  |  '
                 'F fight  |  Shift dodge  |  C campaign' % (face, name))
-        self._showTip(tip)
+        # Ink edge vignette on polluted ACTS enter; tip fades in as it clears.
+        if self._streetIsPolluted(zoneId):
+            self._playEntryVignette(zoneId, tip)
+        else:
+            self._clearVignette()
+            self._showTip(tip)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
@@ -116,6 +131,25 @@ class PlayEntryClient(DirectObject):
             AUTO_RECLAIM_DELAY_SEC,
             self._autoStartReclaim,
             self._autoReclaimTaskName(zoneId))
+
+    def _streetIsPolluted(self, zoneId):
+        """True when local pollution (or act seed) still stains the street."""
+        minLevel = float(CorruptionGlobals.ENTRY_VIGNETTE_MIN_POLLUTION)
+        pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
+        if pm is not None:
+            try:
+                level = float(pm.getPollution(zoneId))
+                if level >= minLevel:
+                    return True
+                # Known pure (reclaim cleared) — skip vignette.
+                if zoneId in getattr(pm, 'zonePollution', {}):
+                    return False
+            except Exception:
+                pass
+        act = self._actForZone(zoneId)
+        if act is None:
+            return False
+        return float(act.get('seedPollution', 0.0)) >= minLevel
 
     def _actForZone(self, zoneId):
         for act in CampaignGlobals.ACTS:
@@ -231,7 +265,92 @@ class PlayEntryClient(DirectObject):
         pm.d_requestStreetEvent(1)
         self._flashBanner('%s is calling the next act…' % _face())
 
-    def _showTip(self, text):
+    def _playEntryVignette(self, zoneId, tipText):
+        """Brief ink edge darken that fades as the tip bar appears."""
+        self._clearVignette()
+        root = self._buildVignetteRoot(zoneId)
+        if root is None:
+            self._showTip(tipText)
+            return
+        self._vignetteRoot = root
+        # Tip starts invisible, fades in while vignette holds/fades out.
+        self._showTip(tipText, fadeIn=True)
+        tipNP = self._tipNP
+        inSec = float(CorruptionGlobals.ENTRY_VIGNETTE_IN_SEC)
+        holdSec = float(CorruptionGlobals.ENTRY_VIGNETTE_HOLD_SEC)
+        outSec = float(CorruptionGlobals.ENTRY_VIGNETTE_OUT_SEC)
+        tipDelay = float(CorruptionGlobals.ENTRY_VIGNETTE_TIP_DELAY_SEC)
+        tipFade = float(CorruptionGlobals.ENTRY_VIGNETTE_TIP_FADE_SEC)
+        peak = float(CorruptionGlobals.ENTRY_VIGNETTE_PEAK_ALPHA)
+
+        parts = [
+            Sequence(
+                LerpColorScaleInterval(root, inSec, Vec4(1, 1, 1, peak)),
+                Wait(holdSec),
+                LerpColorScaleInterval(root, outSec, Vec4(1, 1, 1, 0)),
+                Func(self._clearVignette),
+            ),
+        ]
+        if tipNP is not None and not tipNP.isEmpty():
+            parts.append(Sequence(
+                Wait(tipDelay),
+                LerpColorScaleInterval(tipNP, tipFade, Vec4(1, 1, 1, 1)),
+            ))
+        self._vignetteIval = Sequence(
+            Parallel(*parts),
+            name='playEntryInkVignette',
+        )
+        self._vignetteIval.start()
+
+    def _buildVignetteRoot(self, zoneId):
+        """Four ink edge strips — rubber-hose frame darken, open center."""
+        try:
+            ink = CorruptionGlobals.entryVignetteInk(zoneId)
+            edge = float(CorruptionGlobals.ENTRY_VIGNETTE_EDGE)
+            binSort = int(CorruptionGlobals.ENTRY_VIGNETTE_BIN)
+            root = aspect2d.attachNewNode('play-entry-ink-vignette')  # noqa: F821
+            root.setTransparency(TransparencyAttrib.MAlpha)
+            root.setColorScale(1, 1, 1, 0)
+            root.setBin('fixed', binSort)
+            root.setDepthTest(False)
+            root.setDepthWrite(False)
+            # Top / bottom / left / right — thick ink borders, clear middle.
+            frames = (
+                (-2.0, 2.0, 1.0 - edge, 1.25),
+                (-2.0, 2.0, -1.25, -1.0 + edge),
+                (-2.0, -1.0 + edge, -1.25, 1.25),
+                (1.0 - edge, 2.0, -1.25, 1.25),
+            )
+            for i, frame in enumerate(frames):
+                cm = CardMaker('play-entry-vignette-%s' % i)
+                cm.setFrame(*frame)
+                strip = root.attachNewNode(cm.generate())
+                strip.setTransparency(TransparencyAttrib.MAlpha)
+                strip.setColor(ink[0], ink[1], ink[2], 1)
+                strip.setBin('fixed', binSort)
+                strip.setDepthTest(False)
+                strip.setDepthWrite(False)
+            return root
+        except Exception:
+            return None
+
+    def _clearVignette(self):
+        if self._vignetteIval:
+            try:
+                self._vignetteIval.pause()
+            except Exception:
+                pass
+            self._vignetteIval = None
+        root = self._vignetteRoot
+        self._vignetteRoot = None
+        if root is not None:
+            try:
+                if not root.isEmpty():
+                    root.removeNode()
+            except Exception:
+                pass
+
+    def _showTip(self, text, fadeIn=False):
         self._clearTip()
         tn = TextNode('play-entry-tip')
         tn.setText(text)
@@ -242,9 +361,18 @@ class PlayEntryClient(DirectObject):
         np = aspect2d.attachNewNode(tn)  # noqa: F821
         np.setScale(0.042)
         np.setPos(0, 0, -0.92)
+        if fadeIn:
+            np.setTransparency(TransparencyAttrib.MAlpha)
+            np.setColorScale(1, 1, 1, 0)
         self._tipNP = np
 
     def _clearTip(self):
+        if self._tipIval:
+            try:
+                self._tipIval.pause()
+            except Exception:
+                pass
+            self._tipIval = None
         if self._tipNP and not self._tipNP.isEmpty():
             self._tipNP.removeNode()
         self._tipNP = None
