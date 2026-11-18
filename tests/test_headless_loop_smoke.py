@@ -555,6 +555,119 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SILLY_ACT_TIP_POP_SQUASH', play_src)
         self.assertIn('SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT', play_src)
 
+        # Reclaim cheer cream sparkle flecks (#98) — mid-screen flecks with pitch swell.
+        cheer_sparkle_rel = 'toontown/reclaim/CheerCreamSparkleFx.py'
+        _assert_module_file(cheer_sparkle_rel)
+        cheer_sparkle_names = _class_and_func_names(_module_ast(cheer_sparkle_rel))
+        self.assertIn('CheerCreamSparkleFxClient', cheer_sparkle_names)
+        self.assertIn('ensureCheerCreamSparkleFxClient', cheer_sparkle_names)
+        cheer_sparkle_methods = _class_method_names(
+            _module_ast(cheer_sparkle_rel), 'CheerCreamSparkleFxClient')
+        self.assertIn('playSparkle', cheer_sparkle_methods)
+        self.assertIn('_spawnFlecks', cheer_sparkle_methods)
+        for cheer_key in (
+                'CHEER_CREAM_SPARKLE_ENABLED',
+                'CHEER_CREAM_SPARKLE_COUNT',
+                'CHEER_CREAM_SPARKLE_COUNT_WAVE',
+                'CHEER_CREAM_SPARKLE_COLOR',
+                'CHEER_CREAM_SPARKLE_END_COLOR',
+                'CHEER_CREAM_SPARKLE_BIN'):
+            self.assertIn(
+                cheer_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % cheer_key)
+        cheer_src = _read('toontown/reclaim/ReclaimCheer.py')
+        self.assertIn('ensureCheerCreamSparkleFxClient', cheer_src)
+        self.assertIn('CheerCreamSparkleFx', cheer_src)
+        self.assertIn('CheerCreamSparkleFx', director_src)
+
+        # Campaign handoff cream sparkle flecks (#99) — glitter on carnival confetti.
+        for handoff_key in (
+                'HANDOFF_CREAM_SPARKLE_ENABLED',
+                'HANDOFF_CREAM_SPARKLE_COUNT',
+                'HANDOFF_CREAM_SPARKLE_STREAK_COUNT',
+                'HANDOFF_CREAM_SPARKLE_COLORS',
+                'HANDOFF_CREAM_SPARKLE_BIN'):
+            self.assertIn(
+                handoff_key, campaign_names,
+                msg='CampaignGlobals missing %s' % handoff_key)
+        confetti_rel = 'toontown/campaign/CampaignHandoffConfetti.py'
+        _assert_module_file(confetti_rel)
+        confetti_names = _class_and_func_names(_module_ast(confetti_rel))
+        self.assertIn('HandoffConfettiPop', confetti_names)
+        confetti_methods = _class_method_names(
+            _module_ast(confetti_rel), 'HandoffConfettiPop')
+        self.assertIn('_spawnCreamSparkle', confetti_methods)
+        confetti_src = _read(confetti_rel)
+        self.assertIn('HANDOFF_CREAM_SPARKLE_ENABLED', confetti_src)
+
+        # Pollution fog cream dissolve (#100) — cream veil + flecks on purity clear.
+        fog_rel = 'toontown/corruption/PollutionFogCreamDissolveFx.py'
+        _assert_module_file(fog_rel)
+        fog_names = _class_and_func_names(_module_ast(fog_rel))
+        self.assertIn('PollutionFogCreamDissolveFx', fog_names)
+        fog_methods = _class_method_names(
+            _module_ast(fog_rel), 'PollutionFogCreamDissolveFx')
+        self.assertIn('playDissolve', fog_methods)
+        self.assertIn('_spawnShimmer', fog_methods)
+        self.assertIn('_spawnFlecks', fog_methods)
+        for fog_key in (
+                'FOG_CREAM_DISSOLVE_ENABLED',
+                'FOG_CREAM_DISSOLVE_SEC',
+                'FOG_CREAM_DISSOLVE_COLOR',
+                'FOG_CREAM_DISSOLVE_FLECK_COUNT',
+                'FOG_CREAM_DISSOLVE_FLECK_COLOR',
+                'FOG_CREAM_DISSOLVE_BIN'):
+            self.assertTrue(
+                hasattr(cg, fog_key),
+                msg='CorruptionGlobals missing %s' % fog_key)
+        self.assertTrue(
+            hasattr(cg, 'hoodFogCreamDissolveColor'),
+            msg='CorruptionGlobals missing hoodFogCreamDissolveColor')
+        pollution_src = _read('toontown/corruption/PollutionManager.py')
+        self.assertIn('PollutionFogCreamDissolveFx', pollution_src)
+        self.assertIn('beginCreamDissolve', pollution_src)
+        self.assertIn('setCreamDissolveBlend', pollution_src)
+
+        # Dodge roll cream sparkle flecks (#101) — glitter along smear trail.
+        for dodge_sparkle_key in (
+                'DODGE_TRAIL_CREAM_SPARKLE_ENABLED',
+                'DODGE_TRAIL_CREAM_SPARKLE_COUNT',
+                'DODGE_TRAIL_CREAM_SPARKLE_STREAK_COUNT',
+                'DODGE_TRAIL_CREAM_SPARKLE_COLOR',
+                'DODGE_TRAIL_CREAM_SPARKLE_END',
+                'DODGE_TRAIL_CREAM_SPARKLE_SPAWN_SEC'):
+            self.assertIn(
+                dodge_sparkle_key, config_names,
+                msg='HackSlashConfig missing dodge cream sparkle %s'
+                % dodge_sparkle_key)
+        dodge_trail_tree = _module_ast('toontown/hackslash/DodgeTrailFx.py')
+        dodge_trail_methods = _class_method_names(dodge_trail_tree, 'DodgeTrailFx')
+        self.assertIn('_spawnCreamSparkles', dodge_trail_methods)
+        self.assertIn('_makeCreamSparkleFleck', dodge_trail_methods)
+        dodge_trail_src = _read('toontown/hackslash/DodgeTrailFx.py')
+        self.assertIn('DODGE_TRAIL_CREAM_SPARKLE_ENABLED', dodge_trail_src)
+
+        # Corrupt telegraph cream warn flecks (#102) — cream contrast at wind-up.
+        warn_rel = 'toontown/corruption/CorruptTelegraphCreamWarnFx.py'
+        _assert_module_file(warn_rel)
+        warn_names = _class_and_func_names(_module_ast(warn_rel))
+        self.assertIn('TelegraphCreamWarnFlecks', warn_names)
+        self.assertIn('telegraphCreamWarnLook', warn_names)
+        warn_methods = _class_method_names(
+            _module_ast(warn_rel), 'TelegraphCreamWarnFlecks')
+        self.assertIn('play', warn_methods)
+        self.assertIn('_spawnFleck', warn_methods)
+        self.assertTrue(
+            hasattr(cg, 'TELEGRAPH_CREAM_WARN_LOOK'),
+            msg='CorruptionGlobals missing TELEGRAPH_CREAM_WARN_LOOK')
+        self.assertEqual(
+            cg.TELEGRAPH_CREAM_WARN_LOOK.get('id'), 'telegraph-cream-warn')
+        self.assertTrue(
+            hasattr(cg, 'TELEGRAPH_CREAM_WARN_ENABLED'),
+            msg='CorruptionGlobals missing TELEGRAPH_CREAM_WARN_ENABLED')
+        self.assertIn('TelegraphCreamWarnFlecks', corrupt_src)
+        self.assertIn('CorruptTelegraphCreamWarnFx', corrupt_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
