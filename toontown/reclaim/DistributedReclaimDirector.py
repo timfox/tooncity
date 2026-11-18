@@ -251,6 +251,13 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         # immediately followed by a pressure whisper.
         self.__armPurityPressure(resetStall=True)
         self.__showStatusHud()
+        # Brief sunny meter hose-pop so wave begin reads clearly (not rim
+        # flash #213 / secured lock #209).
+        if self._purityMeter is not None:
+            try:
+                self._purityMeter.popWaveStart()
+            except Exception:
+                pass
 
     def announceWaveCleared(self, waveIndex):
         # Light banner pop + cheer pitch swell + cream burst between packs.
