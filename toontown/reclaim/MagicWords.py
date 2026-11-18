@@ -53,9 +53,10 @@ class StartReclaim(MagicWord):
         'richer aftershock — tip-near lock glitter, not wave-clear sunny '
         'sparkle, warm rim flash, or wave-start hose), then after the purity '
         'celebration settles the meter juicily hose-settles with richer '
-        'settling pure-cream flecks so the finish reads juicier still '
-        '(taller stretch + deeper downward cream, not wave-start rising '
-        'squash hose or lock soft green scale). Pair with '
+        'settling pure-cream flecks past #266 so the finish reads juicier '
+        'still (taller stretch + deeper downward cream, not wave-start '
+        'rising squash hose, lock soft green scale, mid-wave rim, or '
+        'wave-clear sparkle). Pair with '
         '~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

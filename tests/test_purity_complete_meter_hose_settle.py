@@ -2,10 +2,11 @@
 """Behavioral headless tests for purity-complete meter hose settle cream.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-further-deepened PURITY_COMPLETE_METER_SETTLE / CREAM tunables past #248,
+further-deepened PURITY_COMPLETE_METER_SETTLE / CREAM tunables past #266,
 rubber-hose (non-KH) copy, and AST hooks on PurityMeterHud + reclaim director
-restore settle path. Distinct from wave-hose cream deepen (#239), lock
-celebration deepen (#243 / #261), and original complete hose settle (#225).
+restore settle path. Distinct from wave-hose cream deepen (#239 / #280), lock
+celebration deepen (#243 / #261 / #286), mid-wave rim / wave-clear sparkle,
+and original complete hose settle (#225).
 
 Run from repo root:
   python3 tests/test_purity_complete_meter_hose_settle.py
@@ -78,7 +79,7 @@ def _class_method_names(tree: ast.AST, class_name: str) -> set[str]:
 
 
 class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
-    """Pure-Python purity-complete meter hose-settle cream deepen past #248."""
+    """Pure-Python purity-complete meter hose-settle cream deepen past #266."""
 
     @classmethod
     def setUpClass(cls):
@@ -88,25 +89,25 @@ class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
         rg = self.rg
         self.assertIs(rg.PURITY_COMPLETE_METER_SETTLE_ENABLED, True)
         self.assertIs(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED, True)
-        # Floors past #248 deepen (0.20 / 0.36 / stretch Z 1.34 / count 6).
-        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_SEC), 0.20)
-        self.assertGreaterEqual(float(rg.PURITY_COMPLETE_METER_SETTLE_RIM_SEC), 0.40)
+        # Floors past #266 deepen (0.24 / 0.42 / stretch Z 1.36 / count 8).
+        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_SEC), 0.24)
+        self.assertGreaterEqual(float(rg.PURITY_COMPLETE_METER_SETTLE_RIM_SEC), 0.46)
         stretch = rg.PURITY_COMPLETE_METER_SETTLE_STRETCH
         self.assertEqual(len(stretch), 4)
         # Tall stretch overshoot — settle finish, not flat squash first.
-        self.assertGreater(float(stretch[2]), 1.34)  # past #248 tall finish
+        self.assertGreater(float(stretch[2]), 1.36)  # past #266 tall finish
         self.assertLess(float(stretch[2]), float(rg.WAVE_START_METER_POP_STRETCH[2]))
         # Settle dwell longer than stretch beat so the finish lands.
         self.assertGreater(
             float(rg.PURITY_COMPLETE_METER_SETTLE_SEC),
             float(stretch[3]))
-        # Richer settling cream flecks / halo past #248 (downward finish juice).
-        self.assertGreaterEqual(int(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT), 8)
-        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_FALL), 0.11)
+        # Richer settling cream flecks / halo past #266 (downward finish juice).
+        self.assertGreaterEqual(int(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT), 10)
+        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_FALL), 0.14)
         self.assertGreater(
-            float(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK), 1.28)
+            float(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK), 1.38)
         self.assertGreaterEqual(
-            float(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA), 0.16)
+            float(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA), 0.18)
         self.assertTrue(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_ENABLED)
 
     def test_rim_accent_distinct_from_wave_start_and_secured(self):
@@ -123,11 +124,11 @@ class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
         self.assertGreater(float(finish[0]), 0.9)
         self.assertGreater(float(finish[1]), 0.9)
         self.assertLess(float(finish[2]), float(finish[1]))
-        self.assertGreaterEqual(float(finish[3]), 0.94)  # creamier rim alpha past #248
+        self.assertGreaterEqual(float(finish[3]), 0.96)  # creamier rim alpha past #266
         self.assertGreater(float(lock[1]), float(lock[0]))  # green lock
         # Settling finish flecks stay pure cream (high G), not green lock glitter.
         self.assertGreater(float(cream[1]), 0.95)
-        self.assertGreaterEqual(float(cream[3]), 0.94)
+        self.assertGreaterEqual(float(cream[3]), 0.96)
         self.assertNotEqual(
             tuple(cream), tuple(rg.WAVE_START_METER_CREAM_COLOR))
         self.assertNotEqual(
@@ -139,7 +140,7 @@ class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
             str(self.rg.PURITY_COMPLETE_METER_SETTLE_ENABLED),
             str(self.rg.PURITY_COMPLETE_METER_SETTLE_RIM_COLOR),
             str(self.rg.PURITY_COMPLETE_METER_SETTLE_CREAM_COLOR),
-            'purity complete meter hose settle sunny cream deepen past 248',
+            'purity complete meter hose settle sunny cream deepen past 266',
         ]).lower()
         for term in banned:
             self.assertNotIn(term, blob)

@@ -19,9 +19,11 @@ green hold (#209 / #261).
 
 Purity complete (after celebration settles): further-deepened soft tall
 stretch → longer settle on the full meter with richer settling pure-cream
-flecks / soft halo so the finish reads juicier still (past #248) — not
-wave-start squash→stretch + rising cream (#220 / #239) and not secured-lock
-green soft uniform scale + tip-near green-cream sparkle (#209 / #243 / #261).
+flecks / soft halo so the finish reads juicier still (past #266) — not
+wave-start squash→stretch + rising cream (#220 / #239 / #280), not
+secured-lock green soft uniform scale + tip-near green-cream sparkle
+(#209 / #243 / #261 / #286), and not mid-wave warm rim-flash / wave-clear
+sparkle (#234 / #275 / #229 / #273).
 
 Mid-wave purity pressure (director tip): further-deepened warm triple-pulse
 contested rim flash + richer local cream flecks / soft halo past #234 when
@@ -725,10 +727,10 @@ class PurityMeterHud(object):
         """Further-deepened soft tall stretch → settle after purity celebration.
 
         Finish-read hose on the full meter with richer settling pure-cream
-        flecks / soft halo so reclaim finish reads juicier still (past #248)
-        — not wave-start squash→stretch + rising cream (#220 / #239) and not
-        secured-lock green soft uniform scale + tip-near green-cream sparkle
-        (#209 / #243 / #261).
+        flecks / soft halo so reclaim finish reads juicier still (past #266)
+        — not wave-start squash→stretch + rising cream (#220 / #239 / #280)
+        and not secured-lock green soft uniform scale + tip-near green-cream
+        sparkle (#209 / #243 / #261 / #286).
         """
         if not getattr(
                 ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_ENABLED', True):
@@ -738,9 +740,9 @@ class PurityMeterHud(object):
         self._clearPressureWarn()
         rimColor = getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_COLOR',
-            (1.0, 0.99, 0.78, 0.96))
+            (1.0, 0.99, 0.80, 0.98))
         rimSec = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.42))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.48))
         if self._rimNP is not None and not self._rimNP.isEmpty():
             try:
                 self._rimNP.setColor(*rimColor)
@@ -749,9 +751,9 @@ class PurityMeterHud(object):
 
         stx, sty, stz, stretchSec = getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_STRETCH',
-            (1.10, 1.0, 1.36, 0.10))
+            (1.12, 1.0, 1.40, 0.11))
         settleSec = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_SEC', 0.24))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_SEC', 0.28))
         try:
             baseScale = self._root.getScale()
             try:
@@ -829,22 +831,22 @@ class PurityMeterHud(object):
             return None
         half = float(getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_HALF',
-            0.092))
+            0.102))
         start = float(getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_START',
-            0.36))
+            0.34))
         peak = float(getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK',
-            1.38))
+            1.48))
         sec = float(getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_SEC',
-            0.34))
+            0.38))
         peakA = float(getattr(
             ReclaimGlobals,
-            'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA', 0.18))
+            'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA', 0.21))
         r, g, b, a = getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_COLOR',
-            (1.0, 0.98, 0.82, 1.0))
+            (1.0, 0.99, 0.84, 1.0))
         binSort = int(getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_BIN', 48))
         try:
@@ -884,25 +886,25 @@ class PurityMeterHud(object):
     def _spawnCompleteSettleCreamFlecks(self):
         """Richer pure-cream chips that settle downward on complete hose."""
         count = int(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT', 8))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT', 10))
         if count <= 0 or self._root is None or self._root.isEmpty():
             return []
         halfW = float(ReclaimGlobals.PURITY_METER_WIDTH) * 0.5
         halfH = float(ReclaimGlobals.PURITY_METER_HEIGHT) * 0.5
         size = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SIZE', 0.016))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SIZE', 0.018))
         fall = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_FALL', 0.14))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_FALL', 0.17))
         spread = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SPREAD', 0.24))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SPREAD', 0.28))
         sec = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SEC', 0.36))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SEC', 0.40))
         r, g, b, a = getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_COLOR',
-            (1.0, 0.99, 0.78, 0.96))
+            (1.0, 0.99, 0.80, 0.98))
         er, eg, eb, ea = getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_END_COLOR',
-            (1.0, 0.95, 0.60, 0.0))
+            (1.0, 0.96, 0.62, 0.0))
         fleckBin = int(getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_BIN', 48))
 
