@@ -22,3 +22,12 @@ Preferred street: Toontown Central Loopy Lane (`2200`).
 ```
 
 Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
+
+## Depth D2 enemy demo
+
+```
+~spawncorrupt 2
+~hackslash 0
+# CorruptToons chase, telegraph ink stretches, then smack for modest HP.
+# Melee (F / LMB) splat-defeats them; purity pop + pollution drop.
+```

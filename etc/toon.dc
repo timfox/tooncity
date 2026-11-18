@@ -3289,6 +3289,9 @@ dclass DistributedCorruptToon : DistributedNode {
   setHp(int16) required broadcast ram;
   setMaxHp(int16) required broadcast ram;
   announceDefeat() broadcast;
+  // Wind-up cue before AI resolves modest toon damage.
+  announceAttackTelegraph() broadcast;
+  announceAttackHit() broadcast;
   // Melee SoftTarget calls applyHackSlashHit client-side; this RPC lands AI damage.
   requestHackSlashHit(uint16) airecv clsend;
 };

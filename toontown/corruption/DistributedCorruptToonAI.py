@@ -1,13 +1,16 @@
+import math
+
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed.DistributedNodeAI import DistributedNodeAI
 from direct.task import Task
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.HackSlashTarget import HackSlashTarget
+from toontown.toon.DistributedToonAI import DistributedToonAI
 
 
 class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
-    """AI stub for a corrupt toon enemy; defeat lowers zone pollution."""
+    """Hostile corrupt toon: chase, telegraphed smack, defeat → pollution reclaim."""
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedCorruptToonAI')
 
@@ -17,6 +20,16 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self.maxHp = maxHp if maxHp is not None else CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
         self.hp = self.maxHp
         self._defeated = False
+        self._attacking = False
+        self._targetId = None
+        self._attackReadyAt = 0.0
+
+    def generate(self):
+        DistributedNodeAI.generate(self)
+        taskMgr.doMethodLater(
+            CorruptionGlobals.AI_TICK_DT,
+            self.__aiTick,
+            self.uniqueName('corrupt-ai'))
 
     def getName(self):
         return self.name
@@ -66,23 +79,131 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     # Alias for magic-word / future melee hit events.
     takeDamage = takeHackSlashDamage
 
+    def __aiTick(self, task):
+        if self._defeated or self.isDeleted():
+            return Task.done
+        if self._attacking:
+            return Task.again
+
+        target = self.__findNearestToon()
+        if target is None:
+            self._targetId = None
+            return Task.again
+
+        self._targetId = target.doId
+        dist = self.__planarDist(target)
+        if dist <= CorruptionGlobals.MELEE_RANGE:
+            now = globalClock.getFrameTime()
+            if now >= self._attackReadyAt:
+                self.__beginAttack(target)
+            return Task.again
+
+        if dist <= CorruptionGlobals.AGGRO_RANGE:
+            self.__chaseToward(target)
+        return Task.again
+
+    def __findNearestToon(self):
+        best = None
+        bestDist = CorruptionGlobals.AGGRO_RANGE
+        for obj in list(self.air.doId2do.values()):
+            if not isinstance(obj, DistributedToonAI):
+                continue
+            if getattr(obj, 'zoneId', None) != self.zoneId:
+                continue
+            if getattr(obj, 'hp', 1) <= 0:
+                continue
+            dist = self.__planarDist(obj)
+            if dist < bestDist:
+                bestDist = dist
+                best = obj
+        return best
+
+    def __planarDist(self, other):
+        try:
+            dx = other.getX() - self.getX()
+            dy = other.getY() - self.getY()
+        except Exception:
+            return 9999.0
+        return math.sqrt(dx * dx + dy * dy)
+
+    def __chaseToward(self, target):
+        try:
+            tx, ty = target.getX(), target.getY()
+            x, y, z = self.getX(), self.getY(), self.getZ()
+        except Exception:
+            return
+        dx = tx - x
+        dy = ty - y
+        dist = math.sqrt(dx * dx + dy * dy)
+        if dist < 0.05:
+            return
+        step = CorruptionGlobals.CHASE_SPEED * CorruptionGlobals.AI_TICK_DT
+        if step >= dist:
+            nx, ny = tx, ty
+        else:
+            nx = x + dx / dist * step
+            ny = y + dy / dist * step
+        heading = -math.degrees(math.atan2(dx, dy))
+        self.setPos(nx, ny, z)
+        self.setH(heading)
+        # Same compound broadcast pattern elevators / crushables use for Node pos.
+        self.sendUpdate('setXYZH', [nx, ny, z, heading])
+
+    def __beginAttack(self, target):
+        self._attacking = True
+        self._targetId = target.doId
+        self.sendUpdate('announceAttackTelegraph', [])
+        taskMgr.doMethodLater(
+            CorruptionGlobals.ATTACK_TELEGRAPH_DELAY,
+            self.__resolveAttack,
+            self.uniqueName('corrupt-attack'))
+
+    def __resolveAttack(self, task):
+        self._attacking = False
+        self._attackReadyAt = (
+            globalClock.getFrameTime() + CorruptionGlobals.ATTACK_COOLDOWN)
+        if self._defeated or self.isDeleted():
+            return Task.done
+        target = self.air.doId2do.get(self._targetId)
+        if target is None or not isinstance(target, DistributedToonAI):
+            return Task.done
+        if getattr(target, 'zoneId', None) != self.zoneId:
+            return Task.done
+        if getattr(target, 'hp', 1) <= 0:
+            return Task.done
+        if self.__planarDist(target) > CorruptionGlobals.ATTACK_HIT_RANGE:
+            return Task.done
+        try:
+            target.takeDamage(CorruptionGlobals.ATTACK_DAMAGE)
+        except Exception:
+            self.notify.debug('takeDamage failed on av %s' % self._targetId)
+        self.sendUpdate('announceAttackHit', [])
+        return Task.done
+
     def __defeat(self, attackerId=None):
         if self._defeated:
             return
         self._defeated = True
+        self._attacking = False
+        taskMgr.remove(self.uniqueName('corrupt-ai'))
+        taskMgr.remove(self.uniqueName('corrupt-attack'))
         self.sendUpdate('announceDefeat', [])
         pollutionMgr = getattr(self.air, 'pollutionManager', None)
         if pollutionMgr is not None:
             pollutionMgr.onCorruptToonDefeated(self.zoneId)
-        # Brief delay so clients can play splat, then delete.
+        # Brief delay so clients can play splat / purity pop, then delete.
         taskMgr.doMethodLater(
-            0.5, self.__deleteTask, self.uniqueName('corrupt-toon-delete'))
+            CorruptionGlobals.DEFEAT_DELETE_DELAY,
+            self.__deleteTask,
+            self.uniqueName('corrupt-toon-delete'))
 
     def __deleteTask(self, task):
         if not self.isDeleted():
             self.requestDelete()
-        return task.done
+        return Task.done
 
     def delete(self):
+        taskMgr.remove(self.uniqueName('corrupt-ai'))
+        taskMgr.remove(self.uniqueName('corrupt-attack'))
         taskMgr.remove(self.uniqueName('corrupt-toon-delete'))
         DistributedNodeAI.delete(self)

@@ -74,10 +74,12 @@ class Purify(MagicWord):
 
 class SpawnCorrupt(MagicWord):
     aliases = ['spawncorrupttoon', 'corrupttoon', 'spawnct']
-    desc = 'Spawn CorruptToon stub(s) near the invoker for melee / reclaim demos.'
+    desc = 'Spawn CorruptToon enemies near the invoker (chase + telegraphed smack).'
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
-        'Optional count (1-8) and hp. Defeat lowers zone pollution.')
+        'They aggro, telegraph attacks, and deal modest HP damage. '
+        'Optional count (1-8) and hp. Defeat lowers zone pollution. '
+        'Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]

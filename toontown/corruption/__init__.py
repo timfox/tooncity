@@ -1,5 +1,6 @@
-"""Corrupt toons and neighborhood pollution (KH x Toontown slice 2).
+"""Corrupt toons and neighborhood pollution (KH x Toontown).
 
-Foundation for the reclaim loop (slice 3): clearing CorruptToons lowers
-per-zone pollution via PollutionManager; hitting 0.0 unlocks purity restore.
+CorruptToons chase, telegraph ink attacks, and take melee damage. Clearing
+them lowers per-zone pollution via PollutionManager; hitting 0.0 unlocks
+purity restore (reclaim / campaign directors).
 """
