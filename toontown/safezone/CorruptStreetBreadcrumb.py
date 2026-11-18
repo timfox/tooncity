@@ -5,12 +5,15 @@ tunnels that lead to Loopy Lane, Punchline Place, and Silly Street.
 Players notice ink-stained streets from the hub without magic words.
 
 After the appear hose-pop, placemarkers briefly pulse / cream-highlight
-(#211). Separately, a short ink crumb trail at the tunnel mouth pulses
-on a faster stagger so polluted streets read clearer from the playground
-side without relying on the overhead placemarker alone. A soft pollution
-fog edge veil also breathes at the playground-side tunnel lip so
-corruption presence reads before you enter a reclaim street — distinct
-from both placemarker (#211) and crumb (#216) scale pulses.
+(#211), deepened with a juicier cream mid-settle + soft local cream
+halo so discoverability reads punchier without KH branding — distinct
+from the birds-return fullscreen cream wash (#226). Separately, a short
+ink crumb trail at the tunnel mouth pulses on a faster stagger so
+polluted streets read clearer from the playground side without relying
+on the overhead placemarker alone. A soft pollution fog edge veil also
+breathes at the playground-side tunnel lip so corruption presence reads
+before you enter a reclaim street — distinct from both placemarker
+(#211) and crumb (#216) scale pulses.
 
 When a polluted reclaim tunnel clears (or purityRestoreFx fires while
 the hub is live), a brief birds-return cream wash pulses so the
@@ -50,12 +53,25 @@ _POP_SQUASH = 0.72
 _POP_STRETCH = 1.18
 _POP_SETTLE_SEC = 0.28
 # Brief attention pulse / cream highlight so reclaim tunnels read on the hub.
+# Cream deepen: warmer peak → soft mid settle + local cream halo bloom
+# (not birds-return fullscreen wash #226; not crumb #216 / fog #221).
 _PULSE_PEAK = 1.22
 _PULSE_HALF_SEC = 0.16
 _PULSE_BEATS = 2
 _PULSE_GAP_SEC = 4.8
-_PULSE_HIGHLIGHT = Vec4(1.0, 0.88, 0.58, 1.0)
+_PULSE_HIGHLIGHT = Vec4(1.0, 0.93, 0.52, 1.0)  # juicier sunny cream peak
+_PULSE_CREAM_MID = Vec4(1.0, 0.96, 0.72, 1.0)  # soft settle before rest
+_PULSE_CREAM_MID_SEC = 0.09
 _PULSE_REST = Vec4(1.0, 1.0, 1.0, 1.0)
+# Soft local cream halo behind placemarker during notice pulse.
+_PULSE_HALO_NAME = 'corruptStreetPlacemarkerCreamHalo'
+_PULSE_HALO_HALF_W = 2.55
+_PULSE_HALO_HALF_H = 0.62
+_PULSE_HALO_Z_OFF = -0.08
+_PULSE_HALO_SCALE_PEAK = 1.32
+_PULSE_HALO_PEAK = Vec4(1.0, 0.96, 0.78, 0.38)
+_PULSE_HALO_MID = Vec4(1.0, 0.94, 0.70, 0.16)
+_PULSE_HALO_REST = Vec4(1.0, 0.97, 0.82, 0.0)
 
 # Tunnel-mouth ink crumb trail — distinct from overhead placemarker pulse.
 _CRUMB_GLYPH = '•'
@@ -176,6 +192,31 @@ def placemarkerPulseParams():
     }
 
 
+def placemarkerPulseCreamParams():
+    """Pure cream-deepen params for hub tunnel placemarker notice pulse.
+
+    Juicier cream mid-settle + local halo bloom on the #211 scale pulse.
+    Distinct from BirdsReturnCreamWashFx fullscreen wash (#226) and from
+    crumb (#216) / fog (#221) cues. Headless-safe — no Panda geom.
+    """
+    hi = _PULSE_HIGHLIGHT
+    mid = _PULSE_CREAM_MID
+    haloPeak = _PULSE_HALO_PEAK
+    haloMid = _PULSE_HALO_MID
+    return {
+        'highlight': (float(hi[0]), float(hi[1]), float(hi[2]), float(hi[3])),
+        'creamMid': (float(mid[0]), float(mid[1]), float(mid[2]), float(mid[3])),
+        'creamMidSec': float(_PULSE_CREAM_MID_SEC),
+        'haloPeakAlpha': float(haloPeak[3]),
+        'haloMidAlpha': float(haloMid[3]),
+        'haloScalePeak': float(_PULSE_HALO_SCALE_PEAK),
+        'haloHalfW': float(_PULSE_HALO_HALF_W),
+        'haloHalfH': float(_PULSE_HALO_HALF_H),
+        # Not a fullscreen wash — local world-space placemarker halo only.
+        'fullscreenWash': False,
+    }
+
+
 def streetBreadcrumbPulseParams():
     """Pure timing / scale for tunnel-mouth ink crumb trail pulse.
 
@@ -228,6 +269,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         DirectObject.__init__(self)
         self._playground = playground
         self._markers = {}  # zoneId -> NodePath
+        self._pulseHalos = {}  # zoneId -> NodePath (cream deepen halo)
         self._crumbTrails = {}  # zoneId -> [NodePath, ...]
         self._fogEdges = {}  # zoneId -> NodePath
         self._popIvals = {}
@@ -424,11 +466,48 @@ class CorruptStreetBreadcrumb(DirectObject):
         np.setDepthWrite(0)
         np.setBin('fixed', 40)
         self._markers[int(zoneId)] = np
+        halo = self._attachPulseCreamHalo(link, zoneId)
         crumbs = self._attachCrumbTrail(link, zoneId)
         fog = self._attachFogEdge(link, zoneId)
-        self._playPop(zoneId, np, crumbs, fog)
+        self._playPop(zoneId, np, crumbs, fog, halo=halo)
         self.notify.debug(
             'placemarker on tunnel → %s (%s)' % (streetName, zoneId))
+
+    def _attachPulseCreamHalo(self, link, zoneId):
+        """Soft local cream halo behind placemarker — deepen #211 cream cue."""
+        zoneId = int(zoneId)
+        old = self._pulseHalos.pop(zoneId, None)
+        if old is not None:
+            try:
+                old.removeNode()
+            except Exception:
+                pass
+        leftover = link.find('**/%s' % _PULSE_HALO_NAME)
+        if not leftover.isEmpty():
+            leftover.removeNode()
+        halo = None
+        try:
+            cm = CardMaker(_PULSE_HALO_NAME)
+            cm.setFrame(
+                -_PULSE_HALO_HALF_W, _PULSE_HALO_HALF_W,
+                -_PULSE_HALO_HALF_H, _PULSE_HALO_HALF_H)
+            halo = link.attachNewNode(cm.generate())
+            halo.setName(_PULSE_HALO_NAME)
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            # Sit just behind the placemarker text (bin under fixed/40).
+            halo.setPos(0, 0, _MARKER_Z + _PULSE_HALO_Z_OFF)
+            halo.setScale(1.0)
+            halo.setColorScale(_PULSE_HALO_REST)
+            halo.setDepthWrite(0)
+            halo.setBin('fixed', 38)  # under placemarker (40), over fog (37)
+            halo.setBillboardPointEye()
+        except Exception:
+            self.notify.debug(
+                'placemarker cream halo unavailable for zone %s' % zoneId)
+            halo = None
+        if halo is not None:
+            self._pulseHalos[zoneId] = halo
+        return halo
 
     def _attachFogEdge(self, link, zoneId):
         """Soft ink fog veil at the playground-side tunnel lip."""
@@ -505,7 +584,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._crumbTrails[zoneId] = crumbs
         return crumbs
 
-    def _playPop(self, zoneId, np, crumbs=None, fog=None):
+    def _playPop(self, zoneId, np, crumbs=None, fog=None, halo=None):
         self._stopPulse(zoneId)
         self._stopCrumbPulse(zoneId)
         self._stopFogPulse(zoneId)
@@ -515,6 +594,8 @@ class CorruptStreetBreadcrumb(DirectObject):
                 old.finish()
             except Exception:
                 pass
+        if halo is None:
+            halo = self._pulseHalos.get(int(zoneId))
         baseScale = _MARKER_SCALE
         ival = Sequence(
             LerpScaleInterval(
@@ -529,8 +610,8 @@ class CorruptStreetBreadcrumb(DirectObject):
                 np, _POP_SETTLE_SEC * 0.30,
                 baseScale,
                 startScale=baseScale * _POP_STRETCH),
-            # Placemarker (#211) + crumb (#216) + fog-edge breath pulses.
-            Func(self._startPulseLoop, zoneId, np),
+            # Placemarker cream deepen (#211+) + crumb + fog-edge pulses.
+            Func(self._startPulseLoop, zoneId, np, halo),
             Func(self._startCrumbPulseLoop, zoneId, crumbs or ()),
             Func(self._startFogPulseLoop, zoneId, fog),
         )
@@ -539,26 +620,31 @@ class CorruptStreetBreadcrumb(DirectObject):
             ival.start()
         except Exception:
             np.setScale(baseScale)
-            self._startPulseLoop(zoneId, np)
+            self._startPulseLoop(zoneId, np, halo)
             self._startCrumbPulseLoop(zoneId, crumbs or ())
             self._startFogPulseLoop(zoneId, fog)
 
-    def _buildNoticePulseIval(self, np):
-        """One brief rubber-hose scale + cream highlight pulse."""
+    def _buildNoticePulseIval(self, np, halo=None):
+        """One brief rubber-hose scale + deepened cream highlight pulse."""
         baseScale = _MARKER_SCALE
         half = max(0.01, float(_PULSE_HALF_SEC))
+        midSec = max(0.01, float(_PULSE_CREAM_MID_SEC))
         peak = baseScale * float(_PULSE_PEAK)
         restCs = _PULSE_REST
         hiCs = _PULSE_HIGHLIGHT
+        midCs = _PULSE_CREAM_MID
+        # Scale still snaps out/in; cream settles peak → mid → rest (juicier).
+        scaleOut = half
+        scaleIn = half + midSec
         beats = []
         for _ in range(max(1, int(_PULSE_BEATS))):
-            beats.append(Parallel(
+            parts = [
                 Sequence(
                     LerpScaleInterval(
-                        np, half, peak, startScale=baseScale,
+                        np, scaleOut, peak, startScale=baseScale,
                         blendType='easeOut'),
                     LerpScaleInterval(
-                        np, half, baseScale, startScale=peak,
+                        np, scaleIn, baseScale, startScale=peak,
                         blendType='easeIn'),
                 ),
                 Sequence(
@@ -566,13 +652,44 @@ class CorruptStreetBreadcrumb(DirectObject):
                         np, half, hiCs, startColorScale=restCs,
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        np, half, restCs, startColorScale=hiCs,
+                        np, midSec, midCs, startColorScale=hiCs,
+                        blendType='easeInOut'),
+                    LerpColorScaleInterval(
+                        np, half, restCs, startColorScale=midCs,
                         blendType='easeIn'),
                 ),
-            ))
+            ]
+            if halo is not None:
+                parts.append(self._buildPulseCreamHaloIval(halo, half, midSec))
+            beats.append(Parallel(*parts))
         return Sequence(*beats)
 
-    def _startPulseLoop(self, zoneId, np):
+    def _buildPulseCreamHaloIval(self, halo, half, midSec):
+        """Local cream halo bloom — peak → mid → fade (not fullscreen wash)."""
+        peakScale = float(_PULSE_HALO_SCALE_PEAK)
+        return Parallel(
+            Sequence(
+                LerpColorScaleInterval(
+                    halo, half, _PULSE_HALO_PEAK,
+                    startColorScale=_PULSE_HALO_REST, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    halo, midSec, _PULSE_HALO_MID,
+                    startColorScale=_PULSE_HALO_PEAK, blendType='easeInOut'),
+                LerpColorScaleInterval(
+                    halo, half, _PULSE_HALO_REST,
+                    startColorScale=_PULSE_HALO_MID, blendType='easeIn'),
+            ),
+            Sequence(
+                LerpScaleInterval(
+                    halo, half, peakScale, startScale=1.0,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    halo, half + midSec, 1.0, startScale=peakScale,
+                    blendType='easeIn'),
+            ),
+        )
+
+    def _startPulseLoop(self, zoneId, np, halo=None):
         """Sparse brief pulses while the polluted placemarker stays up."""
         zoneId = int(zoneId)
         if not self._active or self._markers.get(zoneId) is not np:
@@ -584,15 +701,23 @@ class CorruptStreetBreadcrumb(DirectObject):
                 return
         except Exception:
             return
+        if halo is None:
+            halo = self._pulseHalos.get(zoneId)
         self._stopPulse(zoneId)
         try:
             np.setColorScale(_PULSE_REST)
             np.setScale(_MARKER_SCALE)
         except Exception:
             pass
+        if halo is not None:
+            try:
+                halo.setColorScale(_PULSE_HALO_REST)
+                halo.setScale(1.0)
+            except Exception:
+                pass
         gap = max(0.5, float(_PULSE_GAP_SEC))
         loop = Sequence(
-            self._buildNoticePulseIval(np),
+            self._buildNoticePulseIval(np, halo),
             Wait(gap),
         )
         self._pulseIvals[zoneId] = loop
@@ -605,6 +730,12 @@ class CorruptStreetBreadcrumb(DirectObject):
                 np.setColorScale(_PULSE_REST)
             except Exception:
                 pass
+            if halo is not None:
+                try:
+                    halo.setColorScale(_PULSE_HALO_REST)
+                    halo.setScale(1.0)
+                except Exception:
+                    pass
 
     def _stopPulse(self, zoneId):
         zoneId = int(zoneId)
@@ -617,6 +748,13 @@ class CorruptStreetBreadcrumb(DirectObject):
                     ival.pause()
                 except Exception:
                     pass
+        halo = self._pulseHalos.get(zoneId)
+        if halo is not None:
+            try:
+                halo.setColorScale(_PULSE_HALO_REST)
+                halo.setScale(1.0)
+            except Exception:
+                pass
 
     def _buildCrumbPulseIval(self, crumb):
         """One brief scale + cream beat on a single trail crumb."""
@@ -778,6 +916,12 @@ class CorruptStreetBreadcrumb(DirectObject):
         if ival is not None:
             try:
                 ival.finish()
+            except Exception:
+                pass
+        halo = self._pulseHalos.pop(zoneId, None)
+        if halo is not None:
+            try:
+                halo.removeNode()
             except Exception:
                 pass
         fog = self._fogEdges.pop(zoneId, None)
