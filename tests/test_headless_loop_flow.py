@@ -1517,9 +1517,25 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'HubStainConfrontClient', 'ensureHubStainConfrontClient',
                 'refreshHubStainConfront', 'stopHubStainConfront'):
             self.assertIn(sym, confront_names)
+        # Washed-plaza epilogue beat after chase clear (beyond plate + tip).
+        self.assertTrue(camp.HUB_EPILOGUE_BEAT_ENABLED)
+        self.assertTrue(
+            stain.hubEpilogueBeatWanted(camp.STATE_VICTORY, chaseCleared=1))
+        self.assertFalse(
+            stain.hubEpilogueBeatWanted(camp.STATE_VICTORY, chaseCleared=0))
+        epi_rel = 'toontown/campaign/HubEpilogueBeat.py'
+        self.assertTrue((REPO_ROOT / epi_rel).is_file())
+        epi_names = _class_and_func_names(_module_ast(epi_rel))
+        for sym in (
+                'HubEpilogueBeatClient', 'ensureHubEpilogueBeatClient',
+                'refreshHubEpilogueBeat', 'stopHubEpilogueBeat',
+                'clearHubEpilogueBeat'):
+            self.assertIn(sym, epi_names)
         tt = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('refreshHubStainConfront', tt)
         self.assertIn('stopHubStainConfront', tt)
+        self.assertIn('refreshHubEpilogueBeat', tt)
+        self.assertIn('stopHubEpilogueBeat', tt)
         # Trusted Oswald stub wiring must survive hub-stain mount.
         self.assertIn('refreshOswaldPresenceHub', tt)
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
@@ -1528,6 +1544,9 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 camp.HUB_STAIN_CLEAR_MSG,
                 camp.HUB_STAIN_CONFRONT_LABEL,
                 camp.HUB_STAIN_CONFRONT_TIP,
+                camp.HUB_EPILOGUE_BEAT_LABEL,
+                camp.HUB_EPILOGUE_BEAT_ABSENCE,
+                camp.HUB_EPILOGUE_BEAT_TIP,
             ]).lower()
             self.assertNotIn(banned, blob)
 

@@ -237,8 +237,8 @@ class HubStainAfterBetrayalTests(unittest.TestCase):
         names = _module_names('toontown/campaign/HubStain.py')
         for need in (
                 'hubStainEnabled', 'hubStainZone', 'hubStainLevel',
-                'hubStainWanted', 'applyHubStain', 'clearHubStain',
-                'syncHubStain'):
+                'hubStainWanted', 'hubEpilogueBeatWanted', 'applyHubStain',
+                'clearHubStain', 'syncHubStain'):
             self.assertIn(need, names)
 
     def test_director_wires_hub_stain_on_victory_and_clear(self):

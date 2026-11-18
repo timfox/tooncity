@@ -34,6 +34,19 @@ HUB_STAIN_CONFRONT_TIP = (
     "Oswald's ink stains the plaza — wash the betrayal chase!  |  "
     'F fight  |  C campaign')
 HUB_STAIN_CONFRONT_FORWARD = 5.5
+# Washed-plaza epilogue beat after chase clear (HubEpilogueBeat).
+# Complements HubStainConfront (pending stain): once fog washes, TTC gets
+# an authored celebration placemarker + absence confirmation tip — not
+# HUD plate / HUB_VICTORY_TIP alone. HUB_EPILOGUE_BEAT_ENABLED = False
+# drops world placemarker + tip only (epilogue handoff plate / hub tip
+# remain). Not cream FX, not OswaldPresence deepen. No keyblades / KH.
+HUB_EPILOGUE_BEAT_ENABLED = True
+HUB_EPILOGUE_BEAT_LABEL = 'Plaza washed'
+HUB_EPILOGUE_BEAT_ABSENCE = "Oswald's gone — plaza pure"
+HUB_EPILOGUE_BEAT_TIP = (
+    "Toon Central plaza is washed clean — Oswald's absence holds. "
+    'Replay from hub / C on Loopy!  |  F fight  |  C campaign')
+HUB_EPILOGUE_BEAT_FORWARD = 5.5
 # Alias used by handoff / PlayEntry celebration UX.
 RECLAIM_FACE = PROTAGONIST
 

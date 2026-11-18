@@ -5,6 +5,7 @@ celebration — Oswald as the trusted face, title hose-pop, clear next-street
 cue — not a single toast line. Finale victory keeps the Oswald twist beat.
 After Corrupted Oswald chase clear, an epilogue soft-end plate points the
 hub replay tip (twist→soft-end authored beat — not cream FX deepen).
+HubEpilogueBeat adds the washed-plaza world placemarker beyond this plate.
 
 Title lands with the same squash→stretch→settle rubber-hose scale pop as
 PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
@@ -295,6 +296,17 @@ class CampaignHandoffClient(DirectObject):
             return
         self._epilogueShown = True
         self._showEpilogueHandoff()
+        # Washed-plaza world beat beyond this HUD plate (HubEpilogueBeat).
+        self._refreshHubEpilogueBeat()
+
+    def _refreshHubEpilogueBeat(self):
+        """Arm TTC washed-plaza placemarker after chase-clear soft-end."""
+        try:
+            from toontown.campaign.HubEpilogueBeat import (
+                refreshHubEpilogueBeat)
+            refreshHubEpilogueBeat()
+        except Exception:
+            pass
 
     def _showEpilogueHandoff(self):
         """Hose-pop soft-end plate: stain washed → hub replay tip."""

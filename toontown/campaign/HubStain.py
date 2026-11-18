@@ -3,9 +3,10 @@
 After finale victory (betrayal), Toontown Central (`HUB_ZONE`) receives an
 authored pollution fog so the hub is no longer a pristine sunny plaza while
 the Corrupted Oswald chase is still pending. Chase clear / replay wipe
-washes the hub back to pure. Gameplay world consequence — not cream FX,
-not OswaldPresence NPC deepen. Toontown spiritual sequel — no keyblades /
-KH branding.
+washes the hub back to pure. ``hubEpilogueBeatWanted`` gates the washed-
+plaza epilogue placemarker (HubEpilogueBeat) once chase is cleared.
+Gameplay world consequence — not cream FX, not OswaldPresence NPC deepen.
+Toontown spiritual sequel — no keyblades / KH branding.
 """
 
 from __future__ import annotations
@@ -47,6 +48,26 @@ def hubStainWanted(state, chaseCleared=0):
     if not victory:
         return False
     return int(chaseCleared or 0) == 0
+
+
+def hubEpilogueBeatWanted(state, chaseCleared=0):
+    """True after victory when the betrayal stain wash (chase) is done.
+
+    Complementary to ``hubStainWanted`` — pending chase stains the hub;
+    cleared chase arms the washed-plaza epilogue beat (HubEpilogueBeat).
+    Gated by CAMPAIGN_EPILOGUE + HUB_EPILOGUE_BEAT toggles.
+    """
+    if not bool(getattr(CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True)):
+        return False
+    if not bool(getattr(CampaignGlobals, 'HUB_EPILOGUE_BEAT_ENABLED', True)):
+        return False
+    try:
+        victory = int(state) == int(CampaignGlobals.STATE_VICTORY)
+    except (TypeError, ValueError):
+        victory = state == CampaignGlobals.STATE_VICTORY
+    if not victory:
+        return False
+    return int(chaseCleared or 0) == 1
 
 
 def hubStainMsg():
