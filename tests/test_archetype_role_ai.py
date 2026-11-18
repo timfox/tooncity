@@ -210,6 +210,10 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         brute = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_BRUTE]
         self.assertEqual(brute.get('attackMove'), 'spit')
         self.assertTrue(self.cg.BRUTE_SPIT_PROJECTILE_ENABLED)
+        # Ink Smudge kit is attack identity; role AI still plain chase.
+        ink = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_INK]
+        self.assertEqual(ink.get('attackMove'), 'ink_dash')
+        self.assertTrue(self.cg.INK_SMUDGE_KIT_ENABLED)
 
     def test_ai_role_move_wiring(self):
         rel = 'toontown/corruption/DistributedCorruptToonAI.py'

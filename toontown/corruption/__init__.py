@@ -1,7 +1,8 @@
 """Corrupt toons and neighborhood pollution (Toontown spiritual sequel).
 
 CorruptToons prefer ink-tinted Toon Actor / DNA silhouettes (card fallback),
-chase, and telegraph attacks: Ink Smudge purple melee wind-up, Sludge Brute
+chase, and telegraph attacks: Ink Smudge purple ink_dash rush + close
+ink_splat secondary (swarm move identity, not smack fodder), Sludge Brute
 green spit telegraph + AI traveling spit projectile (trail/land splash) with
 close slam secondary + client ink blob on land, Balloon Snare amber
 string-lash + vine zip, Gunk Gagster teal gag-lob puddle trap. Between

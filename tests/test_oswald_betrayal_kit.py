@@ -205,9 +205,11 @@ class OswaldBetrayalKitTest(unittest.TestCase):
         self.assertTrue(self.cg.SNARE_LASH_YANK_ENABLED)
         self.assertGreater(self.cg.SNARE_LASH_YANK_DIST, 0.5)
         self.assertTrue(self.cg.GAGSTER_PUDDLE_LINGER_ENABLED)
-        # Ink Smudge still default smack (separate gap) — Oswald is not Smudge.
+        # Ink Smudge has its own ink_dash kit — Oswald is not Smudge.
         ink = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_INK]
-        self.assertNotEqual(ink.get('attackMove', 'smack'), 'betrayal_lunge')
+        self.assertEqual(ink.get('attackMove'), 'ink_dash')
+        self.assertNotEqual(ink.get('attackMove'), 'betrayal_lunge')
+        self.assertTrue(self.cg.INK_SMUDGE_KIT_ENABLED)
 
     def test_ai_betrayal_kit_wiring(self):
         rel = 'toontown/corruption/DistributedCorruptToonAI.py'
