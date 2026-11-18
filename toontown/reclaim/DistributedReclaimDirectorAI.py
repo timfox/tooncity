@@ -59,10 +59,12 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
         Soft-gate (story skip reduction): Punchline / Silly packs need
         campaign unlockedThrough >= their ACTS index. Loopy (act 0) stays
-        open so discoverable play entry works. When a campaign act is
-        already live on this street, prefer campaign attach (C path) so
-        R cannot race past unlocks. force=True bypasses the soft-gate for
-        ~startreclaim demos — not a hard brick on tips / explore.
+        open so discoverable play entry works. Hydrates CampaignProgressSave
+        for the invoking toon before the gate so unlocks survive relog
+        (parity with C startCampaign). When a campaign act is already live
+        on this street, prefer campaign attach (C path) so R cannot race
+        past unlocks. force=True bypasses the soft-gate for ~startreclaim
+        demos — not a hard brick on tips / explore.
 
         Returns a short player-facing message (started / gated / prefer).
         """
@@ -73,6 +75,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             from toontown.campaign import CampaignGlobals
             from toontown.campaign.CampaignDirectorAI import getCampaignDirector
             campaign = getCampaignDirector(air)
+            # R soft-gate must see persisted unlocks after relog / avatar
+            # switch — C already hydrates in startCampaign / advanceCampaign;
+            # street-pack R must hydrate before reading unlockedThrough.
+            if hasattr(campaign, '_hydrateFromToon'):
+                campaign._hydrateFromToon(toon)
             unlockedThrough = int(
                 getattr(campaign, 'unlockedThrough', 0) or 0)
             # Prefer campaign attach when live on this street.
