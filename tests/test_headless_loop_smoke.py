@@ -2313,7 +2313,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SmudgeHitCreamWashPulse', corrupt_src)
         self.assertIn('__playSmudgeHitCreamWash', corrupt_src)
 
-        # Dodge i-frame cream wash (#166) — soft wash after first i-frame pulse.
+        # Dodge i-frame cream wash (#166 deepen) — stronger wash + aftershock
+        # after first i-frame pulse so invuln windows read clearly.
         iframe_wash_rel = 'toontown/hackslash/DodgeIFrameCreamWashFx.py'
         _assert_module_file(iframe_wash_rel)
         iframe_wash_names = _class_and_func_names(_module_ast(iframe_wash_rel))
@@ -2322,20 +2323,29 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             _module_ast(iframe_wash_rel), 'DodgeIFrameCreamWashPulse')
         self.assertIn('play', iframe_wash_methods)
         self.assertIn('clear', iframe_wash_methods)
+        self.assertIn('_buildAftershock', iframe_wash_methods)
+        self.assertIn('_spawnAftershockHalo', iframe_wash_methods)
+        self.assertIn('_spawnAftershockFleck', iframe_wash_methods)
         for iframe_wash_key in (
                 'DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED',
                 'DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC',
                 'DODGE_TRAIL_PULSE_CREAM_WASH_COLOR',
                 'DODGE_TRAIL_PULSE_CREAM_WASH_PEAK',
                 'DODGE_TRAIL_PULSE_CREAM_WASH_MID',
-                'DODGE_TRAIL_PULSE_CREAM_WASH_BIN'):
+                'DODGE_TRAIL_PULSE_CREAM_WASH_BIN',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED'):
             self.assertIn(
                 iframe_wash_key, config_names,
                 msg='HackSlashConfig missing %s' % iframe_wash_key)
+        config_funcs = _class_and_func_names(config_tree)
+        self.assertIn('dodgeIFrameCreamWashPeakAtSec', config_funcs)
         dodge_trail_src = _read('toontown/hackslash/DodgeTrailFx.py')
         self.assertIn('DodgeIFrameCreamWashPulse', dodge_trail_src)
         self.assertIn('_armIFrameCreamWash', dodge_trail_src)
         self.assertIn('DodgeIFrameCreamWashPulse', hack_init)
+        self.assertIn('dodgeIFrameCreamWashPeakAtSec', hack_init)
 
         # (#167 was prior headless smoke through #162 — no new juice symbols.)
         # (#169 was prior headless smoke through #166 — no new juice symbols.)
