@@ -21,9 +21,12 @@ from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
 from toontown.corruption import CorruptionGlobals
+from toontown.reclaim import ReclaimGlobals
 
 # Brief delay so zone + PollutionManager are ready before auto-fielding packs.
 AUTO_RECLAIM_DELAY_SEC = 1.35
+# Punchline sludge street: slightly longer explore beat before packs field.
+PUNCHLINE_AUTO_RECLAIM_DELAY_SEC = 1.85
 
 
 def _face():
@@ -110,13 +113,14 @@ class PlayEntryClient(DirectObject):
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
         face = _face()
-        tip = (
-            '%s: CORRUPTION on %s — packs incoming  |  '
-            'F fight  |  Shift dodge  |  C campaign' % (face, name))
+        # Punchline STREET_PACK tip: explore → fight → reclaim; else ACTS/default.
         if act and act.get('finale'):
             tip = (
                 '%s vs the Ink Overlord on %s  |  '
                 'F fight  |  Shift dodge  |  C campaign' % (face, name))
+        else:
+            tip = ReclaimGlobals.streetPlayEntryTip(
+                zoneId, face=face, fallbackName=name)
         # Ink edge vignette on polluted ACTS enter; tip fades in as it clears.
         if self._streetIsPolluted(zoneId):
             self._playEntryVignette(zoneId, tip)
@@ -126,9 +130,13 @@ class PlayEntryClient(DirectObject):
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
+        # Punchline gets a short explore beat before sludge packs inbound.
         self._autoReclaimZone = zoneId
+        delay = AUTO_RECLAIM_DELAY_SEC
+        if ReclaimGlobals.streetPackId(zoneId) == 'punchline-sludge':
+            delay = PUNCHLINE_AUTO_RECLAIM_DELAY_SEC
         taskMgr.doMethodLater(  # noqa: F821
-            AUTO_RECLAIM_DELAY_SEC,
+            delay,
             self._autoStartReclaim,
             self._autoReclaimTaskName(zoneId))
 
@@ -195,20 +203,22 @@ class PlayEntryClient(DirectObject):
         if self._reclaimLive:
             return task.done
         self._requestReclaim()
-        self._flashBanner('%s fields the packs — Fight!' % _face())
+        self._flashBanner(
+            ReclaimGlobals.streetAutoFlash(zoneId, face=_face()))
         return task.done
 
     def _onReclaimStart(self, *args):
         self._reclaimLive = True
         self._cancelAutoReclaim()
         av = getattr(base, 'localAvatar', None)  # noqa: F821
+        zoneId = getattr(av, 'zoneId', None) if av is not None else None
         if av is not None and hasattr(av, 'enableHackSlashMelee'):
             try:
                 av.enableHackSlashMelee(spawnHostiles=False)
             except Exception:
                 pass
         self._flashBanner(
-            'RECLAIM LIVE — %s says clear them with F!' % _face())
+            ReclaimGlobals.streetReclaimLiveFlash(zoneId, face=_face()))
 
     def _onPurity(self, zoneId):
         """Yield the celebration banner to CampaignHandoff; tip shows next street."""

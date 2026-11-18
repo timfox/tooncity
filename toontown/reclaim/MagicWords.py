@@ -42,15 +42,23 @@ class StartReclaim(MagicWord):
         director = DistributedReclaimDirectorAI(self.air, zoneId=zoneId)
         director.generateWithRequired(zoneId)
         directors[zoneId] = director
+        packKwargs = ReclaimGlobals.streetPackParams(zoneId)
         director.start(
             zoneId,
             (toon.getX(), toon.getY(), toon.getZ()),
-            toon.getH())
+            toon.getH(),
+            **packKwargs)
+        pack = ReclaimGlobals.streetPack(zoneId) or {}
+        packId = pack.get('packId') or 'default'
+        seed = pack.get(
+            'seedPollution', ReclaimGlobals.RECLAIM_START_POLLUTION)
+        maxPacks = pack.get('maxPacks', ReclaimGlobals.MAX_PACKS)
+        packSize = pack.get('packSize', ReclaimGlobals.PACK_SIZE)
         return (
-            'Reclaim started in zone %s (pollution %.2f, %s escalating waves, '
-            'base pack %s). Enable melee with ~hackslash 0, then clear waves.'
-            % (zoneId, ReclaimGlobals.RECLAIM_START_POLLUTION,
-               ReclaimGlobals.MAX_PACKS, ReclaimGlobals.PACK_SIZE))
+            'Reclaim started in zone %s [%s] (pollution %.2f, %s escalating '
+            'waves, base pack %s). Enable melee with ~hackslash 0, then '
+            'clear waves.'
+            % (zoneId, packId, seed, maxPacks, packSize))
 
 
 class StopReclaim(MagicWord):
