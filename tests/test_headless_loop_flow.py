@@ -1334,12 +1334,32 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('SecuredLockSparkle', client_src)
 
         # Power bump scales melee with reclaim count (campaign depth).
+        # After #366 AI used baseline COMBO_DAMAGE; reclaimCount table push
+        # restores reclaim→power→fight on the authoritative path.
         power_src = _read('toontown/campaign/CampaignPower.py')
         self.assertIn('applyPowerBump', power_src)
         self.assertIn('POWER_BUMP_PER_RECLAIM', power_src)
         self.assertIn('reclaimCount', power_src)
+        self.assertIn('comboDamageTableFromReclaimCount', power_src)
         self.assertGreater(self.camp.POWER_BUMP_PER_RECLAIM, 0.0)
         self.assertGreater(self.camp.POWER_BUMP_MAX, self.camp.POWER_BUMP_PER_RECLAIM)
+        hs_cfg = self.hs_cfg
+        hs_src = _read('toontown/hackslash/HackSlashConfig.py')
+        self.assertIn('def comboDamageTableFromReclaimCount', hs_src)
+        self.assertIn('def powerBumpMultiplier', hs_src)
+        per = self.camp.POWER_BUMP_PER_RECLAIM
+        cap = self.camp.POWER_BUMP_MAX
+        baseline = hs_cfg.COMBO_DAMAGE
+        bumped = hs_cfg.comboDamageTableFromReclaimCount(
+            2, baseTable=baseline, perReclaim=per, bumpMax=cap)
+        self.assertGreater(bumped[0], baseline[0])
+        self.assertEqual(
+            hs_cfg.meleeDamageFromHitIndex(0, 0, damageTable=bumped),
+            int(bumped[0]))
+        corrupt_ai = _read('toontown/corruption/DistributedCorruptToonAI.py')
+        self.assertIn('__campaignPowerDamageTable', corrupt_ai)
+        self.assertIn('comboDamageTableFromReclaimCount', corrupt_ai)
+        self.assertIn('getCampaignDirector', corrupt_ai)
         # Street-clear slice reward beyond COMBO_DAMAGE (jellybean / laff trophy).
         self.assertIn('awardStreetClearReward', power_src)
         self.assertIn('streetClearJellybeans', power_src)

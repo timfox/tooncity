@@ -111,6 +111,21 @@ class AuthoritativeMeleeDamageTest(unittest.TestCase):
         self.assertEqual(capped, int(self.cfg.MELEE_DAMAGE_MAX))
         self.assertLessEqual(capped, 80)
 
+    def test_reclaim_count_table_helper_scales_combo_damage(self):
+        """CampaignPower follow-up: reclaimCount → bumped table for AI."""
+        base = self.cfg.COMBO_DAMAGE
+        bumped = self.cfg.comboDamageTableFromReclaimCount(
+            2, baseTable=base, perReclaim=0.08, bumpMax=0.40)
+        self.assertEqual(
+            bumped,
+            tuple(max(1, int(round(d * 1.16))) for d in base))
+        self.assertEqual(
+            self.cfg.meleeDamageFromHitIndex(1, damageTable=bumped),
+            int(bumped[1]))
+        self.assertEqual(
+            self.cfg.comboDamageTableFromReclaimCount(0, baseTable=base),
+            tuple(max(1, int(round(d * 1.0))) for d in base))
+
     def test_no_kh_branding_in_damage_helper_copy(self):
         src = _read('toontown/hackslash/HackSlashConfig.py')
         block = src.split('def meleeDamageFromHitIndex', 1)[1][:700].lower()

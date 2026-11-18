@@ -219,8 +219,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         """Client melee RPC: SoftTarget applyHackSlashHit → AI damage + hang stun.
 
         Damage is server-authoritative from hitIndex (+ optional counterFlags)
-        via HackSlashConfig.meleeDamageFromHitIndex / COMBO_DAMAGE — the client
-        amount is not trusted.
+        via HackSlashConfig.meleeDamageFromHitIndex / COMBO_DAMAGE, scaled by
+        CampaignDirector reclaimCount (same POWER_BUMP_* math as client
+        CampaignPower) — the client amount is not trusted.
         """
         if self._defeated:
             return
@@ -236,7 +237,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             flags = max(0, min(255, int(counterFlags or 0)))
         except (TypeError, ValueError):
             flags = 0
-        amount = HackSlashConfig.meleeDamageFromHitIndex(idx, flags)
+        table = self.__campaignPowerDamageTable()
+        amount = HackSlashConfig.meleeDamageFromHitIndex(
+            idx, flags, damageTable=table)
         if amount <= 0:
             return
         self.takeHackSlashDamage(amount, attackerId=avId)
@@ -244,6 +247,36 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         # __defeat already stops AI; stun is a no-op after delete.
         if not self._defeated:
             self.__applyJuggleHangStun(idx)
+
+    def __campaignPowerDamageTable(self):
+        """COMBO_DAMAGE scaled by live campaign reclaimCount (or baseline).
+
+        Restores reclaim→power→fight after #366 made AI ignore the
+        client-only CampaignPower table mutation. Returns None when there
+        is no reclaim bump so meleeDamageFromHitIndex uses module baseline.
+        """
+        reclaimCount = 0
+        perReclaim = getattr(
+            HackSlashConfig, 'POWER_BUMP_PER_RECLAIM_DEFAULT', 0.08)
+        bumpMax = getattr(
+            HackSlashConfig, 'POWER_BUMP_MAX_DEFAULT', 0.40)
+        try:
+            from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+            director = getCampaignDirector(self.air)
+            reclaimCount = max(
+                0, int(getattr(director, 'reclaimCount', 0) or 0))
+        except Exception:
+            reclaimCount = 0
+        try:
+            from toontown.campaign import CampaignGlobals
+            perReclaim = float(CampaignGlobals.POWER_BUMP_PER_RECLAIM)
+            bumpMax = float(CampaignGlobals.POWER_BUMP_MAX)
+        except Exception:
+            pass
+        if reclaimCount <= 0:
+            return None
+        return HackSlashConfig.comboDamageTableFromReclaimCount(
+            reclaimCount, perReclaim=perReclaim, bumpMax=bumpMax)
 
     def __applyJuggleHangStun(self, hitIndex):
         """Pause chase/attack for launch hang so cancel→slam sticks."""

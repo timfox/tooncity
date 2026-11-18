@@ -31,18 +31,44 @@ def _ensureBaseline():
 
 
 def applyPowerBump(reclaimCount):
-    """Scale combo damage by reclaim progress. Returns the multiplier used."""
+    """Scale combo damage by reclaim progress. Returns the multiplier used.
+
+    Mutates the local (client) HackSlashConfig.COMBO_DAMAGE for juice.
+    AI hostile HP drain uses the same POWER_BUMP_* math via
+    HackSlashConfig.comboDamageTableFromReclaimCount + reclaimCount on
+    CampaignDirectorAI — keep both paths on the shared helper.
+    """
     _ensureBaseline()
-    bump = min(
-        CampaignGlobals.POWER_BUMP_MAX,
-        max(0.0, float(reclaimCount) * CampaignGlobals.POWER_BUMP_PER_RECLAIM))
-    mult = 1.0 + bump
+    per = CampaignGlobals.POWER_BUMP_PER_RECLAIM
+    cap = CampaignGlobals.POWER_BUMP_MAX
+    hs = None
     try:
-        from toontown.hackslash import HackSlashConfig
-        HackSlashConfig.COMBO_DAMAGE = tuple(
-            max(1, int(round(d * mult))) for d in _BASE_DAMAGE)
+        from toontown.hackslash import HackSlashConfig as hs
     except Exception:
-        pass
+        hs = None
+
+    if hs is not None and hasattr(hs, 'powerBumpMultiplier'):
+        mult = hs.powerBumpMultiplier(
+            reclaimCount, perReclaim=per, bumpMax=cap)
+    else:
+        bump = min(cap, max(0.0, float(reclaimCount or 0) * float(per)))
+        mult = 1.0 + bump
+
+    if hs is not None and hasattr(hs, 'comboDamageTableFromReclaimCount'):
+        table = hs.comboDamageTableFromReclaimCount(
+            reclaimCount,
+            baseTable=_BASE_DAMAGE,
+            perReclaim=per,
+            bumpMax=cap)
+    else:
+        table = tuple(
+            max(1, int(round(d * mult))) for d in _BASE_DAMAGE)
+
+    if hs is not None:
+        try:
+            hs.COMBO_DAMAGE = table
+        except Exception:
+            pass
     return mult
 
 
