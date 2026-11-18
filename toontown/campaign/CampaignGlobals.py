@@ -294,6 +294,18 @@ SILLY_ACT_TIP_POP_STRETCH = (0.70, 1.0, 1.52, 0.08)
 SILLY_ACT_TIP_POP_SETTLE_SEC = 0.10
 SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.07)
 SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
+# Brief cream hose settle after Silly tip fracture bounce (#207 path).
+# Juicier outward overshoot → rest so the almost-confess / trust-fracture
+# tip lands rubber-hose and readable — Punchline tip cream hose settle
+# (#227) twin on the tip bar, taller/longer for Act 3 unease. Armed on
+# tipHose='silly' only (entry foreshadow + mid-act approachTip). Distinct
+# from Punchline #227 tunables and finale betrayal banner (#212).
+# SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = False drops this cream settle
+# only (hose pop + trust/fracture settle + cream wash remain).
+# No keyblades / KH branding.
+SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = True
+SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.09, 1.0, 1.14, 0.07)  # sx, sy, sz, sec
+SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.11
 # Delay after Silly Street enter before the mid-act almost-confess tip
 # replaces the entry tip (PlayEntry). Longer than SILLY_AUTO_RECLAIM so
 # the explore / entry foreshadow beat lands first.
@@ -307,9 +319,10 @@ SILLY_APPROACH_TIP_DELAY_SEC = 3.85
 # tip wash twin). Loopy / Punchline / default tip hose stay wash-free.
 # Act-enter / trust / handoff / victory / finale washes live in their own
 # modules. SILLY_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only (hose
-# pop + trust settle remain). No keyblades / KH branding.
+# pop + trust settle + cream hose settle remain). No keyblades / KH
+# branding.
 SILLY_ACT_TIP_CREAM_WASH_ENABLED = True
-SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.36  # after play; after hose settle
+SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.56  # after play; after cream hose settle
 SILLY_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
 SILLY_ACT_TIP_CREAM_WASH_PEAK = 0.12
 SILLY_ACT_TIP_CREAM_WASH_MID = 0.07
