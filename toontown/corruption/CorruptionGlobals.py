@@ -666,6 +666,47 @@ IDLE_CREAM_DRIP_LOOK = {
     'binSort': IDLE_CREAM_DRIP_BIN,
 }
 
+# Silhouette cream / pastel rim flecks — soft sunny chips sparkling along the
+# ink Actor/DNA (or card) silhouette rim between telegraphs (client only).
+# Compose lift/period via CorruptSilhouetteCreamRimFx.silhouetteCreamRimLook
+# → idleCreamDripLook. Distinct from falling IdleCreamDripContrastFx drips:
+# rim flecks orbit/drift off the silhouette edge. Not ink-colored.
+# SILHOUETTE_CREAM_RIM_ENABLED = False drops rim flecks only (idle cream stays).
+SILHOUETTE_CREAM_RIM_ENABLED = True
+SILHOUETTE_CREAM_RIM_BIN = 42
+SILHOUETTE_CREAM_RIM_COLORS = (
+    (1.0, 0.97, 0.82, 0.78),  # sunny cream
+    (1.0, 0.96, 0.62, 0.72),  # butter
+    (1.0, 0.9, 0.78, 0.68),   # soft peach pastel
+    (0.98, 0.94, 0.88, 0.65),  # warm parchment
+)
+SILHOUETTE_CREAM_RIM_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+SILHOUETTE_CREAM_RIM_LOOK = {
+    'id': 'silhouette-cream-rim',
+    # lift / period composed with idleCreamDripLook when played; fallbacks below.
+    'lift': 2.05,
+    'periodSec': 1.85,
+    'periodScale': 0.72,
+    'settleSec': 0.55,
+    'settleBias': -0.12,
+    'fleckCount': 3,
+    'fleckHalf': 0.09,
+    'rimRadius': 0.72,
+    'rimZJitter': 0.22,
+    'fleckDist': 0.38,
+    'fleckLift': 0.28,
+    'fleckSec': 0.42,
+    'fleckStagger': 0.04,
+    'fleckColors': SILHOUETTE_CREAM_RIM_COLORS,
+    'fleckEndColors': SILHOUETTE_CREAM_RIM_END_COLORS,
+    'binSort': SILHOUETTE_CREAM_RIM_BIN,
+}
+
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
 BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)
