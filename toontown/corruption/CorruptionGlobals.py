@@ -1651,53 +1651,54 @@ GAGSTER_PUDDLE_SEC = 0.28
 # Cream splash + delayed cream aftershock on Gunk Gagster puddle land /
 # splash (after telegraph puddle warn #197). Sunny cream / pastel contrast
 # against teal GAGSTER_PUDDLE_* so the trap impact reads juicy. Deepened
-# ground-trap juice (#218 deepen): juicier splat/flecks + flat cream bloom
-# on the puddle plane + wider settle aftershock — distinct from Smudge hit
-# cream splash (#231, mid-body beside purple ink) and Brute spit cream
-# splash (#223, spit land). Same residual grammar as
+# ground-trap juice beyond #238 (#218 deepen): juicier splat/flecks +
+# thicker flat cream bloom on the puddle plane + wider settle aftershock —
+# distinct from Smudge hit cream deepen (#259, radial hose), Brute spit
+# cream deepen (#264, vertical drip), and Snare counter cream deepen
+# (#269, horizontal whip). Same residual grammar as
 # TELEGRAPH_CREAM_WARN_AFTERSHOCK_* / Snare counter cream splash (#214).
 # Client only. No keyblades / KH branding.
 # GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
 # GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED = False drops aftershock only.
 # GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED = False drops ground bloom only.
 GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED = True
-GAGSTER_PUDDLE_CREAM_SPLASH_DELAY_SEC = 0.05  # fallback; look prefers puddle compose
-GAGSTER_PUDDLE_CREAM_SPLASH_LIFT = 0.48  # above flat teal puddle ring
+GAGSTER_PUDDLE_CREAM_SPLASH_DELAY_SEC = 0.04  # fallback; look prefers puddle compose
+GAGSTER_PUDDLE_CREAM_SPLASH_LIFT = 0.52  # above flat teal puddle ring (beyond #238 0.48)
 GAGSTER_PUDDLE_CREAM_SPLASH_BIN = 40  # above teal puddle (38)
-GAGSTER_PUDDLE_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.96)  # sunny cream
-GAGSTER_PUDDLE_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.78)
+GAGSTER_PUDDLE_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.98)  # sunny cream
+GAGSTER_PUDDLE_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.82)
 GAGSTER_PUDDLE_CREAM_SPLASH_FLECK_COLORS = (
-    (1.0, 0.97, 0.82, 0.94),  # sunny cream
-    (1.0, 0.96, 0.62, 0.88),  # butter
-    (1.0, 0.9, 0.78, 0.84),   # soft peach pastel
-    (1.0, 0.94, 0.7, 0.82),   # warm lemon pastel — trap pop
+    (1.0, 0.97, 0.82, 0.96),  # sunny cream
+    (1.0, 0.96, 0.62, 0.9),   # butter
+    (1.0, 0.9, 0.78, 0.86),   # soft peach pastel
+    (1.0, 0.94, 0.7, 0.84),   # warm lemon pastel — trap pop
 )
 # Flat cream bloom on the puddle plane — ground-trap readability (not
-# Smudge mid-body billboard / Brute spit spray).
+# Smudge mid-body billboard / Brute spit drip / Snare whip).
 GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED = True
-GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_HALF = 0.72
-GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK = 2.05
-GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_SEC = 0.28
-GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK_ALPHA = 0.55
-GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_COLOR = (1.0, 0.97, 0.84, 0.7)
+GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_HALF = 0.85  # beyond #238 (0.72)
+GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK = 2.35  # thicker trap-plane bloom
+GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_SEC = 0.3
+GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK_ALPHA = 0.65
+GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_COLOR = (1.0, 0.97, 0.84, 0.76)
 GAGSTER_PUDDLE_CREAM_SPLASH_LOOK = {
     'id': 'gagster-puddle-cream-splash',
     # lift / delaySec composed with GAGSTER_PUDDLE_SEC when played.
     'lift': GAGSTER_PUDDLE_CREAM_SPLASH_LIFT,
     'delaySec': GAGSTER_PUDDLE_CREAM_SPLASH_DELAY_SEC,
-    'delayScale': 0.18,  # earlier pop as teal puddle blooms
-    'peakAlpha': 0.96,
-    'splatHalf': 0.32,  # juicier trap land core vs #218 (0.26)
-    'splatPeak': 1.85,
-    'splatSec': 0.18,
-    'rimScale': 1.38,
+    'delayScale': 0.15,  # snappier pop as teal puddle blooms (beyond #238 0.18)
+    'peakAlpha': 0.98,
+    'splatHalf': 0.36,  # juicier trap land core vs #238 (0.32) / #218 (0.26)
+    'splatPeak': 2.0,
+    'splatSec': 0.2,
+    'rimScale': 1.45,
     'splatColor': GAGSTER_PUDDLE_CREAM_SPLASH_COLOR,
     'rimColor': GAGSTER_PUDDLE_CREAM_SPLASH_RIM_COLOR,
-    'fleckCount': 6,  # deepened vs #218 (4) / Smudge hit (4) / Brute spit (4)
-    'fleckHalf': 0.12,
-    'fleckDist': 1.35,  # wider puddle-plane spray
-    'fleckLift': 0.38,  # stay low over the trap ring
-    'fleckSec': 0.26,
+    'fleckCount': 7,  # beyond #238 (6) / #218 (4)
+    'fleckHalf': 0.13,
+    'fleckDist': 1.5,  # wider puddle-plane spray (beyond #238 1.35)
+    'fleckLift': 0.42,  # stay low over the trap ring
+    'fleckSec': 0.28,
     'fleckColors': GAGSTER_PUDDLE_CREAM_SPLASH_FLECK_COLORS,
     'bloomEnabled': GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED,
     'bloomHalf': GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_HALF,
@@ -1708,24 +1709,24 @@ GAGSTER_PUDDLE_CREAM_SPLASH_LOOK = {
     'binSort': GAGSTER_PUDDLE_CREAM_SPLASH_BIN,
 }
 GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED = True
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DELAY_SEC = 0.14
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT = 5  # deepened trap residual vs Smudge (4) / Brute (3)
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COUNT = 2
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_SIZE = 0.12
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_SIZE = 0.14
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DRIFT = 0.95  # wider settle across puddle plane
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_FALL = 0.28  # soft onto the trap ring
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_SEC = 0.38
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.9)
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DELAY_SEC = 0.12
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT = 6  # beyond #238 (5) trap residual
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COUNT = 3
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_SIZE = 0.13
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_SIZE = 0.15
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DRIFT = 1.1  # wider settle across puddle plane
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_FALL = 0.32  # soft onto the trap ring
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_SEC = 0.4
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.92)
 GAGSTER_PUDDLE_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.88)
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.9)
 GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
 GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_ENABLED = True
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_HALF = 0.58  # wider puddle-plane halo
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_START = 0.32
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK = 1.75
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_SEC = 0.34
-GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.26
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_HALF = 0.68  # wider puddle-plane halo (beyond #238 0.58)
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_START = 0.28
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK = 1.9
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_SEC = 0.36
+GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.3
 GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Gunk Gagster telegraph puddle warn — short rubber-hose teal bounce-pie +
