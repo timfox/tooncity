@@ -32,8 +32,13 @@ from direct.interval.IntervalGlobal import (
 from toontown.corruption import CorruptionGlobals
 
 
-def overlordTelegraphPunchLook(finaleLook=None, phase=1):
-    """Resolve warn-ring / impact-punch palette; phase charge colors tint."""
+def overlordTelegraphPunchLook(finaleLook=None, phase=1, moveId=None):
+    """Resolve warn-ring / impact-punch palette; phase charge colors tint.
+
+    Optional ``moveId`` (rain / slam / ink_surge) scales the danger ring to
+    that move's hit band so telegraphs read distinctly. Missing / street
+    moves keep the legacy rain ``attackHitRange`` footprint.
+    """
     look = dict(getattr(
         CorruptionGlobals, 'OVERLORD_TELEGRAPH_PUNCH_LOOK', {}) or {})
     try:
@@ -42,19 +47,36 @@ def overlordTelegraphPunchLook(finaleLook=None, phase=1):
         phaseIndex = 1
 
     # Compose warn footprint with combat hit range when available so the
-    # danger ring tracks rain / slam pressure without hard-coding radii.
+    # danger ring tracks rain / slam / ink_surge without hard-coding radii.
     combat = CorruptionGlobals.overlordPhaseCombat(phaseIndex)
     if combat:
-        hitRange = float(combat.get('attackHitRange', 9.5))
+        telegraphMove = 'rain'
+        if hasattr(CorruptionGlobals, 'normalizeOverlordTelegraphMove'):
+            telegraphMove = (
+                CorruptionGlobals.normalizeOverlordTelegraphMove(moveId)
+                or 'rain')
+        if hasattr(CorruptionGlobals, 'overlordTelegraphMoveHitRange'):
+            hitRange = float(CorruptionGlobals.overlordTelegraphMoveHitRange(
+                telegraphMove, phase=phaseIndex, combat=combat))
+        else:
+            hitRange = float(combat.get('attackHitRange', 9.5))
         scale = float(look.get('warnHitRangeScale', 0.32))
-        look['warnHalf'] = max(
-            float(look.get('warnHalf', 2.8)), hitRange * scale)
+        computed = hitRange * scale
+        defaultHalf = float(look.get('warnHalf', 2.8))
+        if telegraphMove == 'rain':
+            # Legacy rain floor — wide puddle footprint.
+            look['warnHalf'] = max(defaultHalf, computed)
+        else:
+            # Slam / surge: use move-scaled ring (don't floor to rain size).
+            look['warnHalf'] = max(1.2, computed)
         if phaseIndex >= 2:
             # Unleashed: slightly wider / hotter ring; slam still fits inside.
             look['warnHalf'] = float(look['warnHalf']) * float(
                 look.get('p2WarnScale', 1.14))
             look['warnPeak'] = float(look.get('warnPeak', 1.06)) * float(
                 look.get('p2WarnPeakScale', 1.1))
+        # Stamp resolved move so callers / tests can assert distinct reads.
+        look['telegraphMove'] = telegraphMove
 
     if phaseIndex >= 2:
         look['warnColor'] = look.get(
@@ -153,13 +175,14 @@ class OverlordTelegraphPunch(object):
         self._ival = None
         self._nodes = []
 
-    def playWarn(self, pos, finaleLook=None, phase=1, parent=None):
+    def playWarn(self, pos, finaleLook=None, phase=1, parent=None, moveId=None):
         """Spawn ground danger ring + cream flecks. Returns Sequence or None."""
         if not getattr(
                 CorruptionGlobals, 'OVERLORD_TELEGRAPH_PUNCH_ENABLED', True):
             return None
         self.clear()
-        look = overlordTelegraphPunchLook(finaleLook=finaleLook, phase=phase)
+        look = overlordTelegraphPunchLook(
+            finaleLook=finaleLook, phase=phase, moveId=moveId)
         parentNP = parent
         if parentNP is None:
             try:
@@ -182,13 +205,15 @@ class OverlordTelegraphPunch(object):
         self._ival.start()
         return self._ival
 
-    def playImpact(self, pos, finaleLook=None, phase=1, parent=None):
+    def playImpact(
+            self, pos, finaleLook=None, phase=1, parent=None, moveId=None):
         """Spawn impact punch bloom + cream aftershock. Returns Sequence or None."""
         if not getattr(
                 CorruptionGlobals, 'OVERLORD_TELEGRAPH_PUNCH_ENABLED', True):
             return None
         self.clear()
-        look = overlordTelegraphPunchLook(finaleLook=finaleLook, phase=phase)
+        look = overlordTelegraphPunchLook(
+            finaleLook=finaleLook, phase=phase, moveId=moveId)
         parentNP = parent
         if parentNP is None:
             try:

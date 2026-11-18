@@ -496,7 +496,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 self._puddleXY = None
                 self._spitAimXY = None
         self._attackMove = move
-        self.sendUpdate('announceAttackTelegraph', [])
+        # Pass move id so client Overlord AV can read rain vs slam vs ink_surge
+        # (and street kits keep their own attackMove string).
+        self.sendUpdate('announceAttackTelegraph', [str(move or '')])
         delay = self.__telegraphDelayForMove(move)
         taskMgr.doMethodLater(
             delay,

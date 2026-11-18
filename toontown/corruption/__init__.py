@@ -63,14 +63,15 @@ warn at the lob landing). Gunk Gagster puddle land / splash also fires
 GagsterPuddleCreamSplashFx (deepened cream splash beyond #276 + thicker
 flat puddle-plane cream bloom + wider settle aftershock — sunny cream/
 pastel juice on the trap impact; distinct from Smudge radial hose / Brute
-vertical drip / Snare whip; telegraph cream warn aftershock grammar). Ink Overlord phase telegraphs also flash
-OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
-OverlordPhaseInkRainFx (ink rain / ink fall shower) plus
-OverlordTelegraphPunchFx (deepened cream danger-ring warn beyond #255 +
+vertical drip / Snare whip; telegraph cream warn aftershock grammar). Ink Overlord phase telegraphs pass a move id on
+announceAttackTelegraph (rain / slam / ink_surge) so AV reads distinctly:
+crown always (OverlordTelegraphCrownFx); ink rain shower
+(OverlordPhaseInkRainFx) on rain only; danger-ring warn
+(OverlordTelegraphPunchFx — deepened cream danger-ring warn beyond #255 +
 denser radial cream phase flecks + juicier impact punch bloom with wider
-cream aftershock; phase-timed AV squash/stretch hold for fair punish
-windows — distinct from Brute spit cream drip / Snare whip / Smudge hose /
-Gunk puddle bloom #299). Ink Overlord
+cream aftershock; move-scaled footprint + phase-timed AV squash/stretch
+hold for fair punish windows) on all three — distinct from Brute spit cream
+drip / Snare whip / Smudge hose / Gunk puddle bloom #299. Ink Overlord
 hits and deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
 rubber-hose ink splash; phase-retinted; composes with crown / rain / death /
 idle looks — not street Smudge purple); Overlord hits also pulse
