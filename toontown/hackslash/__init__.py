@@ -6,6 +6,7 @@ Slice 1: stretch punches, short combo window, soft nearest-hostile targeting.
 
 from .MeleeCombat import MeleeCombatController
 from .HackSlashConfig import (
+    comboCounterCreamEdgeAftershockAtSec,
     comboCounterCreamEdgePeakAtSec,
     dodgeCancelCreamWashPeakAtSec,
     dodgeIFrameCreamWashPeakAtSec,
@@ -56,6 +57,7 @@ from .SoftLockReticleFx import SoftLockReticleFx
 
 __all__ = [
     'MeleeCombatController',
+    'comboCounterCreamEdgeAftershockAtSec',
     'comboCounterCreamEdgePeakAtSec',
     'dodgeCancelCreamWashPeakAtSec',
     'dodgeIFrameCreamWashPeakAtSec',

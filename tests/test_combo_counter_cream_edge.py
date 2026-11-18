@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for combo-counter cream edge pop helpers.
+"""Behavioral headless tests for combo-counter cream edge deepen helpers.
 
 Loads HackSlashConfig combo cream edge helpers without Panda3D. Covers
-tunables + peak timing so the local cream frame reads on each punch-counter
-tick beside hose pop + cream sparkle.
+deepened edge tunables + quiet local cream edge aftershock so the punch
+counter reads juicier on each tick beside hose pop + cream sparkle —
+distinct from soft-lock cycle reticle cream deepen (#233) and dodge
+i-frame cream wash deepen (#228).
 
 Run from repo root:
   python3 tests/test_combo_counter_cream_edge.py
@@ -73,7 +75,7 @@ def _top_level_names(tree: ast.AST) -> set[str]:
 
 
 class ComboCounterCreamEdgeTest(unittest.TestCase):
-    """Config + AST checks for combo-counter cream edge pop."""
+    """Config + AST checks for deepened combo-counter cream edge pop."""
 
     @classmethod
     def setUpClass(cls):
@@ -81,6 +83,7 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
 
     def test_config_combo_cream_edge_tunables(self):
         self.assertTrue(self.cfg.COMBO_COUNTER_CREAM_EDGE_ENABLED)
+        self.assertTrue(self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED)
         self.assertGreater(self.cfg.COMBO_COUNTER_CREAM_EDGE, 0.0)
         self.assertGreater(self.cfg.COMBO_COUNTER_CREAM_EDGE_HALF_W, 0.0)
         self.assertGreater(self.cfg.COMBO_COUNTER_CREAM_EDGE_HALF_H, 0.0)
@@ -90,6 +93,15 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
             self.cfg.COMBO_COUNTER_CREAM_EDGE_PULSE,
             self.cfg.COMBO_COUNTER_CREAM_EDGE_PEAK)
         self.assertGreater(self.cfg.COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK, 1.0)
+        # Deepened readability: juicier than original #224 edge pop.
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_PEAK, 0.72)
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE, 0.024)
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_HOLD_SEC, 0.04)
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK, 1.28)
         # Snappier than banner / wave cream edge settle (ticks fire often).
         self.assertLess(
             self.cfg.COMBO_COUNTER_CREAM_EDGE_IN_SEC, 0.08)
@@ -101,6 +113,22 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
         self.assertGreater(
             self.cfg.COMBO_COUNTER_CREAM_EDGE_BIN,
             self.cfg.COMBO_COUNTER_CREAM_WASH_BIN)
+        # Quiet local edge aftershock under the edge strips.
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT, 1)
+        self.assertTrue(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_ENABLED)
+        self.assertLess(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_BIN,
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_BIN)
+        # Aftershock begins during / just after deepened edge peak hold.
+        edge_body = (
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_IN_SEC
+            + self.cfg.COMBO_COUNTER_CREAM_EDGE_HOLD_SEC
+            + self.cfg.COMBO_COUNTER_CREAM_EDGE_PULSE_SEC
+            + self.cfg.COMBO_COUNTER_CREAM_EDGE_OUT_SEC)
+        self.assertLess(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC, edge_body)
         cream = self.cfg.COMBO_COUNTER_CREAM_EDGE_COLOR
         self.assertEqual(len(cream), 4)
         # Cream / pastel — no ink purple edge.
@@ -109,11 +137,13 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
         peak_at = self.cfg.comboCounterCreamEdgePeakAtSec()
         self.assertAlmostEqual(
             peak_at, self.cfg.COMBO_COUNTER_CREAM_EDGE_IN_SEC)
+        self.assertIn('combo cream edge', self.cfg.DEMO_HINT.lower())
         banned = ('keyblade', 'kingdom hearts', 'sora', 'heartless')
         blob = ' '.join([
             'combo counter cream edge pop',
             str(cream),
             str(self.cfg.COMBO_COUNTER_LABEL),
+            self.cfg.DEMO_HINT,
         ]).lower()
         for term in banned:
             self.assertNotIn(term, blob)
@@ -125,6 +155,14 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
         self.assertAlmostEqual(peak_fn(0.03), 0.03)
         self.assertAlmostEqual(peak_fn(-1.0), 0.0)
 
+    def test_combo_cream_edge_aftershock_helper(self):
+        after_fn = self.cfg.comboCounterCreamEdgeAftershockAtSec
+        self.assertAlmostEqual(
+            after_fn(),
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC)
+        self.assertAlmostEqual(after_fn(0.12), 0.12)
+        self.assertAlmostEqual(after_fn(-1.0), 0.0)
+
     def test_ast_combo_cream_edge_fx(self):
         rel = 'toontown/hackslash/ComboCounterCreamEdgeFx.py'
         tree = _module_ast(rel)
@@ -132,11 +170,17 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
         self.assertIn('ComboCounterCreamEdgePulse', names)
         src = (REPO_ROOT / rel).read_text(encoding='utf-8')
         self.assertIn('COMBO_COUNTER_CREAM_EDGE_ENABLED', src)
+        self.assertIn('COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED', src)
         self.assertIn('_buildEdgeRoot', src)
+        self.assertIn('_buildAftershock', src)
+        self.assertIn('_spawnAftershockHalo', src)
+        self.assertIn('_spawnAftershockFleck', src)
         self.assertIn('hackslashComboCounterCreamEdge', src)
         # Ban phrasing only — no KH product names as branding.
         self.assertIn('no keyblades', src.lower())
         self.assertNotIn('kingdom hearts', src.lower())
+        # Distinct from soft-lock / i-frame deepen cues.
+        self.assertIn('distinct from', src.lower())
 
     def test_ast_melee_wires_combo_cream_edge(self):
         melee_rel = 'toontown/hackslash/MeleeCombat.py'
@@ -150,6 +194,7 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
         init_src = (REPO_ROOT / init_rel).read_text(encoding='utf-8')
         self.assertIn('ComboCounterCreamEdgePulse', init_src)
         self.assertIn('comboCounterCreamEdgePeakAtSec', init_src)
+        self.assertIn('comboCounterCreamEdgeAftershockAtSec', init_src)
 
         cfg_names = _top_level_names(
             _module_ast('toontown/hackslash/HackSlashConfig.py'))
@@ -158,12 +203,17 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
                 'COMBO_COUNTER_CREAM_EDGE_PEAK',
                 'COMBO_COUNTER_CREAM_EDGE_HALF_W',
                 'COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK',
-                'comboCounterCreamEdgePeakAtSec'):
+                'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED',
+                'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT',
+                'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_ENABLED',
+                'comboCounterCreamEdgePeakAtSec',
+                'comboCounterCreamEdgeAftershockAtSec'):
             self.assertIn(name, cfg_names)
 
         mw_src = (REPO_ROOT / 'toontown/hackslash/MagicWords.py').read_text(
             encoding='utf-8')
-        self.assertIn('cream edge pop', mw_src.lower())
+        self.assertIn('cream edge', mw_src.lower())
+        self.assertIn('aftershock', mw_src.lower())
         self.assertNotIn('keyblade', mw_src.lower())
 
 
