@@ -95,6 +95,22 @@ DODGE_DISTANCE = 6.5
 DODGE_COOLDOWN_SEC = 0.65
 DODGE_SQUASH = (0.55, 0.55, 1.45, 0.12)
 
+# Dodge roll afterimage / smear trail (Shift/X i-frame roll juice).
+# Warm cartoon smear ghosts drip behind the toon — not KH blue streaks.
+DODGE_TRAIL_SPAWN_SEC = 0.045
+DODGE_TRAIL_FADE_SEC = 0.2
+DODGE_TRAIL_MAX_GHOSTS = 6
+DODGE_TRAIL_COLOR = (1.0, 0.88, 0.45, 0.55)
+DODGE_TRAIL_END_COLOR = (1.0, 0.95, 0.7, 0.0)
+DODGE_TRAIL_HALF_W = 0.55
+DODGE_TRAIL_HALF_H = 1.35
+DODGE_TRAIL_STRETCH = (0.75, 1.55, 1.15)
+DODGE_TRAIL_LIFT = 1.1
+DODGE_TRAIL_SPARK_COUNT = 2
+DODGE_TRAIL_SPARK_SIZE = 0.18
+DODGE_TRAIL_SPARK_DRIFT = 0.55
+DODGE_TRAIL_SPARK_COLOR = (1.0, 0.97, 0.75, 0.9)
+
 # Squash / stretch pulses (scale xyz multipliers over short windows).
 # Read as exaggerated rubber-hose hit frames, not realistic physics.
 HOSE_SQUASH = (

@@ -25,6 +25,7 @@ from otp.avatar import Emote
 from . import HackSlashConfig
 from . import HitJuice
 from .DemoHostile import spawnDemoHostiles
+from .DodgeTrailFx import DodgeTrailFx
 from .SoftTarget import SoftTargetFinder
 
 
@@ -51,6 +52,7 @@ class MeleeCombatController(DirectObject):
         self._iframeUntil = 0.0
         self._dodgeReadyAt = 0.0
         self._dodging = False
+        self._dodgeTrail = DodgeTrailFx(avatar)
         self._origScale = None
         self._baseFov = None
         self._comboHits = 0
@@ -124,6 +126,10 @@ class MeleeCombatController(DirectObject):
 
     def destroy(self):
         self.disable()
+        try:
+            self._dodgeTrail.clear()
+        except Exception:
+            pass
         self.ignoreAll()
 
     def isEnabled(self):
@@ -647,10 +653,19 @@ class MeleeCombatController(DirectObject):
             name=self.avatar.uniqueName('hackslashDodge'),
         )
         self._dodgeIval.start()
+        # Afterimage smear trail — isolated helper, not hit-squash paths.
+        try:
+            self._dodgeTrail.start()
+        except Exception:
+            pass
 
     def _finishDodge(self):
         self._dodging = False
         self._dodgeIval = None
+        try:
+            self._dodgeTrail.stop(clearGhosts=False)
+        except Exception:
+            pass
         try:
             self.avatar.setScale(1.0, 1.0, 1.0)
         except Exception:
@@ -664,6 +679,10 @@ class MeleeCombatController(DirectObject):
                 pass
             self._dodgeIval = None
         self._dodging = False
+        try:
+            self._dodgeTrail.clear()
+        except Exception:
+            pass
 
     def isInvulnerable(self):
         return globalClock.getFrameTime() < self._iframeUntil  # noqa: F821

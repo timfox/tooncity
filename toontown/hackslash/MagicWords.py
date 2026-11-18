@@ -13,7 +13,8 @@ class ToggleHackSlash(MagicWord):
         'camera/facing nudge toward the sticky lock (mid-combo soft '
         'orbit/pull for readability without hard-locking), hitstop, impact '
         'squash/stretch juice on connect (and when a corrupt smacks you), a '
-        'brief white flash, and an on-screen punch counter that ticks on hits '
+        'brief white flash, Shift/X dodge roll with i-frames + rubber-hose '
+        'afterimage trail, and an on-screen punch counter that ticks on hits '
         'then fades when the string breaks (finisher also FOV-punches). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
@@ -34,8 +35,9 @@ class ToggleHackSlash(MagicWord):
         enabled = av.toggleHackSlashMelee(spawnHostiles=spawn)
         if enabled:
             return (
-                'Stretch-punch melee ON. Press F (or LMB) for fist combos. '
-                'Connects squash/stretch; punch counter + soft-lock orbit + '
-                'hit flash. Soft-targets demo hostiles (and street suits).'
+                'Stretch-punch melee ON. Press F (or LMB) for fist combos; '
+                'Shift/X to dodge with a smear trail. Connects squash/stretch; '
+                'punch counter + soft-lock orbit + hit flash. Soft-targets '
+                'demo hostiles (and street suits).'
             )
         return 'Stretch-punch melee OFF.'
