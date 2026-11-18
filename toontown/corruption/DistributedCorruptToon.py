@@ -122,6 +122,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._snareStringCounterTask = None
         self._snareStringCounterArmed = False
         self._snareStringCounterUntil = 0.0
+        # Brute spit / Gagster lob dedicated counter schedule tasks (thin
+        # client hooks — MeleeCombat owns the rewarded opener window).
+        self._bruteSpitCounterTask = None
+        self._gagsterLobCounterTask = None
         self._bruteTelegraphSpit = None
         self._bruteSludgeSplash = None
         self._bruteSpitCreamSplash = None
@@ -221,6 +225,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapSplash()
         self.__clearSnareStringCounterCreamSplash()
         self.__clearSnareStringSnapCounter()
+        self.__clearBruteSpitCounter()
+        self.__clearGagsterLobCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -634,10 +640,18 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         else:
             self.__clearSmudgeTelegraphInk()
         # Sludge Brute-only: green spit-gob telegraph pop for ranged spit read.
+        # Spit move also arms a Snare-like dedicated counter→melee window
+        # (thin messenger hook; slam stays commit-through / no counter).
+        telegraphMove = str(getattr(self, '_telegraphMove', '') or '')
         if isBrute and not look:
             self.__playBruteTelegraphSpit()
+            if telegraphMove == 'spit':
+                self.__scheduleBruteSpitCounter()
+            else:
+                self.__clearBruteSpitCounter()
         else:
             self.__clearBruteTelegraphSpit()
+            self.__clearBruteSpitCounter()
         # Balloon Snare-only: amber string-lash telegraph pop for zip/lash read.
         if isSnare and not look:
             self.__playSnareTelegraphString()
@@ -647,10 +661,16 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__clearSnareTelegraphString()
             self.__clearSnareStringSnapCounter()
         # Gunk Gagster-only: teal bounce-pie + cream/ink puddle warn for lob read.
+        # gag_lob also arms a Snare-like dedicated counter→melee window.
         if isGagster and not look:
             self.__playGagsterTelegraphPuddle()
+            if (not telegraphMove) or telegraphMove == 'gag_lob':
+                self.__scheduleGagsterLobCounter()
+            else:
+                self.__clearGagsterLobCounter()
         else:
             self.__clearGagsterTelegraphPuddle()
+            self.__clearGagsterLobCounter()
         # Overlord-only: crown always; rain shower only on rain; danger-ring
         # warn on rain / slam / ink_surge with move-scaled footprint.
         if look and phase >= 1:
@@ -1431,6 +1451,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapSplash()
         self.__clearSnareStringCounterCreamSplash()
         self.__clearSnareStringSnapCounter()
+        self.__clearBruteSpitCounter()
+        self.__clearGagsterLobCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -2081,6 +2103,104 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._snareStringCounterTask = None
         self._snareStringCounterArmed = False
         self._snareStringCounterUntil = 0.0
+
+    def __scheduleBruteSpitCounter(self):
+        """After spit telegraph reads, arm a short punish→melee counter window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path (same as Snare string-snap). Gameplay timing only.
+        """
+        self.__clearBruteSpitCounter()
+        if not getattr(
+                CorruptionGlobals, 'BRUTE_SPIT_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'BRUTE_SPIT_COUNTER_ARM_DELAY_SEC', 0.22))
+        window = float(getattr(
+            CorruptionGlobals, 'BRUTE_SPIT_COUNTER_WINDOW_SEC', 0.55))
+        event = str(getattr(
+            CorruptionGlobals, 'BRUTE_SPIT_COUNTER_EVENT',
+            'corruptBruteSpitCounter'))
+
+        def _fire(task=None):
+            self._bruteSpitCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._bruteSpitCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('brute-spit-counter'))
+        except Exception:
+            self._bruteSpitCounterTask = None
+            _fire()
+
+    def __clearBruteSpitCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('brute-spit-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._bruteSpitCounterTask = None
+
+    def __scheduleGagsterLobCounter(self):
+        """After lob telegraph reads, arm a short punish→melee counter window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path (same as Snare string-snap). Gameplay timing only.
+        """
+        self.__clearGagsterLobCounter()
+        if not getattr(
+                CorruptionGlobals, 'GAGSTER_LOB_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'GAGSTER_LOB_COUNTER_ARM_DELAY_SEC', 0.18))
+        window = float(getattr(
+            CorruptionGlobals, 'GAGSTER_LOB_COUNTER_WINDOW_SEC', 0.52))
+        event = str(getattr(
+            CorruptionGlobals, 'GAGSTER_LOB_COUNTER_EVENT',
+            'corruptGagsterLobCounter'))
+
+        def _fire(task=None):
+            self._gagsterLobCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._gagsterLobCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('gagster-lob-counter'))
+        except Exception:
+            self._gagsterLobCounterTask = None
+            _fire()
+
+    def __clearGagsterLobCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('gagster-lob-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._gagsterLobCounterTask = None
 
     def __consumeSnareStringCounterCreamSplash(self):
         """If string-snap counter juice is live, play cream splash and spend it.

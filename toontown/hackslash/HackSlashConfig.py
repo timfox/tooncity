@@ -1332,6 +1332,6 @@ DEMO_HINT = (
     'Stretch punches: F/LMB  |  combo cream edge deepen  |  '
     'Shift/X dodge i-frame cream wash deepen++  |  '
     'dodge→F cream flash deepen+++  |  perfect dodge→F counter  |  '
-    'Snare string→F counter  |  Snare lash yank  |  Oswald betrayal lunge/shove  |  juggle hang stun→F slam  |  hurt cream wash deepen++→F/Shift  |  '
+    'Snare string→F counter  |  Brute spit→F counter  |  Gagster lob→F counter  |  Snare lash yank  |  Oswald betrayal lunge/shove  |  juggle hang stun→F slam  |  hurt cream wash deepen++→F/Shift  |  '
     'Tab/` soft-lock cycle cream  |  hit soft-lock aim cream deepen+  |  ~melee'
 )

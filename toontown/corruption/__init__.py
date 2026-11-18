@@ -38,7 +38,10 @@ warn aftershock grammar) and pulse SmudgeHitCreamWashFx (soft cream wash
 — cream/pastel contrast against purple ink; overlord-hit / telegraph /
 silhouette / death cream-wash grammar). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
-pop). Sludge Brute spit land / splash also fires BruteSpitCreamSplashFx
+pop) and, on spit (not slam), arm a short dedicated counter window into
+melee (BRUTE_SPIT_COUNTER_*; synchs with hackslash perfect-dodge counter;
+mid-spit-telegraph melee interrupts the wind-up — interrupt ≠ counter).
+Sludge Brute spit land / splash also fires BruteSpitCreamSplashFx
 (deepened cream splash beyond #264 + thicker vertical cream drip filaments
 + heavier downward cream aftershock — sunny cream/pastel juice on the spit
 impact; distinct from Snare counter cream whip / Gunk puddle cream bloom /
@@ -59,7 +62,10 @@ cream warn aftershock grammar). Balloon Snare hits and deaths also flash
 SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
 composes with string / death / idle looks). Gunk Gagster wind-ups also flash
 GagsterPuddleTelegraphFx (teal bounce-pie charge + cream/ink ground puddle
-warn at the lob landing). Gunk Gagster puddle land / splash also fires
+warn at the lob landing) and arm a short dedicated lob counter window into
+melee (GAGSTER_LOB_COUNTER_*; synchs with hackslash perfect-dodge counter;
+mid-lob melee interrupts the wind-up — interrupt ≠ counter). Gunk Gagster
+puddle land / splash also fires
 GagsterPuddleCreamSplashFx (deepened cream splash beyond #276 + thicker
 flat puddle-plane cream bloom + wider settle aftershock — sunny cream/
 pastel juice on the trap impact; distinct from Smudge radial hose / Brute
