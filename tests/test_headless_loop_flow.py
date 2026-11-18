@@ -22,7 +22,8 @@ wave / act-param / kit suites by chaining the spiritual-sequel loop:
             sludge (#362), boss/chase HP bar (#331)
   reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
             modifiers / earlier-wave ambush + Silly between-swell
-            (#345/#358) + ACTS C path elite/ambush mirror (#365),
+            (#345/#358) + ACTS C path elite/ambush mirror (#365) +
+            finale C phase2 elite/ambush beside Unleashed adds (#388),
             street-clear jellybean/laff reward (#361), campaign progress
             client sync on login (#333), CampaignPower reclaimCount
             rehydrate (#349) + sync/purity dedupe (#367), SECURED
@@ -1194,6 +1195,23 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                     archetype_id, cg.ARCHETYPE_INK,
                     msg='P2 wave %s must stay Overlord ink, got %r'
                     % (wave_i, archetype_id))
+        # Story P2 elite/ambush beside Unleashed Smudge adds (no R HP promote).
+        self.assertEqual(phase2.get('addWaveStart'), 2)
+        self.assertIn('waveModifiers', phase2)
+        self.assertIn('ambushBeats', phase2)
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(phase2['waveModifiers'], 2)))
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(phase2['waveModifiers'], 3)))
+        self.assertEqual(
+            rg.resolveAmbushBeat(phase2['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveAmbushBeat(phase2['ambushBeats'], 2),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertNotIn('overlordP2HpFrac', phase2)
 
         # STREET_PACKS scripts stay distinct across the three hoods.
         loopy = rg.resolveWaveScript(
@@ -1269,6 +1287,17 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(
             finale_act['ambushBeats'], silly_pack['ambushBeats'])
         self.assertNotIn('overlordP2HpFrac', finale_act)
+        # Finale C phase2 replaces P1 tables with Unleashed elite/ambush.
+        p2 = finale_act['phase2']
+        self.assertNotEqual(p2['waveModifiers'], finale_act['waveModifiers'])
+        self.assertNotEqual(p2['ambushBeats'], finale_act['ambushBeats'])
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(p2['waveModifiers'], 3)))
+        self.assertEqual(
+            rg.resolveAmbushBeat(p2['ambushBeats'], 2),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertNotIn('overlordP2HpFrac', p2)
         base_hp = 46
         elite_hp = rg.applyElitePackHp(base_hp, loopy_mods)
         self.assertGreater(elite_hp, base_hp)

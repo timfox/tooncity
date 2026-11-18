@@ -325,6 +325,57 @@ class EliteWaveModifiersAmbushTests(unittest.TestCase):
             rg.STREET_PACKS[SILLY]['ambushBeats'])
         self.assertNotIn('overlordP2HpFrac', finale)
 
+    def test_finale_phase2_elite_and_ambush_beside_adds(self):
+        """Story P2 Unleashed swells carry elite/ambush beside Smudge adds."""
+        rg, cg, camp = self.rg, self.cg, self.camp
+        finale = {a['id']: a for a in camp.ACTS}['finale']
+        phase2 = finale['phase2']
+
+        self.assertEqual(phase2['maxPacks'], 3)
+        self.assertEqual(phase2.get('addWaveStart'), 2)
+        self.assertEqual(phase2.get('addName'), 'Ink Smudge')
+        self.assertIn('waveModifiers', phase2)
+        self.assertIn('ambushBeats', phase2)
+        # Elite on add waves (2+) — pressure beside Unleashed Smudge adds.
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(phase2['waveModifiers'], 2)))
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(phase2['waveModifiers'], 3)))
+        self.assertIsNone(
+            rg.resolveWaveModifiers(phase2['waveModifiers'], 1))
+        # Between-swell Smudge ambush before wave 2 and wave 3.
+        self.assertEqual(
+            rg.resolveAmbushBeat(phase2['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveAmbushBeat(phase2['ambushBeats'], 2),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertIsNone(
+            rg.resolveAmbushBeat(phase2['ambushBeats'], 3))
+        # Distinct from P1 / Silly STREET_PACKS tables.
+        self.assertNotEqual(
+            phase2['waveModifiers'], finale['waveModifiers'])
+        self.assertNotEqual(
+            phase2['ambushBeats'], finale['ambushBeats'])
+        self.assertNotIn('overlordP2HpFrac', phase2)
+        self.assertNotIn('overlordP2HpFrac', finale)
+        # No cream / KH on the authored phase2 pressure block.
+        camp_src = _read('toontown/campaign/CampaignGlobals.py')
+        p2_idx = camp_src.index("'corruptName': 'Ink Overlord Unleashed'")
+        p2_end = camp_src.index("'addName': 'Ink Smudge'", p2_idx) + 40
+        p2_snip = camp_src[p2_idx:p2_end]
+        self.assertIn("'waveModifiers'", p2_snip)
+        self.assertIn("'ambushBeats'", p2_snip)
+        self.assertIn("'addWaveStart'", p2_snip)
+        # Key must stay omitted (comment may name the asymmetry).
+        self.assertNotIn("'overlordP2HpFrac'", p2_snip)
+        self.assertNotIn('overlordP2HpFrac:', p2_snip)
+        p2_l = p2_snip.lower()
+        self.assertNotIn('keyblade', p2_l)
+        self.assertNotIn('kingdom hearts', p2_l)
+
     def test_director_ai_wires_elite_and_ambush(self):
         src = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')
         tree = _module_ast('toontown/reclaim/DistributedReclaimDirectorAI.py')
