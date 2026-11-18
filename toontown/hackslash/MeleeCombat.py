@@ -31,6 +31,7 @@ from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 from .HitSparkFx import HitSparkFx
 from .HitStopFx import HitStopFx
+from .HurtStaggerCreamWashFx import HurtStaggerCreamWashPulse
 from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
 from .SoftTarget import (
@@ -85,6 +86,7 @@ class MeleeCombatController(DirectObject):
         self._hurtCancelUntil = 0.0
         self._hurtAttackBuffered = False
         self._hurtDodgeBuffered = False
+        self._hurtCreamWash = HurtStaggerCreamWashPulse()
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
         self._hitStop = HitStopFx(avatar)
@@ -189,6 +191,7 @@ class MeleeCombatController(DirectObject):
         self._clearPerfectDodgeCounterWindow()
         self._clearJuggleCancelWindow()
         self._clearHurtRecoveryCancelWindow()
+        self._clearHurtCreamWash()
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
@@ -1008,7 +1011,8 @@ class MeleeCombatController(DirectObject):
         self._playTinyHitstop(HackSlashConfig.PLAYER_HIT_REACT_HITSTOP_SEC)
         # Stronger flash than normal hit confirm so the window is obvious.
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
-        # Brief stagger then cancel-into-dodge/melee so combat stays responsive.
+        # Brief stagger + cream wash aftershock, then cancel-into-dodge/melee
+        # so combat stays responsive and the smack still reads juicy.
         self._armHurtRecoveryCancelWindow(now)
         messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
 
@@ -1160,9 +1164,26 @@ class MeleeCombatController(DirectObject):
         self._hurtStaggerArmed = True
         self._hurtCancelOpenAt = now + max(0.0, stagger)
         self._hurtCancelUntil = self._hurtCancelOpenAt + max(0.0, window)
+        # Soft cream wash + residual aftershock during stagger so the smack
+        # still feels juicy before F/Shift cancel opens — wash owns settle.
+        self._playHurtCreamWash()
         messenger.send(
             'hackslash-hurt-stagger',
             [self.avatar, max(0.0, stagger), max(0.0, window)])  # noqa: F821
+
+    def _playHurtCreamWash(self):
+        """Cream wash pulse + wash aftershock during committed hurt stagger."""
+        try:
+            # HurtStaggerCreamWashPulse owns wash + residual wash aftershock.
+            self._hurtCreamWash.play()
+        except Exception:
+            pass
+
+    def _clearHurtCreamWash(self):
+        try:
+            self._hurtCreamWash.clear()
+        except Exception:
+            pass
 
     def _clearHurtRecoveryCancelWindow(self):
         self._hurtStaggerArmed = False
