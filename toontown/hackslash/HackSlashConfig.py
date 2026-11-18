@@ -113,6 +113,13 @@ COMBO_ANIMS = ('swing', 'throw', 'sound')
 COMBO_PLAY_RATES = (1.85, 2.1, 1.25)
 COMBO_DAMAGE = (8, 12, 28)
 
+# Server-authoritative melee damage ceiling (legacy client clamp). Table +
+# known counter mults stay well under this; keeps spoofed amounts out.
+MELEE_DAMAGE_MAX = 80
+# requestHackSlashHit counterFlags bits — rewarded opener mult only when set.
+MELEE_COUNTER_FLAG_NONE = 0
+MELEE_COUNTER_FLAG_PERFECT_DODGE = 1 << 0
+
 # Hitstop / freeze on connect — pauses juice + anims so the impact silhouette
 # sticks before launch / hop / FOV punch. Longer on finisher. Client juice only.
 HITSTOP_ENABLED = True
@@ -870,6 +877,35 @@ def perfectDodgeCounterOpenerRate(baseRate, mult=None):
 def isPerfectDodgeCounterWindowOpen(armed, until, now):
     """True while a perfect-dodge counter→melee window is live."""
     return bool(armed) and float(now) < float(until)
+
+
+def meleeDamageFromHitIndex(hitIndex, counterFlags=0, damageTable=None):
+    """Authoritative stretch-punch damage from hitIndex (+ optional counters).
+
+    AI derives hit damage from COMBO_DAMAGE (or an explicit table) instead of
+    trusting the client-sent amount. Optional counterFlags apply known
+    rewarded opener mults (perfect-dodge / telegraph counter) without
+    accepting arbitrary damage. Rubber-hose Oswald punches only — no KH.
+    """
+    table = COMBO_DAMAGE if damageTable is None else damageTable
+    if not table:
+        return 0
+    try:
+        idx = max(0, min(int(hitIndex), len(table) - 1))
+    except (TypeError, ValueError):
+        idx = 0
+    try:
+        amount = int(table[idx])
+    except (TypeError, ValueError, IndexError):
+        return 0
+    try:
+        flags = int(counterFlags or 0)
+    except (TypeError, ValueError):
+        flags = 0
+    if flags & MELEE_COUNTER_FLAG_PERFECT_DODGE:
+        amount = perfectDodgeCounterOpenerDamage(amount)
+    ceiling = int(MELEE_DAMAGE_MAX)
+    return max(0, min(ceiling, int(amount)))
 
 # Dodge roll afterimage / smear trail (Shift/X i-frame roll juice).
 # Warm cartoon smear ghosts drip behind the toon — not KH blue streaks.

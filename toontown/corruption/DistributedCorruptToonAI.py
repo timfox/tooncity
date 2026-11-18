@@ -215,8 +215,13 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self.notify.debug(
             'melee telegraph interrupt (%s) — wind-up cancelled' % move)
 
-    def requestHackSlashHit(self, damage, hitIndex=0):
-        """Client melee RPC: SoftTarget applyHackSlashHit → AI damage + hang stun."""
+    def requestHackSlashHit(self, hitIndex=0, counterFlags=0):
+        """Client melee RPC: SoftTarget applyHackSlashHit → AI damage + hang stun.
+
+        Damage is server-authoritative from hitIndex (+ optional counterFlags)
+        via HackSlashConfig.meleeDamageFromHitIndex / COMBO_DAMAGE — the client
+        amount is not trusted.
+        """
         if self._defeated:
             return
         avId = self.air.getAvatarIdFromSender()
@@ -226,10 +231,14 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         # Same-zone gate keeps random cross-shard smackdowns out of reclaim demos.
         if getattr(toon, 'zoneId', None) != self.zoneId:
             return
-        amount = max(0, min(80, int(damage)))
+        idx = max(0, min(255, int(hitIndex)))
+        try:
+            flags = max(0, min(255, int(counterFlags or 0)))
+        except (TypeError, ValueError):
+            flags = 0
+        amount = HackSlashConfig.meleeDamageFromHitIndex(idx, flags)
         if amount <= 0:
             return
-        idx = max(0, min(255, int(hitIndex)))
         self.takeHackSlashDamage(amount, attackerId=avId)
         # Launch beats arm hang stun even if the hit finished the hostile —
         # __defeat already stops AI; stun is a no-op after delete.

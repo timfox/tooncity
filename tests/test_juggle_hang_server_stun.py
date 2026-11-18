@@ -152,10 +152,10 @@ class JuggleHangServerStunTest(unittest.TestCase):
 
     def test_client_and_dc_pass_hit_index(self):
         client = _read('toontown/corruption/DistributedCorruptToon.py')
-        self.assertIn("sendUpdate('requestHackSlashHit', [amount, idx])", client)
+        self.assertIn("sendUpdate('requestHackSlashHit', [idx, flags])", client)
         dc = _read('etc/toon.dc')
         self.assertIn(
-            'requestHackSlashHit(uint16, uint8)',
+            'requestHackSlashHit(uint8, uint8)',
             dc)
         self.assertIn('juggle-hang stun', dc.lower().replace('_', '-'))
         init_src = _read('toontown/hackslash/__init__.py')

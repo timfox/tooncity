@@ -194,7 +194,7 @@ class HackSlashTarget:
     def getHackSlashName(self):
         raise NotImplementedError
 
-    def applyHackSlashHit(self, damage, hitIndex, attacker):
+    def applyHackSlashHit(self, damage, hitIndex, attacker, counterFlags=0):
         """Apply damage / reaction. Return True if the hit landed."""
         raise NotImplementedError
 
@@ -554,7 +554,7 @@ class SuitHackSlashAdapter(HackSlashTarget):
     def getHackSlashPos(self):
         return self.suit.getPos(render)  # noqa: F821
 
-    def applyHackSlashHit(self, damage, hitIndex, attacker):
+    def applyHackSlashHit(self, damage, hitIndex, attacker, counterFlags=0):
         if not self.isHackSlashAlive():
             return False
         self._stubHp = max(0, self._stubHp - damage)
