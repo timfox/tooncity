@@ -27,6 +27,7 @@ from . import HitJuice
 from .DemoHostile import spawnDemoHostiles
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
+from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
 from .SoftTarget import SoftTargetFinder
 
@@ -58,6 +59,7 @@ class MeleeCombatController(DirectObject):
         self._dodging = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
+        self._slamDust = SlamDustFx(avatar)
         self._softLockReticle = SoftLockReticleFx(avatar)
         self._origScale = None
         self._baseFov = None
@@ -127,6 +129,7 @@ class MeleeCombatController(DirectObject):
         self._clearLaunch()
         self._clearDodge()
         self._clearPerfectDodge()
+        self._clearSlamDust()
         self._clearSoftLockReticle()
         self._clearComboCounter()
         self._iframeUntil = 0.0
@@ -149,6 +152,10 @@ class MeleeCombatController(DirectObject):
             pass
         try:
             self._dodgePerfect.clear()
+        except Exception:
+            pass
+        try:
+            self._slamDust.clear()
         except Exception:
             pass
         try:
@@ -1058,6 +1065,7 @@ class MeleeCombatController(DirectObject):
                 finishScale=self._origScale,
                 name=av.uniqueName('hackslashFinisherSlam'),
             )
+            self._playSlamDust(target)
         else:
             self._impactIval = HitJuice.playImpactSquash(
                 av,
@@ -1091,6 +1099,29 @@ class MeleeCombatController(DirectObject):
                 setattr(target, '_hackslashImpactIval', targetIval)
             except Exception:
                 pass
+
+    def _playSlamDust(self, target=None):
+        """Short rubber-hose dust / ink puff at feet on finisher slam connect."""
+        origin = None
+        # Prefer target feet when present so the thud reads on the hit.
+        if target is not None:
+            try:
+                if hasattr(target, 'getHackSlashPos'):
+                    origin = target.getHackSlashPos()
+                else:
+                    origin = target.getPos(render)  # noqa: F821
+            except Exception:
+                origin = None
+        try:
+            self._slamDust.play(origin=origin)
+        except Exception:
+            pass
+
+    def _clearSlamDust(self):
+        try:
+            self._slamDust.clear()
+        except Exception:
+            pass
 
     def _clearImpactJuice(self):
         HitJuice.finishInterval(
