@@ -8,6 +8,7 @@ from .MeleeCombat import MeleeCombatController
 from .HackSlashConfig import (
     comboCounterCreamEdgePeakAtSec,
     dodgeCancelCreamWashPeakAtSec,
+    dodgeIFrameCreamWashPeakAtSec,
     finisherFovPunchKeys,
     hurtStaggerCreamWashPeakAtSec,
     hurtStaggerTotalSec,
@@ -55,6 +56,7 @@ __all__ = [
     'MeleeCombatController',
     'comboCounterCreamEdgePeakAtSec',
     'dodgeCancelCreamWashPeakAtSec',
+    'dodgeIFrameCreamWashPeakAtSec',
     'finisherFovPunchKeys',
     'hurtStaggerCreamWashPeakAtSec',
     'hurtStaggerTotalSec',

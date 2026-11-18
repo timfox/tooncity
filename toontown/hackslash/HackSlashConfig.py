@@ -654,18 +654,53 @@ DODGE_TRAIL_PULSE_INK_END = (0.38, 0.1, 0.42, 0.0)
 
 # I-frame pulse cream wash — soft aspect2d veil after first dodge i-frame
 # cream/ink pulse (#66). SoftLock FOV / reticle cream wash grammar (#160 /
-# #155). Quieter under trail wash (#139); cream/pastel only. Toggle
-# DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = False drops wash only.
+# #155). Deepened so invuln windows read clearly: brighter peak + longer mid
+# hold while dodge i-frames are live. Quieter under trail wash (#139);
+# cream/pastel only. Toggle DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = False
+# drops wash (+ wash aftershock).
 DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = True
-DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC = 0.22  # after first pulse; past pulse (~0.18)
+DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC = 0.16  # after first pulse; mid-iframe
 DODGE_TRAIL_PULSE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-DODGE_TRAIL_PULSE_CREAM_WASH_PEAK = 0.07
-DODGE_TRAIL_PULSE_CREAM_WASH_MID = 0.04
+DODGE_TRAIL_PULSE_CREAM_WASH_PEAK = 0.09
+DODGE_TRAIL_PULSE_CREAM_WASH_MID = 0.055
 DODGE_TRAIL_PULSE_CREAM_WASH_IN_SEC = 0.05
-DODGE_TRAIL_PULSE_CREAM_WASH_PULSE_SEC = 0.07
-DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC = 0.04
-DODGE_TRAIL_PULSE_CREAM_WASH_OUT_SEC = 0.26
+DODGE_TRAIL_PULSE_CREAM_WASH_PULSE_SEC = 0.08
+DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC = 0.08
+DODGE_TRAIL_PULSE_CREAM_WASH_OUT_SEC = 0.30
 DODGE_TRAIL_PULSE_CREAM_WASH_BIN = 27  # under trail wash (28) / soft-lock pulse
+
+# I-frame pulse cream wash aftershock — residual cream flecks + soft halo
+# after the wash pulse so the invuln settle still reads. Same grammar as
+# HURT_STAGGER_CREAM_WASH_AFTERSHOCK_* / PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_*;
+# quieter (rolls fire often). Cream/pastel only. Toggle
+# DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ENABLED = True
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.12  # after wash starts
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.08)
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT = 3
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SIZE = 0.011
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DRIFT = 0.18
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_FALL = 0.15
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SEC = 0.24
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.62)
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_BIN = 29  # over i-frame wash veil (27)
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.34
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_START = 0.18
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 0.92
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.18
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.07
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+
+
+def dodgeIFrameCreamWashPeakAtSec(delay=None, inSec=None):
+    """Seconds from first i-frame pulse until cream wash reaches peak alpha."""
+    if delay is None:
+        delay = DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC
+    if inSec is None:
+        inSec = DODGE_TRAIL_PULSE_CREAM_WASH_IN_SEC
+    return max(0.0, float(delay)) + max(0.0, float(inSec))
 
 # Cream sparkle flecks along the dodge roll trail (while smear drips).
 # Pastel cream glitter chips that compose with smear ghosts + i-frame cream/ink
@@ -1043,8 +1078,8 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Stretch punches: F/LMB  |  Shift/X dodge→F cream flash  |  '
-    'perfect dodge→F counter  |  '
+    'Stretch punches: F/LMB  |  Shift/X dodge i-frame cream wash  |  '
+    'dodge→F cream flash  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash→F/Shift  |  '
     'Tab/` soft-lock cycle pulse  |  hit soft-lock aim  |  ~melee'
 )
