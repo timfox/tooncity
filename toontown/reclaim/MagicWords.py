@@ -36,7 +36,8 @@ class StartReclaim(MagicWord):
         'delayed cream aftershock + soft cream wash pulse + cream sparkle '
         'flecks. Wave announce '
         'plates get a cream edge pulse with cream sparkle flecks + soft '
-        'cream wash pulse. Pair with '
+        'cream wash pulse. Mid-wave purity stall / ink-rise whispers a short '
+        'contested tip under the purity meter. Pair with '
         '~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

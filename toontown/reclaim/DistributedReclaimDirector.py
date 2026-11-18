@@ -13,7 +13,12 @@ from toontown.reclaim.StreetColorWash import StreetColorWash
 
 
 class DistributedReclaimDirector(DistributedObject.DistributedObject):
-    """Client reclaim feedback: status HUD, wave banners, purity restore FX."""
+    """Client reclaim feedback: status HUD, wave banners, purity restore FX.
+
+    Mid-wave purity pressure: short rubber-hose tip whisper + meter rim warn
+    when purity stalls or ink rises while packs are still alive (contested
+    feel after incomplete re-creep #194).
+    """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedReclaimDirector')
 
@@ -32,12 +37,18 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._hintNP = None
         self._statusNP = None
         self._demoHintNP = None
+        self._pressureTipNP = None
         self._purityMeter = PurityMeterHud()
         self._streetWash = StreetColorWash()
         self._restoreIval = None
         self._burstFlashNP = None
         self._burstRingNP = None
         self._puritySfx = None
+        self._pressureLastPurity = None
+        self._pressureLastAdvanceT = None
+        self._pressureLastPollution = None
+        self._pressureCooldownUntil = 0.0
+        self._pressureTaskName = None
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
@@ -68,6 +79,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     def disable(self):
         self.ignoreAll()
+        self.__stopPressureWatch()
         self.__clearHud()
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -86,6 +98,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.state = int(state)
         zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         if self.state == ReclaimGlobals.STATE_IDLE:
+            self.__stopPressureWatch()
             if self._streetWash is not None:
                 self._streetWash.setActive(False, zoneId=zoneId)
             self.__clearHud()
@@ -93,8 +106,10 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             if self._streetWash is not None:
                 self._streetWash.setActive(True, zoneId=zoneId)
                 self._streetWash.update(zoneId, self.pollutionHint, snap=True)
+            self.__armPurityPressure()
             self.__showStatusHud()
         elif self.state == ReclaimGlobals.STATE_COMPLETE:
+            self.__stopPressureWatch()
             # Purity burst owns the payoff; wash soft-clears via messengers.
             if self._streetWash is not None:
                 self._streetWash.setActive(False, zoneId=zoneId)
@@ -165,6 +180,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         if self._streetWash is not None:
             self._streetWash.setActive(True, zoneId=zoneId)
             self._streetWash.update(zoneId, self.pollutionHint, snap=True)
+        self.__armPurityPressure()
         self.__showDemoHint()
         self.__showStatusHud()
 
@@ -225,6 +241,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             pass
         messenger.send(
             'reclaimWaveAnnounce', [self.reclaimZoneId, wave])
+        # Fresh mid-wave beat — reset stall clock so announce plate isn't
+        # immediately followed by a pressure whisper.
+        self.__armPurityPressure(resetStall=True)
         self.__showStatusHud()
 
     def announceWaveCleared(self, waveIndex):
@@ -299,6 +318,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.__playRestoreFx()
         self.__hideStatusHud()
         self.__hideDemoHint()
+        self.__stopPressureWatch()
 
     def __onPollutionChanged(self, zoneId, level):
         if self.state != ReclaimGlobals.STATE_ACTIVE:
@@ -308,6 +328,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             if self._streetWash is not None:
                 self._streetWash.update(zoneId, level)
             self.__showStatusHud()
+            self.__evaluatePurityPressure()
 
     def __showBanner(self, text, color, hold=2.2, pop=False):
         self.__hideBanner()
@@ -465,6 +486,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         if self._streetWash is not None and self.state == ReclaimGlobals.STATE_ACTIVE:
             self._streetWash.setActive(True, zoneId=zoneId)
             self._streetWash.update(zoneId, self.pollutionHint)
+        self.__evaluatePurityPressure()
 
     def __hidePollutionHint(self):
         if self._hintNP is not None and not self._hintNP.isEmpty():
@@ -473,6 +495,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     def __hideStatusHud(self):
         self.__hideTelegraphCue()
+        self.__hidePressureTip()
         if self._statusNP is not None and not self._statusNP.isEmpty():
             self._statusNP.removeNode()
         self._statusNP = None
@@ -641,9 +664,185 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                     pass
             setattr(self, attr, None)
 
+    def __now(self):
+        try:
+            return float(globalClock.getFrameTime())  # noqa: F821
+        except Exception:
+            return 0.0
+
+    def __armPurityPressure(self, resetStall=False):
+        """Seed mid-wave pressure clocks and start the stall watcher task."""
+        now = self.__now()
+        purity = 1.0 - float(self.pollutionHint or 0.0)
+        if self._pressureLastPurity is None or resetStall:
+            self._pressureLastPurity = purity
+            self._pressureLastAdvanceT = now
+        if self._pressureLastPollution is None or resetStall:
+            self._pressureLastPollution = float(self.pollutionHint or 0.0)
+        if resetStall:
+            self._pressureLastPurity = purity
+            self._pressureLastAdvanceT = now
+            self._pressureLastPollution = float(self.pollutionHint or 0.0)
+        self.__ensurePressureWatch()
+
+    def __ensurePressureWatch(self):
+        if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_ENABLED', True):
+            self.__stopPressureWatch()
+            return
+        if self._pressureTaskName is not None:
+            return
+        self._pressureTaskName = self.uniqueName('reclaim-purity-pressure')
+        try:
+            taskMgr.doMethodLater(  # noqa: F821
+                1.0, self.__pressureWatchTick, self._pressureTaskName)
+        except Exception:
+            self._pressureTaskName = None
+
+    def __stopPressureWatch(self):
+        if self._pressureTaskName is not None:
+            try:
+                taskMgr.remove(self._pressureTaskName)  # noqa: F821
+            except Exception:
+                pass
+            self._pressureTaskName = None
+        self.__hidePressureTip()
+        self._pressureLastPurity = None
+        self._pressureLastAdvanceT = None
+        self._pressureLastPollution = None
+        self._pressureCooldownUntil = 0.0
+
+    def __pressureWatchTick(self, task):
+        if self.state != ReclaimGlobals.STATE_ACTIVE:
+            self._pressureTaskName = None
+            return task.done
+        self.__evaluatePurityPressure()
+        return task.again
+
+    def __evaluatePurityPressure(self):
+        """Whisper when purity stalls or ink rises mid-wave (contested feel)."""
+        if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_ENABLED', True):
+            return
+        if self.state != ReclaimGlobals.STATE_ACTIVE:
+            return
+        if not ReclaimGlobals.isMidWavePressureContext(
+                self.state, self.waveIndex, self.packAlive):
+            # Keep clocks warm so the first mid-wave beat gets a full stall window.
+            self.__armPurityPressure(resetStall=False)
+            if self._pressureLastAdvanceT is None:
+                self._pressureLastAdvanceT = self.__now()
+            if self._pressureLastPollution is None:
+                self._pressureLastPollution = float(self.pollutionHint or 0.0)
+            return
+
+        now = self.__now()
+        pollution = float(self.pollutionHint or 0.0)
+        purity = 1.0 - pollution
+        advanceFloor = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_ADVANCE_THRESHOLD',
+            ReclaimGlobals.PURITY_METER_POP_THRESHOLD))
+
+        if self._pressureLastPurity is None:
+            self._pressureLastPurity = purity
+            self._pressureLastAdvanceT = now
+        elif purity > float(self._pressureLastPurity) + advanceFloor:
+            self._pressureLastPurity = purity
+            self._pressureLastAdvanceT = now
+
+        if self._pressureLastPollution is None:
+            self._pressureLastPollution = pollution
+        pollutionDelta = pollution - float(self._pressureLastPollution)
+        # Always track the latest ink level so small noise doesn't stack.
+        if pollution <= float(self._pressureLastPollution):
+            self._pressureLastPollution = pollution
+
+        if self._pressureLastAdvanceT is None:
+            self._pressureLastAdvanceT = now
+        stallAge = max(0.0, now - float(self._pressureLastAdvanceT))
+
+        if now < float(self._pressureCooldownUntil or 0.0):
+            # Still cool down — absorb ink rise so we don't fire immediately after.
+            if pollutionDelta > 0.0:
+                self._pressureLastPollution = pollution
+            return
+
+        reason = ReclaimGlobals.purityPressureReason(
+            pollutionDelta, stallAge)
+        if reason is None:
+            return
+
+        tip = ReclaimGlobals.purityPressureTipText(reason)
+        self.__showPressureTip(tip)
+        if self._purityMeter is not None:
+            try:
+                self._purityMeter.warnPressure()
+            except Exception:
+                pass
+        cooldown = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_COOLDOWN_SEC', 12.0))
+        self._pressureCooldownUntil = now + max(0.5, cooldown)
+        self._pressureLastPollution = pollution
+        # Stall tips also refresh the advance clock so we don't re-fire next tick.
+        if reason == ReclaimGlobals.PURITY_PRESSURE_REASON_STALL:
+            self._pressureLastAdvanceT = now
+            self._pressureLastPurity = purity
+
+    def __showPressureTip(self, text, hold=None):
+        """Short rubber-hose HUD whisper under the purity meter."""
+        self.__hidePressureTip()
+        if hold is None:
+            hold = float(getattr(
+                ReclaimGlobals, 'PURITY_PRESSURE_TIP_HOLD_SEC', 2.4))
+        color = getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_TIP_COLOR',
+            (1.0, 0.88, 0.55, 1.0))
+        baseScale = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_TIP_SCALE', 0.038))
+        pos = getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_TIP_POS', (0.0, 0.0, 0.40))
+        tn = TextNode('reclaim-purity-pressure-tip')
+        tn.setText(str(text))
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(*color)
+        tn.setShadow(0.04, 0.04)
+        tn.setShadowColor(0, 0, 0, 0.75)
+        np = aspect2d.attachNewNode(tn)  # noqa: F821
+        np.setScale(baseScale)
+        np.setPos(*pos)
+        self._pressureTipNP = np
+        popScale = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_TIP_POP_SCALE', 0.052))
+        popSec = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_TIP_POP_SEC', 0.10))
+        try:
+            Sequence(
+                LerpScaleInterval(np, popSec, popScale, blendType='easeOut'),
+                LerpScaleInterval(np, 0.16, baseScale, blendType='easeIn'),
+                name='reclaimPurityPressureTipHose',
+            ).start()
+        except Exception:
+            pass
+        taskMgr.doMethodLater(  # noqa: F821
+            max(0.4, float(hold)),
+            self.__pressureTipTimeout,
+            self.uniqueName('reclaim-purity-pressure-tip'))
+
+    def __pressureTipTimeout(self, task):
+        self.__hidePressureTip()
+        return task.done
+
+    def __hidePressureTip(self):
+        taskMgr.remove(self.uniqueName('reclaim-purity-pressure-tip'))  # noqa: F821
+        if self._pressureTipNP is not None and not self._pressureTipNP.isEmpty():
+            try:
+                self._pressureTipNP.removeNode()
+            except Exception:
+                pass
+        self._pressureTipNP = None
+
     def __clearHud(self):
         self.__hideBanner()
         self.__hideSubBanner()
+        self.__hidePressureTip()
         self.__hideStatusHud()
         self.__hideDemoHint()
         self.__clearPurityBurstOverlay()

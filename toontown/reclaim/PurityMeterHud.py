@@ -9,6 +9,9 @@ shimmer flecks along the filled bar, then a delayed cream aftershock
 (softer flecks settling downward + soft halo) — same residual grammar as
 cheer cream aftershock — then a soft cream wash pulse (CheerCreamWashPulse /
 WaveClearCreamWashPulse vocabulary).
+
+Mid-wave purity pressure (director tip): brief contested rim warn flash when
+purity stalls or ink pressure rises — rubber-hose urgency after re-creep #194.
 """
 
 from math import cos, pi, sin
@@ -61,6 +64,8 @@ class PurityMeterHud(object):
         self._haloNP = None
         self._creamWash = None
         self._lastPopPurity = None
+        self._warnIval = None
+        self._finalePhase = 0
 
     def isShown(self):
         return self._root is not None and not self._root.isEmpty()
@@ -135,6 +140,7 @@ class PurityMeterHud(object):
         self._clearPop()
         self._clearFlecks()
         self._clearFillShimmer()
+        self._clearPressureWarn()
         if self._root is not None and not self._root.isEmpty():
             self._root.removeNode()
         self._root = None
@@ -145,6 +151,7 @@ class PurityMeterHud(object):
         self._pctNP = None
         self._purity = None
         self._lastPopPurity = None
+        self._finalePhase = 0
 
     def destroy(self):
         self.hide()
@@ -159,23 +166,16 @@ class PurityMeterHud(object):
         prev = self._purity
         first = prev is None
         self._purity = purity
+        self._finalePhase = int(finalePhase or 0)
 
         fillColor = _lerpColor(
             ReclaimGlobals.PURITY_METER_FILL_POLLUTED,
             ReclaimGlobals.PURITY_METER_FILL_PURE,
             purity)
 
-        # Finale streets lean magenta / crimson on the rim for boss readability.
-        phase = int(finalePhase or 0)
-        if phase >= 2:
-            rimColor = ReclaimGlobals.PURITY_METER_RIM_FINALE_P2
-        elif phase == 1:
-            rimColor = ReclaimGlobals.PURITY_METER_RIM_FINALE_P1
-        else:
-            rimColor = ReclaimGlobals.PURITY_METER_RIM_COLOR
-
-        if self._rimNP is not None and not self._rimNP.isEmpty():
-            self._rimNP.setColor(*rimColor)
+        # Skip rim snap while contested pressure warn is playing.
+        if not self._isPressureWarnPlaying():
+            self._applyRimColor()
 
         if self._fillNP is not None and not self._fillNP.isEmpty():
             # Avoid zero scale (can cull oddly); clamp tiny.
@@ -199,6 +199,61 @@ class PurityMeterHud(object):
         if (not first
                 and purity > prev + ReclaimGlobals.PURITY_METER_POP_THRESHOLD):
             self._popTick()
+
+    def warnPressure(self):
+        """Brief contested rim flash when mid-wave purity pressure whispers."""
+        if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_ENABLED', True):
+            return
+        if self._rimNP is None or self._rimNP.isEmpty():
+            return
+        self._clearPressureWarn()
+        warnColor = getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_COLOR',
+            (1.0, 0.55, 0.35, 0.78))
+        hold = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_SEC', 0.55))
+        try:
+            self._rimNP.setColor(*warnColor)
+        except Exception:
+            return
+        self._warnIval = Sequence(
+            Wait(max(0.05, hold)),
+            Func(self._onPressureWarnDone),
+            name='reclaimPurityMeterPressureWarn',
+        )
+        self._warnIval.start()
+
+    def _baseRimColor(self):
+        phase = int(self._finalePhase or 0)
+        if phase >= 2:
+            return ReclaimGlobals.PURITY_METER_RIM_FINALE_P2
+        if phase == 1:
+            return ReclaimGlobals.PURITY_METER_RIM_FINALE_P1
+        return ReclaimGlobals.PURITY_METER_RIM_COLOR
+
+    def _applyRimColor(self):
+        if self._rimNP is None or self._rimNP.isEmpty():
+            return
+        try:
+            self._rimNP.setColor(*self._baseRimColor())
+        except Exception:
+            pass
+
+    def _isPressureWarnPlaying(self):
+        return self._warnIval is not None and self._warnIval.isPlaying()
+
+    def _onPressureWarnDone(self):
+        self._warnIval = None
+        self._applyRimColor()
+
+    def _clearPressureWarn(self):
+        if self._warnIval is not None:
+            try:
+                self._warnIval.finish()
+            except Exception:
+                pass
+            self._warnIval = None
+        self._applyRimColor()
 
     def _isPopPlaying(self):
         return self._popIval is not None and self._popIval.isPlaying()
