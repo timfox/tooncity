@@ -400,6 +400,12 @@ STREET_PURITY_LOCK_ENABLED = True
 STREET_PURITY_LOCK_MSG = (
     "Street's secured — that ink can't creep back!"
 )
+# Finished-reclaim purity locks persist across AI restart via thin JSON
+# under air.dataFolder (PollutionSecuredSave). Without this, secured
+# Loopy/Punchline reopen while campaign progress still says cleared.
+# POLLUTION_SECURED_PERSIST_ENABLED = False keeps process-memory locks only.
+POLLUTION_SECURED_PERSIST_ENABLED = True
+POLLUTION_SECURED_FILENAME = 'pollution_secured.json'
 
 # Purity-complete fog cream dissolve — sunny cream/pastel lift of street fog
 # when purityRestoreFx fires. Matches POLLUTION_FOG_CLEAR_SEC density ramp

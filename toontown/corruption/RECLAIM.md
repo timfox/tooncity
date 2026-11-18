@@ -45,6 +45,9 @@ Sections below remain **debug / magic-word** fallbacks.
    quieter pitch swell + light bounce via `reclaimWaveCleared`.
    Complete marks the street `STREET_SECURED` and **purity-locks** it — pure
    stays pure (no auto re-ink, no pollution rises until a new reclaim starts).
+   Locks persist across AI restart via `pollution_secured.json` (+ optional
+   `CampaignProgressSave.securedZones` mirror) so cleared streets stay sealed
+   while campaign unlocks still say cleared.
    Client HUD shows a short secured-lock tip + meter rim confirm.
 6. Bail mid-reclaim (`~stopreclaim` / director stop while `STATE_ACTIVE`) marks the
    street `STREET_CONTESTED`. Residual ink slowly re-creeps via
