@@ -21,6 +21,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     Sludge Brute fires a traveling spit projectile (trail + land splash) from
     hold range, with a close slam secondary — not an instant long-range smack.
 
+    Corrupted Oswald (finale betrayal chase) uses a distinct betrayal kit —
+    ``betrayal_lunge`` dash-then-hit plus close ``stain_burst`` AoE and a
+    planar shove — not a crimson Ink Smudge smack reskin.
+
     Air-juggle hang stuns chase/attack on the AI so cancel→slam is not just
     client juice under multi-enemy pressure.
     """
@@ -308,6 +312,14 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             slamEngage = float(self._stats.get(
                 'slamMeleeRange', spitEngage))
             return max(spitEngage, slamEngage)
+        # Corrupted Oswald: lunge from mid-range; stain burst is closer.
+        if (CorruptionGlobals.normalizeArchetype(self.archetype)
+                == CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD):
+            lungeEngage = float(self._stats.get(
+                'meleeRange', CorruptionGlobals.MELEE_RANGE))
+            burstEngage = float(self._stats.get(
+                'burstMeleeRange', lungeEngage))
+            return max(lungeEngage, burstEngage)
         return float(self._stats.get('meleeRange', CorruptionGlobals.MELEE_RANGE))
 
     def __findNearestToon(self):
@@ -432,11 +444,15 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self._spitAimXY = None
         else:
             move = str(self._stats.get('attackMove', 'smack') or 'smack')
+            aid = CorruptionGlobals.normalizeArchetype(self.archetype)
             # Sludge Brute: spit by default; slam when the toon is in their face.
-            if (CorruptionGlobals.normalizeArchetype(self.archetype)
-                    == CorruptionGlobals.ARCHETYPE_BRUTE
-                    and move == 'spit'):
+            if aid == CorruptionGlobals.ARCHETYPE_BRUTE and move == 'spit':
                 move = CorruptionGlobals.brutePickAttackMove(
+                    self.__planarDist(target), self._stats)
+            # Corrupted Oswald: betrayal lunge by default; stain burst up close.
+            elif (aid == CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD
+                    and move in ('betrayal_lunge', 'smack')):
+                move = CorruptionGlobals.oswaldPickAttackMove(
                     self.__planarDist(target), self._stats)
             # Gunk Gagster: snapshot target XY at wind-up so the puddle lands
             # where they stood — dodge out during telegraph to escape the trap.
@@ -484,6 +500,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'slamTelegraphDelay',
                 self._stats.get(
                     'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
+        if move == 'stain_burst':
+            return float(self._stats.get(
+                'burstTelegraphDelay',
+                self._stats.get(
+                    'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
         return float(self._stats.get(
             'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY))
 
@@ -491,6 +512,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if move == 'slam':
             return float(self._stats.get(
                 'slamCooldown',
+                self._stats.get(
+                    'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
+        if move == 'stain_burst':
+            return float(self._stats.get(
+                'burstCooldown',
                 self._stats.get(
                     'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
         return float(self._stats.get(
@@ -503,6 +529,24 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             near = float(self._stats.get(
                 'slamNearMissRange', CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
             return hit, near
+        if move == 'stain_burst':
+            hit = float(self._stats.get(
+                'burstHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
+            near = float(self._stats.get(
+                'burstNearMissRange',
+                CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+            return hit, near
+        if move == 'betrayal_lunge':
+            hit = float(self._stats.get(
+                'lungeHitRange',
+                self._stats.get(
+                    'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE)))
+            near = float(self._stats.get(
+                'lungeNearMissRange',
+                self._stats.get(
+                    'attackNearMissRange',
+                    CorruptionGlobals.ATTACK_NEAR_MISS_RANGE)))
+            return hit, near
         hit = float(self._stats.get(
             'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
         near = float(self._stats.get(
@@ -513,6 +557,14 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if move == 'slam':
             return int(self._stats.get(
                 'slamDamage',
+                self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
+        if move == 'stain_burst':
+            return int(self._stats.get(
+                'burstDamage',
+                self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
+        if move == 'betrayal_lunge':
+            return int(self._stats.get(
+                'lungeDamage',
                 self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
         return int(self._stats.get(
             'attackDamage', CorruptionGlobals.ATTACK_DAMAGE))
@@ -531,6 +583,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return self.__resolveGagsterPuddle()
         if move == 'spit':
             return self.__resolveBruteSpit()
+        if move == 'stain_burst':
+            return self.__resolveOswaldStainBurst()
+        if move == 'betrayal_lunge':
+            return self.__resolveOswaldBetrayalLunge()
         return self.__resolveSingleTargetHit(move)
 
     def __resolveBruteSpit(self):
@@ -827,6 +883,98 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.sendUpdate('announceAttackDodged', [])
         return Task.done
 
+    def __resolveOswaldBetrayalLunge(self):
+        """False-friend rush: dash toward the toon, then single-target hit + shove.
+
+        Distinct from stationary Smudge smack — Oswald closes the gap on
+        resolve so the twist chase fights like a betrayal, not fodder.
+        Falls back to single-target when the kit / lunge is disabled.
+        """
+        if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_KIT_ENABLED', True):
+            return self.__resolveSingleTargetHit('smack')
+        if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_LUNGE_ENABLED', True):
+            return self.__resolveSingleTargetHit('betrayal_lunge')
+        target = self.air.doId2do.get(self._targetId)
+        if target is None or not isinstance(target, DistributedToonAI):
+            return Task.done
+        if getattr(target, 'zoneId', None) != self.zoneId:
+            return Task.done
+        if getattr(target, 'hp', 1) <= 0:
+            return Task.done
+        self.__dashOswaldTowardTarget(target)
+        return self.__resolveSingleTargetHit('betrayal_lunge')
+
+    def __resolveOswaldStainBurst(self):
+        """Close crimson stain burst — self-centered AoE when Oswald is pressed.
+
+        Distinct from Overlord rain (wider mid-range) and Gagster lob (wind-up
+        snapshot). Dodge out of the burst radius during telegraph to escape.
+        """
+        if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_KIT_ENABLED', True):
+            return self.__resolveSingleTargetHit('smack')
+        if not getattr(
+                CorruptionGlobals, 'OSWALD_STAIN_BURST_SECONDARY_ENABLED', True):
+            return self.__resolveOswaldBetrayalLunge()
+        try:
+            ox = float(self.getX())
+            oy = float(self.getY())
+        except Exception:
+            return Task.done
+        hitRange, nearMiss = self.__hitRangesForMove('stain_burst')
+        dmg = self.__damageForMove('stain_burst')
+        now = globalClock.getFrameTime()  # noqa: F821
+        anyHit = False
+        anyDodge = False
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - ox
+                dy = float(target.getY()) - oy
+            except Exception:
+                continue
+            dist = math.sqrt(dx * dx + dy * dy)
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            iframes = now < iframeUntil
+            if iframes and dist <= max(hitRange, nearMiss):
+                anyDodge = True
+                continue
+            if dist > hitRange:
+                continue
+            try:
+                target.takeDamage(dmg)
+                anyHit = True
+                self.__shoveTargetFromOswald(target)
+            except Exception:
+                self.notify.debug(
+                    'stain_burst takeDamage failed on av %s' % getattr(
+                        target, 'doId', '?'))
+        if anyHit:
+            self.sendUpdate('announceAttackHit', [])
+        elif anyDodge:
+            self.sendUpdate('announceAttackDodged', [])
+        return Task.done
+
+    def __dashOswaldTowardTarget(self, target):
+        """Planar dash step for betrayal_lunge — closes the false-friend gap."""
+        if target is None:
+            return
+        try:
+            sx = float(self.getX())
+            sy = float(self.getY())
+            sz = float(self.getZ())
+            tx = float(target.getX())
+            ty = float(target.getY())
+        except Exception:
+            return
+        dash = CorruptionGlobals.oswaldLungeDashDist(self._stats)
+        nx, ny = CorruptionGlobals.oswaldLungeDashPos(sx, sy, tx, ty, dash=dash)
+        if abs(nx - sx) < 1e-6 and abs(ny - sy) < 1e-6:
+            return
+        heading = -math.degrees(math.atan2(tx - sx, ty - sy))
+        self.setPos(nx, ny, sz)
+        self.setH(heading)
+        self.sendUpdate('setXYZH', [nx, ny, sz, heading])
+
     def __resolveSingleTargetHit(self, move='smack'):
         target = self.air.doId2do.get(self._targetId)
         if target is None or not isinstance(target, DistributedToonAI):
@@ -856,6 +1004,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.notify.debug('takeDamage failed on av %s' % self._targetId)
         # Balloon Snare: short planar reel toward the zip-flier (not damage-only).
         self.__yankTargetTowardSnare(target)
+        # Corrupted Oswald: betrayal shove away (opposite Snare yank).
+        self.__shoveTargetFromOswald(target)
         self.sendUpdate('announceAttackHit', [])
         return Task.done
 
@@ -889,6 +1039,43 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         except Exception:
             self.notify.debug(
                 'snare lash yank setPos failed on av %s' % getattr(
+                    target, 'doId', self._targetId))
+
+    def __shoveTargetFromOswald(self, target):
+        """Knock the hit toon a short distance away from Corrupted Oswald.
+
+        Betrayal identity — push away (opposite Balloon Snare yank). Server
+        shadow displace so follow-up chase/hit math sees the shove. Client
+        hurt-react lerp (hackslash) owns the readable local feel. No-op for
+        non-Oswald archetypes or when the kit / shove is disabled.
+        """
+        if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_KIT_ENABLED', True):
+            return
+        if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_SHOVE_ENABLED', True):
+            return
+        if (CorruptionGlobals.normalizeArchetype(self.archetype)
+                != CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD):
+            return
+        if target is None:
+            return
+        try:
+            sx = float(self.getX())
+            sy = float(self.getY())
+            tx = float(target.getX())
+            ty = float(target.getY())
+            tz = float(target.getZ())
+        except Exception:
+            return
+        dist = CorruptionGlobals.oswaldShoveDist(self._stats)
+        nx, ny = CorruptionGlobals.oswaldBetrayalShovePos(
+            sx, sy, tx, ty, dist=dist)
+        if abs(nx - tx) < 1e-6 and abs(ny - ty) < 1e-6:
+            return
+        try:
+            target.setPos(nx, ny, tz)
+        except Exception:
+            self.notify.debug(
+                'oswald betrayal shove setPos failed on av %s' % getattr(
                     target, 'doId', self._targetId))
 
     def __defeat(self, attackerId=None):

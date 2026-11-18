@@ -2,6 +2,8 @@
 
 Gameplay payload for the Oswald twist: CampaignDirectorAI schedules a
 thin ARCHETYPE_CORRUPT_OSWALD spawn after Silly finale victory / reveal.
+Oswald carries a distinct betrayal attack kit (lunge + stain burst +
+shove) from CorruptionGlobals — not a crimson Smudge smack reskin.
 Client tip + melee arm land when the chase fields. Not cream FX; not a
 full new campaign act. Toontown spiritual sequel — no keyblades / KH.
 """
@@ -49,10 +51,20 @@ def chaseHp():
         CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD)
 
 
+def chaseAttackMove():
+    """Primary betrayal kit move from ARCHETYPE_CORRUPT_OSWALD stats."""
+    stats = CorruptionGlobals.archetypeStats(
+        CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD)
+    move = str(stats.get('attackMove', 'betrayal_lunge') or 'betrayal_lunge')
+    if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_KIT_ENABLED', True):
+        return 'smack'
+    return move
+
+
 def chaseTip():
     return str(getattr(
         CampaignGlobals, 'OSWALD_BETRAYAL_CHASE_TIP',
-        'Oswald turns on you — Corrupted Oswald inbound!  |  '
+        'Oswald turns on you — betrayal lunge inbound!  |  '
         'F fight  |  Shift dodge'))
 
 
@@ -75,7 +87,12 @@ def chaseClearMsg():
 
 
 def spawnCorruptOswald(air, toon, zoneId=None, forward=None):
-    """Spawn one fightable Corrupted Oswald near `toon`. Returns AI or None."""
+    """Spawn one fightable Corrupted Oswald near `toon`. Returns AI or None.
+
+    Archetype stats already carry the betrayal attack kit
+    (``betrayal_lunge`` / ``stain_burst``); this hook only fields HP/name/
+    pose so the chase fights like the twist, not a smack reskin.
+    """
     if air is None or toon is None:
         return None
     if zoneId is None:
@@ -91,9 +108,17 @@ def spawnCorruptOswald(air, toon, zoneId=None, forward=None):
     archetype = CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD
     name = chaseName()
     hp = chaseHp()
+    # Pin kit identity at spawn so a future HP override cannot drop the move.
+    _kitMove = chaseAttackMove()
     corrupt = DistributedCorruptToonAI(
         air, name=name, maxHp=hp, archetype=archetype, finalePhase=0)
     corrupt.hp = corrupt.maxHp
+    if _kitMove and hasattr(corrupt, '_stats'):
+        try:
+            corrupt._stats = dict(corrupt._stats)
+            corrupt._stats['attackMove'] = _kitMove
+        except Exception:
+            pass
 
     baseX = float(toon.getX())
     baseY = float(toon.getY())

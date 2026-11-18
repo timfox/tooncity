@@ -66,6 +66,8 @@ class MeleeCombatController(DirectObject):
         self._dodgeIval = None
         # Balloon Snare string-lash → short planar reel toward the zip-flier.
         self._snareLashYankIval = None
+        # Corrupted Oswald betrayal kit → short planar shove away from Oswald.
+        self._oswaldBetrayalShoveIval = None
         self._iframeUntil = 0.0
         self._dodgeIFrameUntil = 0.0
         self._dodgeReadyAt = 0.0
@@ -196,6 +198,7 @@ class MeleeCombatController(DirectObject):
         self._clearLaunch()
         self._clearDodge()
         self._clearSnareLashYank()
+        self._clearOswaldBetrayalShove()
         self._clearDodgeCancelWindow()
         self._clearPerfectDodgeCounterWindow()
         self._clearJuggleCancelWindow()
@@ -1071,6 +1074,7 @@ class MeleeCombatController(DirectObject):
         # (archetype identity — not damage-only). AI also displaces in
         # __resolveSingleTargetHit; this lerp is the readable local feel.
         self._yankAvatarTowardSnare(corrupt)
+        self._shoveAvatarFromOswald(corrupt)
         # Stronger flash than normal hit confirm so the window is obvious.
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
         # Brief stagger + cream wash aftershock, then cancel-into-dodge/melee
@@ -1130,6 +1134,62 @@ class MeleeCombatController(DirectObject):
             except Exception:
                 pass
             self._snareLashYankIval = None
+
+    def _shoveAvatarFromOswald(self, corrupt=None):
+        """Thin hurt-react: shove local avatar a short distance away from Oswald.
+
+        CorruptionGlobals owns shove math / tunables; CorruptToonAI updates the
+        server shadow. No-op for non-Oswald archetypes or when shove is off.
+        Opposite of Balloon Snare yank — betrayal push, not string reel.
+        """
+        if corrupt is None or self._dodging:
+            return
+        try:
+            from toontown.corruption import CorruptionGlobals
+        except Exception:
+            return
+        if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_KIT_ENABLED', True):
+            return
+        if not getattr(CorruptionGlobals, 'OSWALD_BETRAYAL_SHOVE_ENABLED', True):
+            return
+        try:
+            archetype = CorruptionGlobals.normalizeArchetype(
+                corrupt.getArchetype())
+        except Exception:
+            return
+        if archetype != CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD:
+            return
+        self._clearOswaldBetrayalShove()
+        try:
+            cpos = corrupt.getPos(render)  # noqa: F821
+            start = self.avatar.getPos(render)  # noqa: F821
+            nx, ny = CorruptionGlobals.oswaldBetrayalShovePos(
+                float(cpos.getX()), float(cpos.getY()),
+                float(start.getX()), float(start.getY()))
+            if (abs(nx - float(start.getX())) < 1e-4
+                    and abs(ny - float(start.getY())) < 1e-4):
+                return
+            end = Point3(nx, ny, start.getZ())
+            sec = float(getattr(
+                CorruptionGlobals, 'OSWALD_BETRAYAL_SHOVE_SEC', 0.12))
+            self._oswaldBetrayalShoveIval = Sequence(
+                LerpPosInterval(
+                    self.avatar, max(0.01, sec), end,
+                    other=render, blendType='easeOut'),  # noqa: F821
+                Func(self._clearOswaldBetrayalShove),
+                name=self.avatar.uniqueName('hackslashOswaldBetrayalShove'),
+            )
+            self._oswaldBetrayalShoveIval.start()
+        except Exception:
+            self._clearOswaldBetrayalShove()
+
+    def _clearOswaldBetrayalShove(self):
+        if self._oswaldBetrayalShoveIval is not None:
+            try:
+                self._oswaldBetrayalShoveIval.pause()
+            except Exception:
+                pass
+            self._oswaldBetrayalShoveIval = None
 
     def _onCorruptAttackDodged(self, corrupt=None):
         """Telegraph resolved into Shift/X dodge i-frames — ink sparkle juice."""

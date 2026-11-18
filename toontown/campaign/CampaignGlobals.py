@@ -886,11 +886,11 @@ OSWALD_BETRAYAL_CHASE_DELAY_SEC = 3.15
 OSWALD_BETRAYAL_CHASE_HP = 0
 OSWALD_BETRAYAL_CHASE_SPAWN_FORWARD = 7.5
 OSWALD_BETRAYAL_CHASE_TIP = (
-    'Oswald turns on you — Corrupted Oswald inbound!  |  '
+    'Oswald turns on you — betrayal lunge inbound!  |  '
     'F fight  |  Shift dodge')
 OSWALD_BETRAYAL_CHASE_BANNER = 'CORRUPTED OSWALD CHASE!'
 OSWALD_BETRAYAL_CHASE_MSG = (
-    'Oswald sheds the smile — chase him down and wash the stain!')
+    'Oswald sheds the smile — dodge the betrayal lunge and wash the stain!')
 OSWALD_BETRAYAL_CHASE_CLEAR_MSG = (
     "Oswald's stain is washed — purity holds for real this time!")
 # Tip lands slightly after spawn so the enemy is already fielded.

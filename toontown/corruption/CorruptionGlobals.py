@@ -97,21 +97,39 @@ ARCHETYPE_STATS = {
         'puddleLingerTickDamage': 1,
         'puddleLingerSlowFactor': 0.55,
     },
-    # Finale betrayal chase: trusted Oswald turns ink-corrupt — fast chase
-    # arena smack (not Overlord phase combat; not a full new campaign act).
+    # Finale betrayal chase: trusted Oswald turns ink-corrupt — distinct
+    # betrayal kit (lunge dash + close stain burst + shove), not smack reskin
+    # / crimson Ink Smudge. Not Overlord phase combat; not a full new act.
     ARCHETYPE_CORRUPT_OSWALD: {
         'name': 'Corrupted Oswald',
         'hpScale': 1.35,
         'defaultHp': 48,
         'chaseSpeed': 12.2,
-        'meleeRange': 4.8,
-        'attackHitRange': 6.0,
+        # Engage from mid-range so the betrayal lunge can rush the gap.
+        'meleeRange': 6.4,
+        'attackHitRange': 5.2,
+        'attackNearMissRange': 6.4,
         'attackDamage': 3,
-        'telegraphDelay': 0.42,
-        'attackCooldown': 1.45,
+        'telegraphDelay': 0.38,
+        'attackCooldown': 1.55,
         'actorScale': 1.18,
         # Crimson-shadow tint — reads as betrayal stain vs street purple ink.
         'actorTint': (0.42, 0.08, 0.14, 1.0),
+        # False-friend rush — dash then hit (default attackMove).
+        'attackMove': 'betrayal_lunge',
+        'lungeDashDist': 4.5,
+        'lungeHitRange': 5.2,
+        'lungeNearMissRange': 6.4,
+        'lungeDamage': 3,
+        # Close secondary — crimson stain burst AoE when already in his face.
+        'burstMeleeRange': 3.6,
+        'burstHitRange': 4.5,
+        'burstNearMissRange': 5.6,
+        'burstDamage': 4,
+        'burstTelegraphDelay': 0.32,
+        'burstCooldown': 1.25,
+        # Hit shove — knock the toon away (opposite Balloon Snare yank).
+        'shoveDist': 2.1,
     },
 }
 
@@ -1792,6 +1810,113 @@ def snareLashYankDelta(sx, sy, tx, ty, dist=None, stop=None):
 def snareLashYankPos(sx, sy, tx, ty, dist=None, stop=None):
     """Return (nx, ny) after applying :func:`snareLashYankDelta`."""
     ddx, ddy = snareLashYankDelta(sx, sy, tx, ty, dist=dist, stop=stop)
+    return (float(tx) + ddx, float(ty) + ddy)
+
+
+# ---------------------------------------------------------------------------
+# Corrupted Oswald betrayal attack kit — not a crimson Smudge smack reskin.
+#
+# Finale chase identity: false-friend ``betrayal_lunge`` (dash then hit) as
+# the default attackMove, close ``stain_burst`` AoE secondary when the toon
+# is already in his face, and a planar ``betrayal_shove`` knockback on hit
+# (opposite Balloon Snare yank). Gameplay kit — not cream FX deepen.
+# OSWALD_BETRAYAL_KIT_ENABLED = False restores legacy smack for Oswald.
+# Wired from DistributedCorruptToonAI.__beginAttack / __resolveOswald* /
+# thin OswaldBetrayalChase spawn tip. No keyblades / KH branding.
+# ---------------------------------------------------------------------------
+OSWALD_BETRAYAL_KIT_ENABLED = True
+OSWALD_BETRAYAL_LUNGE_ENABLED = True
+OSWALD_STAIN_BURST_SECONDARY_ENABLED = True
+OSWALD_BETRAYAL_SHOVE_ENABLED = True
+OSWALD_BETRAYAL_LUNGE_DASH = 4.5  # planar dash toward the toon on resolve
+OSWALD_BETRAYAL_LUNGE_STOP = 0.85  # never overshoot past this gap to the toon
+OSWALD_STAIN_BURST_MELEE_RANGE = 3.6  # pick burst when inside this engage
+OSWALD_BETRAYAL_SHOVE_DIST = 2.1  # planar knockback away from Oswald
+OSWALD_BETRAYAL_SHOVE_SEC = 0.12  # client hurt-react lerp (hackslash)
+
+
+def oswaldBurstMeleeRange(stats=None):
+    if stats and 'burstMeleeRange' in stats:
+        return max(0.5, float(stats['burstMeleeRange']))
+    return max(0.5, float(OSWALD_STAIN_BURST_MELEE_RANGE))
+
+
+def oswaldLungeDashDist(stats=None):
+    if stats and 'lungeDashDist' in stats:
+        return max(0.0, float(stats['lungeDashDist']))
+    return max(0.0, float(OSWALD_BETRAYAL_LUNGE_DASH))
+
+
+def oswaldShoveDist(stats=None):
+    if stats and 'shoveDist' in stats:
+        return max(0.0, float(stats['shoveDist']))
+    return max(0.0, float(OSWALD_BETRAYAL_SHOVE_DIST))
+
+
+def oswaldPickAttackMove(dist, stats=None):
+    """Choose Oswald ``betrayal_lunge`` vs close ``stain_burst``.
+
+    Lunge is the default attackMove (false-friend rush). Stain burst is the
+    close secondary when the toon is inside burstMeleeRange. Returns
+    ``betrayal_lunge`` when the kit or burst secondary is off.
+    """
+    if not OSWALD_BETRAYAL_KIT_ENABLED:
+        return 'smack'
+    if not OSWALD_STAIN_BURST_SECONDARY_ENABLED:
+        return 'betrayal_lunge'
+    if float(dist) <= oswaldBurstMeleeRange(stats):
+        return 'stain_burst'
+    return 'betrayal_lunge'
+
+
+def oswaldLungeDashPos(sx, sy, tx, ty, dash=None, stop=None):
+    """Planar Oswald position after dashing toward (tx, ty).
+
+    Advances up to ``dash`` but never closer than ``stop`` to the toon so the
+    lunge does not overshoot through them. Returns (sx, sy) if already inside
+    the stop gap or coincident.
+    """
+    if dash is None:
+        dash = OSWALD_BETRAYAL_LUNGE_DASH
+    if stop is None:
+        stop = OSWALD_BETRAYAL_LUNGE_STOP
+    dash = max(0.0, float(dash))
+    stop = max(0.0, float(stop))
+    sx = float(sx)
+    sy = float(sy)
+    dx = float(tx) - sx
+    dy = float(ty) - sy
+    planar = (dx * dx + dy * dy) ** 0.5
+    if planar <= stop or planar < 1e-6 or dash <= 0.0:
+        return (sx, sy)
+    step = min(dash, planar - stop)
+    if step <= 0.0:
+        return (sx, sy)
+    return (sx + dx / planar * step, sy + dy / planar * step)
+
+
+def oswaldBetrayalShoveDelta(sx, sy, tx, ty, dist=None):
+    """Planar (dx, dy) to add to toon at (tx, ty) to shove away from Oswald.
+
+    Opposite of :func:`snareLashYankDelta` — betrayal push, not string reel.
+    Returns (0.0, 0.0) when ``dist`` is zero. Coincident toons shove along +Y.
+    """
+    if dist is None:
+        dist = OSWALD_BETRAYAL_SHOVE_DIST
+    dist = max(0.0, float(dist))
+    if dist <= 0.0:
+        return (0.0, 0.0)
+    dx = float(tx) - float(sx)
+    dy = float(ty) - float(sy)
+    planar = (dx * dx + dy * dy) ** 0.5
+    if planar < 1e-6:
+        return (0.0, dist)
+    return (dx / planar * dist, dy / planar * dist)
+
+
+def oswaldBetrayalShovePos(sx, sy, tx, ty, dist=None):
+    """Return (nx, ny) after applying :func:`oswaldBetrayalShoveDelta`."""
+    ddx, ddy = oswaldBetrayalShoveDelta(sx, sy, tx, ty, dist=dist)
     return (float(tx) + ddx, float(ty) + ddy)
 
 
