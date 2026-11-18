@@ -251,40 +251,42 @@ PUNCHLINE_ACT_TIP_POP_SETTLE_SEC = 0.10
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.90, 1.0, 1.16, 0.07)
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 # Deepened cream hose settle after Punchline tip trust/fracture bounce
-# (#198 / #227 deepen). Juicier outward overshoot → rest → micro rebound
-# → rest so the Act 2 unease tip lands rubber-hose and reads juicier —
-# handoff cream edge settle rebound twin (#240) on the tip bar. Armed on
-# tipHose='punchline' only. Distinct from Silly almost-confess tip cream
-# hose settle (#232 — taller/longer primary overshoot, no tip rebound)
-# and Silly Overlord tip cream wash + aftershock deepen (#251 — wash
-# flecks/halo, not tip scale). PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED
-# = False drops this cream settle + rebound only (hose pop +
-# trust/fracture settle + cream wash remain). No keyblades / KH branding.
+# (#198 / #227 / #256 deepen). Juicier outward overshoot → rest → micro
+# rebound → rest past #256 so the Act 2 unease tip lands rubber-hose and
+# reads juicier — handoff cream edge settle rebound twin (#240/#271) on
+# the tip bar. Armed on tipHose='punchline' only. Distinct from Silly
+# almost-confess tip cream hose settle (#232/#279 — taller/longer primary
+# overshoot, no tip rebound) and Silly Overlord tip cream wash +
+# aftershock deepen (#251/#279 — wash flecks/halo, not tip scale).
+# PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = False drops this cream
+# settle + rebound only (hose pop + trust/fracture settle + cream wash
+# remain). No keyblades / KH branding.
 PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = True
-PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.08, 1.0, 1.12, 0.065)  # juicier than #227 (1.06/1.10/0.06)
-PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.10
-PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND = (1.03, 1.0, 1.05, 0.04)  # micro second bounce
-PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC = 0.06
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.10, 1.0, 1.15, 0.075)  # juicier than #256 (1.08/1.12/0.065)
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.11  # was 0.10 @ #256
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND = (1.035, 1.0, 1.06, 0.045)  # juicier micro bounce past #256; under betrayal
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC = 0.07  # was 0.06 @ #256
 
 # Soft cream wash pulse after Punchline Act 2 tip hose pop (#91).
 # Act-banner / trust wash grammar (#154/#145) — delayed two-beat aspect2d
 # veil on PlayEntry tipHose='punchline' path only. Soft under the tip bar;
 # cream / pastel only. A touch quieter / shorter than handoff wash (#141)
-# — tip lands without glitter hang (trust / act-banner wash twin). Loopy /
-# default tip hose stay wash-free; Silly tip wash lives in its own module.
+# — tip lands without glitter hang (trust / act-banner wash twin). Wash
+# delay tracks the juicier cream hose settle past #256. Loopy / default
+# tip hose stay wash-free; Silly tip wash lives in its own module.
 # Act-enter / trust / handoff / victory / finale washes live in their own
 # modules. PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only
 # (hose pop + trust settle + cream hose settle remain). No keyblades / KH
 # branding.
 PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = True
-PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.62  # after play; after cream hose settle + rebound
+PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.70  # after play; after cream hose settle + rebound past #256
 PUNCHLINE_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK = 0.12
-PUNCHLINE_ACT_TIP_CREAM_WASH_MID = 0.07
-PUNCHLINE_ACT_TIP_CREAM_WASH_IN_SEC = 0.07
-PUNCHLINE_ACT_TIP_CREAM_WASH_PULSE_SEC = 0.12
-PUNCHLINE_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.10
-PUNCHLINE_ACT_TIP_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
+PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK = 0.13  # was 0.12; soft veil rides juicier hose
+PUNCHLINE_ACT_TIP_CREAM_WASH_MID = 0.08  # was 0.07
+PUNCHLINE_ACT_TIP_CREAM_WASH_IN_SEC = 0.08  # was 0.07
+PUNCHLINE_ACT_TIP_CREAM_WASH_PULSE_SEC = 0.13  # was 0.12
+PUNCHLINE_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.12  # was 0.10
+PUNCHLINE_ACT_TIP_CREAM_WASH_OUT_SEC = 0.40  # soft settle, no glitter hang (was 0.36)
 # Above ink entry vignette (48); soft veil settle under tip bar.
 PUNCHLINE_ACT_TIP_CREAM_WASH_BIN = 49
 

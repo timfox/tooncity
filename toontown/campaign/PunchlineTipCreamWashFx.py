@@ -1,15 +1,17 @@
 """Rubber-hose cream wash pulse after Punchline Act 2 tip hose pop.
 
 Fullscreen soft cream veil that settles *after* Punchline Place entry tip
-hose pop (#91) — same PerfectDodgeCreamWashPulse / HitSparkCreamWashPulse /
+hose pop (#91) and deepened cream hose settle past #256 — same
+PerfectDodgeCreamWashPulse / HitSparkCreamWashPulse /
 ActBannerCreamWashPulse / OswaldTrustCreamWashPulse / HandoffCreamWashPulse
 / VictoryCreamWashPulse / FinaleRevealCreamWashPulse overlay grammar as a
 brief Act-2 tip settle beat. Soft under the tip bar; cream / pastel only
-(not ink). Wired from PlayEntry tipHose='punchline' path only. Loopy /
-default tip hose stay wash-free; Silly tip wash lives in
-SillyTipCreamWashFx; act-enter banner wash, trust / handoff / victory /
-finale-reveal wash live in their own modules. Client only. Toontown
-spiritual sequel — no keyblades / no KH branding.
+(not ink). Wash delay / peak ride the juicier tip hose settle. Wired from
+PlayEntry tipHose='punchline' path only. Loopy / default tip hose stay
+wash-free; Silly tip wash lives in SillyTipCreamWashFx; act-enter banner
+wash, trust / handoff / victory / finale-reveal wash live in their own
+modules. Client only. Toontown spiritual sequel — no keyblades / no KH
+branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4
@@ -52,23 +54,23 @@ class PunchlineTipCreamWashPulse(object):
             r, g, b = 1.0, 0.97, 0.82
 
         peak = float(getattr(
-            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK', 0.12))
+            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK', 0.13))
         mid = float(getattr(
-            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_MID', 0.07))
+            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_MID', 0.08))
         inSec = float(getattr(
-            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_IN_SEC', 0.07))
+            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_IN_SEC', 0.08))
         pulseSec = float(getattr(
-            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_PULSE_SEC', 0.12))
+            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_PULSE_SEC', 0.13))
         holdSec = float(getattr(
-            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_HOLD_SEC', 0.10))
+            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_HOLD_SEC', 0.12))
         outSec = float(getattr(
-            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_OUT_SEC', 0.36))
+            CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_OUT_SEC', 0.40))
         binSort = int(getattr(
             CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_BIN', 49))
         if delay is None:
             delay = float(getattr(
                 CampaignGlobals, 'PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC',
-                0.36))
+                0.70))
 
         try:
             cm = CardMaker('campaign-punchline-tip-cream-wash')
