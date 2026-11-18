@@ -1,12 +1,13 @@
 """Rubber-hose cream wash pulse after Smudge purple ink splash (hit only).
 
-Fullscreen soft cream veil that settles *after* SmudgeInkSplashFx (#75) on
-Ink Smudge hits — CorruptTelegraphCreamWashFx (#157) /
-OverlordHitCreamWashFx (#161) / CorruptSilhouetteCreamWashFx (#153) /
-CorruptDeathCreamWashFx (#119) overlay grammar as a brief street-hit settle
-beat against purple ink. Soft under world-space splash; cream / pastel only
-(not ink). Wired from DistributedCorruptToon hit reaction beside
-SmudgeInkSplash (hit path only — death keeps splash + death cream wash).
+Fullscreen soft cream veil that settles *after* SmudgeInkSplashFx (#75) +
+SmudgeHitCreamSplashFx cream splash/aftershock on Ink Smudge hits —
+CorruptTelegraphCreamWashFx (#157) / OverlordHitCreamWashFx (#161) /
+CorruptSilhouetteCreamWashFx (#153) / CorruptDeathCreamWashFx (#119)
+overlay grammar as a brief street-hit settle beat against purple ink. Soft
+under world-space splash; cream / pastel only (not ink). Wired from
+DistributedCorruptToon hit reaction beside SmudgeInkSplash +
+SmudgeHitCreamSplash (hit path only — death keeps splash + death cream wash).
 Client only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
 

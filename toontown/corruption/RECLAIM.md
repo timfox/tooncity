@@ -134,7 +134,8 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # plus squash/SFX so wind-ups read without a combat HUD; impact flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
 # Melee hits on Smudge flash SmudgeInkSplashFx (cheap purple ink splash)
-# then soft cream wash pulse (SmudgeHitCreamWashFx — overlord-hit /
+# then SmudgeHitCreamSplashFx (brief cream splash + delayed cream aftershock)
+# plus soft cream wash pulse (SmudgeHitCreamWashFx — overlord-hit /
 # telegraph / silhouette / death cream-wash grammar);
 # Smudge death layers splash with CorruptDeathPopFx for swarm readability.
 # Melee hits on Brute flash BruteSludgeSplashFx (cheap green sludge splash);
@@ -293,10 +294,12 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # Smudge: purple squash + ink-fist telegraph pop (SmudgeInkTelegraphFx)
 # + ink drip + cream warn flecks + pie whoosh SFX, then impact flash on hit.
 # Land F / LMB — cheap purple ink splash (SmudgeInkSplashFx) on each hit,
-# then soft cream wash pulse against purple ink (SmudgeHitCreamWashFx —
+# then SmudgeHitCreamSplashFx (brief cream splash + delayed cream aftershock)
+# plus soft cream wash pulse against purple ink (SmudgeHitCreamWashFx —
 # overlord-hit / telegraph / silhouette / death cream-wash grammar).
 # Hit path only; defeat layers a larger splash with CorruptDeathPopFx
-# (+ death cream wash). SMUDGE_HIT_CREAM_WASH_ENABLED = False drops wash only.
+# (+ death cream wash). SMUDGE_HIT_CREAM_SPLASH_ENABLED = False drops cream
+# splash + aftershock; SMUDGE_HIT_CREAM_WASH_ENABLED = False drops wash only.
 ```
 
 ## Sludge Brute spit / splash demo

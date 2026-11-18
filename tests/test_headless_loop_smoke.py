@@ -2333,6 +2333,39 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SmudgeHitCreamWashPulse', corrupt_src)
         self.assertIn('__playSmudgeHitCreamWash', corrupt_src)
 
+        # Smudge hit cream splash aftershock — deepen pack juice beside purple splash.
+        self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_SPLASH_ENABLED'))
+        self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_SPLASH_LOOK'))
+        self.assertTrue(hasattr(cg, 'SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED'))
+        self.assertIs(cg.SMUDGE_HIT_CREAM_SPLASH_ENABLED, True)
+        self.assertIs(cg.SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED, True)
+        smudge_cream_look = cg.SMUDGE_HIT_CREAM_SPLASH_LOOK
+        self.assertEqual(
+            smudge_cream_look.get('id'), 'smudge-hit-cream-splash')
+        self.assertGreater(int(smudge_cream_look.get('fleckCount', 0)), 0)
+        smudge_cream_id = str(smudge_cream_look.get('id', '')).lower()
+        self.assertNotIn('keyblade', smudge_cream_id)
+        self.assertNotIn('kingdom hearts', smudge_cream_id)
+        smudge_cream_fx_rel = 'toontown/corruption/SmudgeHitCreamSplashFx.py'
+        _assert_module_file(smudge_cream_fx_rel)
+        smudge_cream_fx_names = _class_and_func_names(
+            _module_ast(smudge_cream_fx_rel))
+        self.assertIn('SmudgeHitCreamSplash', smudge_cream_fx_names)
+        self.assertIn('smudgeHitCreamSplashLook', smudge_cream_fx_names)
+        smudge_cream_fx_methods = _class_method_names(
+            _module_ast(smudge_cream_fx_rel), 'SmudgeHitCreamSplash')
+        self.assertIn('play', smudge_cream_fx_methods)
+        self.assertIn('clear', smudge_cream_fx_methods)
+        self.assertIn('_buildAftershock', smudge_cream_fx_methods)
+        self.assertIn('SmudgeHitCreamSplash', corrupt_src)
+        self.assertIn('__playSmudgeHitCreamSplash', corrupt_src)
+        self.assertIn('__clearSmudgeHitCreamSplash', corrupt_src)
+        self.assertGreater(corrupt_src.count('__clearSmudgeHitCreamSplash'), 2)
+        smudge_reclaim_md = _read('toontown/corruption/RECLAIM.md')
+        smudge_corr_init = _read('toontown/corruption/__init__.py')
+        self.assertIn('SmudgeHitCreamSplashFx', smudge_reclaim_md)
+        self.assertIn('SmudgeHitCreamSplashFx', smudge_corr_init)
+
         # Dodge i-frame cream wash (#166 deepen) — stronger wash + aftershock
         # after first i-frame pulse so invuln windows read clearly.
         iframe_wash_rel = 'toontown/hackslash/DodgeIFrameCreamWashFx.py'
