@@ -12,6 +12,41 @@ POLLUTION_SCALE = 1000
 CORRUPT_TOON_DEFAULT_HP = 30
 CORRUPT_TOON_DEFAULT_NAME = 'Corrupt Toon'
 
+# Archetypes — Ink Smudge (default) vs Sludge Brute (tank + longer spit reach).
+ARCHETYPE_INK = 0
+ARCHETYPE_BRUTE = 1
+ARCHETYPE_STATS = {
+    ARCHETYPE_INK: {
+        'name': 'Ink Smudge',
+        'hpScale': 1.0,
+        'chaseSpeed': 9.0,
+        'meleeRange': 4.5,
+        'attackHitRange': 5.5,
+        'attackDamage': 2,
+        'telegraphDelay': 0.55,
+        'attackCooldown': 1.75,
+        'actorScale': 1.08,
+        'actorTint': (0.18, 0.06, 0.28, 1.0),
+    },
+    ARCHETYPE_BRUTE: {
+        'name': 'Sludge Brute',
+        'hpScale': 1.75,
+        'chaseSpeed': 5.2,
+        'meleeRange': 6.0,
+        'attackHitRange': 11.0,  # longer spit reach
+        'attackDamage': 4,
+        'telegraphDelay': 0.9,
+        'attackCooldown': 2.35,
+        'actorScale': 1.38,
+        'actorTint': (0.12, 0.28, 0.1, 1.0),
+    },
+}
+
+
+def archetypeStats(archetypeId):
+    return ARCHETYPE_STATS.get(
+        int(archetypeId), ARCHETYPE_STATS[ARCHETYPE_INK])
+
 # Defeating one corrupt toon reduces local pollution by this amount.
 # Slice 3 reclaim loop will tune pack sizes against this contribution.
 POLLUTION_PER_DEFEAT = 0.15

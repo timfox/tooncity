@@ -278,13 +278,22 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         rad = math.radians(heading)
         spawned = []
         for i in range(count):
+            # Mix Sludge Brutes into packs (every other after first) for variety.
+            archetype = CorruptionGlobals.ARCHETYPE_INK
+            if count > 1 and (i % 2 == 1):
+                archetype = CorruptionGlobals.ARCHETYPE_BRUTE
+            stats = CorruptionGlobals.archetypeStats(archetype)
             name = self._corruptName
-            if name and count > 1 and i > 0:
+            if archetype == CorruptionGlobals.ARCHETYPE_BRUTE:
+                name = stats.get('name', 'Sludge Brute')
+                if count > 1 and i > 1:
+                    name = '%s %s' % (name, (i // 2) + 1)
+            elif name and count > 1 and i > 0:
                 name = '%s %s' % (self._corruptName, i + 1)
             elif name is None and wave > 1:
                 name = 'Corrupt Wave %s' % wave
             corrupt = DistributedCorruptToonAI(
-                self.air, name=name, maxHp=hp)
+                self.air, name=name, maxHp=hp, archetype=archetype)
             # Fan packs slightly farther each wave so the street fills forward.
             offset = (
                 ReclaimGlobals.SPAWN_FORWARD
