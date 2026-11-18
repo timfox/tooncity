@@ -37,13 +37,30 @@ ARCHETYPE_STATS = {
         'name': 'Sludge Brute',
         'hpScale': 1.75,
         'chaseSpeed': 5.2,
-        'meleeRange': 6.0,
-        'attackHitRange': 11.0,  # longer spit reach
+        # Engage from hold-plant range so planted Brutes actually spit.
+        'meleeRange': 7.6,
+        # Land splash radius (projectile travel owns mid-range reach).
+        'attackHitRange': 3.5,
+        'attackNearMissRange': 5.0,
         'attackDamage': 4,
         'telegraphDelay': 0.9,
         'attackCooldown': 2.35,
         'actorScale': 1.38,
         'actorTint': (0.12, 0.28, 0.1, 1.0),
+        # Real spit projectile (not instant long-range smack) + close slam.
+        'attackMove': 'spit',
+        'spitMaxRange': 11.0,
+        'spitTravelSec': 0.32,
+        'spitTrailTickSec': 0.1,
+        'spitTrailRadius': 1.6,
+        'spitTrailDamage': 1,
+        # Tank secondary — heavy close slam when the toon is in their face.
+        'slamMeleeRange': 4.2,
+        'slamHitRange': 4.8,
+        'slamNearMissRange': 5.8,
+        'slamDamage': 5,
+        'slamTelegraphDelay': 0.55,
+        'slamCooldown': 2.0,
     },
     # Punchline zip-flier: fragile balloon that lashes with a rubber-hose string.
     ARCHETYPE_SNARE: {
@@ -181,7 +198,7 @@ GAGSTER_KITE_BAND = 1.4  # half-width comfort band around preferred
 GAGSTER_KITE_RETREAT_SPEED_SCALE = 1.2  # snappier backpedal than lob approach
 
 # Sludge Brute hold — plant once inside hold range; slow approach otherwise.
-BRUTE_HOLD_RANGE = 7.8  # stop chasing (spit-ready plant; near meleeRange 6.0)
+BRUTE_HOLD_RANGE = 7.8  # stop chasing (spit-ready plant; near meleeRange 7.6)
 BRUTE_HOLD_CHASE_SPEED_SCALE = 0.55  # sluggish close so tank doesn't race Snare
 
 # Balloon Snare flank — close via perpendicular offset, then engage for lash.
@@ -1490,10 +1507,119 @@ BRUTE_ATTACK_HIT_SFX_VOLUME = 0.8
 BRUTE_HIT_FLASH_COLOR = (0.45, 1.05, 0.35, 1.0)
 BRUTE_HIT_FLASH_PEAK = 0.62
 # Client-only ink blob that travels toward the local toon on spit hit.
+# Travel sec tracks AI BRUTE_SPIT_TRAVEL_SEC so AV flight matches projectile.
 BRUTE_SPIT_BLOB_COLOR = (0.18, 0.72, 0.22, 0.92)
 BRUTE_SPIT_BLOB_SCALE = 0.55
-BRUTE_SPIT_BLOB_TRAVEL = 0.28
+BRUTE_SPIT_BLOB_TRAVEL = 0.32
 BRUTE_SPIT_BLOB_Z = 2.4
+
+# ---------------------------------------------------------------------------
+# Sludge Brute spit projectile + slam secondary (gameplay identity).
+# Gap scan #4: was AV blob + longer __resolveSingleTargetHit smack — Punchline
+# pack read as tinted Smudge at AI level. BRUTE_SPIT_PROJECTILE_ENABLED = False
+# falls back to instant single-target spit smack; BRUTE_SLAM_SECONDARY_ENABLED
+# = False keeps spit-only. Not cream FX deepen.
+# ---------------------------------------------------------------------------
+BRUTE_SPIT_PROJECTILE_ENABLED = True
+BRUTE_SPIT_TRAVEL_SEC = 0.32
+BRUTE_SPIT_MAX_RANGE = 11.0
+BRUTE_SPIT_LAND_RADIUS = 3.5
+BRUTE_SPIT_TRAIL_TICK_SEC = 0.1
+BRUTE_SPIT_TRAIL_RADIUS = 1.6
+BRUTE_SPIT_TRAIL_DAMAGE = 1
+BRUTE_SLAM_SECONDARY_ENABLED = True
+BRUTE_SLAM_MELEE_RANGE = 4.2
+
+
+def bruteSpitTravelSec(stats=None):
+    """Seconds for spit projectile to travel origin → clamped aim."""
+    if stats and 'spitTravelSec' in stats:
+        return max(0.05, float(stats['spitTravelSec']))
+    return max(0.05, float(BRUTE_SPIT_TRAVEL_SEC))
+
+
+def bruteSpitMaxRange(stats=None):
+    """Planar max aim distance from Brute (projectile reach)."""
+    if stats and 'spitMaxRange' in stats:
+        return max(0.5, float(stats['spitMaxRange']))
+    return max(0.5, float(BRUTE_SPIT_MAX_RANGE))
+
+
+def bruteSpitLandRadius(stats=None):
+    """Splash radius at spit land (also default attackHitRange)."""
+    if stats and 'attackHitRange' in stats:
+        return max(0.5, float(stats['attackHitRange']))
+    return max(0.5, float(BRUTE_SPIT_LAND_RADIUS))
+
+
+def bruteSpitTrailTickSec(stats=None):
+    if stats and 'spitTrailTickSec' in stats:
+        return max(0.05, float(stats['spitTrailTickSec']))
+    return max(0.05, float(BRUTE_SPIT_TRAIL_TICK_SEC))
+
+
+def bruteSpitTrailRadius(stats=None):
+    if stats and 'spitTrailRadius' in stats:
+        return max(0.25, float(stats['spitTrailRadius']))
+    return max(0.25, float(BRUTE_SPIT_TRAIL_RADIUS))
+
+
+def bruteSpitTrailDamage(stats=None):
+    if stats and 'spitTrailDamage' in stats:
+        return max(1, int(stats['spitTrailDamage']))
+    return max(1, int(BRUTE_SPIT_TRAIL_DAMAGE))
+
+
+def bruteSpitAimPos(sx, sy, aimX, aimY, maxRange=None):
+    """Clamp spit aim XY to ``maxRange`` from origin (sx, sy).
+
+    Returns (lx, ly) on the origin→aim ray. Coincident / zero max → origin.
+    """
+    if maxRange is None:
+        maxRange = BRUTE_SPIT_MAX_RANGE
+    maxRange = max(0.0, float(maxRange))
+    sx = float(sx)
+    sy = float(sy)
+    dx = float(aimX) - sx
+    dy = float(aimY) - sy
+    dist = (dx * dx + dy * dy) ** 0.5
+    if dist < 1e-6 or maxRange <= 0.0:
+        return (sx, sy)
+    if dist <= maxRange:
+        return (sx + dx, sy + dy)
+    return (sx + dx / dist * maxRange, sy + dy / dist * maxRange)
+
+
+def bruteSpitPosAtFrac(ox, oy, lx, ly, frac):
+    """Planar spit position at flight fraction ``frac`` in [0, 1]."""
+    t = max(0.0, min(1.0, float(frac)))
+    return (float(ox) + (float(lx) - float(ox)) * t,
+            float(oy) + (float(ly) - float(oy)) * t)
+
+
+def isInsideBruteSpitSplash(dx, dy, radius):
+    """True when planar offset is inside a spit splash / trail circle."""
+    r = max(0.0, float(radius))
+    return (float(dx) * float(dx) + float(dy) * float(dy)) <= (r * r)
+
+
+def bruteSlamMeleeRange(stats=None):
+    if stats and 'slamMeleeRange' in stats:
+        return max(0.5, float(stats['slamMeleeRange']))
+    return max(0.5, float(BRUTE_SLAM_MELEE_RANGE))
+
+
+def brutePickAttackMove(dist, stats=None):
+    """Choose Brute ``spit`` vs close ``slam`` from planar distance.
+
+    Spit is the default attackMove; slam is the tank secondary when the toon
+    is inside slamMeleeRange. Returns ``spit`` when slam secondary is off.
+    """
+    if not BRUTE_SLAM_SECONDARY_ENABLED:
+        return 'spit'
+    if float(dist) <= bruteSlamMeleeRange(stats):
+        return 'slam'
+    return 'spit'
 
 # Sludge Brute telegraph spit-gob pop — short rubber-hose green spit charge on
 # announceAttackTelegraph (client only). Distinct from hit-time BRUTE_SPIT_BLOB_*

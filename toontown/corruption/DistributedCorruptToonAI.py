@@ -18,6 +18,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     AI (Gagster kite, Brute hold, Snare flank) so wave-script pack intent
     survives after combat starts — not all nearest-chase.
 
+    Sludge Brute fires a traveling spit projectile (trail + land splash) from
+    hold range, with a close slam secondary — not an instant long-range smack.
+
     Air-juggle hang stuns chase/attack on the AI so cancel→slam is not just
     client juice under multi-enemy pressure.
     """
@@ -45,6 +48,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._stats = stats
         self._attackMove = 'smack'
         self._puddleXY = None
+        self._spitAimXY = None
+        self._spitProjectile = None
         # Absolute frame-time until which chase/attack stay paused (juggle hang).
         self._juggleHangStunUntil = 0.0
         self._puddleLinger = None
@@ -129,6 +134,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return
         self._attacking = False
         self._puddleXY = None
+        self._spitAimXY = None
+        self.__clearBruteSpitProjectile()
         try:
             taskMgr.remove(self.uniqueName('corrupt-attack'))
         except Exception:
@@ -233,6 +240,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return
         self._attacking = False
         self._puddleXY = None
+        self._spitAimXY = None
+        self.__clearBruteSpitProjectile()
         try:
             taskMgr.remove(self.uniqueName('corrupt-attack'))
         except Exception:
@@ -291,6 +300,14 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             rainEngage = float(self._stats.get(
                 'meleeRange', CorruptionGlobals.MELEE_RANGE))
             return max(slamEngage, rainEngage)
+        # Sludge Brute: spit from hold-plant range (meleeRange); slam is closer.
+        if (CorruptionGlobals.normalizeArchetype(self.archetype)
+                == CorruptionGlobals.ARCHETYPE_BRUTE):
+            spitEngage = float(self._stats.get(
+                'meleeRange', CorruptionGlobals.MELEE_RANGE))
+            slamEngage = float(self._stats.get(
+                'slamMeleeRange', spitEngage))
+            return max(spitEngage, slamEngage)
         return float(self._stats.get('meleeRange', CorruptionGlobals.MELEE_RANGE))
 
     def __findNearestToon(self):
@@ -408,11 +425,19 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def __beginAttack(self, target):
         self._attacking = True
         self._targetId = target.doId
+        self.__clearBruteSpitProjectile()
         if self._isOverlord():
             move = self.__pickOverlordMove(target)
             self._puddleXY = None
+            self._spitAimXY = None
         else:
             move = str(self._stats.get('attackMove', 'smack') or 'smack')
+            # Sludge Brute: spit by default; slam when the toon is in their face.
+            if (CorruptionGlobals.normalizeArchetype(self.archetype)
+                    == CorruptionGlobals.ARCHETYPE_BRUTE
+                    and move == 'spit'):
+                move = CorruptionGlobals.brutePickAttackMove(
+                    self.__planarDist(target), self._stats)
             # Gunk Gagster: snapshot target XY at wind-up so the puddle lands
             # where they stood — dodge out during telegraph to escape the trap.
             if move == 'gag_lob':
@@ -420,8 +445,19 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                     self._puddleXY = (float(target.getX()), float(target.getY()))
                 except Exception:
                     self._puddleXY = (float(self.getX()), float(self.getY()))
+                self._spitAimXY = None
+            elif move == 'spit':
+                # Snapshot aim so the spit flies where they stood at wind-up.
+                try:
+                    self._spitAimXY = (
+                        float(target.getX()), float(target.getY()))
+                except Exception:
+                    self._spitAimXY = (
+                        float(self.getX()), float(self.getY()))
+                self._puddleXY = None
             else:
                 self._puddleXY = None
+                self._spitAimXY = None
         self._attackMove = move
         self.sendUpdate('announceAttackTelegraph', [])
         delay = self.__telegraphDelayForMove(move)
@@ -493,15 +529,147 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return self.__resolveOverlordRain()
         if move == 'gag_lob':
             return self.__resolveGagsterPuddle()
+        if move == 'spit':
+            return self.__resolveBruteSpit()
         return self.__resolveSingleTargetHit(move)
+
+    def __resolveBruteSpit(self):
+        """Launch a traveling spit projectile — not an instant long-range smack.
+
+        Aim XY was snapshotted at wind-up (dodge sideways / out of the land
+        splash during flight). Trail ticks chip along the path; land resolves
+        splash damage and announceAttackHit. Falls back to single-target when
+        projectile is disabled or aim snapshot failed.
+        """
+        if not getattr(
+                CorruptionGlobals, 'BRUTE_SPIT_PROJECTILE_ENABLED', True):
+            return self.__resolveSingleTargetHit('spit')
+        aim = self._spitAimXY
+        self._spitAimXY = None
+        if aim is None:
+            return self.__resolveSingleTargetHit('spit')
+        try:
+            ox = float(self.getX())
+            oy = float(self.getY())
+        except Exception:
+            return Task.done
+        maxRange = CorruptionGlobals.bruteSpitMaxRange(self._stats)
+        lx, ly = CorruptionGlobals.bruteSpitAimPos(
+            ox, oy, aim[0], aim[1], maxRange=maxRange)
+        travel = CorruptionGlobals.bruteSpitTravelSec(self._stats)
+        trailTick = CorruptionGlobals.bruteSpitTrailTickSec(self._stats)
+        landRadius = CorruptionGlobals.bruteSpitLandRadius(self._stats)
+        _, nearMiss = self.__hitRangesForMove('spit')
+        self._spitProjectile = {
+            'ox': ox,
+            'oy': oy,
+            'lx': lx,
+            'ly': ly,
+            't0': globalClock.getFrameTime(),  # noqa: F821
+            'travel': travel,
+            'trailRadius': CorruptionGlobals.bruteSpitTrailRadius(self._stats),
+            'trailDamage': CorruptionGlobals.bruteSpitTrailDamage(self._stats),
+            'landRadius': landRadius,
+            'nearMiss': float(nearMiss),
+            'landDamage': self.__damageForMove('spit'),
+            'trailHitIds': set(),
+            'anyHit': False,
+            'anyDodge': False,
+        }
+        taskMgr.doMethodLater(
+            trailTick,
+            self.__tickBruteSpitProjectile,
+            self.uniqueName('brute-spit-projectile'))
+        return Task.done
+
+    def __tickBruteSpitProjectile(self, task):
+        """Advance spit along origin→land; trail chip, then land splash."""
+        spit = getattr(self, '_spitProjectile', None)
+        if spit is None or self.isDeleted() or self._defeated:
+            self._spitProjectile = None
+            return Task.done
+        now = globalClock.getFrameTime()  # noqa: F821
+        travel = max(0.05, float(spit['travel']))
+        elapsed = now - float(spit['t0'])
+        frac = elapsed / travel
+        ox, oy = spit['ox'], spit['oy']
+        lx, ly = spit['lx'], spit['ly']
+        if frac < 1.0:
+            px, py = CorruptionGlobals.bruteSpitPosAtFrac(
+                ox, oy, lx, ly, frac)
+            self.__applyBruteSpitSplash(
+                spit, px, py,
+                radius=float(spit['trailRadius']),
+                damage=int(spit['trailDamage']),
+                nearMiss=float(spit['nearMiss']),
+                trailOnly=True)
+            return Task.again
+        # Land — full spit splash at clamped aim.
+        self.__applyBruteSpitSplash(
+            spit, lx, ly,
+            radius=float(spit['landRadius']),
+            damage=int(spit['landDamage']),
+            nearMiss=float(spit['nearMiss']),
+            trailOnly=False)
+        if spit['anyHit']:
+            self.sendUpdate('announceAttackHit', [])
+        elif spit['anyDodge']:
+            self.sendUpdate('announceAttackDodged', [])
+        self._spitProjectile = None
+        return Task.done
+
+    def __applyBruteSpitSplash(self, spit, px, py, radius, damage,
+                               nearMiss, trailOnly):
+        """Damage / dodge-stamp toons inside a spit trail or land splash."""
+        now = globalClock.getFrameTime()  # noqa: F821
+        trailIds = spit['trailHitIds']
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - float(px)
+                dy = float(target.getY()) - float(py)
+                doId = int(getattr(target, 'doId', 0) or 0)
+            except Exception:
+                continue
+            dist = math.sqrt(dx * dx + dy * dy)
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            iframes = now < iframeUntil
+            inSplash = CorruptionGlobals.isInsideBruteSpitSplash(
+                dx, dy, radius)
+            if iframes and (inSplash or dist <= max(radius, nearMiss)):
+                spit['anyDodge'] = True
+                continue
+            if not inSplash:
+                continue
+            if trailOnly:
+                if doId and doId in trailIds:
+                    continue
+                if doId:
+                    trailIds.add(doId)
+            try:
+                target.takeDamage(int(damage))
+                spit['anyHit'] = True
+            except Exception:
+                self.notify.debug(
+                    'brute spit takeDamage failed on av %s' % getattr(
+                        target, 'doId', '?'))
+
+    def __clearBruteSpitProjectile(self):
+        self._spitProjectile = None
+        self._spitAimXY = None
+        try:
+            taskMgr.remove(self.uniqueName('brute-spit-projectile'))
+        except Exception:
+            pass
 
     def __resolveGagsterPuddle(self):
         """Teal gag-lob puddle — AoE at the wind-up snapshot, then linger.
 
-        Distinct from Smudge/Brute/Snare single-target smack and Overlord rain
-        (self-centered). Players who dodge out of the lob zone during telegraph
-        escape the land hit; the puddle then leaves a short sludge hazard that
-        ticks DoT / stamps slow while anyone stays inside.
+        Distinct from Smudge/Snare single-target smack, Brute traveling spit,
+        and Overlord rain (self-centered). Players who dodge out of the lob
+        zone during telegraph escape the land hit; the puddle then leaves a
+        short sludge hazard that ticks DoT / stamps slow while anyone stays
+        inside.
         """
         puddle = self._puddleXY
         self._puddleXY = None
@@ -729,6 +897,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._defeated = True
         self._attacking = False
         self._juggleHangStunUntil = 0.0
+        self.__clearBruteSpitProjectile()
         taskMgr.remove(self.uniqueName('corrupt-ai'))
         taskMgr.remove(self.uniqueName('corrupt-attack'))
         # Keep linger sludge armed through the defeat delete delay so a
@@ -750,6 +919,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     def delete(self):
         self.__clearGagsterPuddleLinger()
+        self.__clearBruteSpitProjectile()
         taskMgr.remove(self.uniqueName('corrupt-ai'))
         taskMgr.remove(self.uniqueName('corrupt-attack'))
         taskMgr.remove(self.uniqueName('corrupt-toon-delete'))

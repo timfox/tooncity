@@ -203,6 +203,10 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         oswald = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_CORRUPT_OSWALD]
         self.assertEqual(oswald.get('name'), 'Corrupted Oswald')
         self.assertGreater(float(oswald.get('chaseSpeed', 0)), 8.0)
+        # Brute hold still plants; spit projectile kit stays armed beside role AI.
+        brute = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_BRUTE]
+        self.assertEqual(brute.get('attackMove'), 'spit')
+        self.assertTrue(self.cg.BRUTE_SPIT_PROJECTILE_ENABLED)
 
     def test_ai_role_move_wiring(self):
         rel = 'toontown/corruption/DistributedCorruptToonAI.py'
