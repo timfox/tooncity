@@ -3,9 +3,12 @@
 Cheap world-space CardMaker juice for swarm readability — which Smudge got
 tagged / popped stays scannable in a pack. Composes palette / motion cues
 from SmudgeInkTelegraphFx (purple fist/smear), CorruptDeathPopFx (radial
-flecks), and IdleInkDripFx (soft falling drip). Wired from
-DistributedCorruptToon hit reaction + announceDefeat for ARCHETYPE_INK only.
-Toontown spiritual sequel only — no keyblades / no KH branding.
+flecks), and IdleInkDripFx (soft falling drip). Hit path also arms
+SmudgeHitCreamWashFx (soft cream wash pulse — cream/pastel contrast against
+purple ink; overlord-hit / telegraph / silhouette / death cream-wash
+grammar). Wired from DistributedCorruptToon hit reaction + announceDefeat
+for ARCHETYPE_INK only. Toontown spiritual sequel only — no keyblades /
+no KH branding.
 """
 
 from math import cos, pi, sin

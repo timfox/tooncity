@@ -276,6 +276,8 @@ SMUDGE_TELEGRAPH_INK_LOOK = {
 # readability (client only). Composes with SmudgeInkTelegraphFx / CorruptDeathPopFx
 # / IdleInkDripFx palettes via SmudgeInkSplashFx.smudgeInkSplashLook. Hit is the
 # cheap pack-scan cue; death layers a slightly larger splash with DeathPop.
+# Hit path also arms SmudgeHitCreamWashFx (soft cream wash — see
+# SMUDGE_HIT_CREAM_WASH_* below).
 SMUDGE_INK_SPLASH_LOOK = {
     'hit': {
         'id': 'smudge-hit-splash',
@@ -541,6 +543,40 @@ OVERLORD_HIT_CREAM_WASH_LOOK = {
     'holdSec': OVERLORD_HIT_CREAM_WASH_HOLD_SEC,
     'outSec': OVERLORD_HIT_CREAM_WASH_OUT_SEC,
     'binSort': OVERLORD_HIT_CREAM_WASH_BIN,
+}
+
+# Soft cream wash pulse after Smudge purple ink splash (hit only) —
+# aspect2d veil after SmudgeInkSplashFx (#75) smack (client only).
+# Matches OverlordHitCreamWashFx (#161) / CorruptTelegraphCreamWashFx (#157)
+# / CorruptSilhouetteCreamWashFx (#153) / CorruptDeathCreamWashFx (#119)
+# two-beat grammar. Delay composed via SmudgeHitCreamWashFx.smudgeHitCreamWashLook
+# → smudgeInkSplashLook('hit'). Soft cream/pastel contrast against purple ink.
+# SMUDGE_HIT_CREAM_WASH_ENABLED = False drops wash only (purple splash stays).
+# Death path keeps splash + death cream wash. Street Smudge only (not Overlord).
+SMUDGE_HIT_CREAM_WASH_ENABLED = True
+SMUDGE_HIT_CREAM_WASH_DELAY_SEC = 0.13  # fallback; look prefers splash compose
+SMUDGE_HIT_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+SMUDGE_HIT_CREAM_WASH_PEAK = 0.07  # quieter than death (0.14) / melee (0.10) /
+# overlord hit (0.08); above telegraph (0.065) so Smudge hit reads vs purple ink
+SMUDGE_HIT_CREAM_WASH_MID = 0.04
+SMUDGE_HIT_CREAM_WASH_IN_SEC = 0.06
+SMUDGE_HIT_CREAM_WASH_PULSE_SEC = 0.10
+SMUDGE_HIT_CREAM_WASH_HOLD_SEC = 0.08
+SMUDGE_HIT_CREAM_WASH_OUT_SEC = 0.38
+SMUDGE_HIT_CREAM_WASH_BIN = 40  # soft veil under purple splash (45)
+SMUDGE_HIT_CREAM_WASH_LOOK = {
+    'id': 'smudge-hit-cream-wash',
+    # delaySec composed with smudgeInkSplashLook('hit') when played.
+    'delaySec': SMUDGE_HIT_CREAM_WASH_DELAY_SEC,
+    'delayScale': 0.72,
+    'color': SMUDGE_HIT_CREAM_WASH_COLOR,
+    'peak': SMUDGE_HIT_CREAM_WASH_PEAK,
+    'mid': SMUDGE_HIT_CREAM_WASH_MID,
+    'inSec': SMUDGE_HIT_CREAM_WASH_IN_SEC,
+    'pulseSec': SMUDGE_HIT_CREAM_WASH_PULSE_SEC,
+    'holdSec': SMUDGE_HIT_CREAM_WASH_HOLD_SEC,
+    'outSec': SMUDGE_HIT_CREAM_WASH_OUT_SEC,
+    'binSort': SMUDGE_HIT_CREAM_WASH_BIN,
 }
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
 ATTACK_HIT_FLASH_PEAK = 0.55
