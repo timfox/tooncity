@@ -2,7 +2,7 @@
 """Behavioral headless tests for further-deepened wave-clear cream sparkle.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-WAVE_CLEAR_CREAM_SPARKLE / AFTERSHOCK tunables past #229, rubber-hose
+WAVE_CLEAR_CREAM_SPARKLE / AFTERSHOCK tunables past #253, rubber-hose
 (non-KH) copy, and AST hooks on WaveClearCreamWashFx + shimmer hold wiring.
 Distinct from secured-lock green sting (#243) and purity-complete meter hose
 settle cream (#248).
@@ -84,21 +84,21 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
     def setUpClass(cls):
         cls.rg = _load_reclaim_globals()
 
-    def test_sparkle_tunables_deepened_past_229(self):
+    def test_sparkle_tunables_deepened_past_253(self):
         rg = self.rg
         self.assertIs(rg.WAVE_CLEAR_CREAM_SPARKLE_ENABLED, True)
         self.assertIs(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_ENABLED, True)
-        # Juicier than #229 deepen (9 / 0.36 / 1.22 / aftershock 4).
-        self.assertGreaterEqual(rg.WAVE_CLEAR_CREAM_SPARKLE_COUNT, 10)
-        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_RISE), 0.38)
-        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_SEC), 0.38)
-        self.assertGreater(float(rg.WAVE_CLEAR_CREAM_SPARKLE_POP), 1.22)
-        self.assertGreaterEqual(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT, 5)
+        # Juicier than #253 deepen (11 / 0.42 / 1.30 / aftershock 5 / halo 1.18).
+        self.assertGreaterEqual(rg.WAVE_CLEAR_CREAM_SPARKLE_COUNT, 12)
+        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_RISE), 0.44)
+        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_SEC), 0.42)
+        self.assertGreater(float(rg.WAVE_CLEAR_CREAM_SPARKLE_POP), 1.30)
+        self.assertGreaterEqual(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT, 6)
         self.assertGreaterEqual(
-            float(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC), 0.32)
+            float(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC), 0.36)
         self.assertTrue(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_ENABLED)
         self.assertGreaterEqual(
-            float(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK), 1.15)
+            float(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK), 1.20)
         # Still quieter than full-purity StreetSparkle horizon payoff.
         self.assertLess(
             rg.WAVE_CLEAR_CREAM_SPARKLE_COUNT, rg.STREET_SPARKLE_COUNT)
@@ -157,7 +157,7 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
         self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_POP', src)
         self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK', src)
         self.assertIn('reclaim-wave-clear-cream-sparkle', src)
-        self.assertIn('#229', src)
+        self.assertIn('#253', src)
         lower = src.lower()
         self.assertTrue(
             'no keyblade' in lower or 'no kh' in lower,
@@ -169,7 +169,7 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
         src = _read('toontown/reclaim/WaveClearCreamShimmerFx.py')
         self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK', src)
         self.assertIn('WaveClearCreamWashPulse', src)
-        self.assertIn('#229', src)
+        self.assertIn('#253', src)
         lower = src.lower()
         self.assertTrue(
             'no keyblade' in lower or 'no kh' in lower,
@@ -184,7 +184,7 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
         self.assertGreater(idx, 0)
         snip = rg_src[max(0, idx - 700):idx + 200].lower()
         self.assertIn('no kh', snip)
-        self.assertIn('#229', snip)
+        self.assertIn('#253', snip)
         self.assertTrue(
             '#243' in snip or 'lock' in snip,
             msg='sparkle comment should stay distinct from lock celebration')
