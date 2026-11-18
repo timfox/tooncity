@@ -135,6 +135,18 @@ def _class_and_func_names(tree: ast.AST) -> set:
     return names
 
 
+def _class_method_names(tree: ast.AST, class_name: str) -> set:
+    """Method / nested func names defined directly on a top-level class."""
+    for node in getattr(tree, 'body', []):
+        if isinstance(node, ast.ClassDef) and node.name == class_name:
+            names = set()
+            for item in node.body:
+                if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    names.add(item.name)
+            return names
+    raise AssertionError('class %r not found' % class_name)
+
+
 def _toplevel_assign_names(tree: ast.AST) -> set:
     """Names bound by top-level Assign / AnnAssign (any RHS shape)."""
     names = set()
@@ -282,6 +294,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             'toontown/hackslash/HitStopFx.py': {'HitStopFx'},
             'toontown/hackslash/SoftLockReticleFx.py': {'SoftLockReticleFx'},
             'toontown/hackslash/DodgeTrailFx.py': {'DodgeTrailFx'},
+            'toontown/hackslash/DodgePerfectFx.py': {'DodgePerfectFx'},
         }
         for rel, expected in hack_modules.items():
             _assert_module_file(rel)
@@ -301,12 +314,54 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 tunable, config_names,
                 msg='HackSlashConfig missing soft-lock FOV tunable %s' % tunable)
 
+        # Soft-lock cream pulse ring on acquire (#92).
+        for tunable in (
+                'SOFT_LOCK_PULSE_RING_ENABLED',
+                'SOFT_LOCK_PULSE_RING_HALF',
+                'SOFT_LOCK_PULSE_RING_START',
+                'SOFT_LOCK_PULSE_RING_PEAK',
+                'SOFT_LOCK_PULSE_RING_SEC',
+                'SOFT_LOCK_PULSE_RING_COLOR',
+                'SOFT_LOCK_PULSE_RING_END',
+                'SOFT_LOCK_PULSE_RING_BIN'):
+            self.assertIn(
+                tunable, config_names,
+                msg='HackSlashConfig missing soft-lock pulse ring %s' % tunable)
+
+        reticle_tree = _module_ast('toontown/hackslash/SoftLockReticleFx.py')
+        reticle_methods = _class_method_names(reticle_tree, 'SoftLockReticleFx')
+        self.assertIn('_playPulseRing', reticle_methods)
+
+        # Perfect-dodge cream star aftershock (#89).
+        for tunable in (
+                'PERFECT_DODGE_CREAM_AFTERSHOCK_ENABLED',
+                'PERFECT_DODGE_CREAM_AFTERSHOCK_DELAY_SEC',
+                'PERFECT_DODGE_CREAM_AFTERSHOCK_STAR_COUNT',
+                'PERFECT_DODGE_CREAM_AFTERSHOCK_STAR_COLOR',
+                'PERFECT_DODGE_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'PERFECT_DODGE_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                tunable, config_names,
+                msg='HackSlashConfig missing perfect-dodge aftershock %s' % tunable)
+
+        dodge_perfect_tree = _module_ast('toontown/hackslash/DodgePerfectFx.py')
+        dodge_perfect_methods = _class_method_names(
+            dodge_perfect_tree, 'DodgePerfectFx')
+        self.assertIn('_buildAftershock', dodge_perfect_methods)
+        self.assertIn('play', dodge_perfect_methods)
+
+        melee_src = _read('toontown/hackslash/MeleeCombat.py')
+        self.assertIn('DodgePerfectFx', melee_src)
+        self.assertIn('self._dodgePerfect', melee_src)
+
         # Re-exports keep client import paths stable.
         hack_init = _read('toontown/hackslash/__init__.py')
-        for symbol in ('HitStopFx', 'SoftLockReticleFx', 'DodgeTrailFx'):
+        for symbol in (
+                'HitStopFx', 'SoftLockReticleFx', 'DodgeTrailFx',
+                'DodgePerfectFx'):
             self.assertIn(symbol, hack_init)
 
-        # --- reclaim: street wash + wave-clear cream burst ---
+        # --- reclaim: street wash + wave-clear cream burst + purity shimmer ---
         _assert_module_file('toontown/reclaim/StreetColorWash.py')
         wash_names = _class_and_func_names(
             _module_ast('toontown/reclaim/StreetColorWash.py'))
@@ -329,7 +384,25 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 cream_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % cream_key)
 
-        # --- corruption: idle ink drip + overlord phase ink rain ---
+        # Purity meter fill cream shimmer (#90).
+        _assert_module_file('toontown/reclaim/PurityMeterHud.py')
+        purity_tree = _module_ast('toontown/reclaim/PurityMeterHud.py')
+        purity_names = _class_and_func_names(purity_tree)
+        self.assertIn('PurityMeterHud', purity_names)
+        purity_methods = _class_method_names(purity_tree, 'PurityMeterHud')
+        self.assertIn('_spawnFillShimmerFlecks', purity_methods)
+        for shimmer_key in (
+                'PURITY_METER_FILL_SHIMMER_ENABLED',
+                'PURITY_METER_FILL_SHIMMER_COUNT',
+                'PURITY_METER_FILL_SHIMMER_SIZE',
+                'PURITY_METER_FILL_SHIMMER_COLOR',
+                'PURITY_METER_FILL_SHIMMER_END_COLOR',
+                'PURITY_METER_FILL_SHIMMER_BIN'):
+            self.assertIn(
+                shimmer_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % shimmer_key)
+
+        # --- corruption: idle ink drip + overlord phase ink rain + magenta splash ---
         _assert_module_file('toontown/corruption/IdleInkDripFx.py')
         idle_names = _class_and_func_names(
             _module_ast('toontown/corruption/IdleInkDripFx.py'))
@@ -342,6 +415,13 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('OverlordPhaseInkRain', rain_names)
         self.assertIn('overlordInkRainLook', rain_names)
 
+        # Overlord magenta ink splash on hit/death (#88).
+        splash_rel = 'toontown/corruption/OverlordMagentaInkSplashFx.py'
+        _assert_module_file(splash_rel)
+        splash_names = _class_and_func_names(_module_ast(splash_rel))
+        self.assertIn('OverlordMagentaInkSplash', splash_names)
+        self.assertIn('overlordMagentaInkSplashLook', splash_names)
+
         cg = self.corruption
         self.assertTrue(
             hasattr(cg, 'OVERLORD_PHASE_INK_RAIN_LOOK'),
@@ -351,6 +431,43 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertTrue(
             hasattr(cg, 'IDLE_INK_DRIP_LOOK'),
             msg='CorruptionGlobals missing IDLE_INK_DRIP_LOOK')
+        self.assertTrue(
+            hasattr(cg, 'OVERLORD_MAGENTA_INK_SPLASH_LOOK'),
+            msg='CorruptionGlobals missing OVERLORD_MAGENTA_INK_SPLASH_LOOK')
+        splash_look = cg.OVERLORD_MAGENTA_INK_SPLASH_LOOK
+        self.assertIn('hit', splash_look)
+        self.assertIn('death', splash_look)
+        self.assertEqual(splash_look['hit'].get('id'), 'overlord-hit-splash')
+        self.assertEqual(splash_look['death'].get('id'), 'overlord-death-splash')
+
+        corrupt_src = _read('toontown/corruption/DistributedCorruptToon.py')
+        self.assertIn('OverlordMagentaInkSplash', corrupt_src)
+        self.assertIn('__playOverlordMagentaInkSplash', corrupt_src)
+
+        # --- campaign: Punchline Act 2 tip hose pop (#91) ---
+        campaign_names = _toplevel_assign_names(self.campaign_tree)
+        for tip_key in (
+                'PUNCHLINE_ACT_TIP_POP_SQUASH',
+                'PUNCHLINE_ACT_TIP_POP_STRETCH',
+                'PUNCHLINE_ACT_TIP_POP_SETTLE_SEC',
+                'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT',
+                'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC'):
+            self.assertIn(
+                tip_key, campaign_names,
+                msg='CampaignGlobals missing %s' % tip_key)
+
+        acts_node = _toplevel_value(self.campaign_tree, 'ACTS')
+        acts = [_literal(elt) for elt in acts_node.elts]
+        punchline = next(a for a in acts if a.get('id') == 'punchline')
+        entry_tip = punchline.get('entryTip') or ''
+        self.assertIn('Sludge Brutes', entry_tip)
+        self.assertIn('Balloon Snares', entry_tip)
+        self.assertIn('Oswald', entry_tip)
+
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn('PUNCHLINE_ACT_TIP_POP_SQUASH', play_src)
+        self.assertIn('_tipHosePopInterval', play_src)
+        self.assertIn('playEntryTipHosePop', play_src)
 
 
 def main() -> int:
