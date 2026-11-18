@@ -203,6 +203,13 @@ class FinalePhaseFxClient(DirectObject):
             handoffOwnsCopy = True
         except Exception:
             handoffOwnsCopy = False
+        # Chase tip client mirrors AI spawn delay after betrayal.
+        try:
+            from toontown.campaign.OswaldBetrayalChase import (
+                ensureOswaldBetrayalChaseClient)
+            ensureOswaldBetrayalChaseClient()
+        except Exception:
+            pass
         if handoffOwnsCopy:
             messenger.send('oswaldRevealBanner', [title])  # noqa: F821
         else:
