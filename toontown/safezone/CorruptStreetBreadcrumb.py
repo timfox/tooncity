@@ -6,17 +6,19 @@ Players notice ink-stained streets from the hub without magic words.
 
 After the appear hose-pop, placemarkers briefly pulse / cream-highlight
 (#211), deepened with a juicier cream mid-settle + soft local cream
-halo (#230), then deepened again on that cream rim (juicier peak/mid +
-soft mid hold + micro rebound) so discoverability reads punchier
+halo (#230), then cream rim deepen (#252: juicier peak/mid + soft mid
+hold + micro rebound), then deepened again past #252 (brighter halo /
+longer mid hold / punchier rebound) so discoverability reads punchier
 without KH branding — distinct from fog edge cream rim deepen (#250),
-tunnel cream deepen (#230 peak→mid→rest), and birds-return wash (#226).
-Separately, a short ink crumb trail at the tunnel mouth pulses on a
-faster stagger (#216), deepened with a juicier cream mid-settle + soft
-cream pip blot (#241), then deepened again on that cream pip (juicier
-peak/mid + soft mid hold + micro rebound) so polluted streets read
-juicier from the playground side — distinct from placemarker cream
-rim deepen (#252), fog edge cream rim deepen (#250), tunnel cream
-deepen (#230), and birds-return fullscreen wash (#226).
+tunnel cream deepen (#230 peak→mid→rest), #252 rim deepen alone, and
+birds-return wash (#226). Separately, a short ink crumb trail at the
+tunnel mouth pulses on a faster stagger (#216), deepened with a juicier
+cream mid-settle + soft cream pip blot (#241), then deepened again on
+that cream pip (juicier peak/mid + soft mid hold + micro rebound) so
+polluted streets read juicier from the playground side — distinct from
+placemarker cream rim deepen (#252 + past-#252), fog edge cream rim
+deepen (#250), tunnel cream deepen (#230), and birds-return fullscreen
+wash (#226).
 A soft pollution fog edge veil also breathes at the playground-side
 tunnel lip (#221 / #236), deepened again on the cream rim (juicier
 peak/mid + soft mid hold + micro rebound) so polluted borders read
@@ -62,31 +64,32 @@ _POP_STRETCH = 1.18
 _POP_SETTLE_SEC = 0.28
 # Brief attention pulse / cream highlight so reclaim tunnels read on the hub.
 # Cream deepen (#230): warmer peak → soft mid settle + local cream halo.
-# Cream rim deepen (post-#230): juicier halo peak/mid + mid hold + micro
-# rebound — not fog rim hold/rebound #250; not #230 peak→mid→rest alone.
+# Cream rim deepen (#252): juicier halo peak/mid + mid hold + micro rebound.
+# Past-#252 deepen: brighter halo / longer mid hold / punchier rebound —
+# not fog rim #250; not crumb pip #258; not #252 rim alone.
 _PULSE_PEAK = 1.22
 _PULSE_HALF_SEC = 0.16
 _PULSE_BEATS = 2
 _PULSE_GAP_SEC = 4.8
-_PULSE_HIGHLIGHT = Vec4(1.0, 0.94, 0.50, 1.0)  # juicier sunny cream peak
-_PULSE_CREAM_MID = Vec4(1.0, 0.97, 0.74, 1.0)  # soft settle before rest
-_PULSE_CREAM_MID_SEC = 0.10  # slightly longer linger on rim deepen
+_PULSE_HIGHLIGHT = Vec4(1.0, 0.95, 0.46, 1.0)  # warmer sunny cream peak (past #252)
+_PULSE_CREAM_MID = Vec4(1.0, 0.98, 0.78, 1.0)  # creamier soft settle before rest
+_PULSE_CREAM_MID_SEC = 0.11  # longer linger than #252 0.10
 _PULSE_REST = Vec4(1.0, 1.0, 1.0, 1.0)
 # Soft local cream halo behind placemarker during notice pulse.
-# Rim deepen (post-#230): juicier peak/mid + mid hold + micro rebound
-# settle — not fog rim #250 (slower/wider tunnel-lip); not #230 alone.
+# Past-#252 deepen: juicier peak/mid + longer mid hold + punchier rebound
+# settle — not fog rim #250 (slower/wider); not crumb pip #258; not #252 alone.
 _PULSE_HALO_NAME = 'corruptStreetPlacemarkerCreamHalo'
-_PULSE_HALO_HALF_W = 2.70  # slightly wider cream rim peeks past text
-_PULSE_HALO_HALF_H = 0.68
+_PULSE_HALO_HALF_W = 2.85  # wider cream rim peeks past text (past #252 2.70)
+_PULSE_HALO_HALF_H = 0.72
 _PULSE_HALO_Z_OFF = -0.08
-_PULSE_HALO_SCALE_PEAK = 1.38  # juicier than #230 1.32; < crumb pip 1.56
-_PULSE_HALO_PEAK = Vec4(1.0, 0.97, 0.82, 0.44)  # brighter sunny cream rim
-_PULSE_HALO_MID = Vec4(1.0, 0.95, 0.74, 0.22)
+_PULSE_HALO_SCALE_PEAK = 1.44  # juicier than #252 1.38; < crumb pip 1.56
+_PULSE_HALO_PEAK = Vec4(1.0, 0.98, 0.84, 0.48)  # brighter sunny cream rim
+_PULSE_HALO_MID = Vec4(1.0, 0.96, 0.76, 0.26)
 _PULSE_HALO_REST = Vec4(1.0, 0.97, 0.82, 0.0)
-_PULSE_HALO_HOLD_SEC = 0.07  # snappier mid linger than fog rim 0.10
-_PULSE_HALO_REBOUND_SCALE = 1.10  # punchier micro rebound than fog 1.06
-_PULSE_HALO_REBOUND_SEC = 0.06  # snappier than fog rim 0.08
-_PULSE_HALO_REBOUND_PEAK = Vec4(1.0, 0.97, 0.80, 0.14)  # warm cream flash
+_PULSE_HALO_HOLD_SEC = 0.085  # longer than #252 0.07; still < fog rim 0.10
+_PULSE_HALO_REBOUND_SCALE = 1.12  # punchier than #252 1.10; < crumb pip 1.14
+_PULSE_HALO_REBOUND_SEC = 0.065  # slightly longer than #252 0.06; < fog 0.08
+_PULSE_HALO_REBOUND_PEAK = Vec4(1.0, 0.98, 0.82, 0.17)  # warmer cream flash
 
 # Tunnel-mouth ink crumb trail — distinct from overhead placemarker pulse.
 # Cream deepen (#241): warmer peak → soft mid settle + local cream pip blot.
@@ -106,7 +109,7 @@ _CRUMB_FG = Vec4(0.22, 0.10, 0.28, 0.95)
 _CRUMB_SHADOW = Vec4(1.0, 0.92, 0.72, 0.75)
 _CRUMB_HIGHLIGHT = Vec4(1.0, 0.90, 0.38, 1.0)  # juicier warm cream peak
 _CRUMB_CREAM_MID = Vec4(1.0, 0.94, 0.64, 1.0)  # soft settle before rest
-_CRUMB_CREAM_MID_SEC = 0.08  # snappier than placemarker 0.10 / fog 0.14
+_CRUMB_CREAM_MID_SEC = 0.08  # snappier than placemarker 0.11 / fog 0.14
 _CRUMB_REST = Vec4(1.0, 1.0, 1.0, 1.0)
 # Soft cream pip blot under each crumb during the trail pulse.
 # Pip deepen (post-#241): juicier peak/mid + mid hold + micro rebound
@@ -250,11 +253,12 @@ def placemarkerPulseCreamParams():
     """Pure cream-deepen params for hub tunnel placemarker notice pulse.
 
     Juicier cream mid-settle + local halo bloom on the #211 scale pulse
-    (#230), then cream rim deepen (juicier peak/mid + mid hold + micro
-    rebound). Distinct from fog edge cream rim deepen (#250 slower/wider
-    tunnel-lip), BirdsReturnCreamWashFx fullscreen wash (#226), crumb
-    (#216), and the original #230 peak→mid→rest halo (no hold/rebound).
-    Headless-safe — no Panda geom.
+    (#230), cream rim deepen (#252: juicier peak/mid + mid hold + micro
+    rebound), then past-#252 deepen (brighter halo / longer mid hold /
+    punchier rebound). Distinct from fog edge cream rim deepen (#250
+    slower/wider tunnel-lip), crumb pip deepen (#258), BirdsReturnCream
+    WashFx fullscreen wash (#226), and the original #230 peak→mid→rest
+    halo (no hold/rebound). Headless-safe — no Panda geom.
     """
     hi = _PULSE_HIGHLIGHT
     mid = _PULSE_CREAM_MID
@@ -883,8 +887,10 @@ class CorruptStreetBreadcrumb(DirectObject):
     def _buildPulseCreamHaloIval(self, halo, half, midSec):
         """Local cream halo bloom — juicier peak → mid hold → rest → rebound.
 
-        Distinct from #230 peak→mid→rest (no hold/rebound), fog rim #250
-        (slower/wider tunnel-lip), and birds #246 rising chirp/sky halo.
+        Past-#252 deepen (brighter peak / longer hold / punchier rebound).
+        Distinct from #230 peak→mid→rest (no hold/rebound), #252 rim alone,
+        fog rim #250 (slower/wider tunnel-lip), crumb pip #258, and birds
+        #246 rising chirp/sky halo.
         """
         peakScale = float(_PULSE_HALO_SCALE_PEAK)
         holdSec = max(0.04, float(_PULSE_HALO_HOLD_SEC))
