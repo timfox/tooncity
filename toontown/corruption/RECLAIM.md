@@ -75,7 +75,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~hackslash 0
 # CorruptToons prefer ink-tinted Toon Actor silhouettes (DNA clone of you
 # when available), else improved card limbs. Chase AI unchanged; telegraph
-# wind-up + impact flash/SFX punch so smacks read without a combat HUD.
+# wind-up plays a short ink drip / splat pop (CorruptTelegraphInkFx) plus
+# squash/SFX so wind-ups read without a combat HUD; impact flash on hit.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray); purity pop + pollution drop.
 ```
@@ -86,8 +87,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~spawncorrupt 1 40 1
 # or ~spawnbrute 1 40 1
 ~hackslash 0
-# Brute: green squash telegraph + squirt SFX, then ink blob flies at you on hit.
-# Compare ~spawncorrupt 1   (Ink Smudge keeps purple melee telegraph).
+# Brute: green squash telegraph + ink drip + squirt SFX, then ink blob on hit.
+# Compare ~spawncorrupt 1   (Ink Smudge keeps purple melee telegraph + drip).
 ```
 
 ## Balloon Snare string-lash demo
