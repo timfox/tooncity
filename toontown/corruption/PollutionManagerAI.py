@@ -3,6 +3,7 @@ from direct.distributed.DistributedObjectAI import DistributedObjectAI
 from direct.task import Task
 
 from toontown.corruption import CorruptionGlobals
+from toontown.corruption import PollutionSecuredSave
 
 
 class PollutionManagerAI(DistributedObjectAI):
@@ -15,6 +16,9 @@ class PollutionManagerAI(DistributedObjectAI):
     reclaim pauses re-creep via STREET_RECLAIMING and clears the lock so
     seed pollution can land. Ambient never-stained SECURED zones are not
     locked until they hit pure / markStreetSecured.
+
+    Purity locks persist across AI restart via PollutionSecuredSave JSON
+    under air.dataFolder (and optionally CampaignProgressSave.securedZones).
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManagerAI')
@@ -30,6 +34,12 @@ class PollutionManagerAI(DistributedObjectAI):
         # Zones that already got the rubber-hose re-creep whisper this episode.
         self._recreepAnnounced = set()
         self._recreepTaskName = None
+        self._securedHydrated = False
+
+    def generate(self):
+        DistributedObjectAI.generate(self)
+        # Restore purity locks before any reclaim / ~pollute can re-stain.
+        self._hydrateSecuredLocks()
 
     def getPollution(self, zoneId):
         return self.zonePollution.get(zoneId, CorruptionGlobals.POLLUTION_DEFAULT)
@@ -88,9 +98,106 @@ class PollutionManagerAI(DistributedObjectAI):
             amount = CorruptionGlobals.POLLUTION_PER_DEFEAT
         return self.adjustPollution(zoneId, -abs(float(amount)))
 
-    def markStreetSecured(self, zoneId):
+    def _securedPersistEnabled(self):
+        return bool(getattr(
+            CorruptionGlobals, 'POLLUTION_SECURED_PERSIST_ENABLED', True))
+
+    def _securedPath(self):
+        folder = getattr(self.air, 'dataFolder', '') or ''
+        shard = getattr(self.air, 'districtId', None)
+        if shard is None:
+            shard = getattr(self.air, 'shard', None)
+        return PollutionSecuredSave.securedPath(folder, shard)
+
+    def _hydrateSecuredLocks(self):
+        """Load district securedZones and purity-lock them (AI restart)."""
+        if not self._securedPersistEnabled():
+            return False
+        if self._securedHydrated:
+            return False
+        blob = PollutionSecuredSave.loadSecured(self._securedPath())
+        self._securedHydrated = True
+        zones = blob.get('securedZones') or []
+        if not zones:
+            return False
+        PollutionSecuredSave.applySecuredToManager(self, blob, mark=True)
+        self.notify.debug(
+            'hydrated secured purity locks zones=%s' % (list(zones),))
+        return True
+
+    def _persistSecuredLocks(self):
+        """Flush live _purityLocked set to dataFolder JSON."""
+        if not self._securedPersistEnabled():
+            return False
+        blob = PollutionSecuredSave.snapshotFromManager(self)
+        ok = PollutionSecuredSave.saveSecured(self._securedPath(), blob)
+        if ok:
+            self._securedHydrated = True
+            self.notify.debug(
+                'persisted secured purity locks zones=%s' % (
+                    blob.get('securedZones'),))
+        return ok
+
+    def applySecuredZones(self, zones, persist=True):
+        """Union zoneIds into purity locks (campaign hydrate / tests)."""
+        if zones is None:
+            return False
+        if isinstance(zones, (str, bytes)):
+            return False
+        applied = False
+        for item in zones:
+            try:
+                zoneId = int(item)
+            except (TypeError, ValueError):
+                continue
+            if zoneId <= 0:
+                continue
+            if self.isPurityLocked(zoneId):
+                continue
+            self.markStreetSecured(zoneId, persist=False)
+            applied = True
+        if applied and persist:
+            self._persistSecuredLocks()
+        return applied
+
+    def _mirrorSecuredZoneToCampaign(self, zoneId, secured=True):
+        """Best-effort update CampaignDirectorAI.securedZones + persist."""
+        try:
+            from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+            campaign = getCampaignDirector(self.air)
+        except Exception:
+            return False
+        if campaign is None:
+            return False
+        zones = list(getattr(campaign, 'securedZones', None) or [])
+        zoneId = int(zoneId)
+        changed = False
+        if secured:
+            if zoneId not in zones:
+                zones.append(zoneId)
+                changed = True
+        else:
+            if zoneId in zones:
+                zones = [z for z in zones if int(z) != zoneId]
+                changed = True
+        if not changed:
+            # Still normalize list on director for snapshot honesty.
+            campaign.securedZones = sorted({int(z) for z in zones if int(z) > 0})
+            return False
+        campaign.securedZones = sorted({int(z) for z in zones if int(z) > 0})
+        persist = getattr(campaign, '_persistForToon', None)
+        if callable(persist):
+            try:
+                persist()
+            except Exception:
+                self.notify.debug('campaign securedZones persist skipped')
+                return False
+        return True
+
+    def markStreetSecured(self, zoneId, persist=True):
         """Full reclaim / pure street — purity-lock; no auto re-ink or rises."""
         zoneId = int(zoneId)
+        already = self.isPurityLocked(zoneId)
         self.streetStatus[zoneId] = CorruptionGlobals.STREET_SECURED
         self._purityLocked.add(zoneId)
         self._recreepAnnounced.discard(zoneId)
@@ -101,8 +208,13 @@ class PollutionManagerAI(DistributedObjectAI):
         self._refreshRecreepTask()
         self.notify.debug(
             'zone %s street secured + purity-locked (no re-creep)' % zoneId)
+        if persist:
+            self._persistSecuredLocks()
+            # Campaign blob mirror — unlocks already say cleared; keep lock too.
+            if not already:
+                self._mirrorSecuredZoneToCampaign(zoneId, secured=True)
 
-    def markStreetReclaiming(self, zoneId):
+    def markStreetReclaiming(self, zoneId, persist=True):
         """Active reclaim packs — pause re-creep; clear lock so seed can land."""
         zoneId = int(zoneId)
         self.streetStatus[zoneId] = CorruptionGlobals.STREET_RECLAIMING
@@ -110,8 +222,12 @@ class PollutionManagerAI(DistributedObjectAI):
         self._recreepAnnounced.discard(zoneId)
         self._refreshRecreepTask()
         self.notify.debug('zone %s street reclaiming (re-creep paused)' % zoneId)
+        # Live district file drops the lock for seed; campaign securedZones
+        # stay so AI restart mid-reclaim can reseal (reclaim session dies).
+        if persist:
+            self._persistSecuredLocks()
 
-    def markStreetContested(self, zoneId):
+    def markStreetContested(self, zoneId, persist=True):
         """Incomplete reclaim bail-out — residual ink may slowly re-creep."""
         zoneId = int(zoneId)
         self.streetStatus[zoneId] = CorruptionGlobals.STREET_CONTESTED
@@ -121,6 +237,11 @@ class PollutionManagerAI(DistributedObjectAI):
         self.notify.debug(
             'zone %s street contested (re-creep armed, pollution %.3f)' % (
                 zoneId, self.getPollution(zoneId)))
+        if persist:
+            self._persistSecuredLocks()
+            # Contested replay unlock — drop campaign mirror so hydrate
+            # does not immediately reseal a street that should re-creep.
+            self._mirrorSecuredZoneToCampaign(zoneId, secured=False)
 
     def _anyContestedStreet(self):
         contested = CorruptionGlobals.STREET_CONTESTED
@@ -205,10 +326,16 @@ class PollutionManagerAI(DistributedObjectAI):
             self.notify.debug('re-creep whisper skipped for zone %s' % zoneId)
 
     def delete(self):
+        # Flush locks before clearing memory so restart keeps world honesty.
+        try:
+            self._persistSecuredLocks()
+        except Exception:
+            pass
         self._stopRecreepTask()
         self.streetStatus.clear()
         self._purityLocked.clear()
         self._recreepAnnounced.clear()
+        self._securedHydrated = False
         DistributedObjectAI.delete(self)
 
     def requestHackSlashIFrame(self, durationMs):
@@ -237,6 +364,8 @@ class PollutionManagerAI(DistributedObjectAI):
         self.streetStatus[zoneId] = CorruptionGlobals.STREET_SECURED
         self._recreepAnnounced.discard(zoneId)
         self._refreshRecreepTask()
+        # Persist lock drop so AI restart does not reseal over hub stain.
+        self._persistSecuredLocks()
         applied = self.setPollution(zoneId, level)
         self.notify.debug(
             'betrayal hub stain zone %s -> %.3f' % (zoneId, applied))

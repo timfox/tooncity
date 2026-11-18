@@ -51,6 +51,8 @@ class CampaignDirectorAI(DirectObject):
         # 1 after first trusted Oswald E-talk meet (first-meet tip persist).
         # Durable across relog; not wiped on campaign replay.
         self.oswaldMet = 0
+        # Finished-reclaim street zoneIds (mirrors PollutionManagerAI locks).
+        self.securedZones = []
         self._lastToonId = None
         self._hydratedToonId = None
         self._oswaldChaseDoId = None
@@ -99,10 +101,29 @@ class CampaignDirectorAI(DirectObject):
         # Mirror unlock / victory / chaseCleared to the client so hub tip +
         # OswaldPresence match story state after relog (not session-only).
         self._pushProgressToClient(toon)
+        # Reseal cleared-street purity locks (campaign honesty backup;
+        # district pollution_secured.json is primary on AI generate).
+        self._applySecuredZonesToPollution()
         # Hub stain is process-local pollution — re-apply after relog when
         # victory still has an uncleared chase (quiet: no re-whisper).
+        # Runs after securedZones so betrayal fog can clear a TTC lock.
         self._syncHubStain(tell=False)
         return True
+
+    def _applySecuredZonesToPollution(self):
+        """Union campaign securedZones onto PollutionManagerAI purity locks."""
+        pollutionMgr = getattr(self.air, 'pollutionManager', None)
+        if pollutionMgr is None:
+            return False
+        zones = list(getattr(self, 'securedZones', None) or [])
+        apply = getattr(pollutionMgr, 'applySecuredZones', None)
+        if not callable(apply):
+            return False
+        try:
+            return bool(apply(zones, persist=True))
+        except Exception:
+            self.notify.debug('applySecuredZonesToPollution failed')
+            return False
 
     def _persistForToon(self, toon=None):
         avId = None
@@ -274,6 +295,9 @@ class CampaignDirectorAI(DirectObject):
             self._finalePhase = 0
             self.chaseCleared = 0
             self.chaseHp = 0
+            # Fresh run — drop campaign securedZones; live street locks
+            # clear when reclaim marks STREET_RECLAIMING on each act.
+            self.securedZones = []
             self._cancelOswaldBetrayalChase()
             # Force-wash hub now — state is still VICTORY until ACTIVE below,
             # so syncHubStain would otherwise re-apply the betrayal fog.
