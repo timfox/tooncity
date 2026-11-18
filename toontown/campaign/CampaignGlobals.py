@@ -993,12 +993,14 @@ CAMPAIGN_EPILOGUE_WATCH_SEC = 0.45
 
 # Trusted Oswald hub/street NPC-style presence (meet the trust face
 # before twist). Rubber-hose CardMaker body + nametag + short E-talk
-# greet interact — stub-shippable, not a full DistributedNPC / DNA toon
-# / companion AI. Complements tip/banner copy + betrayal chase (#313);
-# does not deepen cream FX. Hide after finale reveal / chase (and on
-# AI-persisted STATE_VICTORY sync) so the trusted lead is gone once the
-# twist lands. OSWALD_PRESENCE_ENABLED = False drops world stub + greet
-# only (HUB_TIP / ACTS tips / betrayal chase remain). No keyblades / KH.
+# greet interact — plaza-anchored deepen (beyond spawn-near-avatar
+# CardMaker stub) + reclaim cheer beat; still stub-shippable, not a
+# full DistributedNPC / DNA toon / companion AI. Complements tip/banner
+# copy + betrayal chase (#313); does not deepen cream FX. Hide after
+# finale reveal / chase (and on AI-persisted STATE_VICTORY sync) so the
+# trusted lead is gone once the twist lands. OSWALD_PRESENCE_ENABLED =
+# False drops world stub + greet + cheer only (HUB_TIP / ACTS tips /
+# betrayal chase remain). No keyblades / KH.
 OSWALD_PRESENCE_ENABLED = True
 OSWALD_PRESENCE_LABEL = 'Oswald'
 OSWALD_PRESENCE_PLATE = 'OSWALD'
@@ -1008,9 +1010,16 @@ OSWALD_PRESENCE_HUB_GREET = (
 OSWALD_PRESENCE_STREET_GREET = (
     'Oswald tips his ears — "I\'ll field the packs — stretch-punch ready!"  |  '
     'F fight  |  Shift dodge  |  C campaign')
+OSWALD_PRESENCE_CHEER_TIP = (
+    'Oswald cheers — "Street\'s clean! On to the next!"  |  '
+    'Hop the tunnel  |  C campaign')
 OSWALD_PRESENCE_INTERACT_PROMPT = 'E — Talk to Oswald'
 OSWALD_PRESENCE_INTERACT_EVENT = 'oswaldPresenceInteract'
-# World stub placement relative to the local toon on zone enter.
+OSWALD_PRESENCE_CHEER_MSG = 'oswaldPresenceCheer'
+# Authored TTC plaza lead stand (x, y, z, h) — near HQ plaza approach,
+# not spawn-relative to the local toon. Streets keep near-avatar offset.
+OSWALD_PRESENCE_HUB_POS = (-48.0, 28.0, -0.55, -100.0)
+# World stub placement relative to the local toon on street enter.
 OSWALD_PRESENCE_SPAWN_FORWARD = 6.5
 OSWALD_PRESENCE_SPAWN_RIGHT = 2.25
 # Grounded NPC body (legacy MARKER_* kept as fallback aliases).
@@ -1023,6 +1032,9 @@ OSWALD_PRESENCE_MARKER_SCALE = 1.2
 OSWALD_PRESENCE_INTERACT_RADIUS = 12.0
 OSWALD_PRESENCE_POLL_SEC = 0.35
 OSWALD_PRESENCE_GREET_HOLD_SEC = 3.2
+OSWALD_PRESENCE_CHEER_HOLD_SEC = 2.4
+OSWALD_PRESENCE_IDLE_BOB = True
+OSWALD_PRESENCE_CHEER_ON_RECLAIM = True
 # Sunny trusted body (readable on TTC / streets — not ink purple).
 OSWALD_PRESENCE_BODY_COLOR = (0.22, 0.58, 0.96, 1.0)
 OSWALD_PRESENCE_MARKER_COLOR = (0.18, 0.52, 0.92, 1.0)

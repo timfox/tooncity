@@ -705,9 +705,17 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         except Exception:
             pass
         # Pitch swell + cream flecks + aftershock + wash (arms CheerCreamSparkleFx).
+        # Thin OswaldPresence arm so plaza lead can cheer on npcCheerStub
+        # (CardMaker body has no setAnimState — ReclaimCheer nudges it too).
         try:
             from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
             ensureReclaimCheerClient()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.OswaldPresence import (
+                ensureOswaldPresenceClient)
+            ensureOswaldPresenceClient()
         except Exception:
             pass
         messenger.send('purityRestoreFx', [self.reclaimZoneId])

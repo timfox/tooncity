@@ -1,8 +1,9 @@
 """Discoverable Toon City loop entry — no magic-word memorization required.
 
-Oswald leads the reclaim fantasy in tip/banner copy **and** a hub/street
-NPC-style presence stub (`OswaldPresence` — body + short E-talk greet)
-so the player meets the trusted lead before the twist. On the TTC hub:
+Oswald leads the reclaim fantasy in tip/banner copy **and** a hub plaza
+NPC deepen (`OswaldPresence` — authored plaza stand + E-talk greet +
+cheer on reclaim street clear, then vanish for the twist) so the player
+meets the trusted lead before the betrayal. On the TTC hub:
 tip points at the next reclaim street (Loopy first; soft handoff cue after).
 On campaign streets: auto-arm melee, auto-start the **campaign** act (C
 path — not street-pack R) so packs field without ~startcampaign / racing
