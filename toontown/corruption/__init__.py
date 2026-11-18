@@ -12,7 +12,9 @@ IdleCreamWashPulseFx (soft cream wash pulse — contrast against ink idle
 drips; death / melee cream-wash grammar) plus
 CorruptSilhouetteCreamRimFx (sunny cream / pastel rim flecks along the
 ink silhouette edge) plus CorruptSilhouetteCreamSparkleFx (sunny cream /
-pastel sparkle flecks rising from the silhouette cream rim). Telegraphs play CorruptTelegraphInkFx (short
+pastel sparkle flecks rising from the silhouette cream rim) plus
+CorruptSilhouetteCreamWashFx (soft cream wash pulse — contrast against the
+ink silhouette; idle / death cream-wash grammar). Telegraphs play CorruptTelegraphInkFx (short
 rubber-hose ink drip / splat pop) layered with CorruptTelegraphCreamWarnFx
 (sunny cream / pastel warn flecks + delayed cream aftershock — contrast to
 ink) plus CorruptTelegraphCreamSparkleFx (sunny cream / pastel sparkle flecks

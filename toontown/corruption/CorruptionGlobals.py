@@ -925,6 +925,40 @@ SILHOUETTE_CREAM_SPARKLE_LOOK = {
     'binSort': SILHOUETTE_CREAM_SPARKLE_BIN,
 }
 
+# Silhouette cream wash pulse — soft aspect2d veil between telegraphs
+# (client only). Matches IdleCreamWashPulseFx (#146) / CorruptDeathCreamWashFx
+# (#119) two-beat grammar; quieter ambient contrast against the ink silhouette
+# cream rim + rising sparkle stack. Compose period via
+# CorruptSilhouetteCreamWashFx.silhouetteCreamWashLook → silhouetteCreamSparkleLook.
+# SILHOUETTE_CREAM_WASH_ENABLED = False drops wash only (rim / sparkles stay).
+SILHOUETTE_CREAM_WASH_ENABLED = True
+SILHOUETTE_CREAM_WASH_DELAY_SEC = 0.0  # loop settle handles spacing
+SILHOUETTE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+SILHOUETTE_CREAM_WASH_PEAK = 0.05  # quieter than idle (0.055) / death (0.14)
+SILHOUETTE_CREAM_WASH_MID = 0.028
+SILHOUETTE_CREAM_WASH_IN_SEC = 0.07
+SILHOUETTE_CREAM_WASH_PULSE_SEC = 0.12
+SILHOUETTE_CREAM_WASH_HOLD_SEC = 0.10
+SILHOUETTE_CREAM_WASH_OUT_SEC = 0.48
+SILHOUETTE_CREAM_WASH_BIN = 37  # soft veil between idle wash (36) / death (38)
+SILHOUETTE_CREAM_WASH_LOOK = {
+    'id': 'silhouette-cream-wash',
+    # period composed with silhouetteCreamSparkleLook when played; fallbacks below.
+    'periodSec': 2.85,
+    'periodScale': 2.4,
+    'settleSec': 0.99,
+    'settleBias': 0.52,
+    'delaySec': SILHOUETTE_CREAM_WASH_DELAY_SEC,
+    'color': SILHOUETTE_CREAM_WASH_COLOR,
+    'peak': SILHOUETTE_CREAM_WASH_PEAK,
+    'mid': SILHOUETTE_CREAM_WASH_MID,
+    'inSec': SILHOUETTE_CREAM_WASH_IN_SEC,
+    'pulseSec': SILHOUETTE_CREAM_WASH_PULSE_SEC,
+    'holdSec': SILHOUETTE_CREAM_WASH_HOLD_SEC,
+    'outSec': SILHOUETTE_CREAM_WASH_OUT_SEC,
+    'binSort': SILHOUETTE_CREAM_WASH_BIN,
+}
+
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
 BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)
