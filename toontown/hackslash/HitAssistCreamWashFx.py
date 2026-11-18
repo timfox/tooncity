@@ -1,16 +1,18 @@
 """Rubber-hose cream wash on soft-lock hit-assist aim nudge.
 
 Fullscreen soft cream veil that flashes *when* melee connect against the
-sticky soft-lock fires the one-shot yaw/aim nudge (#204 deepen) — SoftLock
-FOV / SoftLockCycle / DodgeCancel cream wash overlay grammar as a brief
-glue-assist juice beat so hit assist reads juicier. Soft under HUD; cream /
+sticky soft-lock fires the one-shot yaw/aim nudge (#204 / #254 deepen+) —
+SoftLock FOV / SoftLockCycle / DodgeCancel cream wash overlay grammar as a
+brief glue-assist juice beat so hit assist reads juicier still. Deepened
+past #254: brighter peak / longer mid hold, plus a richer residual cream
+wash aftershock (more flecks + stronger halo). Soft under HUD; cream /
 pastel only (not ink). Quieter/faster than hit-spark cream wash (#147) so
 combo strings stay readable; distinct from soft-lock cycle reticle cream
 deepen (#233) — fires on connect assist, not Tab/` cycle — and from hurt
-wash cream deepen (#247) — player landing soft-lock hits, not getting
-smacked. Wired from MeleeCombatController._assistAimOnHit when a real yaw
-nudge lands. Client only. Toontown spiritual sequel — no keyblades / no KH
-branding.
+wash cream deepen (#247 / #263) — player landing soft-lock hits, not
+getting smacked. Wired from MeleeCombatController._assistAimOnHit when a
+real yaw nudge lands. Client only. Toontown spiritual sequel — no keyblades
+/ no KH branding.
 """
 
 from math import cos, pi
@@ -61,17 +63,17 @@ class HitAssistCreamWashPulse(object):
             r, g, b = 1.0, 0.97, 0.82
 
         peak = float(getattr(
-            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_PEAK', 0.085))
+            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_PEAK', 0.092))
         mid = float(getattr(
-            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_MID', 0.048))
+            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_MID', 0.055))
         inSec = float(getattr(
             HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_IN_SEC', 0.03))
         pulseSec = float(getattr(
-            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC', 0.06))
+            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC', 0.075))
         holdSec = float(getattr(
-            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC', 0.035))
+            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC', 0.048))
         outSec = float(getattr(
-            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC', 0.20))
+            HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC', 0.24))
         binSort = int(getattr(
             HackSlashConfig, 'LOCK_HIT_ASSIST_CREAM_WASH_BIN', 26))
         if delay is None:
@@ -95,7 +97,7 @@ class HitAssistCreamWashPulse(object):
             return None
 
         # Immediate snappy flash on assist nudge: bright → settle → fade.
-        # Deepened peak + mid so soft-lock connect glue reads juicier.
+        # Deepened past #254 peak + mid so soft-lock connect glue reads juicier.
         washVeil = Sequence(
             LerpColorScaleInterval(
                 wash, max(0.01, inSec), Vec4(r, g, b, peak),
@@ -147,7 +149,7 @@ class HitAssistCreamWashPulse(object):
             return None
         delay = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.05))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.04))
         parts = []
 
         if getattr(
@@ -159,10 +161,10 @@ class HitAssistCreamWashPulse(object):
 
         count = int(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT', 3))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT', 4))
         sec = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SEC', 0.18))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SEC', 0.20))
         for i in range(count):
             part = self._spawnAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -179,19 +181,19 @@ class HitAssistCreamWashPulse(object):
     def _spawnAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.34))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.36))
         startScale = float(getattr(
             HackSlashConfig,
             'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_START', 0.20))
         peakScale = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 0.98))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 1.10))
         sec = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.14))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.16))
         peakA = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.08))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.095))
         r, g, b, _a = getattr(
             HackSlashConfig,
             'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_COLOR',
@@ -232,17 +234,17 @@ class HitAssistCreamWashPulse(object):
         count = max(1, int(total))
         size = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SIZE', 0.011))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SIZE', 0.013))
         drift = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DRIFT', 0.18))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DRIFT', 0.20))
         fall = float(getattr(
             HackSlashConfig,
-            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_FALL', 0.12))
+            'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_FALL', 0.13))
         r, g, b, a = getattr(
             HackSlashConfig,
             'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COLOR',
-            (1.0, 0.97, 0.78, 0.68))
+            (1.0, 0.97, 0.78, 0.72))
         er, eg, eb, ea = getattr(
             HackSlashConfig,
             'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_END_COLOR',
