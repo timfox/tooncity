@@ -251,6 +251,18 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('CampaignGlobals.ACTS', play_src)
         self.assertIn('HUB_ZONE', play_src)
         self.assertIn('_requestCampaign()', play_src)
+        # Zone-change messenger re-arms tips/auto-campaign on tunnel hops.
+        self.assertIn("accept('localAvatarZoneChange'", play_src)
+        self.assertIn('getBranchZone', play_src)
+        place_src = _read('toontown/hood/Place.py')
+        self.assertIn("messenger.send('localAvatarZoneChange'", place_src)
+        self.assertIn("messenger.send('localToonLeftZone'", place_src)
+        street_src = _read('toontown/town/Street.py')
+        hub_place_src = _read('toontown/safezone/Playground.py')
+        self.assertIn('announceLocalAvatarZoneChange', street_src)
+        self.assertIn('announceLocalToonLeftZone', street_src)
+        self.assertIn('announceLocalAvatarZoneChange', hub_place_src)
+        self.assertIn('announceLocalToonLeftZone', hub_place_src)
         # Auto path prefers campaign (C) over street-pack reclaim (R).
         auto_idx = play_src.find('def _autoStartReclaim')
         self.assertGreater(auto_idx, 0)

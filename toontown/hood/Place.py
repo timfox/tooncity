@@ -151,6 +151,33 @@ class Place(StateData, FriendsListManager):
     def getTaskZoneId(self):
         return self.getZoneId()
 
+    def announceLocalAvatarZoneChange(self, zoneId=None):
+        """Fire localAvatarZoneChange for street/hub enter re-arm.
+
+        PlayEntry, PollutionManager, and reclaim entry FX accept this event but
+        historically nothing sent it — tunnel hub→street hops never re-armed
+        tips, auto-campaign, or pollution presentation. Send the branch zone
+        so ACTS / STREET_PACKS keys match (not floor-collision ids).
+        """
+        if zoneId is None:
+            zoneId = self.zoneId
+        if zoneId is None and hasattr(base, 'localAvatar'):
+            zoneId = getattr(base.localAvatar, 'zoneId', None)
+        if zoneId is None:
+            return
+        try:
+            zoneId = ZoneUtil.getBranchZone(int(zoneId))
+        except Exception:
+            try:
+                zoneId = int(zoneId)
+            except Exception:
+                return
+        messenger.send('localAvatarZoneChange', [zoneId])
+
+    def announceLocalToonLeftZone(self):
+        """Fire localToonLeftZone so pollution / entry FX clear on place exit."""
+        messenger.send('localToonLeftZone')
+
     def isPeriodTimerEffective(self):
         return 1
 

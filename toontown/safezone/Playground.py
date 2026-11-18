@@ -237,6 +237,8 @@ class Playground(Place):
 
         NametagGlobals.setMasterArrowsOn(1)
         self.zoneId = requestStatus['zoneId']
+        # Hub enter — PlayEntry hub tip / soft next-street cue re-arm.
+        self.announceLocalAvatarZoneChange(self.zoneId)
         self.tunnelOriginList = base.cr.hoodMgr.addLinkTunnelHooks(self, self.loader.nodeList, self.zoneId)
         how = requestStatus['how']
         if how == 'teleportIn':
@@ -245,6 +247,7 @@ class Playground(Place):
         self.fsm.request(how, [requestStatus])
 
     def exit(self):
+        self.announceLocalToonLeftZone()
         self.ignoreAll()
         messenger.send('exitPlayground')
         self._telemLimiter.destroy()
