@@ -1959,18 +1959,18 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         wave_shimmer_src = _read(shimmer_rel)
         self.assertIn('WaveClearCreamWashPulse', wave_shimmer_src)
         self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK', wave_shimmer_src)
-        # Further-deepened pack-clear glitter past #229 stays below StreetSparkle.
+        # Further-deepened pack-clear glitter past #253 stays below StreetSparkle.
         wave_sparkle_assigns = _assign_map(self.reclaim_tree)
         self.assertGreaterEqual(
             int(wave_sparkle_assigns.get('WAVE_CLEAR_CREAM_SPARKLE_COUNT', 0)),
-            10)
+            12)
         self.assertGreater(
             float(wave_sparkle_assigns.get('WAVE_CLEAR_CREAM_SPARKLE_POP', 0)),
-            1.22)
+            1.30)
         self.assertGreaterEqual(
             int(wave_sparkle_assigns.get(
                 'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT', 0)),
-            5)
+            6)
         self.assertLess(
             int(wave_sparkle_assigns.get('WAVE_CLEAR_CREAM_SPARKLE_COUNT', 0)),
             int(wave_sparkle_assigns.get('STREET_SPARKLE_COUNT', 0)))

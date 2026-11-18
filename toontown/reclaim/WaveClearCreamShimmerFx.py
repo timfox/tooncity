@@ -7,7 +7,7 @@ cream aftershock (softer flecks settling downward + soft halo) follows the
 hang — same residual grammar as purity-fill cream aftershock (#123) and cheer
 cream aftershock (#118). A soft cream wash pulse then settles after the
 aftershock — CheerCreamWashPulse / PurityCompleteCreamWashFx vocabulary —
-then further-deepened CheerCreamSparkle-style cream sparkle flecks past #229
+then further-deepened CheerCreamSparkle-style cream sparkle flecks past #253
 (+ soft aftershock) ride the wash settle so pack clear feels juicier.
 Distinct from secured-lock tip-near green sting (#243) and purity-complete
 meter hose settle cream (#248). Layers with cheer pitch swell and street
@@ -146,9 +146,9 @@ class WaveClearCreamShimmerFxClient(DirectObject):
                         ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_DELAY_SEC', 0.40))
                     + float(getattr(
                         ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC',
-                        0.08))
+                        0.07))
                     + float(getattr(
-                        ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SEC', 0.40))
+                        ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SEC', 0.44))
                     + 0.06)
                 sparkleAfter = sparkleBase
                 if getattr(
@@ -160,14 +160,14 @@ class WaveClearCreamShimmerFxClient(DirectObject):
                             0.40))
                         + float(getattr(
                             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC',
-                            0.08))
+                            0.07))
                         + float(getattr(
                             ReclaimGlobals,
                             'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DELAY_SEC',
-                            0.16))
+                            0.14))
                         + float(getattr(
                             ReclaimGlobals,
-                            'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC', 0.34))
+                            'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC', 0.38))
                         + 0.06)
                 sparkleHold = max(sparkleBase, sparkleAfter)
             washHold = max(washLifetime, sparkleHold)
