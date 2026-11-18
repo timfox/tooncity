@@ -777,6 +777,121 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('ensureEntryCreamWashPulseFxClient', director_src)
         self.assertIn('ensureEntryCreamWashPulseFxClient', cheer_src)
 
+        # Act banner cream edge pulse (#110) — cream frame on act-enter banners.
+        act_edge_rel = 'toontown/campaign/ActBannerCreamEdgeFx.py'
+        _assert_module_file(act_edge_rel)
+        act_edge_names = _class_and_func_names(_module_ast(act_edge_rel))
+        self.assertIn('ActBannerCreamEdgeFx', act_edge_names)
+        self.assertIn('playActBannerCreamEdge', act_edge_names)
+        self.assertIn('clearActBannerCreamEdge', act_edge_names)
+        act_edge_methods = _class_method_names(
+            _module_ast(act_edge_rel), 'ActBannerCreamEdgeFx')
+        self.assertIn('play', act_edge_methods)
+        self.assertIn('_spawnEdgeFlecks', act_edge_methods)
+        self.assertIn('_buildEdgeRoot', act_edge_methods)
+        for act_edge_key in (
+                'PLAY_ENTRY_BANNER_CREAM_EDGE_ENABLED',
+                'PLAY_ENTRY_BANNER_CREAM_EDGE_COLOR',
+                'PLAY_ENTRY_BANNER_CREAM_EDGE_PEAK',
+                'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_COUNT',
+                'PLAY_ENTRY_BANNER_CREAM_EDGE_BIN'):
+            self.assertIn(
+                act_edge_key, campaign_names,
+                msg='CampaignGlobals missing %s' % act_edge_key)
+        self.assertIn('playActBannerCreamEdge', play_src)
+        self.assertIn('creamEdge=True', play_src)
+
+        # Air-juggle cream aftershock (#111) — delayed residual on CreamHangSparkleFx.
+        hang_rel = 'toontown/hackslash/CreamHangSparkleFx.py'
+        _assert_module_file(hang_rel)
+        hang_names = _class_and_func_names(_module_ast(hang_rel))
+        self.assertIn('CreamHangSparkleFx', hang_names)
+        hang_methods = _class_method_names(
+            _module_ast(hang_rel), 'CreamHangSparkleFx')
+        self.assertIn('play', hang_methods)
+        self.assertIn('_buildAftershock', hang_methods)
+        self.assertIn('_spawnAftershockHalo', hang_methods)
+        self.assertIn('_spawnAftershockSpark', hang_methods)
+        for juggle_key in (
+                'LAUNCH_HANG_CREAM_AFTERSHOCK_ENABLED',
+                'LAUNCH_HANG_CREAM_AFTERSHOCK_DELAY_SEC',
+                'LAUNCH_HANG_CREAM_AFTERSHOCK_COUNT',
+                'LAUNCH_HANG_CREAM_AFTERSHOCK_COLOR',
+                'LAUNCH_HANG_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'LAUNCH_HANG_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                juggle_key, config_names,
+                msg='HackSlashConfig missing juggle aftershock %s' % juggle_key)
+        self.assertIn('CreamHangSparkleFx', melee_src)
+        self.assertIn('CreamHangSparkleFx', hack_init)
+
+        # Hood tint cream fade (#112) — cream lift of PollutionPropTint on purity.
+        hood_fade_rel = 'toontown/corruption/PollutionHoodTintCreamFadeFx.py'
+        _assert_module_file(hood_fade_rel)
+        hood_fade_names = _class_and_func_names(_module_ast(hood_fade_rel))
+        self.assertIn('PollutionHoodTintCreamFadeFx', hood_fade_names)
+        hood_fade_methods = _class_method_names(
+            _module_ast(hood_fade_rel), 'PollutionHoodTintCreamFadeFx')
+        self.assertIn('playFade', hood_fade_methods)
+        self.assertIn('_spawnShimmer', hood_fade_methods)
+        self.assertIn('_spawnFlecks', hood_fade_methods)
+        for hood_fade_key in (
+                'HOOD_TINT_CREAM_FADE_ENABLED',
+                'HOOD_TINT_CREAM_FADE_SEC',
+                'HOOD_TINT_CREAM_FADE_COLOR',
+                'HOOD_TINT_CREAM_FADE_FLECK_COUNT',
+                'HOOD_TINT_CREAM_FADE_BIN'):
+            self.assertTrue(
+                hasattr(cg, hood_fade_key),
+                msg='CorruptionGlobals missing %s' % hood_fade_key)
+        self.assertTrue(
+            hasattr(cg, 'hoodPropTintCreamFadeColor'),
+            msg='CorruptionGlobals missing hoodPropTintCreamFadeColor')
+        prop_tint_src = _read('toontown/corruption/PollutionPropTint.py')
+        self.assertIn('beginCreamFade', prop_tint_src)
+        self.assertIn('PollutionHoodTintCreamFadeFx', pollution_src)
+
+        # Wave-edge cream sparkle (#113) — StreetSparkle flecks on announce edge.
+        wave_edge_methods = _class_method_names(
+            _module_ast('toontown/reclaim/WaveCreamBurstFx.py'),
+            'WaveCreamBurstFxClient')
+        self.assertIn('playEdgePulse', wave_edge_methods)
+        self.assertIn('_spawnEdgeSparkles', wave_edge_methods)
+        self.assertIn('_spawnEdgeFlecks', wave_edge_methods)
+        for wave_sparkle_key in (
+                'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ENABLED',
+                'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_COUNT',
+                'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_COLOR',
+                'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_END_COLOR',
+                'WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_SEC'):
+            self.assertIn(
+                wave_sparkle_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % wave_sparkle_key)
+        wave_burst_src = _read('toontown/reclaim/WaveCreamBurstFx.py')
+        self.assertIn('WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ENABLED', wave_burst_src)
+
+        # Silhouette cream rim flecks (#114) — cream rim sparkle on corrupt ink.
+        rim_rel = 'toontown/corruption/CorruptSilhouetteCreamRimFx.py'
+        _assert_module_file(rim_rel)
+        rim_names = _class_and_func_names(_module_ast(rim_rel))
+        self.assertIn('SilhouetteCreamRimFlecks', rim_names)
+        self.assertIn('silhouetteCreamRimLook', rim_names)
+        rim_methods = _class_method_names(
+            _module_ast(rim_rel), 'SilhouetteCreamRimFlecks')
+        self.assertIn('start', rim_methods)
+        self.assertIn('_spawnFleck', rim_methods)
+        self.assertIn('_emitBurst', rim_methods)
+        self.assertTrue(
+            hasattr(cg, 'SILHOUETTE_CREAM_RIM_LOOK'),
+            msg='CorruptionGlobals missing SILHOUETTE_CREAM_RIM_LOOK')
+        self.assertEqual(
+            cg.SILHOUETTE_CREAM_RIM_LOOK.get('id'), 'silhouette-cream-rim')
+        self.assertTrue(
+            hasattr(cg, 'SILHOUETTE_CREAM_RIM_ENABLED'),
+            msg='CorruptionGlobals missing SILHOUETTE_CREAM_RIM_ENABLED')
+        self.assertIn('SilhouetteCreamRimFlecks', corrupt_src)
+        self.assertIn('__startSilhouetteCreamRim', corrupt_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
