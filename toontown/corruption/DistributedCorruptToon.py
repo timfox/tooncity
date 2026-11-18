@@ -13,6 +13,7 @@ from toontown.corruption.CorruptDeathPopFx import (
     DeathPopSplat, buildBodyPopInterval, deathPopLook)
 from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphString
 from toontown.corruption.BruteSludgeSplashFx import BruteSludgeSplash
+from toontown.corruption.BruteSpitCreamSplashFx import BruteSpitCreamSplash
 from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphCreamSparkleFx import TelegraphCreamSparkles
 from toontown.corruption.CorruptTelegraphCreamWarnFx import TelegraphCreamWarnFlecks
@@ -117,6 +118,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._snareStringCounterUntil = 0.0
         self._bruteTelegraphSpit = None
         self._bruteSludgeSplash = None
+        self._bruteSpitCreamSplash = None
         self._smudgeTelegraphInk = None
         self._smudgeInkSplash = None
         self._smudgeHitCreamWash = None
@@ -213,6 +215,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
+        self.__clearBruteSpitCreamSplash()
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamWash()
@@ -1060,6 +1063,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 Func(self.__clearSpitBlob),
             )
             self._spitBlobIval.start()
+            # Cream splash aftershock so spit land reads juicy vs green ink.
+            self.__playBruteSpitCreamSplash(end)
         except Exception:
             self.__clearSpitBlob()
 
@@ -1299,6 +1304,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
+        self.__clearBruteSpitCreamSplash()
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamWash()
@@ -2008,6 +2014,33 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._bruteTelegraphSpit = None
+
+    def __playBruteSpitCreamSplash(self, pos=None):
+        """Cream splash + delayed aftershock — Sludge Brute spit land only."""
+        if not self.__isBruteSpit():
+            return
+        if not getattr(
+                CorruptionGlobals,
+                'BRUTE_SPIT_CREAM_SPLASH_ENABLED', True):
+            return
+        self.__clearBruteSpitCreamSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = BruteSpitCreamSplash()
+        self._bruteSpitCreamSplash = splash
+        splash.play(pos)
+
+    def __clearBruteSpitCreamSplash(self):
+        splash = getattr(self, '_bruteSpitCreamSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._bruteSpitCreamSplash = None
 
     def __playGagsterTelegraphPuddle(self):
         """Teal bounce-pie + cream/ink puddle warn — Gunk Gagster wind-ups only."""

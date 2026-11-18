@@ -1252,6 +1252,67 @@ BRUTE_TELEGRAPH_SPIT_LOOK = {
     'binSort': 44,
 }
 
+# Cream splash + delayed cream aftershock on Sludge Brute spit impact /
+# telegraph land (after spit-gob telegraph). Sunny cream / pastel contrast
+# against green BRUTE_SPIT_BLOB_* so the tank spit reads juicy. Same residual
+# grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_* / Gunk puddle cream splash
+# (#218) / Snare counter cream splash (#214). Client only. No keyblades /
+# KH branding.
+# BRUTE_SPIT_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
+# BRUTE_SPIT_CREAM_AFTERSHOCK_ENABLED = False drops aftershock only.
+BRUTE_SPIT_CREAM_SPLASH_ENABLED = True
+BRUTE_SPIT_CREAM_SPLASH_DELAY_SEC = 0.26  # fallback; look prefers spit travel compose
+BRUTE_SPIT_CREAM_SPLASH_LIFT = 0.35  # above spit land pos
+BRUTE_SPIT_CREAM_SPLASH_BIN = 41  # above green spit blob (40)
+BRUTE_SPIT_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.94)  # sunny cream
+BRUTE_SPIT_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.7)
+BRUTE_SPIT_CREAM_SPLASH_FLECK_COLORS = (
+    (1.0, 0.97, 0.82, 0.9),   # sunny cream
+    (1.0, 0.96, 0.62, 0.84),  # butter
+    (1.0, 0.9, 0.78, 0.8),    # soft peach pastel
+)
+BRUTE_SPIT_CREAM_SPLASH_LOOK = {
+    'id': 'brute-spit-cream-splash',
+    # lift / delaySec composed with BRUTE_SPIT_BLOB_TRAVEL when played.
+    'lift': BRUTE_SPIT_CREAM_SPLASH_LIFT,
+    'delaySec': BRUTE_SPIT_CREAM_SPLASH_DELAY_SEC,
+    'delayScale': 0.95,
+    'peakAlpha': 0.94,
+    'splatHalf': 0.24,
+    'splatPeak': 1.5,
+    'splatSec': 0.15,
+    'rimScale': 1.3,
+    'splatColor': BRUTE_SPIT_CREAM_SPLASH_COLOR,
+    'rimColor': BRUTE_SPIT_CREAM_SPLASH_RIM_COLOR,
+    'fleckCount': 4,
+    'fleckHalf': 0.1,
+    'fleckDist': 0.95,
+    'fleckLift': 0.38,
+    'fleckSec': 0.2,
+    'fleckColors': BRUTE_SPIT_CREAM_SPLASH_FLECK_COLORS,
+    'binSort': BRUTE_SPIT_CREAM_SPLASH_BIN,
+}
+BRUTE_SPIT_CREAM_AFTERSHOCK_ENABLED = True
+BRUTE_SPIT_CREAM_AFTERSHOCK_DELAY_SEC = 0.16
+BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT = 3
+BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT = 1
+BRUTE_SPIT_CREAM_AFTERSHOCK_SIZE = 0.1
+BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_SIZE = 0.12
+BRUTE_SPIT_CREAM_AFTERSHOCK_DRIFT = 0.6
+BRUTE_SPIT_CREAM_AFTERSHOCK_FALL = 0.38
+BRUTE_SPIT_CREAM_AFTERSHOCK_SEC = 0.32
+BRUTE_SPIT_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.85)
+BRUTE_SPIT_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
+BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.82)
+BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_ENABLED = True
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF = 0.44
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_START = 0.28
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK = 1.45
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_SEC = 0.28
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.2
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+
 # Balloon Snare string-lash — warm amber, horizontal rubber stretch, vine zip.
 # Reads opposite Brute spit (tall green) and Smudge melee (purple squash).
 SNARE_TELEGRAPH_CHARGE_COLOR = (2.35, 1.45, 0.35, 1.0)
