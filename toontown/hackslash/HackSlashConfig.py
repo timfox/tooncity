@@ -53,6 +53,15 @@ LAUNCH_DOWN_SEC = 0.18
 IFRAME_SEC = 0.55
 IFRAME_FLASH_ALPHA = 0.55
 
+# Player-initiated dodge roll (Shift; Space stays jump).
+DODGE_KEY = 'shift'
+DODGE_KEY_ALT = 'x'
+DODGE_DURATION_SEC = 0.28
+DODGE_IFRAME_SEC = 0.42
+DODGE_DISTANCE = 6.5
+DODGE_COOLDOWN_SEC = 0.65
+DODGE_SQUASH = (0.55, 0.55, 1.45, 0.12)
+
 # Squash / stretch pulses (scale xyz multipliers over short windows).
 # Read as exaggerated rubber-hose hit frames, not realistic physics.
 HOSE_SQUASH = (
@@ -76,5 +85,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Hack-Slash: F/LMB melee  |  soft-lock cam nudge  |  hit flash  |  ~hackslash'
+    'Hack-Slash: F/LMB melee  |  Shift/X dodge  |  soft-lock  |  ~hackslash'
 )

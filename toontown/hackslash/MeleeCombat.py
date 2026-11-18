@@ -44,7 +44,10 @@ class MeleeCombatController(DirectObject):
         self._flashIval = None
         self._flashNP = None
         self._launchIval = None
+        self._dodgeIval = None
         self._iframeUntil = 0.0
+        self._dodgeReadyAt = 0.0
+        self._dodging = False
         self._origScale = None
         self._baseFov = None
         self.targetFinder = SoftTargetFinder(avatar)
@@ -60,12 +63,16 @@ class MeleeCombatController(DirectObject):
         self.comboWindowOpen = False
         self.busy = False
         self._iframeUntil = 0.0
+        self._dodgeReadyAt = 0.0
+        self._dodging = False
         self.avatar.hackSlashDemoHostiles = getattr(
             self.avatar, 'hackSlashDemoHostiles', []) or []
         if spawnHostiles and not self.avatar.hackSlashDemoHostiles:
             self.avatar.hackSlashDemoHostiles = spawnDemoHostiles(self.avatar)
         self.accept(HackSlashConfig.ATTACK_KEY, self._onAttackPressed)
         self.accept(HackSlashConfig.ATTACK_KEY_ALT, self._onAttackPressed)
+        self.accept(HackSlashConfig.DODGE_KEY, self._onDodgePressed)
+        self.accept(HackSlashConfig.DODGE_KEY_ALT, self._onDodgePressed)
         self.accept('corruptToonHitPlayer', self._onCorruptHitPlayer)
         self._showHint(HackSlashConfig.DEMO_HINT)
         taskMgr.add(self._tick, self._taskName)  # noqa: F821
@@ -77,6 +84,8 @@ class MeleeCombatController(DirectObject):
         self.enabled = False
         self.ignore(HackSlashConfig.ATTACK_KEY)
         self.ignore(HackSlashConfig.ATTACK_KEY_ALT)
+        self.ignore(HackSlashConfig.DODGE_KEY)
+        self.ignore(HackSlashConfig.DODGE_KEY_ALT)
         self.ignore('corruptToonHitPlayer')
         taskMgr.remove(self._taskName)  # noqa: F821
         self._finishSwing()
@@ -85,7 +94,9 @@ class MeleeCombatController(DirectObject):
         self._restoreFov()
         self._clearHitFlash()
         self._clearLaunch()
+        self._clearDodge()
         self._iframeUntil = 0.0
+        self._dodging = False
         self.targetFinder.clear()
         self._hideHint()
         self._hideLockHint()
@@ -320,12 +331,81 @@ class MeleeCombatController(DirectObject):
         """Readable i-frame / dodge window after a CorruptToon smack."""
         if not self.enabled:
             return
+        # Active dodge already covers this beat — skip the hit-react flash.
+        if self.isInvulnerable():
+            return
         now = globalClock.getFrameTime()  # noqa: F821
         self._iframeUntil = now + HackSlashConfig.IFRAME_SEC
         self.avatar.hackSlashIFrameUntil = self._iframeUntil
         # Stronger flash than normal hit confirm so the window is obvious.
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
         messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
+
+    def _onDodgePressed(self):
+        """Brief rubber-hose dash with i-frames (Shift / X)."""
+        if not self.enabled or self._dodging:
+            return
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now < self._dodgeReadyAt:
+            return
+        self._dodging = True
+        self._dodgeReadyAt = now + HackSlashConfig.DODGE_COOLDOWN_SEC
+        self._iframeUntil = now + HackSlashConfig.DODGE_IFRAME_SEC
+        self.avatar.hackSlashIFrameUntil = self._iframeUntil
+        messenger.send(
+            'hackslash-iframe',
+            [self.avatar, HackSlashConfig.DODGE_IFRAME_SEC])  # noqa: F821
+        self._playHitFlash(peakAlpha=0.28)
+        try:
+            start = self.avatar.getPos(render)  # noqa: F821
+            forward = render.getRelativeVector(  # noqa: F821
+                self.avatar, Point3(0, 1, 0))
+            forward.setZ(0)
+            if forward.lengthSquared() < 1e-4:
+                end = start
+            else:
+                forward.normalize()
+                end = start + forward * HackSlashConfig.DODGE_DISTANCE
+        except Exception:
+            self._dodging = False
+            return
+        sx, sy, sz, squashSec = HackSlashConfig.DODGE_SQUASH
+        self._clearDodge()
+        self._dodgeIval = Parallel(
+            Sequence(
+                LerpPosInterval(
+                    self.avatar, HackSlashConfig.DODGE_DURATION_SEC, end,
+                    other=render),  # noqa: F821
+                Func(self._finishDodge),
+            ),
+            Sequence(
+                LerpScaleInterval(
+                    self.avatar, squashSec, Point3(sx, sy, sz)),
+                LerpScaleInterval(
+                    self.avatar,
+                    HackSlashConfig.DODGE_DURATION_SEC - squashSec,
+                    Point3(1.0, 1.0, 1.0)),
+            ),
+            name=self.avatar.uniqueName('hackslashDodge'),
+        )
+        self._dodgeIval.start()
+
+    def _finishDodge(self):
+        self._dodging = False
+        self._dodgeIval = None
+        try:
+            self.avatar.setScale(1.0, 1.0, 1.0)
+        except Exception:
+            pass
+
+    def _clearDodge(self):
+        if self._dodgeIval:
+            try:
+                self._dodgeIval.finish()
+            except Exception:
+                pass
+            self._dodgeIval = None
+        self._dodging = False
 
     def isInvulnerable(self):
         return globalClock.getFrameTime() < self._iframeUntil  # noqa: F821
