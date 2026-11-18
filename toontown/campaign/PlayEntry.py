@@ -190,7 +190,7 @@ class PlayEntryClient(DirectObject):
         return task.done
 
     def _onCampaignProgressSync(
-            self, unlockedThrough=0, state=0, chaseCleared=0):
+            self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
         """Apply AI-persisted progress so hub tip survives relog."""
         try:
             from toontown.campaign import CampaignProgressSave
@@ -198,6 +198,7 @@ class PlayEntryClient(DirectObject):
                 'unlockedThrough': unlockedThrough,
                 'state': state,
                 'chaseCleared': chaseCleared,
+                'reclaimCount': reclaimCount,
                 # actIndex omitted — sanitize uses unlockedThrough as default.
             })
         except Exception:

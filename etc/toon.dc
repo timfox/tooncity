@@ -3287,9 +3287,9 @@ dclass PollutionManager : DistributedObject {
   // Client reports dodge/hit i-frame window (milliseconds) so AI skips CorruptToon damage.
   requestHackSlashIFrame(uint16) airecv clsend;
   // Thin campaign progress mirror after login / hydrate (no DistributedToon field).
-  // unlockedThrough, CampaignGlobals STATE_*, chaseCleared (0/1).
+  // unlockedThrough, CampaignGlobals STATE_*, chaseCleared (0/1), reclaimCount.
   requestCampaignProgress() airecv clsend;
-  setCampaignProgress(uint8, uint8, uint8);
+  setCampaignProgress(uint8, uint8, uint8, uint8);
 };
 
 dclass DistributedCorruptToon : DistributedNode {

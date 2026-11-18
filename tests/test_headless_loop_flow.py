@@ -1135,7 +1135,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         pollution_block = dc.split('dclass PollutionManager')[1].split(
             'dclass ')[0]
         self.assertIn(
-            'setCampaignProgress(uint8, uint8, uint8)', pollution_block)
+            'setCampaignProgress(uint8, uint8, uint8, uint8)', pollution_block)
 
         play_src = _read('toontown/campaign/PlayEntry.py')
         for needle in (

@@ -34,10 +34,11 @@ class PollutionManager(DistributedObject.DistributedObject):
         DistributedObject.DistributedObject.__init__(self, cr)
         self.zonePollution = {}
         # Thin campaign progress mirror (login hydrate) — PlayEntry /
-        # OswaldPresence read via campaignProgressSync messenger.
+        # OswaldPresence / CampaignHandoff read via campaignProgressSync.
         self.campaignUnlockedThrough = 0
         self.campaignState = 0
         self.campaignChaseCleared = 0
+        self.campaignReclaimCount = 0
         self._fog = None
         self._hazeNP = None
         self._activeZoneId = None
@@ -163,14 +164,16 @@ class PollutionManager(DistributedObject.DistributedObject):
         self.sendUpdate('requestStreetEvent', [int(eventType)])
 
     def d_requestCampaignProgress(self):
-        """Ask AI to push persisted victory / unlock / chaseCleared after login."""
+        """Ask AI to push persisted victory / unlock / chase / reclaimCount."""
         self.sendUpdate('requestCampaignProgress', [])
 
-    def setCampaignProgress(self, unlockedThrough, state, chaseCleared):
-        """Mirror AI CampaignProgressSave so hub tip + OswaldPresence match relog."""
+    def setCampaignProgress(self, unlockedThrough, state, chaseCleared,
+                            reclaimCount=0):
+        """Mirror AI CampaignProgressSave so hub tip + power match relog."""
         self.campaignUnlockedThrough = max(0, int(unlockedThrough))
         self.campaignState = max(0, int(state))
         self.campaignChaseCleared = 1 if int(chaseCleared) else 0
+        self.campaignReclaimCount = max(0, min(255, int(reclaimCount)))
         try:
             from toontown.campaign import CampaignGlobals
             msg = getattr(
@@ -183,7 +186,8 @@ class PollutionManager(DistributedObject.DistributedObject):
                 msg,
                 [self.campaignUnlockedThrough,
                  self.campaignState,
-                 self.campaignChaseCleared])
+                 self.campaignChaseCleared,
+                 self.campaignReclaimCount])
         except Exception:
             self.notify.debug('campaignProgressSync messenger failed')
 

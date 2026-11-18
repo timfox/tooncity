@@ -134,6 +134,12 @@ class CampaignHandoffClient(DirectObject):
         # Chase-clear epilogue soft-end (AI-local + client watch rebroadcast).
         self.accept('oswaldBetrayalChaseCleared', self._onChaseCleared)
         self.accept('campaignEpilogue', self._onChaseCleared)
+        # Login / hydrate: re-apply POWER_BUMP from AI-persisted reclaimCount
+        # so mid-campaign relog keeps melee scale (silent — no handoff plate).
+        syncMsg = getattr(
+            CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
+            'campaignProgressSync')
+        self.accept(syncMsg, self._onCampaignProgressSync)
 
     def destroy(self):
         self.ignoreAll()
@@ -144,6 +150,13 @@ class CampaignHandoffClient(DirectObject):
         phase = int(phaseIndex)
         if phase >= 1:
             self._finaleClears = max(self._finaleClears, phase - 1)
+
+    def _onCampaignProgressSync(
+            self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
+        """Silent power rehydrate from AI reclaimCount (login / persist push)."""
+        count = max(0, int(reclaimCount or 0))
+        self._localReclaimCount = count
+        applyPowerBump(count)
 
     def _onPurityRestore(self, zoneId):
         self._localReclaimCount += 1
