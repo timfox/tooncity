@@ -23,6 +23,7 @@ from direct.task import Task
 from otp.avatar import Emote
 
 from . import HackSlashConfig
+from . import HitJuice
 from .DemoHostile import spawnDemoHostiles
 from .SoftTarget import SoftTargetFinder
 
@@ -39,6 +40,8 @@ class MeleeCombatController(DirectObject):
         self.busy = False
         self._swingIval = None
         self._hoseIval = None
+        self._impactIval = None
+        self._playerHitReactIval = None
         self._hitstopIval = None
         self._fovIval = None
         self._flashIval = None
@@ -100,6 +103,8 @@ class MeleeCombatController(DirectObject):
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
         self._finishSwing()
         self._restoreScale()
+        self._clearImpactJuice()
+        self._clearPlayerHitReact()
         self._clearHitstop()
         self._restoreFov()
         self._clearHitFlash()
@@ -350,6 +355,8 @@ class MeleeCombatController(DirectObject):
             landed = False
         if landed:
             messenger.send('hackslash-hit', [self.avatar, target, damage, hitIndex])  # noqa: F821
+            # Squash first so hitstop freezes on the impact silhouette.
+            self._playConnectImpactJuice(hitIndex, target)
             self._playHitstop(hitIndex)
             self._playHitFlash()
             if hitIndex >= HackSlashConfig.LAUNCH_HIT_INDEX:
@@ -575,6 +582,9 @@ class MeleeCombatController(DirectObject):
         self._iframeUntil = now + HackSlashConfig.IFRAME_SEC
         self.avatar.hackSlashIFrameUntil = self._iframeUntil
         self._reportIFrameToAI(HackSlashConfig.IFRAME_SEC)
+        # Rubber-hose player hit-react: flat squash → stretch recover + tiny stop.
+        self._playPlayerHitReact()
+        self._playTinyHitstop(HackSlashConfig.PLAYER_HIT_REACT_HITSTOP_SEC)
         # Stronger flash than normal hit confirm so the window is obvious.
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
         messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
@@ -660,35 +670,35 @@ class MeleeCombatController(DirectObject):
 
     def _playHitstop(self, hitIndex):
         """Brief attack freeze so contacts read as rubber-hose impacts."""
-        self._clearHitstop()
         stopSec = HackSlashConfig.HITSTOP_SEC[
             min(hitIndex, len(HackSlashConfig.HITSTOP_SEC) - 1)]
-        # Pause the swing / hose intervals so the hit silhouette sticks.
-        try:
-            if self._swingIval:
-                self._swingIval.pause()
-        except Exception:
-            pass
-        try:
-            if self._hoseIval:
-                self._hoseIval.pause()
-        except Exception:
-            pass
+        self._playTinyHitstop(stopSec)
+
+    def _playTinyHitstop(self, stopSec):
+        """Pause swing / hose / impact juice so the silhouette sticks briefly."""
+        self._clearHitstop()
+        stopSec = max(0.0, float(stopSec))
+        if stopSec <= 0.0:
+            return
+        for ival in (self._swingIval, self._hoseIval, self._impactIval,
+                     self._playerHitReactIval):
+            try:
+                if ival:
+                    ival.pause()
+            except Exception:
+                pass
         name = self.avatar.uniqueName('hackslashHitstop')
         taskMgr.remove(name)  # noqa: F821
         taskMgr.doMethodLater(stopSec, self._resumeAfterHitstop, name)  # noqa: F821
 
     def _resumeAfterHitstop(self, task):
-        try:
-            if self._swingIval:
-                self._swingIval.resume()
-        except Exception:
-            pass
-        try:
-            if self._hoseIval:
-                self._hoseIval.resume()
-        except Exception:
-            pass
+        for ival in (self._swingIval, self._hoseIval, self._impactIval,
+                     self._playerHitReactIval):
+            try:
+                if ival:
+                    ival.resume()
+            except Exception:
+                pass
         return Task.done
 
     def _clearHitstop(self):
@@ -697,16 +707,13 @@ class MeleeCombatController(DirectObject):
             taskMgr.remove(name)  # noqa: F821
         except Exception:
             pass
-        try:
-            if self._swingIval:
-                self._swingIval.resume()
-        except Exception:
-            pass
-        try:
-            if self._hoseIval:
-                self._hoseIval.resume()
-        except Exception:
-            pass
+        for ival in (self._swingIval, self._hoseIval, self._impactIval,
+                     self._playerHitReactIval):
+            try:
+                if ival:
+                    ival.resume()
+            except Exception:
+                pass
 
     def _playHitFlash(self, peakAlpha=None):
         """Brief full-screen white flash so connects read beyond hitstop alone."""
@@ -834,10 +841,85 @@ class MeleeCombatController(DirectObject):
         )
         self._hoseIval.start()
 
+    def _playConnectImpactJuice(self, hitIndex, target=None):
+        """On connect: replace wind-up hose with impact squash → stretch recover.
+
+        Also pulses the target visual when present so corrupt/demo hit-reacts
+        share the same rubber-hose curve (targets may layer color/knockback).
+        """
+        self._clearImpactJuice()
+        # End wind-up hose so impact silhouette owns the scale beat.
+        if self._hoseIval:
+            try:
+                self._hoseIval.pause()
+            except Exception:
+                pass
+            self._hoseIval = None
+        av = self.avatar
+        if self._origScale is None:
+            try:
+                self._origScale = Point3(1.0, 1.0, 1.0)
+            except Exception:
+                self._origScale = Point3(1.0, 1.0, 1.0)
+        # Snap back to pre-swing scale so wind-up multipliers don't compound.
+        try:
+            av.setScale(self._origScale)
+        except Exception:
+            pass
+        self._impactIval = HitJuice.playImpactSquash(
+            av,
+            hitIndex=hitIndex,
+            finishScale=self._origScale,
+            name=av.uniqueName('hackslashImpactSquash'),
+        )
+        # Target hit-react scale — DemoHostile / CorruptToon may also tint.
+        visual = HitJuice.resolveVisualNode(target)
+        if visual is not None and visual is not av:
+            try:
+                # Tag so overlapping target reactions can finish prior juice.
+                prev = getattr(target, '_hackslashImpactIval', None)
+                HitJuice.finishInterval(prev)
+            except Exception:
+                pass
+            targetIval = HitJuice.playImpactSquash(
+                visual,
+                hitIndex=hitIndex,
+                finishScale=Point3(1.0, 1.0, 1.0),
+                name='hackslashTargetImpact',
+            )
+            try:
+                setattr(target, '_hackslashImpactIval', targetIval)
+            except Exception:
+                pass
+
+    def _clearImpactJuice(self):
+        HitJuice.finishInterval(
+            self._impactIval, self.avatar, restoreScale=self._origScale)
+        self._impactIval = None
+
+    def _playPlayerHitReact(self):
+        """Flat squash → springy stretch when a corrupt smack lands."""
+        self._clearPlayerHitReact()
+        # Don't fight an in-flight dodge / hose scale pulse.
+        if self._dodging:
+            return
+        self._playerHitReactIval = HitJuice.playPlayerHitReact(
+            self.avatar,
+            finishScale=Point3(1.0, 1.0, 1.0),
+            name=self.avatar.uniqueName('hackslashPlayerHitReact'),
+        )
+
+    def _clearPlayerHitReact(self):
+        HitJuice.finishInterval(
+            self._playerHitReactIval, self.avatar,
+            restoreScale=Point3(1.0, 1.0, 1.0))
+        self._playerHitReactIval = None
+
     def _restoreScale(self):
         if self._hoseIval:
             self._hoseIval.finish()
             self._hoseIval = None
+        self._clearImpactJuice()
         if self._origScale is not None:
             try:
                 self.avatar.setScale(self._origScale)

@@ -19,7 +19,6 @@ from panda3d.core import (
 from direct.interval.IntervalGlobal import (
     LerpColorScaleInterval,
     LerpScaleInterval,
-    Parallel,
     Sequence,
 )
 
@@ -96,29 +95,23 @@ class DemoHostile(HackSlashTarget, NodePath):
             return False
         self.hp = max(0, self.hp - int(damage))
         self._labelNP.node().setText(self._labelText())
-        self._playHitReaction(hitIndex)
+        self._playHitReaction(hitIndex, attacker)
         if self.hp <= 0:
             self._playDefeat()
         return True
 
-    def _playHitReaction(self, hitIndex):
+    def _playHitReaction(self, hitIndex, attacker=None):
+        """Ink flash + knockback; scale squash/stretch is owned by MeleeCombat HitJuice."""
         if self._hitIval:
             self._hitIval.finish()
-        stretch = 1.15 + 0.15 * hitIndex
-        squash = 0.7 - 0.05 * hitIndex
         self._hitIval = Sequence(
-            Parallel(
-                LerpScaleInterval(self._visual, 0.06, (stretch, stretch, squash)),
-                LerpColorScaleInterval(self._visual, 0.06, Vec4(1.5, 0.6, 1.8, 1)),
-            ),
-            Parallel(
-                LerpScaleInterval(self._visual, 0.1, (0.85, 0.85, 1.25)),
-                LerpColorScaleInterval(self._visual, 0.1, Vec4(1, 1, 1, 1)),
-            ),
-            LerpScaleInterval(self._visual, 0.08, (1, 1, 1)),
+            LerpColorScaleInterval(self._visual, 0.06, Vec4(1.5, 0.6, 1.8, 1)),
+            LerpColorScaleInterval(self._visual, 0.14, Vec4(1, 1, 1, 1)),
         )
         self._hitIval.start()
         try:
+            if attacker is None:
+                return
             away = self.getPos(render) - attacker.getPos(render)  # noqa: F821
             away.setZ(0)
             if away.length() > 0.01:
