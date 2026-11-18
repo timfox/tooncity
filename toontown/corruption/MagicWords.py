@@ -74,9 +74,10 @@ class Purify(MagicWord):
 
 class SpawnCorrupt(MagicWord):
     aliases = ['spawncorrupttoon', 'corrupttoon', 'spawnct']
-    desc = 'Spawn CorruptToon enemies near the invoker (chase + telegraphed smack).'
+    desc = 'Spawn ink-tinted CorruptToon enemies (Actor silhouette when loadable).'
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
+        'Client prefers DNA/Actor ink silhouette, else card limbs. '
         'They aggro, telegraph attacks, and deal modest HP damage. '
         'Optional count (1-8) and hp. Defeat lowers zone pollution. '
         'Pair with ~hackslash 0 for melee.')
