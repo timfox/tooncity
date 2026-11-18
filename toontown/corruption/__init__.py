@@ -15,5 +15,5 @@ CorruptionGlobals bias tables and PollutionPropTint on street geom. Fog
 density and haze opacity ramp with zone corruption (lerp as reclaim rises or
 clears). Street music crossfades to a darker encounter bed while polluted and
 back to the hood bed on purity restore (PollutionStreetAudio; pairs with
-reclaim cheer/sting).
+reclaim cheer/sting), plus a short rubber-hose birds ambient bed fade-in.
 """
