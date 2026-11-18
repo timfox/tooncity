@@ -283,11 +283,15 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
 
         campaign_names = _class_and_func_names(self.campaign_tree)
         self.assertIn('hubPlayEntryTip', campaign_names)
+        self.assertIn('hubVictoryReplayTip', campaign_names)
         self.assertIn('handoffTravelHint', campaign_names)
         hub_tip = _toplevel_value(self.campaign_tree, 'HUB_TIP')
         self.assertIsNotNone(hub_tip)
+        hub_victory = _toplevel_value(self.campaign_tree, 'HUB_VICTORY_TIP')
+        self.assertIsNotNone(hub_victory)
         hub_zone = _toplevel_value(self.campaign_tree, 'HUB_ZONE')
         self.assertIsNotNone(hub_zone)
+        self.assertIn('_onCampaignEpilogue', play_methods)
 
         # Static read: PlayEntry wires STREET_PACK delays for the three packs.
         play_src = _read('toontown/campaign/PlayEntry.py')

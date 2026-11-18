@@ -399,7 +399,10 @@ not a crimson Ink Smudge smack reskin). Full dialogue is out of scope here.
    (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
 4. Clear again → campaign victory + soft twist tease
    (`CampaignGlobals.FINALE_TWIST_TEASE`) → delayed **Corrupted Oswald**
-   chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client).
+   chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client) →
+   chase clear → **campaign epilogue** soft-end handoff
+   (`CAMPAIGN_EPILOGUE_*` / `oswaldBetrayalChaseCleared`) + hub victory
+   replay tip (`HUB_VICTORY_TIP`) so twist→soft-end has an authored beat.
 
 Debug Overlord AI without the full campaign: `~spawnoverlord` (P1) /
 `~spawnoverlord 1 160 2` (P2) / `~spawncorrupt 1 90 0 1`.

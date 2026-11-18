@@ -96,11 +96,16 @@ class PlayEntryClient(DirectObject):
         self._softNextCue = None
         self._softNextZone = None
         self._softNextStreet = None
+        # After STATE_VICTORY / chase-clear epilogue, hub tip uses replay copy.
+        self._victoryEpilogue = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
         # CampaignHandoff owns the celebration; tip bar latches the next cue.
         self.accept('purityRestoreFx', self._onPurity)
         self.accept('campaignHandoffCue', self._onHandoffCue)
+        self.accept('campaignVictory', self._onCampaignVictory)
+        self.accept('oswaldBetrayalChaseCleared', self._onCampaignEpilogue)
+        self.accept('campaignEpilogue', self._onCampaignEpilogue)
         try:
             from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
             ensureReclaimCheerClient()
@@ -426,10 +431,12 @@ class PlayEntryClient(DirectObject):
         return task.done
 
     def _showHubTip(self):
-        """TTC hub tip — Oswald points at Loopy / soft next street."""
+        """TTC hub tip — Oswald points at Loopy / soft next / victory replay."""
         face = _face()
         if self._softNextCue:
             tip = self._softNextCue
+        elif self._victoryEpilogue:
+            tip = CampaignGlobals.hubPlayEntryTip(face=face, victory=True)
         elif self._softNextStreet:
             tip = CampaignGlobals.hubPlayEntryTip(
                 face=face, nextStreet=self._softNextStreet)
@@ -438,9 +445,33 @@ class PlayEntryClient(DirectObject):
                 CampaignGlobals, 'HUB_TIP', None) or (
                 CampaignGlobals.hubPlayEntryTip(face=face))
         self._showTip(tip)
-        self._flashBanner(
-            '%s needs you — hop a tunnel and reclaim purity!' % face,
-            trustSettle=True)
+        if self._victoryEpilogue and not self._softNextCue:
+            self._flashBanner(
+                'Campaign complete — replay from hub / C on Loopy!',
+                trustSettle=True)
+        else:
+            self._flashBanner(
+                '%s needs you — hop a tunnel and reclaim purity!' % face,
+                trustSettle=True)
+
+    def _onCampaignVictory(self, reclaimCount=0):
+        # Latch victory so hub tip stops inviting Act 1 as if brand-new.
+        self._victoryEpilogue = True
+
+    def _onCampaignEpilogue(self, doId=0):
+        """Chase-clear soft-end — hub replay tip + Loopy rematch latch."""
+        if not bool(getattr(
+                CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True)):
+            return
+        self._victoryEpilogue = True
+        face = _face()
+        tip = getattr(
+            CampaignGlobals, 'CAMPAIGN_EPILOGUE_CUE', None) or (
+            CampaignGlobals.hubVictoryReplayTip(face=face))
+        self._latchSoftNextCue(
+            tip,
+            nextZone=CampaignGlobals.ACTS[0]['zoneId'],
+            nextStreet=CampaignGlobals.ACTS[0]['name'])
 
     def _onReclaimStart(self, *args):
         self._reclaimLive = True
@@ -536,6 +567,12 @@ class PlayEntryClient(DirectObject):
     def _requestCampaign(self):
         # Cancel pending auto so C wins cleanly (no street-pack race).
         self._cancelAutoReclaim()
+        # Replay from victory clears the epilogue hub tip for the new run.
+        if self._victoryEpilogue:
+            self._victoryEpilogue = False
+            self._softNextCue = None
+            self._softNextZone = None
+            self._softNextStreet = None
         pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
         if pm is None:
             return

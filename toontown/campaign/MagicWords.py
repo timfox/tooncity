@@ -41,8 +41,9 @@ class StartCampaign(MagicWord):
         '+ rubber-hose silhouette shadow flash + FOV/SFX + soft cream '
         'aftershock framed by cream edge + soft cream wash pulse + cream '
         'aftershock; then a short fightable Corrupted Oswald chase/arena '
-        'spawn as the betrayal gameplay consequence). Toontown '
-        'spiritual-sequel fantasy — no keyblades. '
+        'spawn as the betrayal gameplay consequence; chase clear lands a '
+        'campaign epilogue soft-end handoff + hub victory replay tip). '
+        'Toontown spiritual-sequel fantasy — no keyblades. '
         'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

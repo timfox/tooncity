@@ -222,6 +222,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('Punchline Place', punch)
         self.assertNotIn('Loopy Lane', punch)
 
+        # Post-victory hub tip (chase-clear epilogue soft-end).
+        victory = camp.hubPlayEntryTip(victory=True)
+        self.assertIn('Campaign complete', victory)
+        self.assertIn('Loopy', victory)
+        self.assertEqual(victory, camp.hubVictoryReplayTip())
+
         nxt = self.act_by_id['punchline']
         hint = camp.handoffTravelHint(nxt)
         self.assertIn('Punchline Place', hint)
@@ -246,8 +252,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         for method in (
                 '_showHubTip', '_latchSoftNextCue', '_autoStartReclaim',
                 '_requestCampaign', '_armSillyApproachTip',
-                '_armLoopyApproachTip'):
+                '_armLoopyApproachTip', '_onCampaignEpilogue'):
             self.assertIn(method, methods, msg='PlayEntryClient missing %s' % method)
+        self.assertIn("accept('oswaldBetrayalChaseCleared'", play_src)
+        self.assertIn("accept('campaignEpilogue'", play_src)
 
         self.assertIn('CampaignGlobals.ACTS', play_src)
         self.assertIn('HUB_ZONE', play_src)

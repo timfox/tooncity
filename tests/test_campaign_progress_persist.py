@@ -107,6 +107,7 @@ class _FakeDirector:
         self.reclaimCount = 0
         self.unlockedThrough = 0
         self._finalePhase = 0
+        self.chaseCleared = 0
         self._lastToonId = None
         self._hydratedToonId = None
 
