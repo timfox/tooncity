@@ -3278,7 +3278,7 @@ dclass DistributedTrashcanZeroMgr : DistributedPhaseEventMgr {
 dclass DistributedSillyMeterMgr : DistributedPhaseEventMgr {
 };
 
-// KH x Toontown slice 2: neighborhood pollution + corrupt toon stubs
+// Toontown spiritual-sequel slice 2: neighborhood pollution + corrupt toon stubs
 dclass PollutionManager : DistributedObject {
   setZonePollution(uint32, uint16/1000(0-1)) broadcast;
   requestZonePollution(uint32) airecv clsend;
@@ -3302,7 +3302,7 @@ dclass DistributedCorruptToon : DistributedNode {
   requestHackSlashHit(uint16) airecv clsend;
 };
 
-// KH x Toontown slice 3 / depth D3: reclaim director + escalating waves
+// Toontown spiritual-sequel slice 3 / depth D3: reclaim director + escalating waves
 // finalePhase: 0=normal reclaim, 1=Ink Overlord rising, 2=Unleashed
 dclass DistributedReclaimDirector : DistributedObject {
   setState(uint8) required broadcast ram;

@@ -8,12 +8,12 @@ ATTACK_KEY_ALT = 'mouse1'
 # Soft-target cone (degrees half-angle) and range (Panda units / feet-ish).
 TARGET_RANGE = 14.0
 TARGET_HALF_ANGLE_DEG = 55.0
-# Sticky lock: hold current target well past a brief glance (KH soft-lock feel).
+# Sticky lock: hold current target well past a brief glance (soft-lock feel).
 TARGET_LOCK_HOLD_SEC = 3.5
 TARGET_STICKY_RANGE = 18.0
 TARGET_STICKY_HALF_ANGLE_DEG = 95.0
 
-# Combo: 3 hits, KH-ish cadence with cartoon overshoot on the finisher.
+# Combo: 3 stretch punches, cartoon cadence with overshoot on the finisher.
 COMBO_LENGTH = 3
 COMBO_WINDOW_SEC = 0.55
 COMBO_RECOVERY_SEC = 0.35
@@ -33,7 +33,7 @@ FINISHER_FOV_IN_SEC = 0.06
 FINISHER_FOV_OUT_SEC = 0.18
 
 # Soft-lock camera / facing nudge while melee is enabled (per-tick lerp).
-# Idle stays mild; mid-combo adds a soft orbit/pull for KH framing without
+# Idle stays mild; mid-combo adds a soft orbit/pull for readable framing without
 # hard-locking (smart-cam + page-up/down still win).
 LOCK_FACE_LERP = 0.12
 LOCK_CAM_LERP = 0.08
@@ -62,7 +62,7 @@ COMBO_COUNTER_POP_SEC = 0.08
 COMBO_COUNTER_SETTLE_SEC = 0.12
 COMBO_BREAK_SEC = 1.15
 COMBO_FADE_SEC = 0.45
-COMBO_COUNTER_LABEL = 'HIT'
+COMBO_COUNTER_LABEL = 'PUNCH'
 # Color ramps slightly warmer as the string climbs (still readable on busy streets).
 COMBO_COUNTER_COLORS = (
     (1.0, 0.95, 0.55, 1.0),
@@ -118,5 +118,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Hack-Slash: F/LMB melee  |  Shift/X dodge  |  soft-lock cam  |  ~hackslash'
+    'Stretch punches: F/LMB  |  Shift/X dodge  |  soft-lock cam  |  ~melee'
 )

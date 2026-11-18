@@ -2,8 +2,8 @@
 
 Story (Tim): Oswald is the trusted toon leading the reclaim — players believe
 he is the hero. Silly/finale victory copy reveals he caused the corruption.
-Gameplay feel may nod to hack-and-slash lock-on/combos and readable telegraphs;
-lore is a spiritual sequel to Toontown (no keyblades, no Kingdom Hearts story).
+Combat is rubber-hose Oswald stretch punches (combo, soft-lock, dodge,
+readable telegraphs). Lore is a spiritual sequel to Toontown — no keyblades.
 """
 
 from toontown.toonbase import ToontownGlobals

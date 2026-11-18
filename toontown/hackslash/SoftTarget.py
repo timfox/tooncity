@@ -1,6 +1,6 @@
-"""Soft nearest-hostile targeting in the KH vein.
+"""Soft nearest-hostile targeting for rubber-hose melee.
 
-Prefers HackSlashTarget implementers (demo hostiles / future CorruptToon),
+Prefers HackSlashTarget implementers (demo hostiles / CorruptToon),
 then falls back to street suits as stand-ins for the prototype.
 """
 

@@ -118,7 +118,7 @@ class PlayEntryClient(DirectObject):
         try:
             av.enableHackSlashMelee(spawnHostiles=False)
             self._armedZone = zoneId
-            self._flashBanner('Oswald: MELEE ARMED — Press F / LMB')
+            self._flashBanner('Oswald: STRETCH PUNCHES — Press F / LMB')
         except Exception:
             pass
 
