@@ -81,6 +81,27 @@ class PollutionManagerAI(DistributedObjectAI):
                 self.notify.warning('requestStreetEvent campaign failed')
                 return
         else:
+            # Prefer campaign attach when a campaign act is already live for
+            # this street — stops street-pack R from racing past C unlocks.
+            try:
+                from toontown.campaign import CampaignGlobals
+                from toontown.campaign.CampaignDirectorAI import (
+                    getCampaignDirector)
+                zoneId = int(toon.zoneId)
+                campaign = getCampaignDirector(self.air)
+                if campaign.state == CampaignGlobals.STATE_ACTIVE:
+                    act = CampaignGlobals.ACTS[campaign.actIndex]
+                    if zoneId == int(act['zoneId']):
+                        msg = campaign.startCampaign(toon)
+                        try:
+                            if hasattr(toon, 'd_setSystemMessage'):
+                                toon.d_setSystemMessage(0, str(msg)[:200])
+                        except Exception:
+                            pass
+                        return
+            except Exception:
+                self.notify.warning(
+                    'requestStreetEvent campaign-prefer check failed')
             try:
                 from toontown.reclaim import ReclaimGlobals
                 from toontown.reclaim.DistributedReclaimDirectorAI import (
@@ -108,9 +129,9 @@ class PollutionManagerAI(DistributedObjectAI):
                     **packKwargs)
                 packId = ReclaimGlobals.streetPackId(zoneId)
                 if packId:
-                    msg = 'Reclaim started in zone %s (%s)' % (zoneId, packId)
+                    msg = 'Reclaim started (%s)' % packId
                 else:
-                    msg = 'Reclaim started in zone %s' % zoneId
+                    msg = 'Reclaim packs inbound — press F to fight!'
             except Exception:
                 self.notify.warning('requestStreetEvent reclaim failed')
                 return

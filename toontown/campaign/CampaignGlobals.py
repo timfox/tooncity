@@ -124,6 +124,31 @@ ACTS = (
     },
 )
 
+# Hub PlayEntry tip — points new players at Act 1 without magic words / zone ids.
+# Soft next-street cues reuse hubPlayEntryTip(nextStreet=…) after a handoff.
+HUB_TIP = (
+    'Oswald needs you on Loopy Lane — hop the tunnel and reclaim purity!  |  '
+    'C campaign')
+
+
+def hubPlayEntryTip(face=None, nextStreet=None):
+    """Player-facing hub tip. nextStreet overrides Loopy after a handoff."""
+    face = face or RECLAIM_FACE
+    street = nextStreet or ACTS[0]['name']
+    return (
+        '%s needs you on %s — hop the tunnel and reclaim purity!  |  '
+        'C campaign' % (face, street))
+
+
+def handoffTravelHint(nextAct, face=None):
+    """Next-street travel line — no zone ids / ~startcampaign."""
+    face = face or RECLAIM_FACE
+    name = (nextAct or {}).get('name') or 'the next street'
+    return (
+        'Head to %s — %s will field the packs when you arrive.'
+        % (name, face))
+
+
 # Client presentation for Silly Street Ink Overlord phases (1 / 2).
 FINALE_PHASE_BANNER = {
     1: 'OSWALD vs THE OVERLORD',

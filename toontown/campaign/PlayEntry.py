@@ -1,8 +1,10 @@
 """Discoverable Toon City loop entry — no magic-word memorization required.
 
-Oswald leads the reclaim fantasy in tip/banner copy. On campaign streets:
-auto-arm melee, auto-start reclaim packs (no ~spawncorrupt), show prompts,
-bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
+Oswald leads the reclaim fantasy in tip/banner copy. On the TTC hub: tip
+points at the next reclaim street (Loopy first; soft handoff cue after).
+On campaign streets: auto-arm melee, auto-start the **campaign** act (C
+path — not street-pack R) so packs field without ~startcampaign / racing
+C vs auto-reclaim, show prompts, bind R/C via PollutionManager.
 
 On polluted ACTS street enter: brief rubber-hose ink edge vignette that
 fades as the tip bar appears. Tip bar and act-enter flash banners play a
@@ -66,6 +68,11 @@ class PlayEntryClient(DirectObject):
         self._armedZone = None
         self._autoReclaimZone = None
         self._reclaimLive = False
+        # Soft next-street cue survives hub / playground hops until the
+        # pointed ACTS street is entered (no magic words / zone ids).
+        self._softNextCue = None
+        self._softNextZone = None
+        self._softNextStreet = None
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
         # CampaignHandoff owns the celebration; tip bar latches the next cue.
@@ -118,14 +125,32 @@ class PlayEntryClient(DirectObject):
         zoneId = int(zoneId)
         self._cancelAutoReclaim()
         self._reclaimLive = False
+        hubZone = int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
+        if zoneId == hubZone:
+            self._showHubTip()
+            self._clearVignette()
+            self.ignore('r')
+            self.accept('c', self._requestCampaign)
+            self._armedZone = None
+            self._autoReclaimZone = None
+            return
         if zoneId not in self._campaignZoneIds():
-            self._clearTip()
+            # Soft next-street cue survives playground hops.
+            if self._softNextCue:
+                self._showTip(self._softNextCue)
+            else:
+                self._clearTip()
             self._clearVignette()
             self.ignore('r')
             self.ignore('c')
             self._armedZone = None
             self._autoReclaimZone = None
             return
+        # Arrived at the handoff street — clear soft hub cue.
+        if self._softNextZone is not None and zoneId == int(self._softNextZone):
+            self._softNextCue = None
+            self._softNextZone = None
+            self._softNextStreet = None
         self._armMelee(zoneId)
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
@@ -160,8 +185,8 @@ class PlayEntryClient(DirectObject):
             self._showTip(tip, tipHose=tipHose)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
-        # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
-        # Street packs get a short explore beat before packs inbound.
+        # Auto-field the **campaign** act (not street-pack R) so C and auto
+        # share one path — no C-vs-auto-reclaim race / ~startcampaign.
         self._autoReclaimZone = zoneId
         delay = AUTO_RECLAIM_DELAY_SEC
         packId = ReclaimGlobals.streetPackId(zoneId)
@@ -238,7 +263,7 @@ class PlayEntryClient(DirectObject):
             pass
 
     def _autoStartReclaim(self, task):
-        """Kick reclaim once per street enter so packs field without magic words."""
+        """Kick campaign act once per street enter (prefer C over street-pack R)."""
         zoneId = self._autoReclaimZone
         if zoneId is None:
             return task.done
@@ -247,10 +272,28 @@ class PlayEntryClient(DirectObject):
             return task.done
         if self._reclaimLive:
             return task.done
-        self._requestReclaim()
+        # Campaign attach owns act unlocks / ACTS params — avoids C race.
+        self._requestCampaign()
         self._flashBanner(
             ReclaimGlobals.streetAutoFlash(zoneId, face=_face()))
         return task.done
+
+    def _showHubTip(self):
+        """TTC hub tip — Oswald points at Loopy / soft next street."""
+        face = _face()
+        if self._softNextCue:
+            tip = self._softNextCue
+        elif self._softNextStreet:
+            tip = CampaignGlobals.hubPlayEntryTip(
+                face=face, nextStreet=self._softNextStreet)
+        else:
+            tip = getattr(
+                CampaignGlobals, 'HUB_TIP', None) or (
+                CampaignGlobals.hubPlayEntryTip(face=face))
+        self._showTip(tip)
+        self._flashBanner(
+            '%s needs you — hop a tunnel and reclaim purity!' % face,
+            trustSettle=True)
 
     def _onReclaimStart(self, *args):
         self._reclaimLive = True
@@ -265,6 +308,16 @@ class PlayEntryClient(DirectObject):
         self._flashBanner(
             ReclaimGlobals.streetReclaimLiveFlash(zoneId, face=_face()))
 
+    def _latchSoftNextCue(self, tip, nextZone=None, nextStreet=None):
+        """Persist next-street tip across hub / playground zone changes."""
+        lined = '%s  |  F fight  |  C campaign' % tip
+        self._softNextCue = lined
+        if nextZone is not None:
+            self._softNextZone = int(nextZone)
+        if nextStreet:
+            self._softNextStreet = nextStreet
+        self._showTip(lined)
+
     def _onPurity(self, zoneId):
         """Yield the celebration banner to CampaignHandoff; tip shows next street."""
         self._reclaimLive = False
@@ -274,23 +327,41 @@ class PlayEntryClient(DirectObject):
             tip = act.get('nextCue') or (
                 getattr(CampaignGlobals, 'FINALE_TWIST_TEASE', None)
                 or "%s's smile feels… wrong" % face)
-        elif act and act.get('nextCue'):
+            # Rematch soft cue — hub points back at Loopy without ~startcampaign.
+            self._latchSoftNextCue(
+                tip,
+                nextZone=CampaignGlobals.ACTS[0]['zoneId'],
+                nextStreet=CampaignGlobals.ACTS[0]['name'])
+            return
+        if act and act.get('nextCue'):
             tip = act['nextCue']
         elif nxt is not None:
             tip = '%s points the tunnel → %s' % (
                 face, nxt.get('name', 'the next street'))
         else:
             tip = '%s cheers — purity holds!' % face
-        # Persist next-street / twist cue on the tip bar (no competing toast).
-        self._showTip('%s  |  F fight  |  C campaign' % tip)
+        nextZone = nxt['zoneId'] if nxt is not None else None
+        nextStreet = (
+            (act.get('nextStreet') if act else None)
+            or (nxt.get('name') if nxt is not None else None))
+        # Persist next-street / twist cue on the tip bar (survives hub hops).
+        self._latchSoftNextCue(tip, nextZone=nextZone, nextStreet=nextStreet)
 
     def _onHandoffCue(self, nextStreet=None, cueText=None):
         """Latch CampaignHandoff's next-street beat onto the tip bar."""
         text = cueText
         if not text and nextStreet:
             text = '%s points the way → %s' % (_face(), nextStreet)
-        if text:
-            self._showTip('%s  |  F fight  |  C campaign' % text)
+        if not text:
+            return
+        nextZone = None
+        streetName = nextStreet
+        if streetName:
+            for act in CampaignGlobals.ACTS:
+                if act.get('name') == streetName:
+                    nextZone = act.get('zoneId')
+                    break
+        self._latchSoftNextCue(text, nextZone=nextZone, nextStreet=streetName)
 
     def _actsAroundZone(self, zoneId):
         if zoneId is None:
@@ -305,6 +376,8 @@ class PlayEntryClient(DirectObject):
         return None, None
 
     def _requestReclaim(self):
+        # Cancel pending auto-campaign so R and auto don't double-fire.
+        self._cancelAutoReclaim()
         if self._reclaimLive:
             return
         pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
@@ -314,6 +387,8 @@ class PlayEntryClient(DirectObject):
         self._flashBanner('%s is calling street reclaim…' % _face())
 
     def _requestCampaign(self):
+        # Cancel pending auto so C wins cleanly (no street-pack race).
+        self._cancelAutoReclaim()
         pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
         if pm is None:
             return
