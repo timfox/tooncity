@@ -393,6 +393,67 @@ SNARE_STRING_SNAP_SPLASH_LOOK = {
         'binSort': 46,
     },
 }
+
+# Ink Overlord hit/death magenta ink splash — cheap rubber-hose magenta /
+# crimson splash so tagged/popped Overlord reads as boss, not street Smudge
+# (client only). Composes with OverlordTelegraphCrownFx /
+# OverlordPhaseInkRainFx / CorruptDeathPopFx / IdleInkDripFx palettes via
+# OverlordMagentaInkSplashFx.overlordMagentaInkSplashLook; phase charge
+# retints P1 magenta vs P2 crimson. Bulkier than SMUDGE_INK_SPLASH_LOOK /
+# BRUTE_SLUDGE_SPLASH_LOOK to match boss silhouette. Hit is the cheap scan
+# cue; death layers a slightly larger splash with DeathPop.
+OVERLORD_MAGENTA_INK_SPLASH_LOOK = {
+    'hit': {
+        'id': 'overlord-hit-splash',
+        'lift': 2.55,
+        'peakAlpha': 0.96,
+        'splatHalf': 0.36,
+        'splatPeak': 1.85,
+        'splatSec': 0.22,
+        'rimScale': 1.32,
+        'smearCount': 4,
+        'smearHalf': 0.12,
+        'smearSec': 0.24,
+        'smearSpread': 1.05,
+        'fleckCount': 4,
+        'fleckHalf': 0.15,
+        'fleckDist': 1.55,
+        'fleckLift': 0.55,
+        'fleckSec': 0.26,
+        'dripCount': 2,
+        'dripHalf': 0.1,
+        'dripSpread': 0.34,
+        'dripFall': 0.95,
+        'dripSec': 0.38,
+        'dripStagger': 0.03,
+        'binSort': 46,
+    },
+    'death': {
+        'id': 'overlord-death-splash',
+        'lift': 2.05,
+        'peakAlpha': 0.98,
+        'splatHalf': 0.52,
+        'splatPeak': 2.45,
+        'splatSec': 0.3,
+        'rimScale': 1.4,
+        'smearCount': 5,
+        'smearHalf': 0.15,
+        'smearSec': 0.32,
+        'smearSpread': 1.45,
+        'fleckCount': 6,
+        'fleckHalf': 0.2,
+        'fleckDist': 2.25,
+        'fleckLift': 0.85,
+        'fleckSec': 0.34,
+        'dripCount': 3,
+        'dripHalf': 0.13,
+        'dripSpread': 0.48,
+        'dripFall': 1.35,
+        'dripSec': 0.48,
+        'dripStagger': 0.04,
+        'binSort': 47,
+    },
+}
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
 ATTACK_HIT_FLASH_PEAK = 0.55
 ATTACK_HIT_FLASH_IN = 0.04

@@ -18,9 +18,12 @@ rubber-hose string-lash pop). Balloon Snare hits and deaths also flash
 SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
 composes with string / death / idle looks). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
-OverlordPhaseInkRainFx (ink rain / ink fall shower). Defeat plays
-CorruptDeathPopFx (rubber-hose ink splat / balloon pop). Clearing them lowers
-per-zone pollution via PollutionManager; hitting 0.0 unlocks purity restore
+OverlordPhaseInkRainFx (ink rain / ink fall shower). Ink Overlord hits and
+deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
+rubber-hose ink splash; phase-retinted; composes with crown / rain / death /
+idle looks — not street Smudge purple). Defeat plays CorruptDeathPopFx
+(rubber-hose ink splat / balloon pop). Clearing them lowers per-zone
+pollution via PollutionManager; hitting 0.0 unlocks purity restore
 (reclaim / campaign).
 
 Pollution fog / ink haze / color grade / street-prop tint are hood-biased

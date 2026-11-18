@@ -98,6 +98,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Brute death layers splash with CorruptDeathPopFx.
 # Melee hits on Snare flash SnareStringSnapSplashFx (cheap amber string-snap);
 # Snare death layers splash with CorruptDeathPopFx.
+# Melee hits on Ink Overlord flash OverlordMagentaInkSplashFx (magenta /
+# crimson, phase-retinted); Overlord death layers splash with DeathPop.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray); purity pop + pollution drop.
 ```
@@ -159,4 +161,15 @@ dialogue is out of scope here.
    chip `P2 CRIMSON FURY`.
 4. Clear again → campaign victory + soft twist tease
    (`CampaignGlobals.FINALE_TWIST_TEASE`).
+
+## Ink Overlord magenta ink splash demo
+
+```
+# Silly finale Overlord (name contains "overlord" / reclaim finalePhase):
+~hackslash 0
+# Land F / LMB — cheap magenta/crimson ink splash
+# (OverlordMagentaInkSplashFx) on each hit; P1 magenta vs P2 crimson.
+# Defeat layers a larger splash with CorruptDeathPopFx.
+# Distinct from street Smudge purple (SmudgeInkSplashFx).
+```
 
