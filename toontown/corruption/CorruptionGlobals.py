@@ -34,6 +34,9 @@ DEFEAT_DELETE_DELAY = 0.85
 CORRUPT_TINT = (0.22, 0.05, 0.32, 0.92)
 CORRUPT_TINT_HOT = (0.55, 0.12, 0.75, 1.0)
 CORRUPT_ARM_TINT = (0.12, 0.02, 0.18, 0.78)
+# DNA Actor base multiply — keeps silhouette readable as ink-black toon.
+CORRUPT_ACTOR_TINT = (0.18, 0.06, 0.28, 1.0)
+CORRUPT_ACTOR_SCALE = 1.08
 CORRUPT_FOG_COLOR = (0.18, 0.12, 0.22)
 CORRUPT_FOG_EXP_MAX = 0.012
 

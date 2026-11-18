@@ -11,7 +11,7 @@ from toontown.corruption.HackSlashTarget import HackSlashTarget
 
 
 class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
-    """Client corrupt enemy: ink silhouette, telegraph stretch, reclaim defeat pop."""
+    """Client corrupt enemy: ink toon Actor when possible, else card silhouette."""
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedCorruptToon')
 
@@ -24,9 +24,15 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.geom = None
         self.armGeom = None
         self.headGeom = None
+        self.legGeomL = None
+        self.legGeomR = None
+        self.toonActor = None
         self.visualRoot = None
         self.nametagNP = None
         self.shadow = None
+        self._useActor = False
+        self._moving = False
+        self._lastPos = None
         self._defeatIval = None
         self._hitIval = None
         self._pulseIval = None
@@ -50,13 +56,32 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
     def delete(self):
         self.__stopIntervals()
-        for attr in ('geom', 'armGeom', 'headGeom', 'visualRoot',
-                     'nametagNP', 'shadow'):
+        self.__cleanupActor()
+        for attr in ('geom', 'armGeom', 'headGeom', 'legGeomL', 'legGeomR',
+                     'visualRoot', 'nametagNP', 'shadow'):
             np = getattr(self, attr, None)
             if np is not None and not np.isEmpty():
                 np.removeNode()
             setattr(self, attr, None)
         DistributedNode.DistributedNode.delete(self)
+
+    def __cleanupActor(self):
+        actor = self.toonActor
+        self.toonActor = None
+        if actor is None:
+            return
+        try:
+            actor.stop()
+        except Exception:
+            pass
+        try:
+            actor.delete()
+        except Exception:
+            try:
+                if not actor.isEmpty():
+                    actor.removeNode()
+            except Exception:
+                pass
 
     def __stopIntervals(self):
         for attr in ('_defeatIval', '_hitIval', '_pulseIval',
@@ -67,11 +92,92 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 setattr(self, attr, None)
 
     def __buildGeom(self):
-        # Layered cards + arm span ≈ rubber-hose ink silhouette (no DNA deps).
         self.visualRoot = self.attachNewNode('corrupt-visual')
+        if self.__tryBuildActorSilhouette():
+            self._useActor = True
+        else:
+            self._useActor = False
+            self.__buildCardSilhouette()
+        self.__buildShadowAndNametag()
 
+    def __tryBuildActorSilhouette(self):
+        """Prefer a real Toon Actor / DNA-tinted silhouette when assets load."""
+        try:
+            from toontown.toon import Toon, ToonDNA
+        except Exception:
+            self.notify.debug('Toon/ToonDNA import failed; using card silhouette')
+            return False
+
+        try:
+            dna = ToonDNA.ToonDNA()
+            cloned = False
+            try:
+                local = getattr(base, 'localAvatar', None)
+                style = getattr(local, 'style', None) if local is not None else None
+                if style is not None and hasattr(style, 'makeNetString'):
+                    dna.makeFromNetString(style.makeNetString())
+                    cloned = True
+            except Exception:
+                cloned = False
+            if not cloned:
+                seed = int(getattr(self, 'doId', 0) or 1)
+                dna.newToonRandom(seed=seed, gender='m')
+
+            toon = Toon.Toon()
+            toon.setDNA(dna)
+            toon.reparentTo(self.visualRoot)
+            toon.setPos(0, 0, 0)
+            toon.setH(0)
+            toon.setScale(CorruptionGlobals.CORRUPT_ACTOR_SCALE)
+            # Ink-black multiply — corruption read stays strong over DNA colors.
+            toon.setColorScale(*CorruptionGlobals.CORRUPT_ACTOR_TINT)
+            try:
+                toon.stopBlink()
+            except Exception:
+                pass
+            try:
+                toon.stopLookAround()
+            except Exception:
+                pass
+            try:
+                if getattr(toon, 'dropShadow', None) is not None:
+                    toon.dropShadow.hide()
+            except Exception:
+                pass
+            try:
+                if getattr(toon, 'nametag3d', None) is not None:
+                    toon.nametag3d.hide()
+            except Exception:
+                pass
+            try:
+                if getattr(toon, 'nametag', None) is not None:
+                    toon.nametag.unmanage(base.marginManager)
+            except Exception:
+                pass
+            try:
+                toon.loop('neutral')
+            except Exception:
+                pass
+
+            self.toonActor = toon
+            self.geom = toon
+            self.notify.debug(
+                'CorruptToon Actor silhouette ready (cloned=%s)' % cloned)
+            return True
+        except Exception:
+            self.notify.debug(
+                'CorruptToon Actor build failed; falling back to cards')
+            self.__cleanupActor()
+            # Clear any partial nodes under visualRoot before cards.
+            if self.visualRoot is not None and not self.visualRoot.isEmpty():
+                for child in self.visualRoot.getChildren():
+                    child.removeNode()
+            return False
+
+    def __buildCardSilhouette(self):
+        """Improved rubber-hose ink cards when DNA/Actor assets are unavailable."""
         cm = CardMaker('corrupt-body')
-        cm.setFrame(-0.65, 0.65, 0.0, 2.15)
+        cm.setFrame(-0.7, 0.7, 0.55, 2.15)
         body = self.visualRoot.attachNewNode(cm.generate())
         body.setColor(*CorruptionGlobals.CORRUPT_TINT)
         body.setBillboardPointEye()
@@ -79,7 +185,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.geom = body
 
         arm = CardMaker('corrupt-arm')
-        arm.setFrame(-1.55, 1.55, 0.85, 1.25)
+        arm.setFrame(-1.85, 1.85, 0.95, 1.35)
         armNP = self.visualRoot.attachNewNode(arm.generate())
         armNP.setColor(*CorruptionGlobals.CORRUPT_ARM_TINT)
         armNP.setBillboardPointEye()
@@ -87,17 +193,34 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.armGeom = armNP
 
         head = CardMaker('corrupt-head')
-        head.setFrame(-0.5, 0.5, 0.0, 0.95)
+        head.setFrame(-0.55, 0.55, 0.0, 1.05)
         headNP = self.visualRoot.attachNewNode(head.generate())
-        headNP.setPos(0, 0, 2.1)
-        headNP.setColor(0.12, 0.03, 0.2, 1.0)
+        headNP.setPos(0, 0, 2.15)
+        headNP.setColor(0.1, 0.02, 0.16, 1.0)
         headNP.setBillboardPointEye()
         headNP.setTransparency(TransparencyAttrib.MAlpha)
         self.headGeom = headNP
 
+        legL = CardMaker('corrupt-leg-l')
+        legL.setFrame(-0.55, -0.08, 0.0, 0.7)
+        legLNP = self.visualRoot.attachNewNode(legL.generate())
+        legLNP.setColor(0.14, 0.03, 0.22, 0.9)
+        legLNP.setBillboardPointEye()
+        legLNP.setTransparency(TransparencyAttrib.MAlpha)
+        self.legGeomL = legLNP
+
+        legR = CardMaker('corrupt-leg-r')
+        legR.setFrame(0.08, 0.55, 0.0, 0.7)
+        legRNP = self.visualRoot.attachNewNode(legR.generate())
+        legRNP.setColor(0.14, 0.03, 0.22, 0.9)
+        legRNP.setBillboardPointEye()
+        legRNP.setTransparency(TransparencyAttrib.MAlpha)
+        self.legGeomR = legRNP
+
+    def __buildShadowAndNametag(self):
         try:
             self.shadow = loader.loadModel('phase_3/models/props/drop_shadow')
-            self.shadow.setScale(0.45)
+            self.shadow.setScale(0.5 if self._useActor else 0.45)
             self.shadow.setColor(0.05, 0.0, 0.1, 0.55)
             self.shadow.setZ(0.025)
             self.shadow.reparentTo(self)
@@ -111,7 +234,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         text.setShadow(0.05, 0.05)
         self.nametagNP = self.attachNewNode(text)
         self.nametagNP.setScale(0.42)
-        self.nametagNP.setPos(0, 0, 3.35)
+        z = 3.6 if self._useActor else 3.35
+        self.nametagNP.setPos(0, 0, z)
         self.nametagNP.setBillboardPointEye()
 
     def __startInkPulse(self):
@@ -132,6 +256,35 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             ),
         )
         self._pulseIval.loop()
+
+    def setXYZH(self, x, y, z, h):
+        DistributedNode.DistributedNode.setXYZH(self, x, y, z, h)
+        self.__updateMoveAnim(Point3(x, y, z))
+
+    def setXYZ(self, x, y, z):
+        DistributedNode.DistributedNode.setXYZ(self, x, y, z)
+        self.__updateMoveAnim(Point3(x, y, z))
+
+    def __updateMoveAnim(self, pos):
+        if not self._useActor or self.toonActor is None:
+            self._lastPos = pos
+            return
+        moving = False
+        if self._lastPos is not None:
+            delta = pos - self._lastPos
+            delta.setZ(0)
+            moving = delta.lengthSquared() > 0.04
+        self._lastPos = pos
+        if moving == self._moving:
+            return
+        self._moving = moving
+        try:
+            self.toonActor.loop('run' if moving else 'neutral')
+        except Exception:
+            try:
+                self.toonActor.loop('walk' if moving else 'neutral')
+            except Exception:
+                pass
 
     def setName(self, name):
         self.name = name
