@@ -7,8 +7,8 @@ EntryCreamShimmerFx). A delayed cream aftershock (softer flecks settling
 downward + soft halo) follows the wash pulse — same residual grammar as
 entry cream wash aftershock (#132), wave-clear cream aftershock (#127), and
 purity-fill cream aftershock (#123). Does not restage progressive wash geom
-tint, purity FOV / rays, cheer flecks, or wave-clear cream. Toontown
-spiritual-sequel tone only — no keyblades / no KH branding.
+tint, purity FOV / rays / FOV cream wash, cheer flecks, or wave-clear cream.
+Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi

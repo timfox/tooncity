@@ -663,6 +663,20 @@ WAVE_CLEAR_BANNER_HOLD_SEC = 1.4
 PURITY_FOV_PUNCH = 15.0
 PURITY_FOV_IN_SEC = 0.07
 PURITY_FOV_OUT_SEC = 0.38
+# Soft cream wash pulse after purity FOV punch (#27) — CheerCreamWashPulse /
+# PurityCompleteCreamWashFx vocabulary. Soft under burst rays (56) / sparks
+# (60); quieter than purity-complete wash (peak 0.28). Sunny pastel only.
+# Toggle PURITY_FOV_CREAM_WASH_ENABLED = False drops wash only.
+PURITY_FOV_CREAM_WASH_ENABLED = True
+PURITY_FOV_CREAM_WASH_DELAY_SEC = 0.22  # after FOV start; soft-lock FOV wash grammar
+PURITY_FOV_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+PURITY_FOV_CREAM_WASH_PEAK = 0.10
+PURITY_FOV_CREAM_WASH_MID = 0.05
+PURITY_FOV_CREAM_WASH_IN_SEC = 0.05
+PURITY_FOV_CREAM_WASH_PULSE_SEC = 0.09
+PURITY_FOV_CREAM_WASH_HOLD_SEC = 0.06
+PURITY_FOV_CREAM_WASH_OUT_SEC = 0.34
+PURITY_FOV_CREAM_WASH_BIN = 54  # soft veil under burst rays (56) / sparks (60)
 # Soft camera pull-back / lift (local camera space units).
 PURITY_CAM_PULL = 0.85
 PURITY_CAM_LIFT = 0.22
