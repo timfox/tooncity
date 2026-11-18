@@ -12,9 +12,10 @@ POLLUTION_SCALE = 1000
 CORRUPT_TOON_DEFAULT_HP = 30
 CORRUPT_TOON_DEFAULT_NAME = 'Corrupt Toon'
 
-# Archetypes — Ink Smudge (default) vs Sludge Brute (tank + longer spit reach).
+# Archetypes — Smudge melee, Brute spit tank, Balloon Snare zip/lash.
 ARCHETYPE_INK = 0
 ARCHETYPE_BRUTE = 1
+ARCHETYPE_SNARE = 2
 ARCHETYPE_STATS = {
     ARCHETYPE_INK: {
         'name': 'Ink Smudge',
@@ -39,6 +40,19 @@ ARCHETYPE_STATS = {
         'attackCooldown': 2.35,
         'actorScale': 1.38,
         'actorTint': (0.12, 0.28, 0.1, 1.0),
+    },
+    # Punchline zip-flier: fragile balloon that lashes with a rubber-hose string.
+    ARCHETYPE_SNARE: {
+        'name': 'Balloon Snare',
+        'hpScale': 0.7,
+        'chaseSpeed': 13.5,
+        'meleeRange': 3.8,
+        'attackHitRange': 7.2,  # string-lash reach
+        'attackDamage': 2,
+        'telegraphDelay': 0.38,
+        'attackCooldown': 1.35,
+        'actorScale': 0.82,
+        'actorTint': (0.55, 0.22, 0.08, 1.0),
     },
 }
 
@@ -74,6 +88,7 @@ def archetypeDefaultName(archetype):
 ARCHETYPE_NAMES = {
     ARCHETYPE_INK: 'Ink Smudge',
     ARCHETYPE_BRUTE: 'Sludge Brute',
+    ARCHETYPE_SNARE: 'Balloon Snare',
 }
 
 # Defeating one corrupt toon reduces local pollution by this amount.
@@ -139,7 +154,7 @@ HOOD_POLLUTION_BIAS = {
 _DEFAULT_HOOD_BIAS = HOOD_POLLUTION_BIAS[2200]
 
 # Telegraph / impact presentation (client AV punch; AI timings unchanged).
-# Ink Smudge = purple melee wind-up; Sludge Brute = green spit (below).
+# Ink Smudge = purple melee; Sludge Brute = green spit; Balloon Snare = amber lash.
 TELEGRAPH_CHARGE_COLOR = (2.15, 0.25, 2.4, 1.0)
 TELEGRAPH_HOLD_COLOR = (1.55, 0.2, 1.85, 1.0)
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
@@ -170,6 +185,26 @@ BRUTE_SPIT_BLOB_COLOR = (0.18, 0.72, 0.22, 0.92)
 BRUTE_SPIT_BLOB_SCALE = 0.55
 BRUTE_SPIT_BLOB_TRAVEL = 0.28
 BRUTE_SPIT_BLOB_Z = 2.4
+
+# Balloon Snare string-lash — warm amber, horizontal rubber stretch, vine zip.
+# Reads opposite Brute spit (tall green) and Smudge melee (purple squash).
+SNARE_TELEGRAPH_CHARGE_COLOR = (2.35, 1.45, 0.35, 1.0)
+SNARE_TELEGRAPH_HOLD_COLOR = (1.95, 1.1, 0.28, 1.0)
+SNARE_TELEGRAPH_SQUASH = (0.55, 0.55, 1.55)
+SNARE_TELEGRAPH_MID = (1.15, 1.15, 1.15)
+SNARE_TELEGRAPH_STRETCH = (2.55, 0.42, 0.55)  # horizontal rubber-hose lash
+SNARE_TELEGRAPH_SFX = 'phase_4/audio/sfx/MG_sfx_vine_game_jump.ogg'
+SNARE_TELEGRAPH_SFX_VOLUME = 0.72
+SNARE_ATTACK_HIT_SFX = 'phase_4/audio/sfx/MG_sfx_vine_game_fall.ogg'
+SNARE_ATTACK_HIT_SFX_VOLUME = 0.78
+SNARE_HIT_FLASH_COLOR = (1.15, 0.72, 0.28, 1.0)
+SNARE_HIT_FLASH_PEAK = 0.58
+# Client-only string line that snaps toward the local toon on lash hit.
+SNARE_LASH_COLOR = (0.95, 0.55, 0.12, 0.95)
+SNARE_LASH_HALF_W = 0.12
+SNARE_LASH_HALF_H = 0.55
+SNARE_LASH_TRAVEL = 0.18
+SNARE_LASH_Z = 2.1
 
 # Ink Overlord finale phase looks (client-readable; AI timings unchanged).
 # Phase 1 = rising magenta swell; Phase 2 = crimson unleashed fury.

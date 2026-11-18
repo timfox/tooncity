@@ -124,6 +124,9 @@ class CampaignDirectorAI(DirectObject):
             'bruteFraction': act.get('bruteFraction'),
             'bruteWaveStart': act.get('bruteWaveStart'),
             'bruteName': act.get('bruteName'),
+            'snareFraction': act.get('snareFraction'),
+            'snareWaveStart': act.get('snareWaveStart'),
+            'snareName': act.get('snareName'),
             'banner': act.get('banner'),
             'finalePhase': 0,
             'transitionSting': False,
@@ -172,6 +175,9 @@ class CampaignDirectorAI(DirectObject):
             bruteFraction=params.get('bruteFraction'),
             bruteWaveStart=params.get('bruteWaveStart'),
             bruteName=params.get('bruteName'),
+            snareFraction=params.get('snareFraction'),
+            snareWaveStart=params.get('snareWaveStart'),
+            snareName=params.get('snareName'),
             finalePhase=params.get('finalePhase', 0),
             transitionSting=params.get('transitionSting', False))
         banner = params.get('banner') or act.get('banner')
