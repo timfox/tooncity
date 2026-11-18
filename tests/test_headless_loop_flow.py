@@ -2137,6 +2137,11 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         pollution_ai = _read('toontown/corruption/PollutionManagerAI.py')
         self.assertIn('applyBetrayalHubStain', pollution_ai)
         self.assertIn('clearBetrayalHubStain', pollution_ai)
+        # Hub stain drops campaign securedZones (parity with contested).
+        apply_snip = pollution_ai[pollution_ai.find('def applyBetrayalHubStain'):]
+        apply_snip = apply_snip[:apply_snip.find('def clearBetrayalHubStain')]
+        self.assertIn('_mirrorSecuredZoneToCampaign', apply_snip)
+        self.assertIn('secured=False', apply_snip)
 
         confront_rel = 'toontown/campaign/HubStainConfront.py'
         self.assertTrue((REPO_ROOT / confront_rel).is_file())

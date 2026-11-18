@@ -288,6 +288,13 @@ class HubStainAfterBetrayalTests(unittest.TestCase):
         apply_snip = apply_snip[:apply_snip.find('def clearBetrayalHubStain')]
         self.assertIn('STREET_SECURED', apply_snip)
         self.assertNotIn('STREET_CONTESTED', apply_snip)
+        # #368 honesty: drop campaign securedZones like contested does.
+        self.assertIn('_mirrorSecuredZoneToCampaign', apply_snip)
+        self.assertIn('secured=False', apply_snip)
+        persist_at = apply_snip.find('_persistSecuredLocks')
+        mirror_at = apply_snip.find('_mirrorSecuredZoneToCampaign')
+        self.assertGreater(persist_at, 0)
+        self.assertGreater(mirror_at, persist_at)
 
     def test_confront_client_and_ttplayground_wiring(self):
         names = _module_names('toontown/campaign/HubStainConfront.py')
