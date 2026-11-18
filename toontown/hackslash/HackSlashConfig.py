@@ -444,6 +444,21 @@ HIT_SPARK_CREAM_AFTERSHOCK_HALO_SEC = 0.32
 HIT_SPARK_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.26
 HIT_SPARK_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.96, 0.78, 1.0)
 
+# Hit-connect cream wash pulse — soft aspect2d veil after cream spark aftershock
+# (#96). Perfect-dodge / entry / purity cream wash grammar. Quieter than
+# perfect-dodge wash (hits fire more often); cream/pastel only. Toggle
+# HIT_SPARK_CREAM_WASH_ENABLED = False drops wash only.
+HIT_SPARK_CREAM_WASH_ENABLED = True
+HIT_SPARK_CREAM_WASH_DELAY_SEC = 0.36  # after play; after aftershock (0.18)
+HIT_SPARK_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+HIT_SPARK_CREAM_WASH_PEAK = 0.10
+HIT_SPARK_CREAM_WASH_MID = 0.06
+HIT_SPARK_CREAM_WASH_IN_SEC = 0.05
+HIT_SPARK_CREAM_WASH_PULSE_SEC = 0.09
+HIT_SPARK_CREAM_WASH_HOLD_SEC = 0.06
+HIT_SPARK_CREAM_WASH_OUT_SEC = 0.34
+HIT_SPARK_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
+
 # Combo-finisher slam — bigger rubber-hose than HIT_IMPACT row 2 so the last
 # stretch-punch reads as a readable slam (flat pancake → tall spring → settle).
 FINISHER_SLAM_SQUASH = (2.2, 2.2, 0.2, 0.085)
