@@ -132,6 +132,16 @@ FINALE_PHASE_HUD = {
 # Explicit Oswald twist after P2 clear (shown after purity victory flash).
 FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
 FINALE_TWIST_TEASE_COLOR = (1.0, 0.55, 0.35, 1.0)
+# Readable AV reveal sting (FinalePhaseFx) after Silly finale victory / purity.
+# Toontown-sequel voice — no keyblades / KH branding.
+FINALE_REVEAL_BANNER = 'OSWALD CAUSED THE CORRUPTION'
+FINALE_REVEAL_SUB = (
+    'That trusted smile… the ink staining Toon City was his all along.')
+FINALE_REVEAL_BANNER_COLOR = (1.0, 0.42, 0.28, 1.0)
+FINALE_REVEAL_SUB_COLOR = (1.0, 0.72, 0.48, 1.0)
+# Hold purity cheer first, then land the twist sting as its own beat.
+FINALE_REVEAL_DELAY_SEC = 2.45
+FINALE_REVEAL_HOLD_SEC = 3.6
 
 STATE_IDLE = 0
 STATE_ACTIVE = 1

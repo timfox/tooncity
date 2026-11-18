@@ -191,6 +191,14 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 CampaignGlobals.FINALE_TWIST_TEASE,
                 CampaignGlobals.FINALE_TWIST_TEASE_COLOR,
                 hold=3.8)
+            # Readable AV reveal sting (banner + FOV/flash/SFX) via FinalePhaseFx.
+            # Delayed inside the client so purity cheer lands first.
+            try:
+                from toontown.campaign.FinalePhaseFx import ensureFinalePhaseFxClient
+                ensureFinalePhaseFxClient()
+            except Exception:
+                pass
+            messenger.send('oswaldRevealSting', [0])
         else:
             self.__showSubBanner(
                 ReclaimGlobals.BANNER_COMPLETE_SUB, (0.85, 1.0, 0.9, 1.0),
