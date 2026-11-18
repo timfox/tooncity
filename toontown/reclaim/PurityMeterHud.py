@@ -10,8 +10,9 @@ shimmer flecks along the filled bar, then a delayed cream aftershock
 cheer cream aftershock — then a soft cream wash pulse (CheerCreamWashPulse /
 WaveClearCreamWashPulse vocabulary).
 
-Mid-wave purity pressure (director tip): brief contested rim warn flash when
-purity stalls or ink pressure rises — rubber-hose urgency after re-creep #194.
+Mid-wave purity pressure (director tip): warm double-pulse contested rim
+flash when purity stalls or ink pressure rises — rubber-hose urgency after
+re-creep #194 so danger reads clearly (distinct from secured-lock #209).
 Full reclaim secured lock: brief cream/green rim confirm + soft meter hose-pop
 that purity is locked (pairs with SecuredLockSparkleFx flecks / pitch sting).
 """
@@ -203,8 +204,14 @@ class PurityMeterHud(object):
             self._popTick()
 
     def warnPressure(self):
-        """Brief contested rim flash when mid-wave purity pressure whispers."""
+        """Warm double-pulse contested rim flash for mid-wave purity pressure.
+
+        Danger blink on the meter rim only — not the secured-lock green hold
+        or whole-meter hose-pop (#209).
+        """
         if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_ENABLED', True):
+            return
+        if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_ENABLED', True):
             return
         if self._rimNP is None or self._rimNP.isEmpty():
             return
@@ -212,18 +219,72 @@ class PurityMeterHud(object):
         warnColor = getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_COLOR',
             (1.0, 0.55, 0.35, 0.78))
-        hold = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_SEC', 0.55))
-        try:
-            self._rimNP.setColor(*warnColor)
-        except Exception:
-            return
+        pulses = max(1, int(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_PULSES', 2)))
+        onSec = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_ON_SEC', 0.10))
+        offSec = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_OFF_SEC', 0.08))
+        holdSec = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_HOLD_SEC',
+            getattr(ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_SEC', 0.14)))
+        scalePeak = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_SCALE', 1.16))
+
+        parts = []
+        for i in range(pulses):
+            peakSec = holdSec if i == pulses - 1 else onSec
+            parts.append(self._buildRimWarnPulse(warnColor, peakSec, scalePeak))
+            if i < pulses - 1:
+                parts.append(Func(self._applyRimColor))
+                parts.append(Wait(max(0.01, offSec)))
+        parts.append(Func(self._onPressureWarnDone))
         self._warnIval = Sequence(
-            Wait(max(0.05, hold)),
-            Func(self._onPressureWarnDone),
+            *parts,
             name='reclaimPurityMeterPressureWarn',
         )
         self._warnIval.start()
+
+    def _buildRimWarnPulse(self, warnColor, peakSec, scalePeak):
+        """One warn on-beat: snap warn color + soft rim-only scale nudge."""
+        peakSec = max(0.05, float(peakSec))
+        scalePeak = max(1.0, float(scalePeak))
+        colorBeat = Sequence(
+            Func(self._setRimWarnColor, warnColor),
+            Wait(peakSec),
+        )
+        if scalePeak <= 1.001:
+            return colorBeat
+        try:
+            scaleBeat = Sequence(
+                LerpScaleInterval(
+                    self._rimNP, max(0.01, peakSec * 0.42),
+                    Point3(scalePeak, 1.0, scalePeak),
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    self._rimNP, max(0.01, peakSec * 0.58),
+                    Point3(1.0, 1.0, 1.0),
+                    blendType='easeIn'),
+            )
+        except Exception:
+            return colorBeat
+        return Parallel(colorBeat, scaleBeat)
+
+    def _setRimWarnColor(self, color):
+        if self._rimNP is None or self._rimNP.isEmpty():
+            return
+        try:
+            self._rimNP.setColor(*color)
+        except Exception:
+            pass
+
+    def _resetRimScale(self):
+        if self._rimNP is None or self._rimNP.isEmpty():
+            return
+        try:
+            self._rimNP.setScale(1.0, 1.0, 1.0)
+        except Exception:
+            pass
 
     def confirmSecured(self):
         """Brief cream/green rim + meter hose-pop when purity locks."""
@@ -297,6 +358,7 @@ class PurityMeterHud(object):
 
     def _onPressureWarnDone(self):
         self._warnIval = None
+        self._resetRimScale()
         self._applyRimColor()
 
     def _clearPressureWarn(self):
@@ -306,6 +368,7 @@ class PurityMeterHud(object):
             except Exception:
                 pass
             self._warnIval = None
+        self._resetRimScale()
         self._applyRimColor()
 
     def _isPopPlaying(self):
