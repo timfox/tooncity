@@ -868,3 +868,10 @@ try:
 except Exception:
     pass
 
+# Neighborhood cheer when reclaim purity restores.
+try:
+    from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
+    ensureReclaimCheerClient()
+except Exception:
+    pass
+

@@ -63,6 +63,8 @@ PURITY_BANNER_POP_SEC = 0.18
 # Existing toon SFX — light celebration sting, optional if asset missing.
 PURITY_STING_SFX = 'phase_4/audio/sfx/AA_sound_whistle.ogg'
 PURITY_STING_VOLUME = 0.85
+# Second cheer beat (jump) layered by ReclaimCheer client.
+PURITY_CHEER_SFX = 'phase_3.5/audio/sfx/AV_jump_2.ogg'
 
 WAVE_BANNER_FMT = 'Wave %s/%s — %s'
 WAVE_LABELS = (
