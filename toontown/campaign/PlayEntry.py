@@ -6,8 +6,9 @@ bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
 
 On polluted ACTS street enter: brief rubber-hose ink edge vignette that
 fades as the tip bar appears. Tip bar and act-enter flash banners play a
-short rubber-hose scale pop when they land (Toontown spiritual sequel —
-no KH branding).
+short rubber-hose scale pop when they land. Early/mid Oswald trusted
+reclaim-lead act banners add a soft settle bounce after that pop
+(FinalePhaseFx twist stays separate — no KH branding).
 """
 
 from panda3d.core import (
@@ -193,10 +194,12 @@ class PlayEntryClient(DirectObject):
             av.enableHackSlashMelee(spawnHostiles=False)
             self._armedZone = zoneId
             # Act-enter banner first (hose-pop); stretch-punch stays on tip.
+            # Early/mid trusted Oswald lead banners get settle bounce.
             act = self._actForZone(zoneId)
             banner = act.get('banner') if act else None
+            trustSettle = bool(act) and not act.get('finale')
             if banner:
-                self._flashBanner(banner)
+                self._flashBanner(banner, trustSettle=trustSettle)
             else:
                 # Keep #33 stretch-punch combat framing (no keyblade / KH copy).
                 self._flashBanner(
@@ -468,8 +471,12 @@ class PlayEntryClient(DirectObject):
             self._tipNP.removeNode()
         self._tipNP = None
 
-    def _bannerHosePopInterval(self, bannerNP):
-        """Flat squash → tall stretch → settle for act-enter flash banners."""
+    def _bannerHosePopInterval(self, bannerNP, trustSettle=False):
+        """Flat squash → tall stretch → settle for act-enter flash banners.
+
+        Early/mid Oswald trusted reclaim-lead banners append a soft
+        overshoot → rest settle bounce (tunables in CampaignGlobals).
+        """
         if bannerNP is None:
             return None
         try:
@@ -488,17 +495,28 @@ class PlayEntryClient(DirectObject):
             bannerNP.setScale(settlePt)
         except Exception:
             return None
-        return Sequence(
+        parts = [
             LerpScaleInterval(
                 bannerNP, float(squashSec), squashPt, blendType='easeOut'),
             LerpScaleInterval(
                 bannerNP, float(stretchSec), stretchPt, blendType='easeOut'),
             LerpScaleInterval(
                 bannerNP, settleSec, settlePt, blendType='easeIn'),
-            name='playEntryBannerHosePop',
-        )
+        ]
+        if trustSettle:
+            ox, oy, oz, overSec = getattr(
+                CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT',
+                (0.90, 1.0, 1.14, 0.07))
+            restSec = float(getattr(
+                CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_REST_SEC', 0.09))
+            overPt = Point3(settle * ox, settle * oy, settle * oz)
+            parts.append(LerpScaleInterval(
+                bannerNP, float(overSec), overPt, blendType='easeOut'))
+            parts.append(LerpScaleInterval(
+                bannerNP, restSec, settlePt, blendType='easeIn'))
+        return Sequence(*parts, name='playEntryBannerHosePop')
 
-    def _flashBanner(self, text):
+    def _flashBanner(self, text, trustSettle=False):
         """Act-enter / reclaim cue flash with tip-matched rubber-hose pop."""
         self._clearFlash()
         tn = TextNode('play-entry-flash')
@@ -519,7 +537,7 @@ class PlayEntryClient(DirectObject):
         hold = float(CampaignGlobals.PLAY_ENTRY_BANNER_HOLD_SEC)
         fadeOut = float(CampaignGlobals.PLAY_ENTRY_BANNER_FADE_OUT_SEC)
         land = [LerpColorScaleInterval(np, fadeIn, Vec4(1, 1, 1, 1))]
-        hose = self._bannerHosePopInterval(np)
+        hose = self._bannerHosePopInterval(np, trustSettle=trustSettle)
         if hose is not None:
             land.append(hose)
         self._flashIval = Sequence(

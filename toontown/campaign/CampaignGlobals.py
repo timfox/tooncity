@@ -160,6 +160,18 @@ HANDOFF_TITLE_POP_SQUASH = (1.42, 1.0, 0.62, 0.06)   # sx, sy, sz, sec
 HANDOFF_TITLE_POP_STRETCH = (0.82, 1.0, 1.36, 0.10)
 HANDOFF_TITLE_POP_SETTLE_SEC = 0.12
 
+# Early/mid Oswald trusted reclaim-lead banners (Act 1/2 enter + handoff).
+# Extra rubber-hose settle bounce after tip/act squash→stretch→settle, plus
+# hose-pop on the Oswald cheer/lead subtitle. FinalePhaseFx twist reveal
+# stays separate — do not weaken the end-game sting. No KH branding.
+OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT = (0.90, 1.0, 1.14, 0.07)  # sx, sy, sz, sec
+OSWALD_TRUST_BANNER_SETTLE_REST_SEC = 0.09
+# Handoff Oswald trust subtitle (cheers / points the tunnel) — tip-matched.
+OSWALD_TRUST_SUB_SCALE = 0.048
+OSWALD_TRUST_SUB_POP_SQUASH = (1.50, 1.0, 0.56, 0.05)   # sx, sy, sz, sec
+OSWALD_TRUST_SUB_POP_STRETCH = (0.80, 1.0, 1.40, 0.08)
+OSWALD_TRUST_SUB_POP_SETTLE_SEC = 0.10
+
 # Campaign handoff confetti / streamer pop (CampaignHandoffConfetti).
 # Short rubber-hose carnival burst on Loopy→Punchline (and act) handoffs.
 # Toontown spiritual sequel — no keyblades / KH branding.
