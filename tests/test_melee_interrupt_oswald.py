@@ -117,10 +117,10 @@ class MeleeInterruptOswaldTest(unittest.TestCase):
         self.assertTrue(fn(oswald, 'stain_burst'))
         # smack aliases the default lunge wind-up.
         self.assertTrue(fn(oswald, 'smack'))
-        # Smudge kit stays commit-through.
+        # Smudge kit interrupt covered by test_melee_interrupt_ink_smudge.py.
         ink = self.cg.ARCHETYPE_INK
-        self.assertFalse(fn(ink, 'ink_dash'))
-        self.assertFalse(fn(ink, 'ink_splat'))
+        self.assertTrue(fn(ink, 'ink_dash'))
+        self.assertTrue(fn(ink, 'ink_splat'))
         # Street / Overlord still interruptible.
         self.assertTrue(fn(self.cg.ARCHETYPE_BRUTE, 'spit'))
         self.assertTrue(fn(self.cg.ARCHETYPE_GAGSTER, 'gag_lob'))

@@ -125,12 +125,12 @@ class MeleeInterruptBruteGagsterTest(unittest.TestCase):
         # Gagster lob yes.
         self.assertTrue(fn(gagster, 'gag_lob'))
         self.assertFalse(fn(gagster, 'smack'))
-        # Smudge dash/splat stay commit-through here.
-        # Overlord rain/slam/surge interrupt is covered by
-        # test_melee_interrupt_overlord.py; Oswald betrayal interrupt by
+        # Smudge dash/splat interrupt is covered by
+        # test_melee_interrupt_ink_smudge.py; Overlord by
+        # test_melee_interrupt_overlord.py; Oswald by
         # test_melee_interrupt_oswald.py (shared helper).
-        self.assertFalse(fn(ink, 'ink_dash'))
-        self.assertFalse(fn(ink, 'ink_splat'))
+        self.assertTrue(fn(ink, 'ink_dash'))
+        self.assertTrue(fn(ink, 'ink_splat'))
 
     def test_helper_respects_disable_flags(self):
         fn = self.cg.isMeleeInterruptibleTelegraph

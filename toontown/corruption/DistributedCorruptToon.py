@@ -242,6 +242,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordRainCounter()
         self.__clearOverlordSlamCounter()
         self.__clearOverlordInkSurgeCounter()
+        self.__clearInkDashCounter()
+        self.__clearInkSplatCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -665,16 +667,29 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playTelegraphCreamSparkle(look)
         # Soft cream wash pulse against ink telegraph (silhouette / idle wash vocab).
         self.__playTelegraphCreamWash(look)
+        telegraphMove = str(getattr(self, '_telegraphMove', '') or '')
         # Ink Smudge-only: purple ink-fist telegraph pop for melee wind-up read.
+        # ink_dash / ink_splat also arm Snare-like dedicated counter→melee
+        # windows (thin messenger hooks; interrupt ≠ counter).
         if ((not look) and (not isBrute) and (not isSnare)
                 and (not isGagster) and (not isOswald)):
             self.__playSmudgeTelegraphInk()
+            if ((not telegraphMove) or telegraphMove in ('ink_dash', 'smack')):
+                self.__scheduleInkDashCounter()
+                self.__clearInkSplatCounter()
+            elif telegraphMove == 'ink_splat':
+                self.__scheduleInkSplatCounter()
+                self.__clearInkDashCounter()
+            else:
+                self.__clearInkDashCounter()
+                self.__clearInkSplatCounter()
         else:
             self.__clearSmudgeTelegraphInk()
+            self.__clearInkDashCounter()
+            self.__clearInkSplatCounter()
         # Corrupted Oswald-only: crimson stain-lunge telegraph (not Smudge).
         # betrayal_lunge / stain_burst also arm Snare-like dedicated
         # counter→melee windows (thin messenger hooks; interrupt ≠ counter).
-        telegraphMove = str(getattr(self, '_telegraphMove', '') or '')
         if isOswald and not look:
             self.__playOswaldTelegraphStain()
             if ((not telegraphMove) or telegraphMove in (
@@ -839,6 +854,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordRainCounter()
         self.__clearOverlordSlamCounter()
         self.__clearOverlordInkSurgeCounter()
+        self.__clearInkDashCounter()
+        self.__clearInkSplatCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
         self.__clearOswaldTelegraphStain()
@@ -1567,6 +1584,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordRainCounter()
         self.__clearOverlordSlamCounter()
         self.__clearOverlordInkSurgeCounter()
+        self.__clearInkDashCounter()
+        self.__clearInkSplatCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -2721,6 +2740,105 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._overlordInkSurgeCounterTask = None
+
+    def __scheduleInkDashCounter(self):
+        """After ink_dash telegraph reads, arm a short punish→melee window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path (same as Snare / Brute spit / Oswald / Overlord).
+        Gameplay timing only.
+        """
+        self.__clearInkDashCounter()
+        if not getattr(
+                CorruptionGlobals, 'INK_DASH_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'INK_DASH_COUNTER_ARM_DELAY_SEC', 0.16))
+        window = float(getattr(
+            CorruptionGlobals, 'INK_DASH_COUNTER_WINDOW_SEC', 0.50))
+        event = str(getattr(
+            CorruptionGlobals, 'INK_DASH_COUNTER_EVENT',
+            'corruptInkDashCounter'))
+
+        def _fire(task=None):
+            self._inkDashCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._inkDashCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('ink-dash-counter'))
+        except Exception:
+            self._inkDashCounterTask = None
+            _fire()
+
+    def __clearInkDashCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('ink-dash-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._inkDashCounterTask = None
+
+    def __scheduleInkSplatCounter(self):
+        """After ink_splat telegraph reads, arm a short punish→melee window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path. Gameplay timing only.
+        """
+        self.__clearInkSplatCounter()
+        if not getattr(
+                CorruptionGlobals, 'INK_SPLAT_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'INK_SPLAT_COUNTER_ARM_DELAY_SEC', 0.12))
+        window = float(getattr(
+            CorruptionGlobals, 'INK_SPLAT_COUNTER_WINDOW_SEC', 0.46))
+        event = str(getattr(
+            CorruptionGlobals, 'INK_SPLAT_COUNTER_EVENT',
+            'corruptInkSplatCounter'))
+
+        def _fire(task=None):
+            self._inkSplatCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._inkSplatCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('ink-splat-counter'))
+        except Exception:
+            self._inkSplatCounterTask = None
+            _fire()
+
+    def __clearInkSplatCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('ink-splat-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._inkSplatCounterTask = None
 
     def __consumeSnareStringCounterCreamSplash(self):
         """If string-snap counter juice is live, play cream splash and spend it.

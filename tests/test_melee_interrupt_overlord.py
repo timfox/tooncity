@@ -118,9 +118,10 @@ class MeleeInterruptOverlordTest(unittest.TestCase):
         self.assertTrue(fn(ink, 'rain'))
         self.assertTrue(fn(ink, 'slam'))
         self.assertTrue(fn(ink, 'ink_surge'))
-        # Smudge kit stays commit-through (follow-up).
-        self.assertFalse(fn(ink, 'ink_dash'))
-        self.assertFalse(fn(ink, 'ink_splat'))
+        # Smudge kit interrupt covered by test_melee_interrupt_ink_smudge.py
+        # (same archetype, distinct move ids).
+        self.assertTrue(fn(ink, 'ink_dash'))
+        self.assertTrue(fn(ink, 'ink_splat'))
         self.assertFalse(fn(ink, 'smack'))
         # Brute slam stays out of Overlord interrupt scope.
         # Oswald betrayal interrupt/counter is covered by
@@ -130,15 +131,15 @@ class MeleeInterruptOverlordTest(unittest.TestCase):
         self.assertTrue(fn(self.cg.ARCHETYPE_BRUTE, 'spit'))
         self.assertTrue(fn(self.cg.ARCHETYPE_GAGSTER, 'gag_lob'))
         self.assertTrue(fn(self.cg.ARCHETYPE_SNARE, 'string_lash'))
-        # Dedicated Overlord counters (separate deepen) stay move-gated.
-        # Full counter wiring is covered by test_overlord_counter_windows.py.
+        # Dedicated Overlord counters stay move-gated; Smudge counters are
+        # covered by test_ink_smudge_counter_windows.py (shared helper).
         self.assertTrue(
             self.cg.isDedicatedTelegraphCounterMove(ink, 'rain'))
         self.assertTrue(
             self.cg.isDedicatedTelegraphCounterMove(ink, 'slam'))
         self.assertTrue(
             self.cg.isDedicatedTelegraphCounterMove(ink, 'ink_surge'))
-        self.assertFalse(
+        self.assertTrue(
             self.cg.isDedicatedTelegraphCounterMove(ink, 'ink_dash'))
 
     def test_helper_respects_disable_flags(self):

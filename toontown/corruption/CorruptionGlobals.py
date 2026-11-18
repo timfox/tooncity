@@ -2181,11 +2181,17 @@ BRUTE_SPIT_MELEE_INTERRUPT = True
 GAGSTER_LOB_MELEE_INTERRUPT = True
 # Overlord climax telegraphs (rain / slam / ink_surge) — same mid-telegraph
 # melee cancel as street kits so boss punish skill matches Punchline packs.
-# Smudge ink_dash/splat stay commit-through (follow-up). Dedicated Overlord
-# counter windows by move id are below (interrupt ≠ counter). No cream / no KH.
+# Dedicated Overlord counter windows by move id are below (interrupt ≠ counter).
+# No cream / no KH.
 OVERLORD_RAIN_MELEE_INTERRUPT = True
 OVERLORD_SLAM_MELEE_INTERRUPT = True
 OVERLORD_INK_SURGE_MELEE_INTERRUPT = True
+# Ink Smudge swarm telegraphs (ink_dash / ink_splat) — same mid-telegraph
+# melee cancel as street kits / Overlord / Oswald so Act 1 + P2-add swarm
+# punish skill matches the archetype ladder. Dedicated Smudge counters below.
+# No cream / no KH.
+INK_DASH_MELEE_INTERRUPT = True
+INK_SPLAT_MELEE_INTERRUPT = True
 # Corrupted Oswald betrayal telegraphs (betrayal_lunge / stain_burst) — same
 # mid-telegraph melee cancel as Snare / Brute spit / Gagster lob so the twist
 # chase punish skill matches Punchline kits. Shove stays hit-applied (not a
@@ -2286,6 +2292,32 @@ OVERLORD_INK_SURGE_COUNTER_DAMAGE_MULT = 1.5
 OVERLORD_INK_SURGE_COUNTER_RATE_MULT = 1.2
 OVERLORD_INK_SURGE_COUNTER_EVENT = 'corruptOverlordInkSurgeCounter'
 
+# Ink Smudge ink_dash telegraph → dedicated counter window (Snare-like).
+# After the purple ink-fist rush telegraph reads, arm a short punish→melee
+# window. Distinct from mid-dash interrupt cancel. Fits inside telegraphDelay.
+# No cream / no KH.
+INK_DASH_COUNTER_ENABLED = True
+INK_DASH_COUNTER_ARM_DELAY_SEC = 0.16
+INK_DASH_COUNTER_WINDOW_SEC = 0.50
+# Planar range — dash engage + rush slack so a readable Smudge can be punished.
+INK_DASH_COUNTER_RANGE = 8.5
+INK_DASH_COUNTER_DAMAGE_MULT = 1.5
+INK_DASH_COUNTER_RATE_MULT = 1.2
+INK_DASH_COUNTER_EVENT = 'corruptInkDashCounter'
+
+# Ink Smudge ink_splat telegraph → dedicated counter window (Snare-like).
+# After the close purple splat telegraph reads, arm a short punish→melee
+# window. Distinct from mid-splat interrupt cancel. Fits inside
+# splatTelegraphDelay. No cream / no KH.
+INK_SPLAT_COUNTER_ENABLED = True
+INK_SPLAT_COUNTER_ARM_DELAY_SEC = 0.12
+INK_SPLAT_COUNTER_WINDOW_SEC = 0.46
+# Planar range — close splat engage + slack for a readable face-range punish.
+INK_SPLAT_COUNTER_RANGE = 6.5
+INK_SPLAT_COUNTER_DAMAGE_MULT = 1.5
+INK_SPLAT_COUNTER_RATE_MULT = 1.2
+INK_SPLAT_COUNTER_EVENT = 'corruptInkSplatCounter'
+
 
 def isMeleeInterruptibleTelegraph(archetype, move):
     """True when stretch-punch mid-telegraph should cancel this wind-up.
@@ -2295,9 +2327,10 @@ def isMeleeInterruptibleTelegraph(archetype, move):
     Gagster: gag_lob only.
     Overlord (ARCHETYPE_INK + rain/slam/ink_surge move ids): when the matching
     OVERLORD_*_MELEE_INTERRUPT flag is on — climax punish parity with street kits.
+    Smudge (ARCHETYPE_INK + ink_dash / ink_splat): when the matching
+    INK_*_MELEE_INTERRUPT flag is on — Act 1 / P2-add swarm punish parity.
     Oswald (ARCHETYPE_CORRUPT_OSWALD + betrayal_lunge / stain_burst): when the
     matching OSWALD_*_MELEE_INTERRUPT flag is on — twist chase punish parity.
-    Smudge ink_dash/splat: False (follow-up scope).
     """
     aid = normalizeArchetype(archetype)
     moveName = str(move or 'smack')
@@ -2307,8 +2340,9 @@ def isMeleeInterruptibleTelegraph(archetype, move):
         return bool(BRUTE_SPIT_MELEE_INTERRUPT)
     if aid == ARCHETYPE_GAGSTER and moveName == 'gag_lob':
         return bool(GAGSTER_LOB_MELEE_INTERRUPT)
-    # Overlord moves are unique strings on ARCHETYPE_INK (finalePhase >= 1);
-    # Smudge never telegraphs rain / slam / ink_surge.
+    # Overlord + Smudge share ARCHETYPE_INK; move ids distinguish kits.
+    # Smudge never telegraphs rain / slam / ink_surge; Overlord never
+    # telegraphs ink_dash / ink_splat.
     if aid == ARCHETYPE_INK:
         if moveName == 'rain':
             return bool(OVERLORD_RAIN_MELEE_INTERRUPT)
@@ -2316,6 +2350,10 @@ def isMeleeInterruptibleTelegraph(archetype, move):
             return bool(OVERLORD_SLAM_MELEE_INTERRUPT)
         if moveName == 'ink_surge':
             return bool(OVERLORD_INK_SURGE_MELEE_INTERRUPT)
+        if moveName == 'ink_dash':
+            return bool(INK_DASH_MELEE_INTERRUPT)
+        if moveName == 'ink_splat':
+            return bool(INK_SPLAT_MELEE_INTERRUPT)
     if aid == ARCHETYPE_CORRUPT_OSWALD:
         # Default attackMove is betrayal_lunge; empty/smack aliases the lunge.
         if moveName in ('betrayal_lunge', 'smack', ''):
@@ -2367,7 +2405,9 @@ def isDedicatedTelegraphCounterMove(archetype, move):
     Oswald: betrayal_lunge / stain_burst when the matching COUNTER_ENABLED flag.
     Overlord (ARCHETYPE_INK + rain/slam/ink_surge): when the matching
     OVERLORD_*_COUNTER_ENABLED flag is on — climax punish parity with street
-    kits after move-id telegraph + melee interrupt. Smudge ink_dash/splat: False.
+    kits after move-id telegraph + melee interrupt.
+    Smudge (ARCHETYPE_INK + ink_dash / ink_splat): when the matching
+    INK_*_COUNTER_ENABLED flag is on — Act 1 / P2-add swarm punish parity.
     Interrupt cancel (isMeleeInterruptibleTelegraph) is separate.
     """
     aid = normalizeArchetype(archetype)
@@ -2383,8 +2423,7 @@ def isDedicatedTelegraphCounterMove(archetype, move):
             return bool(OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED)
         if moveName == 'stain_burst':
             return bool(OSWALD_STAIN_BURST_COUNTER_ENABLED)
-    # Overlord moves are unique strings on ARCHETYPE_INK (finalePhase >= 1);
-    # Smudge never telegraphs rain / slam / ink_surge.
+    # Overlord + Smudge share ARCHETYPE_INK; move ids distinguish kits.
     if aid == ARCHETYPE_INK:
         if moveName == 'rain':
             return bool(OVERLORD_RAIN_COUNTER_ENABLED)
@@ -2392,6 +2431,10 @@ def isDedicatedTelegraphCounterMove(archetype, move):
             return bool(OVERLORD_SLAM_COUNTER_ENABLED)
         if moveName == 'ink_surge':
             return bool(OVERLORD_INK_SURGE_COUNTER_ENABLED)
+        if moveName == 'ink_dash':
+            return bool(INK_DASH_COUNTER_ENABLED)
+        if moveName == 'ink_splat':
+            return bool(INK_SPLAT_COUNTER_ENABLED)
     return False
 
 
@@ -2623,6 +2666,72 @@ def overlordInkSurgeCounterUntil(armedAt, window=None):
     """Absolute expiry for an ink_surge counter window armed at armedAt."""
     if window is None:
         window = OVERLORD_INK_SURGE_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def inkDashCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after an Ink Smudge ink_dash counter."""
+    if mult is None:
+        mult = INK_DASH_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def inkDashCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after an Ink Smudge ink_dash counter."""
+    if mult is None:
+        mult = INK_DASH_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isInkDashCounterWindowOpen(armed, until, now):
+    """True while an Ink Smudge ink_dash counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def inkDashCounterArmAt(now, delay=None):
+    """Absolute time when the ink_dash counter should arm after telegraph."""
+    if delay is None:
+        delay = INK_DASH_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def inkDashCounterUntil(armedAt, window=None):
+    """Absolute expiry for an ink_dash counter window armed at armedAt."""
+    if window is None:
+        window = INK_DASH_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def inkSplatCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after an Ink Smudge ink_splat counter."""
+    if mult is None:
+        mult = INK_SPLAT_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def inkSplatCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after an Ink Smudge ink_splat counter."""
+    if mult is None:
+        mult = INK_SPLAT_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isInkSplatCounterWindowOpen(armed, until, now):
+    """True while an Ink Smudge ink_splat counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def inkSplatCounterArmAt(now, delay=None):
+    """Absolute time when the ink_splat counter should arm after telegraph."""
+    if delay is None:
+        delay = INK_SPLAT_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def inkSplatCounterUntil(armedAt, window=None):
+    """Absolute expiry for an ink_splat counter window armed at armedAt."""
+    if window is None:
+        window = INK_SPLAT_COUNTER_WINDOW_SEC
     return float(armedAt) + max(0.0, float(window))
 
 

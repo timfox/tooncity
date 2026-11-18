@@ -27,7 +27,11 @@ rising from the telegraph cream warn spray — silhouette cream sparkle
 grammar) plus CorruptTelegraphCreamWashFx (soft cream wash pulse — contrast
 against ink telegraph; silhouette / idle cream-wash grammar) and pause idle
 drips / sparkles / wash / rim flecks for the wind-up. Ink Smudge wind-ups also flash
-SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Ink Smudge hits and
+SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop) and, on ink_dash /
+ink_splat, arm short dedicated counter windows into melee
+(INK_DASH_COUNTER_* / INK_SPLAT_COUNTER_*; synchs with hackslash
+perfect-dodge counter; mid-telegraph melee interrupts the wind-up —
+interrupt ≠ counter). Ink Smudge hits and
 deaths also flash SmudgeInkSplashFx (cheap purple rubber-hose ink splash for
 swarm readability; composes with telegraph / death / idle ink looks); Smudge
 hits also fire SmudgeHitCreamSplashFx (deepened cream splash beyond #259
