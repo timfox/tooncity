@@ -227,8 +227,8 @@ class OswaldBetrayalChaseClient(DirectObject):
         self._sawChase = False
         self._epilogueLatched = False
         self._watchTask = None
-        # campaignVictory is local when available; oswaldRevealBanner is the
-        # reliable finale client path from FinalePhaseFx.
+        # campaignVictory is relayed via PollutionManager.announceCampaignVictory
+        # on finale reclaim; oswaldRevealBanner remains a reveal-path backup.
         self.accept('campaignVictory', self._onVictory)
         self.accept('oswaldRevealBanner', self._onReveal)
         self.accept('oswaldBetrayalChase', self._onChaseSpawned)

@@ -144,6 +144,29 @@ class CampaignDirectorAI(DirectObject):
             self.notify.debug('campaign progress client push failed')
             return False
 
+    def _pushVictoryToClient(self, toon, reclaimCount=None):
+        """Relay campaignVictory over PollutionManager to the owning client.
+
+        AI-local messenger.send never crosses processes; this pairs the live
+        finale reclaim event so PlayEntry / OswaldPresence / chase /
+        FinalePhaseFx / Handoff hear it on real clients.
+        """
+        if toon is None:
+            return False
+        pollutionMgr = getattr(self.air, 'pollutionManager', None)
+        if pollutionMgr is None:
+            return False
+        push = getattr(pollutionMgr, 'pushCampaignVictoryToAvatar', None)
+        if not callable(push):
+            return False
+        if reclaimCount is None:
+            reclaimCount = self.reclaimCount
+        try:
+            return bool(push(toon, reclaimCount))
+        except Exception:
+            self.notify.debug('campaignVictory client push failed')
+            return False
+
     def statusText(self):
         if self.state == CampaignGlobals.STATE_VICTORY:
             chaseNote = ''
@@ -675,6 +698,8 @@ class CampaignDirectorAI(DirectObject):
             self._persistForToon(toon)
             self._tellToon(toon, handoff)
             messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
+            # Real clients never hear AI-local messenger — DC relay.
+            self._pushVictoryToClient(toon, self.reclaimCount)
             # Gameplay payload: short corrupted-Oswald chase after betrayal.
             self._scheduleOswaldBetrayalChase(toon, zoneId)
             # TTC hub fog / confront while chase pending (HubStain).
@@ -701,6 +726,7 @@ class CampaignDirectorAI(DirectObject):
             self._persistForToon(toon)
             self._tellToon(toon, handoff)
             messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
+            self._pushVictoryToClient(toon, self.reclaimCount)
 
 
 def getCampaignDirector(air):

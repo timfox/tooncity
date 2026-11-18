@@ -1157,6 +1157,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             'dclass ')[0]
         self.assertIn(
             'setCampaignProgress(uint8, uint8, uint8, uint8)', pollution_block)
+        self.assertIn('announceCampaignVictory(uint8)', pollution_block)
 
         play_src = _read('toontown/campaign/PlayEntry.py')
         for needle in (
@@ -1186,11 +1187,14 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', presence_src)
         director_src = _read('toontown/campaign/CampaignDirectorAI.py')
         self.assertIn('_pushProgressToClient', director_src)
+        self.assertIn('_pushVictoryToClient', director_src)
         pollution_ai = _read('toontown/corruption/PollutionManagerAI.py')
         self.assertIn('pushCampaignProgressToAvatar', pollution_ai)
+        self.assertIn('pushCampaignVictoryToAvatar', pollution_ai)
         self.assertIn('requestCampaignProgress', pollution_ai)
         pollution_client = _read('toontown/corruption/PollutionManager.py')
         self.assertIn('setCampaignProgress', pollution_client)
+        self.assertIn('announceCampaignVictory', pollution_client)
         self.assertIn('d_requestCampaignProgress', pollution_client)
         # Sync path copy only — PlayEntry module still mentions "no kh" in docs.
         sync_blob = ' '.join([

@@ -1270,3 +1270,8 @@ CAMPAIGN_PROGRESS_FILENAME = 'campaign_progress.json'
 # accept this messenger so hub tip, trusted presence, and melee POWER_BUMP
 # match story state after relog (not session-only).
 CAMPAIGN_PROGRESS_SYNC_MSG = 'campaignProgressSync'
+
+# Live finale reclaim complete — AI messenger + PollutionManager
+# announceCampaignVictory rebroadcast so real clients hear the same event
+# (PlayEntry / OswaldPresence / chase tip / FinalePhaseFx / Handoff).
+CAMPAIGN_VICTORY_MSG = 'campaignVictory'

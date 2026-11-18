@@ -182,9 +182,11 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
         marker = "messenger.send('campaignVictory'"
         victory_idx = src.find(marker)
         self.assertGreater(victory_idx, 0)
-        # Schedule call should sit near the first campaignVictory send.
-        window = src[max(0, victory_idx - 200):victory_idx + 220]
+        # Schedule call should sit near the first campaignVictory send
+        # (includes _pushVictoryToClient DC relay for real clients).
+        window = src[max(0, victory_idx - 200):victory_idx + 360]
         self.assertIn('STATE_VICTORY', window)
+        self.assertIn('_pushVictoryToClient', window)
         self.assertIn('_scheduleOswaldBetrayalChase', window)
 
     def test_chase_module_ast_surface(self):
