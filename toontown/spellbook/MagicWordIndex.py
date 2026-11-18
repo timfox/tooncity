@@ -842,3 +842,7 @@ registerCorruptionMagicWords()
 # Reclaim loop words (~startreclaim / ~stopreclaim).
 from toontown.reclaim.MagicWords import registerReclaimMagicWords
 registerReclaimMagicWords()
+
+# Multi-hood campaign loop (slice 4 / goal gate).
+from toontown.campaign.MagicWords import registerCampaignMagicWords
+registerCampaignMagicWords()
