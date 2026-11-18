@@ -5,10 +5,12 @@ the TTC hub (authored plaza stand) and campaign streets — the trust face
 they later lose at the finale betrayal. Beyond the spawn-near-avatar
 CardMaker stub: fixed plaza placement, idle bob, and a reclaim cheer
 beat when a street clears (`npcCheerStub` / purity), then vanish for the
-twist. Stub-shippable: CardMaker silhouette + nametag (not a full DistributedNPC
-/ DNA toon, not companion AI, not cream FX). Suppresses after reveal /
-betrayal chase, including AI-persisted STATE_VICTORY mirrored on login.
-Toontown spiritual sequel — no keyblades / KH branding.
+twist. After ``oswaldCheered``, plaza/street E-talk soft-nexts from unlock
+progress (trust ladder mid-act beats). Stub-shippable: CardMaker silhouette
++ nametag (not a full DistributedNPC / DNA toon, not companion AI, not
+cream FX). Suppresses after reveal / betrayal chase, including AI-persisted
+STATE_VICTORY mirrored on login. Toontown spiritual sequel — no keyblades /
+KH branding.
 """
 
 from __future__ import annotations
@@ -65,6 +67,46 @@ def streetGreetTip():
         CampaignGlobals, 'OSWALD_PRESENCE_STREET_GREET',
         'Oswald tips his ears — "I\'ll field the packs — '
         'stretch-punch ready!"  |  '
+        'F fight  |  Shift dodge  |  C campaign'))
+
+
+def hubGreetSoftNextTip(street):
+    """Post-cheer hub greet pointing at soft-next street."""
+    tmpl = str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT',
+        'Oswald waves from the plaza — "{street} needs us next!"  |  '
+        'Hop the tunnel  |  C campaign'))
+    try:
+        return tmpl.format(street=str(street))
+    except Exception:
+        return tmpl.replace('{street}', str(street))
+
+
+def streetGreetSoftNextTip(street):
+    """Post-cheer street greet pointing at soft-next street."""
+    tmpl = str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT',
+        'Oswald tips his ears — "Wash this stain — then {street}!"  |  '
+        'F fight  |  Shift dodge  |  C campaign'))
+    try:
+        return tmpl.format(street=str(street))
+    except Exception:
+        return tmpl.replace('{street}', str(street))
+
+
+def hubGreetCheeredTip():
+    """Post-cheer hub greet before unlock advances soft-next."""
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_HUB_GREET_CHEERED',
+        'Oswald waves — "That clean cheer sticks — keep reclaiming!"  |  '
+        'Hop the tunnel  |  C campaign'))
+
+
+def streetGreetCheeredTip():
+    """Post-cheer street greet before unlock advances soft-next."""
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_STREET_GREET_CHEERED',
+        'Oswald tips his ears — "We washed one street — packs still wait!"  |  '
         'F fight  |  Shift dodge  |  C campaign'))
 
 
@@ -169,14 +211,35 @@ def presenceZoneIds():
     return zones
 
 
-def greetTipForZone(zoneId):
-    """Hub vs street greet copy for the trusted Oswald stub."""
+def greetTipForZone(zoneId, cheered=False, softNextStreet=None):
+    """Hub/street greet; soft-next after oswaldCheered + unlock progress.
+
+    Pre-cheer: static hub/street copy. After the durable cheer latch, prefer
+    soft-next templates filled from unlock progress (PlayEntry soft-next twin
+    on the plaza NPC). First-meet tip stays separate (once-ever meet path).
+    """
+    helper = getattr(CampaignGlobals, 'oswaldPresenceGreetTip', None)
+    if callable(helper):
+        try:
+            return str(helper(
+                zoneId, cheered=cheered, softNextStreet=softNextStreet))
+        except Exception:
+            pass
     hub = int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
     try:
         zid = int(zoneId)
     except Exception:
         zid = -1
-    if zid == hub:
+    isHub = zid == hub
+    if cheered:
+        if softNextStreet:
+            if isHub:
+                return hubGreetSoftNextTip(softNextStreet)
+            return streetGreetSoftNextTip(softNextStreet)
+        if isHub:
+            return hubGreetCheeredTip()
+        return streetGreetCheeredTip()
+    if isHub:
         return hubGreetTip()
     return streetGreetTip()
 
@@ -210,9 +273,10 @@ class OswaldPresenceClient(DirectObject):
     AI-free stub: place a rubber-hose silhouette at the authored TTC plaza
     stand (streets: near local toon), arm E-talk when approached, greet once
     per zone visit (first-ever meet uses the once-ever first-meet tip and
-    persists ``oswaldMet``), cheer on street-clear purity messengers (first
-    cheer latches + persists ``oswaldCheered``), clear after betrayal
-    messengers / persisted victory sync.
+    persists ``oswaldMet``; later greets soft-next from ``oswaldCheered`` +
+    unlock progress), cheer on street-clear purity messengers (first cheer
+    latches + persists ``oswaldCheered``), clear after betrayal messengers /
+    persisted victory sync.
     """
 
     def __init__(self):
@@ -233,6 +297,9 @@ class OswaldPresenceClient(DirectObject):
         self._oswaldMet = False
         # Durable first-cheer latch (also hydrated from AI oswaldCheered sync).
         self._oswaldCheered = False
+        # Unlock soft-next for progress-aware greets after cheer latch.
+        self._unlockedThrough = 0
+        self._softNextStreet = None
         self._betrayed = False
         self._markerPos = None
         self._inRange = False
@@ -254,8 +321,11 @@ class OswaldPresenceClient(DirectObject):
         # First reclaim cheer latch + persist — orphan send wired here.
         self.accept(cheeredMsgName(), self._onOswaldPresenceCheered)
         self.accept(cheeredSyncMsgName(), self._onOswaldCheeredSync)
+        # Live act unlock — raise soft-next street for post-cheer greets.
+        self.accept('campaignActUnlocked', self._onCampaignActUnlocked)
         # Login mirror — AI-persisted STATE_VICTORY must hide trusted Oswald
-        # after relog (session-only `_betrayed` is not enough).
+        # after relog (session-only `_betrayed` is not enough). Also hydrates
+        # unlock soft-next for progress-aware plaza/street greets.
         syncMsg = getattr(
             CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
             'campaignProgressSync')
@@ -278,6 +348,8 @@ class OswaldPresenceClient(DirectObject):
         self._greetedZone = None
         self._oswaldMet = False
         self._oswaldCheered = False
+        self._unlockedThrough = 0
+        self._softNextStreet = None
         self._betrayed = False
 
     def _bootZone(self, task):
@@ -300,7 +372,7 @@ class OswaldPresenceClient(DirectObject):
 
     def _onCampaignProgressSync(
             self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
-        """Apply AI-persisted victory so trusted presence survives relog."""
+        """Apply AI-persisted victory + unlock soft-next for greets."""
         try:
             from toontown.campaign import CampaignProgressSave
             mirror = CampaignProgressSave.clientMirrorFromProgress({
@@ -308,11 +380,14 @@ class OswaldPresenceClient(DirectObject):
                 'state': state,
                 'chaseCleared': chaseCleared,
                 'reclaimCount': reclaimCount,
+                # actIndex omitted — sanitize uses unlockedThrough as default.
             })
         except Exception:
             return
         betrayed = bool(mirror.get('betrayed'))
         if betrayed:
+            self._unlockedThrough = int(mirror.get('unlockedThrough', 0) or 0)
+            self._softNextStreet = None
             if not self._betrayed:
                 self._onBetrayal()
             else:
@@ -321,9 +396,51 @@ class OswaldPresenceClient(DirectObject):
         # Fresh / mid-campaign — trusted face may return (replay wipe).
         wasBetrayed = self._betrayed
         self._betrayed = False
+        self._unlockedThrough = int(mirror.get('unlockedThrough', 0) or 0)
+        softStreet = mirror.get('softNextStreet')
+        if softStreet:
+            self._softNextStreet = str(softStreet)
+        elif self._unlockedThrough <= 0:
+            self._softNextStreet = None
+        else:
+            self._refreshSoftNextStreet()
         if wasBetrayed:
             # Re-arm marker in the current zone after a replay wipe sync.
             self._onZoneChange(self._zoneId)
+
+    def _onCampaignActUnlocked(self, nextIndex=0, zoneId=0):
+        """Raise unlock latch so post-cheer greets soft-next mid-session."""
+        try:
+            unlocked = int(nextIndex)
+        except Exception:
+            return
+        if unlocked < 0:
+            return
+        self._unlockedThrough = max(int(self._unlockedThrough or 0), unlocked)
+        self._refreshSoftNextStreet()
+
+    def _refreshSoftNextStreet(self):
+        """Derive soft-next street name from unlock progress (PlayEntry twin)."""
+        try:
+            from toontown.campaign import CampaignProgressSave
+            soft = CampaignProgressSave.softNextStreetFromProgress({
+                'unlockedThrough': int(self._unlockedThrough or 0),
+                'actIndex': int(self._unlockedThrough or 0),
+                'state': int(getattr(
+                    CampaignGlobals, 'STATE_ACTIVE', 1)),
+            })
+            self._softNextStreet = str(soft) if soft else None
+            return
+        except Exception:
+            pass
+        acts = getattr(CampaignGlobals, 'ACTS', ()) or ()
+        unlocked = int(self._unlockedThrough or 0)
+        if unlocked <= 0 or not acts:
+            self._softNextStreet = None
+            return
+        idx = max(0, min(unlocked, len(acts) - 1))
+        name = acts[idx].get('name')
+        self._softNextStreet = str(name) if name else None
 
     def _onZoneChange(self, zoneId=None):
         if zoneId is None and hasattr(base, 'localAvatar'):  # noqa: F821
@@ -656,7 +773,8 @@ class OswaldPresenceClient(DirectObject):
 
         First-ever meet shows the once-ever first-meet tip and fires
         ``oswaldPresenceMet`` so the accept path can persist ``oswaldMet``.
-        Later zone visits keep hub/street greet copy.
+        Later visits: static hub/street until ``oswaldCheered``, then
+        progress-aware soft-next from unlock latch.
         """
         if self._greetedZone is not None and int(self._greetedZone) == int(
                 zoneId):
@@ -666,7 +784,13 @@ class OswaldPresenceClient(DirectObject):
         self._clearPrompt()
         self._playGreetWave()
         firstMeet = not bool(self._oswaldMet)
-        tip = firstMeetTip() if firstMeet else greetTipForZone(zoneId)
+        if firstMeet:
+            tip = firstMeetTip()
+        else:
+            tip = greetTipForZone(
+                zoneId,
+                cheered=bool(self._oswaldCheered),
+                softNextStreet=self._softNextStreet)
         self._showGreetTip(tip)
         try:
             messenger.send(  # noqa: F821
@@ -702,17 +826,20 @@ class OswaldPresenceClient(DirectObject):
         """Accept reclaim-cheer messenger — latch + AI-persist oswaldCheered once.
 
         Live tip stays owned by ``playReclaimCheer``; this path retains the
-        cheer-on-clear beat past session bounce (trust→twist ladder).
+        cheer-on-clear beat past session bounce and unlocks progress-aware
+        plaza/street greet soft-next (trust→twist ladder).
         """
         if self._oswaldCheered:
             return
         self._oswaldCheered = True
+        self._refreshSoftNextStreet()
         self._requestPersistCheered()
 
     def _onOswaldCheeredSync(self, cheered=0):
         """Hydrate durable first-cheer latch from AI setOswaldCheered (relog)."""
         if int(cheered):
             self._oswaldCheered = True
+            self._refreshSoftNextStreet()
 
     def _requestPersistCheered(self):
         """Ask AI to persist oswaldCheered so cheer-on-clear survives bounce."""

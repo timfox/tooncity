@@ -1070,7 +1070,22 @@ OSWALD_PRESENCE_CHEER_TIP = (
     'Hop the tunnel  |  C campaign')
 # First reclaim cheer latches CampaignProgressSave.oswaldCheered (survives
 # relog). Live street clears still tip + cheer every time via CHEER_TIP;
-# the latch keeps cheer-on-clear on the trust→twist ladder past bounce.
+# after the latch, plaza/street E-talk soft-nexts from unlock progress
+# (HUB/STREET_GREET_SOFT_NEXT / _CHEERED) so the trust ladder reads mid-act.
+# Soft-next templates take {street} from softNextStreetFromProgress.
+OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT = (
+    'Oswald waves from the plaza — "{street} needs us next!"  |  '
+    'Hop the tunnel  |  C campaign')
+OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT = (
+    'Oswald tips his ears — "Wash this stain — then {street}!"  |  '
+    'F fight  |  Shift dodge  |  C campaign')
+# Cheered but Act 1 cursor still (unlockedThrough 0 / no soft-next street).
+OSWALD_PRESENCE_HUB_GREET_CHEERED = (
+    'Oswald waves — "That clean cheer sticks — keep reclaiming!"  |  '
+    'Hop the tunnel  |  C campaign')
+OSWALD_PRESENCE_STREET_GREET_CHEERED = (
+    'Oswald tips his ears — "We washed one street — packs still wait!"  |  '
+    'F fight  |  Shift dodge  |  C campaign')
 OSWALD_PRESENCE_INTERACT_PROMPT = 'E — Talk to Oswald'
 OSWALD_PRESENCE_INTERACT_EVENT = 'oswaldPresenceInteract'
 OSWALD_PRESENCE_MET_MSG = 'oswaldPresenceMet'
@@ -1104,6 +1119,41 @@ OSWALD_PRESENCE_BODY_COLOR = (0.22, 0.58, 0.96, 1.0)
 OSWALD_PRESENCE_MARKER_COLOR = (0.18, 0.52, 0.92, 1.0)
 OSWALD_PRESENCE_TIP_COLOR = (0.95, 0.98, 1.0, 1.0)
 OSWALD_PRESENCE_HIDE_ON_BETRAYAL = True
+
+
+def oswaldPresenceGreetTip(zoneId, cheered=False, softNextStreet=None):
+    """Hub/street E-talk greet; soft-next after oswaldCheered + unlocks.
+
+    Pre-cheer keeps static HUB/STREET_GREET. After the durable cheer latch,
+    prefer soft-next templates filled with ``softNextStreet`` (from unlock
+    progress); fall back to CHEERED greets when Act 1 still has no soft-next.
+    First-meet tip stays owned by OswaldPresence.firstMeetTip (once-ever).
+    """
+    hub = int(HUB_ZONE)
+    try:
+        zid = int(zoneId)
+    except Exception:
+        zid = -1
+    isHub = zid == hub
+    if cheered:
+        street = softNextStreet
+        if street:
+            street = str(street)
+            if isHub:
+                tmpl = OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT
+            else:
+                tmpl = OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT
+            try:
+                return tmpl.format(street=street)
+            except Exception:
+                return tmpl.replace('{street}', street)
+        if isHub:
+            return str(OSWALD_PRESENCE_HUB_GREET_CHEERED)
+        return str(OSWALD_PRESENCE_STREET_GREET_CHEERED)
+    if isHub:
+        return str(OSWALD_PRESENCE_HUB_GREET)
+    return str(OSWALD_PRESENCE_STREET_GREET)
+
 
 FINALE_BETRAYAL_SETTLE_OVERSHOOT = (0.86, 1.0, 1.22, 0.10)
 FINALE_BETRAYAL_SETTLE_REST_SEC = 0.16

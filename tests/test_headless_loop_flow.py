@@ -462,9 +462,17 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('Loopy', camp.OSWALD_PRESENCE_HUB_GREET)
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_STREET_GREET)
         self.assertTrue(camp.OSWALD_PRESENCE_HIDE_ON_BETRAYAL)
+        # Soft-next greets after oswaldCheered + unlocks (#TC-385 / post-#369).
+        self.assertIn('{street}', camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT)
+        self.assertIn('{street}', camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT)
+        self.assertTrue(callable(camp.oswaldPresenceGreetTip))
+        soft_hub = camp.oswaldPresenceGreetTip(
+            HUB, cheered=True, softNextStreet='Punchline Place')
+        self.assertIn('Punchline Place', soft_hub)
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             self.assertNotIn(banned, camp.OSWALD_PRESENCE_HUB_GREET.lower())
             self.assertNotIn(banned, camp.OSWALD_PRESENCE_STREET_GREET.lower())
+            self.assertNotIn(banned, soft_hub.lower())
 
         presence_rel = 'toontown/campaign/OswaldPresence.py'
         self.assertTrue((REPO_ROOT / presence_rel).is_file())
@@ -525,7 +533,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 '_onOswaldPresenceMet', '_onOswaldMetSync',
                 '_requestPersistMet', '_meetOswald',
                 '_onOswaldPresenceCheered', '_onOswaldCheeredSync',
-                '_requestPersistCheered'):
+                '_requestPersistCheered',
+                '_onCampaignActUnlocked', '_refreshSoftNextStreet'):
             self.assertIn(
                 method, presence_methods,
                 msg='OswaldPresenceClient missing %s' % method)
@@ -533,9 +542,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('metMsgName', presence_names)
         self.assertIn('cheeredMsgName', presence_names)
         self.assertIn('cheeredSyncMsgName', presence_names)
+        self.assertIn('hubGreetSoftNextTip', presence_names)
         self.assertIn('d_requestOswaldMet', presence_src)
         self.assertIn('d_requestOswaldCheered', presence_src)
         self.assertIn('OSWALD_PRESENCE_FIRST_MEET_TIP', presence_src)
+        self.assertIn("accept('campaignActUnlocked'", presence_src)
+        self.assertIn('cheered=bool(self._oswaldCheered)', presence_src)
+        self.assertIn('softNextStreet=self._softNextStreet', presence_src)
         default_progress = self.save.defaultProgress()
         self.assertIn('oswaldMet', default_progress)
         self.assertEqual(default_progress['oswaldMet'], 0)
