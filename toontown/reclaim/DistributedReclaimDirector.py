@@ -251,9 +251,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         # immediately followed by a pressure whisper.
         self.__armPurityPressure(resetStall=True)
         self.__showStatusHud()
-        # Further-deepened sunny meter hose-pop past #239 so wave begin
-        # reads juicier still (not rim flash #213 / #275 / secured lock
-        # #209 / #261).
+        # Further-deepened sunny meter hose-pop past #280 so wave begin
+        # reads juicier still (not rim flash #213 / #275 / #302 / secured
+        # lock #209 / #261 / #286).
         if self._purityMeter is not None:
             try:
                 self._purityMeter.popWaveStart()

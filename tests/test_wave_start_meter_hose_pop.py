@@ -2,11 +2,11 @@
 """Behavioral headless tests for wave-start purity meter hose pop cream.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-further-deepened WAVE_START_METER_POP / CREAM tunables past #239,
+further-deepened WAVE_START_METER_POP / CREAM tunables past #280,
 rubber-hose (non-KH) copy, and AST hooks on PurityMeterHud + reclaim
 director announcePackSpawn. Distinct from rim-flash cream deepen
-(#234 / #275), wave-clear sparkle (#229 / #273), and purity-complete
-hose settle (#225 / #266).
+(#234 / #275 / #302), wave-clear sparkle (#229 / #273 / #297), and
+purity-complete hose settle (#225 / #266 / #292).
 
 Run from repo root:
   python3 tests/test_wave_start_meter_hose_pop.py
@@ -89,24 +89,24 @@ class WaveStartMeterHosePopTest(unittest.TestCase):
         rg = self.rg
         self.assertIs(rg.WAVE_START_METER_POP_ENABLED, True)
         self.assertIs(rg.WAVE_START_METER_CREAM_ENABLED, True)
-        # Floors past #239 (settle 0.12 / rim 0.28 / squash Z 0.52 / stretch Z 1.38).
-        self.assertGreater(float(rg.WAVE_START_METER_POP_SETTLE_SEC), 0.12)
-        self.assertGreaterEqual(float(rg.WAVE_START_METER_RIM_SEC), 0.32)
+        # Floors past #280 (settle 0.16 / rim 0.34 / squash Z 0.44 / stretch Z 1.46).
+        self.assertGreater(float(rg.WAVE_START_METER_POP_SETTLE_SEC), 0.16)
+        self.assertGreaterEqual(float(rg.WAVE_START_METER_RIM_SEC), 0.38)
         squash = rg.WAVE_START_METER_POP_SQUASH
         stretch = rg.WAVE_START_METER_POP_STRETCH
         self.assertEqual(len(squash), 4)
         self.assertEqual(len(stretch), 4)
         # Hose squash flattens Z; stretch overshoots Z — classic rubber-hose.
-        self.assertLess(float(squash[2]), 0.50)  # flatter squash past #239
-        self.assertGreater(float(stretch[2]), 1.40)  # taller stretch past #239
+        self.assertLess(float(squash[2]), 0.44)  # flatter squash past #280
+        self.assertGreater(float(stretch[2]), 1.46)  # taller stretch past #280
         # Richer cream flecks / halo (rising begin juice, not warn rim cream).
-        self.assertGreaterEqual(int(rg.WAVE_START_METER_CREAM_COUNT), 8)
-        self.assertGreater(float(rg.WAVE_START_METER_CREAM_RISE), 0.12)
-        self.assertGreater(float(rg.WAVE_START_METER_CREAM_HALO_PEAK), 1.32)
+        self.assertGreaterEqual(int(rg.WAVE_START_METER_CREAM_COUNT), 10)
+        self.assertGreater(float(rg.WAVE_START_METER_CREAM_RISE), 0.15)
+        self.assertGreater(float(rg.WAVE_START_METER_CREAM_HALO_PEAK), 1.42)
         self.assertGreaterEqual(
-            float(rg.WAVE_START_METER_CREAM_HALO_PEAK_ALPHA), 0.18)
+            float(rg.WAVE_START_METER_CREAM_HALO_PEAK_ALPHA), 0.22)
         self.assertTrue(rg.WAVE_START_METER_CREAM_HALO_ENABLED)
-        self.assertIn('past #239', _read('toontown/reclaim/ReclaimGlobals.py'))
+        self.assertIn('past #280', _read('toontown/reclaim/ReclaimGlobals.py'))
 
     def test_rim_accent_is_sunny_not_warn_or_secured_green(self):
         rg = self.rg
@@ -121,16 +121,16 @@ class WaveStartMeterHosePopTest(unittest.TestCase):
         self.assertGreater(float(start[0]), 0.9)
         self.assertGreater(float(start[1]), 0.9)
         self.assertLess(float(start[2]), float(start[1]))
-        self.assertGreaterEqual(float(start[3]), 0.90)  # creamier rim alpha past #239
+        self.assertGreaterEqual(float(start[3]), 0.96)  # creamier rim alpha past #280
         self.assertGreater(float(warn[0]), float(warn[1]))  # warm warn
         self.assertGreater(float(lock[1]), float(lock[0]))  # green lock
         # Rising begin flecks stay sunny (high G), not warm warn cream.
         self.assertGreater(float(cream[1]), 0.95)
-        self.assertGreaterEqual(float(cream[3]), 0.95)
+        self.assertGreaterEqual(float(cream[3]), 0.96)
         self.assertNotEqual(
             tuple(cream), tuple(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR))
         magic = _read('toontown/reclaim/MagicWords.py')
-        self.assertIn('past #239', magic)
+        self.assertIn('past #280', magic)
         self.assertIn('richer sunny cream flecks', magic)
 
     def test_no_kh_branding_in_wave_start_tunables(self):
