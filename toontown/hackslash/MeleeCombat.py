@@ -27,6 +27,7 @@ from . import HitJuice
 from .DemoHostile import spawnDemoHostiles
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
+from .HitSparkFx import HitSparkFx
 from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
 from .SoftTarget import SoftTargetFinder
@@ -59,6 +60,7 @@ class MeleeCombatController(DirectObject):
         self._dodging = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
+        self._hitSpark = HitSparkFx(avatar)
         self._slamDust = SlamDustFx(avatar)
         self._softLockReticle = SoftLockReticleFx(avatar)
         self._origScale = None
@@ -129,6 +131,7 @@ class MeleeCombatController(DirectObject):
         self._clearLaunch()
         self._clearDodge()
         self._clearPerfectDodge()
+        self._clearHitSpark()
         self._clearSlamDust()
         self._clearSoftLockReticle()
         self._clearComboCounter()
@@ -152,6 +155,10 @@ class MeleeCombatController(DirectObject):
             pass
         try:
             self._dodgePerfect.clear()
+        except Exception:
+            pass
+        try:
+            self._hitSpark.clear()
         except Exception:
             pass
         try:
@@ -1073,6 +1080,8 @@ class MeleeCombatController(DirectObject):
                 finishScale=self._origScale,
                 name=av.uniqueName('hackslashImpactSquash'),
             )
+        # Cream/ink fleck sparkles layer with the squash silhouette.
+        self._playHitSpark(hitIndex, target)
         # Target hit-react scale — DemoHostile / CorruptToon may also tint.
         visual = HitJuice.resolveVisualNode(target)
         if visual is not None and visual is not av:
@@ -1099,6 +1108,30 @@ class MeleeCombatController(DirectObject):
                 setattr(target, '_hackslashImpactIval', targetIval)
             except Exception:
                 pass
+
+    def _playHitSpark(self, hitIndex, target=None):
+        """Short cream/ink fleck sparkles at the hit — layers with impact squash."""
+        origin = None
+        lift = float(HackSlashConfig.HIT_SPARK_LIFT)
+        if target is not None:
+            try:
+                if hasattr(target, 'getHackSlashPos'):
+                    pos = target.getHackSlashPos()
+                else:
+                    pos = target.getPos(render)  # noqa: F821
+                origin = Point3(pos[0], pos[1], pos[2] + lift)
+            except Exception:
+                origin = None
+        try:
+            self._hitSpark.play(origin=origin, hitIndex=hitIndex)
+        except Exception:
+            pass
+
+    def _clearHitSpark(self):
+        try:
+            self._hitSpark.clear()
+        except Exception:
+            pass
 
     def _playSlamDust(self, target=None):
         """Short rubber-hose dust / ink puff at feet on finisher slam connect."""
