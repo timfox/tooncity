@@ -1360,6 +1360,83 @@ def snareStringCounterUntil(armedAt, window=None):
         window = SNARE_STRING_COUNTER_WINDOW_SEC
     return float(armedAt) + max(0.0, float(window))
 
+
+# Cream splash + delayed cream aftershock on successful Balloon Snare
+# string-snap punish/counter (#203 window). Sunny cream / pastel contrast
+# against amber SnareStringSnapSplashFx so the rewarded hit reads juicy.
+# Same residual grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_* / Smudge hit
+# cream wash compose. Client only. No keyblades / KH branding.
+# SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
+# SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED = False drops aftershock only.
+SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED = True
+# Extra seconds after the counter window expires where a late swing hit may
+# still earn cream juice (covers stretch-punch hit delay after F spend).
+SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC = 0.28
+SNARE_STRING_COUNTER_CREAM_SPLASH_DELAY_SEC = 0.06  # fallback; look prefers amber compose
+SNARE_STRING_COUNTER_CREAM_SPLASH_BIN = 46  # above amber snap splash (45)
+SNARE_STRING_COUNTER_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.94)  # sunny cream
+SNARE_STRING_COUNTER_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.7)
+SNARE_STRING_COUNTER_CREAM_SPLASH_FLECK_COLORS = (
+    (1.0, 0.97, 0.82, 0.9),   # sunny cream
+    (1.0, 0.96, 0.62, 0.84),  # butter
+    (1.0, 0.9, 0.78, 0.8),    # soft peach pastel
+)
+SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK = {
+    'id': 'snare-string-counter-cream-splash',
+    # lift / delaySec composed with snareStringSnapSplashLook('hit') when played.
+    'lift': 1.95,
+    'delaySec': SNARE_STRING_COUNTER_CREAM_SPLASH_DELAY_SEC,
+    'delayScale': 0.35,
+    'peakAlpha': 0.92,
+    'splatHalf': 0.22,
+    'splatPeak': 1.45,
+    'splatSec': 0.15,
+    'rimScale': 1.28,
+    'splatColor': SNARE_STRING_COUNTER_CREAM_SPLASH_COLOR,
+    'rimColor': SNARE_STRING_COUNTER_CREAM_SPLASH_RIM_COLOR,
+    'fleckCount': 3,
+    'fleckHalf': 0.09,
+    'fleckDist': 0.95,
+    'fleckLift': 0.35,
+    'fleckSec': 0.2,
+    'fleckColors': SNARE_STRING_COUNTER_CREAM_SPLASH_FLECK_COLORS,
+    'binSort': SNARE_STRING_COUNTER_CREAM_SPLASH_BIN,
+}
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED = True
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC = 0.16
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT = 3
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT = 1
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SIZE = 0.1
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_SIZE = 0.12
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT = 0.55
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_FALL = 0.42
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SEC = 0.32
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.85)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.82)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_ENABLED = True
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF = 0.42
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_START = 0.28
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK = 1.4
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_SEC = 0.28
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.2
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+
+
+def isSnareStringCounterCreamSplashEligible(armed, until, now, grace=None):
+    """True while a successful string-snap counter hit may fire cream splash.
+
+    Extends the live counter window by a short hit-grace so stretch-punch
+    contact that lands just after F spend still earns the cream juice.
+    """
+    if not armed:
+        return False
+    if grace is None:
+        grace = SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC
+    return float(now) < (float(until) + max(0.0, float(grace)))
+
+
 # Gunk Gagster gag-lob — teal bounce-bomb wind-up, arcing pie lob, puddle splat.
 # Reads apart from Brute spit (green linear), Snare lash (amber horizontal),
 # and Smudge melee (purple squash).

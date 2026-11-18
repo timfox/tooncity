@@ -2487,13 +2487,26 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'SNARE_STRING_COUNTER_DAMAGE_MULT',
                 'SNARE_STRING_COUNTER_RATE_MULT',
                 'SNARE_STRING_COUNTER_INTERRUPT',
-                'SNARE_STRING_COUNTER_EVENT'):
+                'SNARE_STRING_COUNTER_EVENT',
+                'SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED',
+                'SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC',
+                'SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK',
+                'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED',
+                'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC',
+                'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COLOR',
+                'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_COLOR'):
             self.assertIn(
                 snare_counter_key, cg_names,
                 msg='CorruptionGlobals missing snare string counter %s' % (
                     snare_counter_key,))
         self.assertIs(self.corruption.SNARE_STRING_COUNTER_ENABLED, True)
         self.assertIs(self.corruption.SNARE_STRING_COUNTER_INTERRUPT, True)
+        self.assertIs(
+            self.corruption.SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED, True)
+        self.assertIs(
+            self.corruption.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED,
+            True)
         self.assertGreater(
             float(self.corruption.SNARE_STRING_COUNTER_ARM_DELAY_SEC), 0.0)
         self.assertGreater(
@@ -2502,6 +2515,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             float(self.corruption.SNARE_STRING_COUNTER_DAMAGE_MULT), 1.0)
         self.assertGreater(
             float(self.corruption.SNARE_STRING_COUNTER_RATE_MULT), 1.0)
+        self.assertGreater(
+            float(self.corruption.SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC),
+            0.0)
         self.assertEqual(
             self.corruption.SNARE_STRING_COUNTER_EVENT,
             'corruptSnareStringSnapCounter')
@@ -2510,7 +2526,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'snareStringCounterOpenerRate',
                 'isSnareStringCounterWindowOpen',
                 'snareStringCounterArmAt',
-                'snareStringCounterUntil'):
+                'snareStringCounterUntil',
+                'isSnareStringCounterCreamSplashEligible'):
             self.assertTrue(
                 callable(getattr(self.corruption, snare_helper, None)),
                 msg='CorruptionGlobals missing helper %s' % snare_helper)
@@ -2518,6 +2535,19 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('__scheduleSnareStringSnapCounter', corrupt_src)
         self.assertIn('__clearSnareStringSnapCounter', corrupt_src)
         self.assertIn('corruptSnareStringSnapCounter', corrupt_src)
+        self.assertIn('__consumeSnareStringCounterCreamSplash', corrupt_src)
+        self.assertIn('__playSnareStringCounterCreamSplash', corrupt_src)
+        self.assertIn('SnareStringCounterCreamSplash', corrupt_src)
+        cream_fx_src = _read(
+            'toontown/corruption/SnareStringCounterCreamSplashFx.py')
+        self.assertIn('class SnareStringCounterCreamSplash', cream_fx_src)
+        self.assertIn('snareStringCounterCreamSplashLook', cream_fx_src)
+        self.assertIn('_buildAftershock', cream_fx_src)
+        cream_look_id = str(
+            self.corruption.SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK.get(
+                'id', '')).lower()
+        self.assertNotIn('keyblade', cream_look_id)
+        self.assertNotIn('kingdom hearts', cream_look_id)
         corrupt_ai_src = _read(
             'toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('__maybeInterruptSnareTelegraph', corrupt_ai_src)
@@ -2529,6 +2559,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('Balloon Snare', magic_src)
         reclaim_md = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('string-snap counter', reclaim_md)
+        self.assertIn('SnareStringCounterCreamSplashFx', reclaim_md)
+        corr_init = _read('toontown/corruption/__init__.py')
+        self.assertIn('SnareStringCounterCreamSplashFx', corr_init)
 
         # Air-juggle → slam cancel window — mid-juggle hang cancel into
         # finisher slam (aerial control; builds on dodge-cancel grammar).
