@@ -2,10 +2,10 @@
 """Behavioral headless tests for combo-counter cream edge deepen helpers.
 
 Loads HackSlashConfig combo cream edge helpers without Panda3D. Covers
-deepened edge tunables + quiet local cream edge aftershock so the punch
-counter reads juicier on each tick beside hose pop + cream sparkle —
-distinct from soft-lock cycle reticle cream deepen (#233) and dodge
-i-frame cream wash deepen (#228).
+deepened-past-#237 edge tunables + richer local cream edge aftershock so
+the punch counter reads juicier still on each tick beside hose pop + cream
+sparkle — distinct from soft-lock cycle reticle cream deepen (#233) and
+dodge i-frame cream wash deepen (#228).
 
 Run from repo root:
   python3 tests/test_combo_counter_cream_edge.py
@@ -93,15 +93,23 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
             self.cfg.COMBO_COUNTER_CREAM_EDGE_PULSE,
             self.cfg.COMBO_COUNTER_CREAM_EDGE_PEAK)
         self.assertGreater(self.cfg.COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK, 1.0)
-        # Deepened readability: juicier than original #224 edge pop.
+        # Deepened-past-#237 readability: juicier than #237 edge pop.
         self.assertGreaterEqual(
-            self.cfg.COMBO_COUNTER_CREAM_EDGE_PEAK, 0.72)
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_PEAK, 0.78)
         self.assertGreaterEqual(
-            self.cfg.COMBO_COUNTER_CREAM_EDGE, 0.024)
+            self.cfg.COMBO_COUNTER_CREAM_EDGE, 0.028)
         self.assertGreaterEqual(
-            self.cfg.COMBO_COUNTER_CREAM_EDGE_HOLD_SEC, 0.04)
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_HOLD_SEC, 0.055)
         self.assertGreaterEqual(
-            self.cfg.COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK, 1.28)
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK, 1.36)
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_PULSE, 0.50)
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT, 4)
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK, 1.25)
+        self.assertGreaterEqual(
+            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK_ALPHA, 0.18)
         # Snappier than banner / wave cream edge settle (ticks fire often).
         self.assertLess(
             self.cfg.COMBO_COUNTER_CREAM_EDGE_IN_SEC, 0.08)
@@ -113,9 +121,7 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
         self.assertGreater(
             self.cfg.COMBO_COUNTER_CREAM_EDGE_BIN,
             self.cfg.COMBO_COUNTER_CREAM_WASH_BIN)
-        # Quiet local edge aftershock under the edge strips.
-        self.assertGreaterEqual(
-            self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT, 1)
+        # Richer local edge aftershock under the edge strips.
         self.assertTrue(
             self.cfg.COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_ENABLED)
         self.assertLess(
@@ -179,8 +185,9 @@ class ComboCounterCreamEdgeTest(unittest.TestCase):
         # Ban phrasing only — no KH product names as branding.
         self.assertIn('no keyblades', src.lower())
         self.assertNotIn('kingdom hearts', src.lower())
-        # Distinct from soft-lock / i-frame deepen cues.
+        # Distinct from soft-lock / i-frame deepen cues; past #237.
         self.assertIn('distinct from', src.lower())
+        self.assertIn('deepened past #237', src.lower())
 
     def test_ast_melee_wires_combo_cream_edge(self):
         melee_rel = 'toontown/hackslash/MeleeCombat.py'
