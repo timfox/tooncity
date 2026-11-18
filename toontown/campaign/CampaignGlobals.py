@@ -162,6 +162,27 @@ PUNCHLINE_ACT_TIP_POP_SETTLE_SEC = 0.10
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.90, 1.0, 1.16, 0.07)
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 
+# Soft cream wash pulse after Punchline Act 2 tip hose pop (#91).
+# Act-banner / trust wash grammar (#154/#145) — delayed two-beat aspect2d
+# veil on PlayEntry tipHose='punchline' path only. Soft under the tip bar;
+# cream / pastel only. A touch quieter / shorter than handoff wash (#141)
+# — tip lands without glitter hang (trust / act-banner wash twin). Loopy /
+# Silly / default tip hose stay wash-free. Act-enter / trust / handoff /
+# victory / finale washes live in their own modules.
+# PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only (hose pop +
+# trust settle remain). No keyblades / KH branding.
+PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = True
+PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.36  # after play; after hose settle
+PUNCHLINE_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK = 0.12
+PUNCHLINE_ACT_TIP_CREAM_WASH_MID = 0.07
+PUNCHLINE_ACT_TIP_CREAM_WASH_IN_SEC = 0.07
+PUNCHLINE_ACT_TIP_CREAM_WASH_PULSE_SEC = 0.12
+PUNCHLINE_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.10
+PUNCHLINE_ACT_TIP_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
+# Above ink entry vignette (48); soft veil settle under tip bar.
+PUNCHLINE_ACT_TIP_CREAM_WASH_BIN = 49
+
 # Silly Street Act 3 entry tip — tip-matched hose pop, slightly heavier for
 # the Ink Overlord finale beat. Oswald stays the trusted mid-campaign lead
 # on this tip (no twist spoilers). Soft trust settle matches Punchline tip

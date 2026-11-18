@@ -7,9 +7,10 @@ FinaleRevealCreamWashPulse overlay grammar as a brief trusted-hero settle
 beat. Soft under the trust plate + edge strips; cream / pastel only (not
 ink). Wired from CampaignHandoff trustSettle (Oswald trusted early/mid
 only) beside the cream edge. No carnival / no twist spoilers — act-enter
-wash lives in ActBannerCreamWashFx; twist / victory / phase / handoff
-carnival stay on their own wash modules. Client only. Toontown spiritual
-sequel — no keyblades / no KH branding.
+wash lives in ActBannerCreamWashFx; Punchline tip wash lives in
+PunchlineTipCreamWashFx; twist / victory / phase / handoff carnival stay
+on their own wash modules. Client only. Toontown spiritual sequel — no
+keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4
