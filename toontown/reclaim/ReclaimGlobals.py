@@ -60,6 +60,16 @@ FINALE_PACK_BANNER = {
     2: "Unleashed ink tide — Oswald's cheer rings hollow!",
 }
 
+# Wave-start announce (readable rubber-hose plate on pack spawn).
+# Title reads "Wave 2 of 4 — Ink packs inbound"; Oswald tip sits under it.
+WAVE_ANNOUNCE_HOLD_SEC = 2.35
+WAVE_BANNER_POP_SCALE_ANNOUNCE = 0.125
+WAVE_BANNER_POP_SEC_ANNOUNCE = 0.12
+WAVE_BANNER_COLOR = (1.0, 0.88, 0.42, 1.0)
+WAVE_SUB_BANNER_COLOR = (1.0, 0.96, 0.82, 1.0)
+WAVE_BANNER_COLOR_PUNCHLINE = (0.72, 0.92, 0.55, 1.0)
+WAVE_SUB_BANNER_COLOR_PUNCHLINE = (0.88, 0.98, 0.78, 1.0)
+
 # Reclaim-complete purity burst (HUD overlay + sting).
 # Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.
 PURITY_BURST_PEAK_ALPHA = 0.78
@@ -95,23 +105,110 @@ PURITY_RAY_SEC = 0.48
 PURITY_SPARK_COUNT = 10
 PURITY_SPARK_SEC = 0.42
 
-WAVE_BANNER_FMT = 'Wave %s/%s — %s'
+WAVE_BANNER_FMT = 'Wave %s of %s — %s'
+# Legacy short labels (finale / older callers still use waveLabel).
 WAVE_LABELS = (
     'Ink blotches appear!',
     'Corruption thickens!',
     'Ink surge!',
     'Final ink tide!',
 )
+# Short inbound phrase after the em dash — Toontown rubber-hose tone.
+WAVE_INBOUND_DEFAULT = 'Ink packs inbound'
+WAVE_INBOUND_BY_ZONE = {
+    ToontownGlobals.LoopyLane: 'Ink packs inbound',
+    ToontownGlobals.PunchlinePlace: 'Sludge packs inbound',
+    ToontownGlobals.SillyStreet: 'Ink packs inbound',
+}
+WAVE_INBOUND_FINALE = {
+    1: 'Overlord pack inbound',
+    2: 'Unleashed pack inbound',
+}
+# Oswald tip flavor under the wave plate (Loopy / Punchline focused).
+OSWALD_WAVE_TIPS_LOOPY = (
+    'Oswald tips: stretch-punch those Ink Smudges!',
+    'Oswald tips his ears — keep Loopy Lane laughing!',
+    'Oswald cheers: one more pack and Loopy is pure!',
+)
+OSWALD_WAVE_TIPS_PUNCHLINE = (
+    'Oswald tips: dodge Brute spit, snip Balloon Snares!',
+    'Oswald: Punchline Place needs that rubber-hose bounce!',
+    'Oswald tips his ears — sludge packs keep coming!',
+    'Oswald: last laugh for Punchline — clear this wave!',
+)
+OSWALD_WAVE_TIPS_DEFAULT = (
+    'Oswald tips: stretch-punch the pack!',
+    'Oswald tips his ears — hold the street!',
+    'Oswald: clear the ink, save the neighborhood!',
+    'Oswald cheers: final pack — reclaim it!',
+)
 
 
 def waveLabel(waveIndex, maxWaves):
-    """Player-facing label for the current wave."""
+    """Player-facing label for the current wave (legacy / finale fallback)."""
     waveIndex = max(1, int(waveIndex))
     maxWaves = max(1, int(maxWaves))
     if waveIndex >= maxWaves:
         return WAVE_LABELS[-1]
     idx = min(waveIndex - 1, len(WAVE_LABELS) - 2)
     return WAVE_LABELS[idx]
+
+
+def waveInboundLabel(zoneId=None, finalePhase=0):
+    """Short inbound phrase for the wave-start banner em-dash."""
+    phase = int(finalePhase or 0)
+    if phase >= 1:
+        return WAVE_INBOUND_FINALE.get(phase, WAVE_INBOUND_DEFAULT)
+    zone = int(zoneId or 0)
+    return WAVE_INBOUND_BY_ZONE.get(zone, WAVE_INBOUND_DEFAULT)
+
+
+def waveAnnounceTitle(waveIndex, maxWaves, zoneId=None, finalePhase=0):
+    """Readable wave-start title, e.g. 'Wave 2 of 4 — Ink packs inbound'."""
+    wave = max(1, int(waveIndex))
+    total = max(1, int(maxWaves))
+    inbound = waveInboundLabel(zoneId=zoneId, finalePhase=finalePhase)
+    return WAVE_BANNER_FMT % (wave, total, inbound)
+
+
+def waveOswaldTip(waveIndex, maxWaves, zoneId=None, packCount=0):
+    """Oswald tip line under the wave plate (Loopy / Punchline flavor)."""
+    wave = max(1, int(waveIndex))
+    total = max(1, int(maxWaves))
+    zone = int(zoneId or 0)
+    if zone == ToontownGlobals.LoopyLane:
+        tips = OSWALD_WAVE_TIPS_LOOPY
+    elif zone == ToontownGlobals.PunchlinePlace:
+        tips = OSWALD_WAVE_TIPS_PUNCHLINE
+    else:
+        tips = OSWALD_WAVE_TIPS_DEFAULT
+    idx = min(wave - 1, len(tips) - 1)
+    tip = tips[idx]
+    count = int(packCount or 0)
+    if count > 0 and wave >= total:
+        return '%s  ·  %s inbound' % (tip, count)
+    if count > 0:
+        return '%s  ·  pack of %s' % (tip, count)
+    return tip
+
+
+def waveAnnounceColors(zoneId=None):
+    """Warm rubber-hose banner colors (Punchline leans gag-green)."""
+    zone = int(zoneId or 0)
+    if zone == ToontownGlobals.PunchlinePlace:
+        return WAVE_BANNER_COLOR_PUNCHLINE, WAVE_SUB_BANNER_COLOR_PUNCHLINE
+    return WAVE_BANNER_COLOR, WAVE_SUB_BANNER_COLOR
+
+
+def waveClearedOswaldTip(waveIndex, zoneId=None):
+    """Brief Oswald beat between waves (Loopy / Punchline flavor)."""
+    wave = int(waveIndex)
+    zone = int(zoneId or 0)
+    if zone == ToontownGlobals.LoopyLane:
+        return 'Oswald tips his ears — next Loopy pack soon'
+    if zone == ToontownGlobals.PunchlinePlace:
+        return 'Oswald: Punchline pause — next sludge surge incoming'
+    return 'Wave %s down — next surge incoming' % wave
 
 
 def wavePackSize(baseSize, waveIndex):
