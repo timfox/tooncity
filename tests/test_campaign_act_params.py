@@ -603,13 +603,19 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('playVictoryTwistConfettiSting', handoff_src)
         self.assertIn('clearVictoryTwistConfettiSting', handoff_src)
         self.assertTrue(getattr(camp, 'VICTORY_TWIST_CONFETTI_ENABLED', False))
-        self.assertGreater(camp.VICTORY_TWIST_CONFETTI_COUNT, 0)
+        self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_COUNT, 12)
+        self.assertTrue(
+            getattr(camp, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED', False))
+        self.assertGreater(
+            float(getattr(camp, 'VICTORY_TWIST_CONFETTI_POP', 0)), 1.45)
         sting_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'VictoryTwistConfettiSting.py'
         ).read_text(encoding='utf-8')
         self.assertIn('VictoryTwistConfettiSting', sting_src)
         self.assertIn('caused the corruption', sting_src.lower())
+        self.assertIn('_buildAftershock', sting_src)
+        self.assertIn('VICTORY_TWIST_CONFETTI_POP', sting_src)
         finale_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'FinalePhaseFx.py'
@@ -622,7 +628,7 @@ class CampaignActParamsTest(unittest.TestCase):
         ).read_text(encoding='utf-8')
         magic_l = magic_src.lower()
         self.assertIn('betrayal handoff', magic_l)
-        self.assertIn('confetti twist sting', magic_l)
+        self.assertIn('deepened victory/confetti twist cream sting', magic_l)
         self.assertIn('no keyblades', magic_l)
 
     def test_act_param_keys_present_for_director(self):

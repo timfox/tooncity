@@ -28,7 +28,7 @@ class StartCampaign(MagicWord):
         'victory cheer: cream swell / sparkle / edge + soft cream wash '
         'pulse + cream aftershock; victory reveal sting: Oswald caused the '
         'corruption — betrayal handoff banner hose-pop + cream hose settle + '
-        'short victory/confetti twist sting '
+        'deepened victory/confetti twist cream sting (+ soft cream aftershock) '
         '+ rubber-hose silhouette shadow flash + FOV/SFX + soft cream '
         'aftershock framed by cream edge + soft cream wash pulse + cream '
         'aftershock). Toontown '

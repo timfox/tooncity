@@ -3262,13 +3262,17 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('betrayalHandoff', handoff_src)
         self.assertIn('FINALE_BETRAYAL_SETTLE_OVERSHOOT', handoff_src)
         self.assertIn('FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT', handoff_src)
-        # Victory/confetti Oswald twist sting — bittersweet chips on betrayal.
+        # Deepened victory/confetti Oswald twist cream sting — juicier chips
+        # + soft cream aftershock on betrayal (distinct from #240 / #235).
         for twist_key in (
                 'VICTORY_TWIST_CONFETTI_ENABLED',
                 'VICTORY_TWIST_CONFETTI_COUNT',
                 'VICTORY_TWIST_CONFETTI_ORIGIN',
                 'VICTORY_TWIST_CONFETTI_COLORS',
-                'VICTORY_TWIST_CONFETTI_DELAY_SEC'):
+                'VICTORY_TWIST_CONFETTI_DELAY_SEC',
+                'VICTORY_TWIST_CONFETTI_POP',
+                'VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED',
+                'VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT'):
             self.assertIn(
                 twist_key, campaign_names,
                 msg='CampaignGlobals missing %s' % twist_key)
@@ -3278,13 +3282,20 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('VictoryTwistConfettiSting', twist_names)
         self.assertIn('playVictoryTwistConfettiSting', twist_names)
         self.assertIn('clearVictoryTwistConfettiSting', twist_names)
+        twist_methods = _class_method_names(
+            _module_ast(twist_rel), 'VictoryTwistConfettiSting')
+        self.assertIn('_buildAftershock', twist_methods)
+        self.assertIn('_spawnAftershockHalo', twist_methods)
+        twist_src = _read(twist_rel)
+        self.assertIn('VICTORY_TWIST_CONFETTI_POP', twist_src)
         self.assertIn('playVictoryTwistConfettiSting', handoff_src)
         self.assertIn('clearVictoryTwistConfettiSting', handoff_src)
         finale_fx_src = _read('toontown/campaign/FinalePhaseFx.py')
         self.assertIn('ensureCampaignHandoffClient', finale_fx_src)
         self.assertIn('betrayal handoff', camp_magic_l)
         self.assertIn('cream hose settle', camp_magic_l)
-        self.assertIn('confetti twist sting', camp_magic_l)
+        self.assertIn(
+            'deepened victory/confetti twist cream sting', camp_magic_l)
         betrayal_cue = campaign_assigns.get('FINALE_BETRAYAL_HANDOFF_CUE') or ''
         if isinstance(betrayal_cue, list):
             betrayal_cue = ''.join(str(part) for part in betrayal_cue)

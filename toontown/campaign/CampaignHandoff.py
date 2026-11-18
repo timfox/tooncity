@@ -24,9 +24,10 @@ and a delayed soft cream wash pulse with a residual cream aftershock
 reveal so the bittersweet sting stays intact. When Silly finale betrayal
 reveal fires (oswaldRevealBanner), a dedicated betrayal handoff plate
 hose-pops the twist copy with a brief cream hose settle so the twist
-lands juicier — complements almost-confess tip (#207) — and a short
-victory/confetti sting (VictoryTwistConfettiSting) lands the hollow cheer
-that Oswald caused the corruption.
+lands juicier — complements almost-confess tip (#207) — and a deepened
+victory/confetti cream sting (VictoryTwistConfettiSting: juicier chips +
+soft cream aftershock) lands the hollow cheer that Oswald caused the
+corruption. Distinct from act handoff cream edge settle deepen (#240).
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -345,8 +346,9 @@ class CampaignHandoffClient(DirectObject):
                 playFinaleRevealCreamEdge()
             except Exception:
                 pass
-            # Short bittersweet victory/confetti sting — hollow cheer that
-            # lands Oswald caused the corruption (#82 swell already cleared).
+            # Deepened bittersweet victory/confetti cream sting — juicier
+            # chips + soft cream aftershock so the hollow cheer that Oswald
+            # caused the corruption lands readable (#82 swell already cleared).
             try:
                 origin = getattr(
                     CampaignGlobals, 'VICTORY_TWIST_CONFETTI_ORIGIN',
