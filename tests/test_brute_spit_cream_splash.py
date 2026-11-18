@@ -91,12 +91,19 @@ class BruteSpitCreamSplashTest(unittest.TestCase):
     def test_spit_cream_splash_tunables(self):
         self.assertTrue(self.cg.BRUTE_SPIT_CREAM_SPLASH_ENABLED)
         self.assertTrue(self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_ENABLED)
+        self.assertTrue(self.cg.BRUTE_SPIT_CREAM_SPLASH_DRIP_ENABLED)
         self.assertGreaterEqual(
             self.cg.BRUTE_SPIT_CREAM_SPLASH_DELAY_SEC, 0.0)
         self.assertGreater(self.cg.BRUTE_SPIT_CREAM_SPLASH_LIFT, 0.0)
         look = self.cg.BRUTE_SPIT_CREAM_SPLASH_LOOK
         self.assertEqual(look.get('id'), 'brute-spit-cream-splash')
-        self.assertGreater(int(look.get('fleckCount', 0)), 0)
+        # Deepened spit-land splash vs #223 baseline (4 flecks / 3 aftershock).
+        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 6)
+        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.65)
+        self.assertGreaterEqual(float(look.get('fleckLift', 0)), 0.45)
+        self.assertTrue(look.get('dripEnabled'))
+        self.assertGreaterEqual(int(look.get('dripCount', 0)), 3)
+        self.assertGreater(float(look.get('dripFall', 0)), 0.0)
         look_id = str(look.get('id', '')).lower()
         self.assertNotIn('keyblade', look_id)
         self.assertNotIn('kingdom hearts', look_id)
@@ -105,12 +112,32 @@ class BruteSpitCreamSplashTest(unittest.TestCase):
         self.assertGreaterEqual(float(color[0]), 0.9)
         self.assertGreaterEqual(float(color[1]), 0.9)
         self.assertGreaterEqual(float(color[2]), 0.55)
+        drip = self.cg.BRUTE_SPIT_CREAM_SPLASH_DRIP_COLOR
+        self.assertGreaterEqual(float(drip[0]), 0.9)
+        self.assertGreaterEqual(float(drip[1]), 0.9)
+        self.assertGreaterEqual(float(drip[2]), 0.55)
         self.assertGreater(
             self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_DELAY_SEC, 0.0)
-        self.assertGreater(self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT, 0)
+        # Deepened spit residual — juicier than #223; distinct from Snare whip.
+        self.assertGreaterEqual(
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT, 5)
+        self.assertGreaterEqual(
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT, 2)
+        self.assertGreaterEqual(
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_FALL, 0.5)
+        self.assertGreaterEqual(
+            self.cg.BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF, 0.5)
         # Delay composes toward spit travel (impact timing).
         self.assertGreater(float(self.cg.BRUTE_SPIT_BLOB_TRAVEL), 0.0)
         self.assertGreaterEqual(float(look.get('delayScale', 0)), 0.5)
+        # Distinct from Snare / Gunk cream splash ids.
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK',
+                    {}).get('id'))
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_LOOK', {}).get('id'))
 
     def test_cream_splash_fx_module_and_wiring(self):
         rel = 'toontown/corruption/BruteSpitCreamSplashFx.py'
@@ -121,15 +148,22 @@ class BruteSpitCreamSplashTest(unittest.TestCase):
         methods = _class_method_names(
             _module_ast(rel), 'BruteSpitCreamSplash')
         for name in (
-                'play', 'clear', '_spawnSplat', '_spawnFleck',
-                '_buildAftershock'):
+                'play', 'clear', '_spawnSplat', '_spawnDripFilament',
+                '_spawnFleck', '_buildAftershock'):
             self.assertIn(
                 name, methods,
                 msg='BruteSpitCreamSplash missing %s' % name)
         src = _read(rel)
         self.assertIn('BRUTE_SPIT_CREAM_SPLASH_LOOK', src)
         self.assertIn('_buildAftershock', src)
+        self.assertIn('_spawnDripFilament', src)
         self.assertIn('BRUTE_SPIT_BLOB_TRAVEL', src)
+        self.assertIn('Snare', src)  # docstring distinctness vs #245
+        self.assertIn('Gunk', src)  # docstring distinctness vs #238
+        # CardMaker / interval names stay Toontown cream — no KH brand ids.
+        self.assertNotIn("'keyblade", src.lower())
+        self.assertNotIn('"keyblade', src.lower())
+        self.assertNotIn('kingdom_hearts', src.lower())
         wire = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('BruteSpitCreamSplash', wire)
         self.assertIn('__playBruteSpitCreamSplash', wire)
@@ -149,6 +183,7 @@ class BruteSpitCreamSplashTest(unittest.TestCase):
         self.assertIn('BruteSpitCreamSplashFx', init_src)
         reclaim = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('BruteSpitCreamSplashFx', reclaim)
+        self.assertIn('drip filament', reclaim.lower())
 
 
 def main() -> int:
