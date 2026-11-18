@@ -3354,8 +3354,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
 
         # Soft-lock hit assist — deepened-past one-shot yaw/aim nudge + cream
         # wash flash / richer aftershock on melee connect against the sticky
-        # soft-lock (past #254). Distinct from soft-lock cycle reticle cream
-        # deepen (#233) and hurt wash cream deepen (#247 / #263).
+        # soft-lock (past #278). Distinct from soft-lock cycle reticle cream
+        # deepen (#233), hurt wash cream deepen (#247 / #263 / #287), i-frame
+        # cream wash (#296), combo edge cream (#291), and dodge-cancel cream
+        # flash (#281).
         for hit_assist_key in (
                 'LOCK_HIT_ASSIST_ENABLED',
                 'LOCK_HIT_ASSIST_YAW_FRAC',
@@ -3375,16 +3377,16 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         yaw_frac = config_assigns.get('LOCK_HIT_ASSIST_YAW_FRAC')
         yaw_max = config_assigns.get('LOCK_HIT_ASSIST_YAW_MAX_DEG')
         self.assertIsInstance(yaw_frac, float)
-        self.assertGreaterEqual(yaw_frac, 0.66)
+        self.assertGreaterEqual(yaw_frac, 0.70)
         self.assertLessEqual(yaw_frac, 1.0)
         self.assertIsInstance(yaw_max, float)
-        self.assertGreaterEqual(yaw_max, 28.0)
+        self.assertGreaterEqual(yaw_max, 30.0)
         self.assertLess(yaw_max, 90.0)
         self.assertGreaterEqual(
-            config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_PEAK'), 0.092)
+            config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_PEAK'), 0.098)
         self.assertGreaterEqual(
             config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT'),
-            4)
+            5)
         assist_cream_funcs = _class_and_func_names(config_tree)
         self.assertIn('hitAssistCreamWashPeakAtSec', assist_cream_funcs)
         self.assertIn('hitAssistCreamWashAftershockAtSec', assist_cream_funcs)

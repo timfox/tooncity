@@ -661,8 +661,9 @@ class MeleeCombatController(DirectObject):
         Caps keep it a rubber-hose assist — never a hard snap. Page-up/down
         still owns camera angles. When a real yaw nudge lands, HitAssistCreamWashPulse
         plays a deepened-past cream flash + richer aftershock so soft-lock glue
-        reads juicier still (distinct from cycle reticle cream #233 and hurt
-        wash cream #247 / #263; past #254 aim-nudge cream deepen).
+        reads juicier still (distinct from cycle reticle cream #233, hurt wash
+        cream #247 / #263 / #287, i-frame wash #296, combo edge #291, and
+        dodge-cancel flash #281; past #278 aim-nudge cream deepen).
         """
         if not getattr(HackSlashConfig, 'LOCK_HIT_ASSIST_ENABLED', True):
             return
@@ -732,7 +733,7 @@ class MeleeCombatController(DirectObject):
     def _playHitAssistCreamWash(self):
         """Soft cream wash flash + aftershock when soft-lock aim nudge lands."""
         try:
-            # HitAssistCreamWashPulse owns deepened-past assist cream + richer aftershock.
+            # HitAssistCreamWashPulse owns deepened-past-#278 assist cream + richer aftershock.
             self._hitAssistCreamWash.play()
         except Exception:
             pass

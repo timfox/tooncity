@@ -101,10 +101,10 @@ class SoftLockHitAssistTest(unittest.TestCase):
             self.cfg.LOCK_HIT_ASSIST_CAM_FRAC,
             self.cfg.LOCK_HIT_ASSIST_YAW_FRAC)
         self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_DEADZONE_DEG, 0.0)
-        # Deepened glue past #254 (and original #204) assist.
-        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_YAW_FRAC, 0.66)
-        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_YAW_MAX_DEG, 28.0)
-        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_CAM_FRAC, 0.38)
+        # Deepened glue past #278 (and #254 / #204) assist.
+        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_YAW_FRAC, 0.70)
+        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_YAW_MAX_DEG, 30.0)
+        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_CAM_FRAC, 0.42)
         self.assertIn('hit soft-lock aim cream deepen+', self.cfg.DEMO_HINT)
         hint_l = self.cfg.DEMO_HINT.lower()
         self.assertNotIn('keyblade', hint_l)
@@ -120,17 +120,17 @@ class SoftLockHitAssistTest(unittest.TestCase):
         self.assertLess(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_MID,
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK)
-        # Deepened past #254: juicier assist cream flash + longer mid hold.
+        # Deepened past #278: juicier assist cream flash + longer mid hold.
         self.assertGreaterEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK, 0.092)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK, 0.098)
         self.assertGreaterEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC, 0.048)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC, 0.06)
         self.assertGreaterEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_MID, 0.055)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_MID, 0.062)
         self.assertGreaterEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC, 0.075)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC, 0.09)
         self.assertGreaterEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC, 0.24)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC, 0.28)
         # Quieter / earlier than hit-connect wash — assists fire mid-combo.
         self.assertLess(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK,
@@ -149,26 +149,39 @@ class SoftLockHitAssistTest(unittest.TestCase):
         self.assertLess(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC,
             self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_DELAY_SEC)
-        # Distinct from hurt wash cream deepen (#247) — quieter/snappier glue
-        # flash (not smack→recovery settle).
+        # Distinct from hurt wash cream deepen (#247 / #287) — quieter/snappier
+        # glue flash (not smack→recovery settle).
         self.assertLess(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK,
             self.cfg.HURT_STAGGER_CREAM_WASH_PEAK)
         self.assertLess(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC,
             self.cfg.HURT_STAGGER_CREAM_WASH_DELAY_SEC)
-        # Richer residual wash aftershock past #254 (4 flecks + stronger halo).
+        # Distinct from i-frame cream wash (#296) — connect assist, not dodge
+        # invuln settle.
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK,
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_PEAK)
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC,
+            self.cfg.DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC)
+        # Distinct from dodge-cancel cream flash (#281) — quieter mid-combo
+        # glue (not cancel→slam flash).
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK,
+            self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK)
+        # Richer residual wash aftershock past #278 (5 flecks + stronger halo).
         self.assertGreaterEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT, 4)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT, 5)
         self.assertTrue(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
         self.assertGreaterEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK, 1.10)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK, 1.22)
         self.assertGreaterEqual(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA,
-            0.095)
+            0.11)
         self.assertLessEqual(
-            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC, 0.04)
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC, 0.03)
         self.assertGreater(
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_BIN,
             self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_BIN)
@@ -260,9 +273,10 @@ class SoftLockHitAssistTest(unittest.TestCase):
         # Ban phrasing only — no KH product names as branding.
         self.assertIn('no keyblades', src.lower())
         self.assertNotIn('kingdom hearts', src.lower())
-        # Distinct from cycle reticle / hurt wash deepen cues; past #254.
+        # Distinct from cycle reticle / hurt / i-frame / combo / dodge cues;
+        # past #278.
         self.assertIn('distinct from', src.lower())
-        self.assertIn('#254', src)
+        self.assertIn('#278', src)
 
     def test_ast_melee_wires_hit_assist_cream_wash(self):
         melee_rel = 'toontown/hackslash/MeleeCombat.py'
