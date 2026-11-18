@@ -10,6 +10,7 @@ from direct.interval.IntervalGlobal import (
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathPopFx import (
     DeathPopSplat, buildBodyPopInterval, deathPopLook)
+from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 
 
@@ -58,6 +59,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._stringLashIval = None
         self._stringLashNP = None
         self._deathPopSplat = None
+        self._telegraphInkDrip = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -117,6 +119,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearAttackFlash()
         self.__clearSpitBlob()
         self.__clearStringLash()
+        self.__clearTelegraphInkDrip()
         self.__clearDeathPopSplat()
 
     def __buildGeom(self):
@@ -457,6 +460,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             stretch = Point3(0.62, 0.62, 1.7)
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
+        self.__playTelegraphInkDrip(look)
         if look and phase >= 1:
             # Phase HUD cue so P1 magenta vs P2 crimson reads mid-wind-up.
             messenger.send(  # noqa: F821
@@ -498,6 +502,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
+        # Clear telegraph drip so impact flash / spit / lash own the frame.
+        self.__clearTelegraphInkDrip()
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
@@ -882,6 +888,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearAttackFlash()
         self.__clearSpitBlob()
         self.__clearStringLash()
+        self.__clearTelegraphInkDrip()
         self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
         look = deathPopLook(self.getArchetype())
@@ -912,6 +919,30 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._deathPopSplat = None
+
+    def __playTelegraphInkDrip(self, finaleLook=None):
+        """Short rubber-hose ink drip / splat pop on attack telegraph."""
+        self.__clearTelegraphInkDrip()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        drip = TelegraphInkDrip()
+        self._telegraphInkDrip = drip
+        drip.play(
+            pos,
+            archetype=self.getArchetype(),
+            finaleLook=finaleLook,
+        )
+
+    def __clearTelegraphInkDrip(self):
+        drip = getattr(self, '_telegraphInkDrip', None)
+        if drip is not None:
+            try:
+                drip.clear()
+            except Exception:
+                pass
+        self._telegraphInkDrip = None
 
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""

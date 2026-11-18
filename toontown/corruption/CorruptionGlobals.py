@@ -196,6 +196,57 @@ ATTACK_HIT_SFX = 'phase_3.5/audio/sfx/AV_collision.ogg'
 TELEGRAPH_SFX_VOLUME = 0.55
 ATTACK_HIT_SFX_VOLUME = 0.75
 
+# Telegraph ink drip / splat pop — short rubber-hose readability juice on
+# announceAttackTelegraph (client only; AI timings unchanged). Distinct from
+# defeat DeathPop spray: drips fall down + tiny chest splat, not a burst.
+TELEGRAPH_INK_DRIP_LOOK = {
+    ARCHETYPE_INK: {
+        'id': 'ink-drip',
+        'lift': 2.15,
+        'splatHalf': 0.42,
+        'splatPeak': 1.85,
+        'splatSec': 0.22,
+        'splatColor': (0.55, 0.18, 0.85, 0.92),
+        'dripCount': 4,
+        'dripHalf': 0.16,
+        'dripSpread': 0.55,
+        'dripFall': 1.45,
+        'dripSec': 0.38,
+        'dripColor': (0.38, 0.1, 0.58, 0.95),
+        'streakColor': (0.62, 0.22, 0.92, 0.9),
+    },
+    ARCHETYPE_BRUTE: {
+        'id': 'sludge-drip',
+        'lift': 2.45,
+        'splatHalf': 0.52,
+        'splatPeak': 2.05,
+        'splatSec': 0.24,
+        'splatColor': (0.28, 0.78, 0.22, 0.92),
+        'dripCount': 5,
+        'dripHalf': 0.2,
+        'dripSpread': 0.7,
+        'dripFall': 1.65,
+        'dripSec': 0.42,
+        'dripColor': (0.18, 0.62, 0.16, 0.95),
+        'streakColor': (0.35, 0.9, 0.28, 0.9),
+    },
+    ARCHETYPE_SNARE: {
+        'id': 'amber-drip',
+        'lift': 1.95,
+        'splatHalf': 0.36,
+        'splatPeak': 1.7,
+        'splatSec': 0.18,
+        'splatColor': (0.95, 0.55, 0.18, 0.92),
+        'dripCount': 3,
+        'dripHalf': 0.14,
+        'dripSpread': 0.85,
+        'dripFall': 1.15,
+        'dripSec': 0.32,
+        'dripColor': (0.88, 0.45, 0.12, 0.95),
+        'streakColor': (1.05, 0.65, 0.22, 0.9),
+    },
+}
+
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
 BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)
