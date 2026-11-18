@@ -7,7 +7,10 @@ Players notice ink-stained streets from the hub without magic words.
 After the appear hose-pop, placemarkers briefly pulse / cream-highlight
 (#211). Separately, a short ink crumb trail at the tunnel mouth pulses
 on a faster stagger so polluted streets read clearer from the playground
-side without relying on the overhead placemarker alone.
+side without relying on the overhead placemarker alone. A soft pollution
+fog edge veil also breathes at the playground-side tunnel lip so
+corruption presence reads before you enter a reclaim street — distinct
+from both placemarker (#211) and crumb (#216) scale pulses.
 
 Reads PollutionManager + reclaim/campaign street tables (import only);
 does not rewrite those packages. Rubber-hose Toontown voice — no KH.
@@ -25,7 +28,7 @@ from direct.interval.IntervalGlobal import (
     Wait,
 )
 from direct.showbase.DirectObject import DirectObject
-from panda3d.core import TextNode, Vec4
+from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
 
 from toontown.toonbase import ToontownGlobals
 
@@ -64,6 +67,21 @@ _CRUMB_FG = Vec4(0.22, 0.10, 0.28, 0.95)
 _CRUMB_SHADOW = Vec4(1.0, 0.92, 0.72, 0.75)
 _CRUMB_HIGHLIGHT = Vec4(1.0, 0.84, 0.48, 1.0)
 _CRUMB_REST = Vec4(1.0, 1.0, 1.0, 1.0)
+
+# Playground-edge pollution fog breath — opacity/billow, not scale+cream.
+# Slower / softer than placemarker (#211) and crumb (#216) so corruption
+# presence reads at the tunnel lip before you hop a reclaim street.
+_FOG_NAME = 'playgroundPollutionFogEdge'
+_FOG_Y = -0.55
+_FOG_Z = 0.42
+_FOG_HALF_W = 3.2
+_FOG_HALF_H = 0.95
+_FOG_SCALE = 1.0
+_FOG_BILLOW = 1.10
+_FOG_PULSE_HALF_SEC = 0.44
+_FOG_PULSE_GAP_SEC = 6.2
+_FOG_REST = Vec4(0.16, 0.10, 0.20, 0.16)
+_FOG_PEAK = Vec4(0.12, 0.06, 0.16, 0.36)
 
 # Short rubber-hose signpost copy (world placemarker — keep punchy).
 _STREET_COPY = {
@@ -170,6 +188,24 @@ def streetBreadcrumbPulseParams():
     }
 
 
+def playgroundFogEdgePulseParams():
+    """Pure timing / alpha for playground pollution fog edge breath.
+
+    Distinct from placemarkerPulseParams (#211) and
+    streetBreadcrumbPulseParams (#216): slower gap, opacity+billow (no
+    cream scale snap) so corruption presence reads at the tunnel lip
+    before reclaim entry. Headless-safe — no Panda geom.
+    """
+    return {
+        'halfSec': float(_FOG_PULSE_HALF_SEC),
+        'gapSec': float(_FOG_PULSE_GAP_SEC),
+        'restAlpha': float(_FOG_REST[3]),
+        'peakAlpha': float(_FOG_PEAK[3]),
+        'billow': float(_FOG_BILLOW),
+        'baseScale': float(_FOG_SCALE),
+    }
+
+
 def _pollutionPure():
     try:
         from toontown.corruption import CorruptionGlobals
@@ -188,9 +224,11 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._playground = playground
         self._markers = {}  # zoneId -> NodePath
         self._crumbTrails = {}  # zoneId -> [NodePath, ...]
+        self._fogEdges = {}  # zoneId -> NodePath
         self._popIvals = {}
         self._pulseIvals = {}
         self._crumbPulseIvals = {}
+        self._fogPulseIvals = {}
         self._active = False
 
     def start(self):
@@ -331,9 +369,43 @@ class CorruptStreetBreadcrumb(DirectObject):
         np.setBin('fixed', 40)
         self._markers[int(zoneId)] = np
         crumbs = self._attachCrumbTrail(link, zoneId)
-        self._playPop(zoneId, np, crumbs)
+        fog = self._attachFogEdge(link, zoneId)
+        self._playPop(zoneId, np, crumbs, fog)
         self.notify.debug(
             'placemarker on tunnel → %s (%s)' % (streetName, zoneId))
+
+    def _attachFogEdge(self, link, zoneId):
+        """Soft ink fog veil at the playground-side tunnel lip."""
+        zoneId = int(zoneId)
+        self._stopFogPulse(zoneId)
+        old = self._fogEdges.pop(zoneId, None)
+        if old is not None:
+            try:
+                old.removeNode()
+            except Exception:
+                pass
+        leftover = link.find('**/%s' % _FOG_NAME)
+        if not leftover.isEmpty():
+            leftover.removeNode()
+        fog = None
+        try:
+            cm = CardMaker(_FOG_NAME)
+            cm.setFrame(-_FOG_HALF_W, _FOG_HALF_W, 0.0, _FOG_HALF_H * 2.0)
+            fog = link.attachNewNode(cm.generate())
+            fog.setName(_FOG_NAME)
+            fog.setTransparency(TransparencyAttrib.MAlpha)
+            fog.setPos(0, _FOG_Y, _FOG_Z)
+            fog.setScale(_FOG_SCALE)
+            fog.setColorScale(_FOG_REST)
+            fog.setDepthWrite(0)
+            fog.setBin('fixed', 37)  # under crumb (39) + placemarker (40)
+            fog.setBillboardPointEye()
+        except Exception:
+            self.notify.debug('fog edge unavailable for zone %s' % zoneId)
+            fog = None
+        if fog is not None:
+            self._fogEdges[zoneId] = fog
+        return fog
 
     def _attachCrumbTrail(self, link, zoneId):
         """Ink crumb dots at the tunnel mouth — playground-side breadcrumb."""
@@ -377,9 +449,10 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._crumbTrails[zoneId] = crumbs
         return crumbs
 
-    def _playPop(self, zoneId, np, crumbs=None):
+    def _playPop(self, zoneId, np, crumbs=None, fog=None):
         self._stopPulse(zoneId)
         self._stopCrumbPulse(zoneId)
+        self._stopFogPulse(zoneId)
         old = self._popIvals.pop(zoneId, None)
         if old is not None:
             try:
@@ -400,9 +473,10 @@ class CorruptStreetBreadcrumb(DirectObject):
                 np, _POP_SETTLE_SEC * 0.30,
                 baseScale,
                 startScale=baseScale * _POP_STRETCH),
-            # Placemarker pulse (#211) + distinct crumb-trail pulse.
+            # Placemarker (#211) + crumb (#216) + fog-edge breath pulses.
             Func(self._startPulseLoop, zoneId, np),
             Func(self._startCrumbPulseLoop, zoneId, crumbs or ()),
+            Func(self._startFogPulseLoop, zoneId, fog),
         )
         self._popIvals[zoneId] = ival
         try:
@@ -411,6 +485,7 @@ class CorruptStreetBreadcrumb(DirectObject):
             np.setScale(baseScale)
             self._startPulseLoop(zoneId, np)
             self._startCrumbPulseLoop(zoneId, crumbs or ())
+            self._startFogPulseLoop(zoneId, fog)
 
     def _buildNoticePulseIval(self, np):
         """One brief rubber-hose scale + cream highlight pulse."""
@@ -568,14 +643,91 @@ class CorruptStreetBreadcrumb(DirectObject):
                 except Exception:
                     pass
 
+    def _buildFogPulseIval(self, fog):
+        """One soft opacity + billow breath on the playground fog edge."""
+        half = max(0.05, float(_FOG_PULSE_HALF_SEC))
+        baseScale = float(_FOG_SCALE)
+        peakScale = baseScale * float(_FOG_BILLOW)
+        return Parallel(
+            Sequence(
+                LerpColorScaleInterval(
+                    fog, half, _FOG_PEAK, startColorScale=_FOG_REST,
+                    blendType='easeInOut'),
+                LerpColorScaleInterval(
+                    fog, half, _FOG_REST, startColorScale=_FOG_PEAK,
+                    blendType='easeInOut'),
+            ),
+            Sequence(
+                LerpScaleInterval(
+                    fog, half, peakScale, startScale=baseScale,
+                    blendType='easeInOut'),
+                LerpScaleInterval(
+                    fog, half, baseScale, startScale=peakScale,
+                    blendType='easeInOut'),
+            ),
+        )
+
+    def _startFogPulseLoop(self, zoneId, fog=None):
+        """Slow fog-edge breath — distinct from placemarker + crumb pulses."""
+        zoneId = int(zoneId)
+        fog = self._fogEdges.get(zoneId) if fog is None else fog
+        # Prefer the live fog edge for this zone (Func may pass a snapshot).
+        live = self._fogEdges.get(zoneId)
+        if live is not None:
+            fog = live
+        if not self._active or fog is None:
+            return
+        try:
+            if fog.isEmpty():
+                return
+        except Exception:
+            return
+        self._stopFogPulse(zoneId)
+        try:
+            fog.setColorScale(_FOG_REST)
+            fog.setScale(_FOG_SCALE)
+        except Exception:
+            pass
+        gap = max(0.8, float(_FOG_PULSE_GAP_SEC))
+        loop = Sequence(self._buildFogPulseIval(fog), Wait(gap))
+        self._fogPulseIvals[zoneId] = loop
+        try:
+            loop.loop()
+        except Exception:
+            self._fogPulseIvals.pop(zoneId, None)
+            try:
+                fog.setColorScale(_FOG_REST)
+                fog.setScale(_FOG_SCALE)
+            except Exception:
+                pass
+
+    def _stopFogPulse(self, zoneId):
+        zoneId = int(zoneId)
+        ival = self._fogPulseIvals.pop(zoneId, None)
+        if ival is not None:
+            try:
+                ival.finish()
+            except Exception:
+                try:
+                    ival.pause()
+                except Exception:
+                    pass
+
     def _removeMarker(self, zoneId):
         zoneId = int(zoneId)
         self._stopPulse(zoneId)
         self._stopCrumbPulse(zoneId)
+        self._stopFogPulse(zoneId)
         ival = self._popIvals.pop(zoneId, None)
         if ival is not None:
             try:
                 ival.finish()
+            except Exception:
+                pass
+        fog = self._fogEdges.pop(zoneId, None)
+        if fog is not None:
+            try:
+                fog.removeNode()
             except Exception:
                 pass
         trail = self._crumbTrails.pop(zoneId, None)
