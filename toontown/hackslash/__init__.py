@@ -18,6 +18,7 @@ from .HackSlashConfig import (
     juggleCancelSlamHitIndex,
     perfectDodgeCounterOpenerDamage,
     perfectDodgeCounterOpenerRate,
+    softLockCycleCreamWashPeakAtSec,
     softLockCyclePulseScaleKeys,
 )
 from .SoftTarget import (
@@ -49,6 +50,7 @@ from .HurtStaggerCreamWashFx import HurtStaggerCreamWashPulse
 from .PerfectDodgeCreamWashFx import PerfectDodgeCreamWashPulse
 from .SlamDustFx import SlamDustFx
 from .SoftLockCreamWashFx import SoftLockCreamWashPulse
+from .SoftLockCycleCreamWashFx import SoftLockCycleCreamWashPulse
 from .SoftLockFovCreamWashFx import SoftLockFovCreamWashPulse
 from .SoftLockReticleFx import SoftLockReticleFx
 
@@ -66,6 +68,7 @@ __all__ = [
     'juggleCancelSlamHitIndex',
     'perfectDodgeCounterOpenerDamage',
     'perfectDodgeCounterOpenerRate',
+    'softLockCycleCreamWashPeakAtSec',
     'softLockCyclePulseScaleKeys',
     'SoftTargetFinder',
     'HackSlashTarget',
@@ -94,6 +97,7 @@ __all__ = [
     'PerfectDodgeCreamWashPulse',
     'SlamDustFx',
     'SoftLockCreamWashPulse',
+    'SoftLockCycleCreamWashPulse',
     'SoftLockFovCreamWashPulse',
     'SoftLockReticleFx',
 ]

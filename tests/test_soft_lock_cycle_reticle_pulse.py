@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for soft-lock cycle reticle pulse helpers.
+"""Behavioral headless tests for soft-lock cycle reticle cream deepen.
 
-Loads HackSlashConfig.softLockCyclePulseScaleKeys without Panda3D. Covers
-cycle pulse tunables and scale keyframes used by HitJuice.playSoftLockCyclePulse
-/ SoftLockReticleFx.playCyclePulse when Tab/` switches soft-lock (#189).
+Loads HackSlashConfig cycle pulse + cycle cream wash helpers without
+Panda3D. Covers deepened cream ring tunables, quiet cycle cream wash, and
+scale keyframes used by HitJuice.playSoftLockCyclePulse /
+SoftLockReticleFx.playCyclePulse when Tab/` switches soft-lock (#210 deepen).
 
 Run from repo root:
   python3 tests/test_soft_lock_cycle_reticle_pulse.py
@@ -12,6 +13,7 @@ Run from repo root:
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import sys
 import types
@@ -48,8 +50,31 @@ def _load_cycle_pulse_helpers():
     return cfg
 
 
+def _module_ast(rel_path: str) -> ast.Module:
+    src = (REPO_ROOT / rel_path).read_text(encoding='utf-8')
+    return ast.parse(src, filename=rel_path)
+
+
+def _class_names(tree: ast.AST) -> set[str]:
+    return {node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+
+
+def _top_level_names(tree: ast.AST) -> set[str]:
+    names: set[str] = set()
+    for node in getattr(tree, 'body', []):
+        if isinstance(node, ast.ClassDef):
+            names.add(node.name)
+        elif isinstance(node, ast.FunctionDef):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+    return names
+
+
 class SoftLockCycleReticlePulseTest(unittest.TestCase):
-    """Config + pure helper checks for Tab/` cycle reticle pulse."""
+    """Config + AST checks for deepened Tab/` cycle reticle cream cue."""
 
     @classmethod
     def setUpClass(cls):
@@ -76,8 +101,14 @@ class SoftLockCycleReticlePulseTest(unittest.TestCase):
         # Milder squash / stretch than acquire pop.
         self.assertLess(squash[0], self.cfg.SOFT_LOCK_RETICLE_SQUASH[0])
         self.assertLess(stretch[2], self.cfg.SOFT_LOCK_RETICLE_STRETCH[2])
-        # Short cream ring — quieter/faster than acquire ring.
+        # Deepened cream ring — juicier than original #210, under acquire.
         self.assertTrue(self.cfg.SOFT_LOCK_CYCLE_PULSE_RING_ENABLED)
+        self.assertGreaterEqual(
+            self.cfg.SOFT_LOCK_CYCLE_PULSE_RING_PEAK, 1.90)
+        self.assertGreaterEqual(
+            self.cfg.SOFT_LOCK_CYCLE_PULSE_RING_SEC, 0.18)
+        self.assertGreaterEqual(
+            self.cfg.SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA, 0.58)
         self.assertLess(
             self.cfg.SOFT_LOCK_CYCLE_PULSE_RING_PEAK,
             self.cfg.SOFT_LOCK_PULSE_RING_PEAK)
@@ -87,7 +118,27 @@ class SoftLockCycleReticlePulseTest(unittest.TestCase):
         self.assertLess(
             self.cfg.SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA,
             self.cfg.SOFT_LOCK_PULSE_RING_PEAK_ALPHA)
-        self.assertIn('Tab/` soft-lock cycle pulse', self.cfg.DEMO_HINT)
+        # Quiet cycle cream wash under acquire reticle wash.
+        self.assertTrue(self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED)
+        self.assertGreater(self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_PEAK, 0.0)
+        self.assertLess(
+            self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_PEAK,
+            self.cfg.SOFT_LOCK_CREAM_WASH_PEAK)
+        self.assertLess(
+            self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_MID,
+            self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_PEAK)
+        self.assertLess(
+            self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_BIN,
+            self.cfg.SOFT_LOCK_CREAM_WASH_BIN)
+        cream = self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_COLOR
+        self.assertEqual(len(cream), 3)
+        self.assertGreaterEqual(cream[0], cream[2])
+        self.assertGreaterEqual(cream[1], cream[2])
+        # Peak lands during / just after deepened cycle cream ring.
+        peak_at = self.cfg.softLockCycleCreamWashPeakAtSec()
+        self.assertLessEqual(
+            peak_at, self.cfg.SOFT_LOCK_CYCLE_PULSE_RING_SEC + 0.05)
+        self.assertIn('Tab/` soft-lock cycle cream', self.cfg.DEMO_HINT)
         hint_l = self.cfg.DEMO_HINT.lower()
         self.assertNotIn('keyblade', hint_l)
         self.assertNotIn('kingdom hearts', hint_l)
@@ -114,6 +165,48 @@ class SoftLockCycleReticlePulseTest(unittest.TestCase):
         self.assertGreater(z_settle[0], 0.0)
         self.assertGreater(z_squash[0], 0.0)
         self.assertGreater(z_stretch[0], 0.0)
+
+    def test_soft_lock_cycle_cream_wash_peak_helper(self):
+        peak_fn = self.cfg.softLockCycleCreamWashPeakAtSec
+        self.assertAlmostEqual(
+            peak_fn(),
+            self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_DELAY_SEC
+            + self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_IN_SEC)
+        self.assertAlmostEqual(peak_fn(0.10, 0.05), 0.15)
+        self.assertAlmostEqual(peak_fn(-1.0, 0.05), 0.05)
+
+    def test_ast_cycle_cream_wash_fx(self):
+        rel = 'toontown/hackslash/SoftLockCycleCreamWashFx.py'
+        tree = _module_ast(rel)
+        names = _class_names(tree)
+        self.assertIn('SoftLockCycleCreamWashPulse', names)
+        src = (REPO_ROOT / rel).read_text(encoding='utf-8')
+        self.assertIn('SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED', src)
+        self.assertIn('no keyblades', src.lower())
+        self.assertNotIn('kingdom hearts', src.lower())
+
+        reticle_src = (
+            REPO_ROOT / 'toontown/hackslash/SoftLockReticleFx.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('SoftLockCycleCreamWashPulse', reticle_src)
+        self.assertIn('_armCycleCreamWash', reticle_src)
+
+        init_src = (
+            REPO_ROOT / 'toontown/hackslash/__init__.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('SoftLockCycleCreamWashPulse', init_src)
+        self.assertIn('softLockCycleCreamWashPeakAtSec', init_src)
+
+        cfg_names = _top_level_names(
+            _module_ast('toontown/hackslash/HackSlashConfig.py'))
+        for name in (
+                'SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_DELAY_SEC',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_PEAK',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_MID',
+                'SOFT_LOCK_CYCLE_CREAM_WASH_BIN',
+                'softLockCycleCreamWashPeakAtSec'):
+            self.assertIn(name, cfg_names)
 
 
 def main() -> int:

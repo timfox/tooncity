@@ -27,21 +27,42 @@ TARGET_CYCLE_HALF_ANGLE_DEG = 95.0
 
 # Soft-lock cycle reticle pulse — brief rubber-hose pulse when Tab/` switches
 # the sticky lock so the new target reads clearly (tracking feel without the
-# full acquire snap FOV / cream wash spam). Milder/snappier than
-# SOFT_LOCK_RETICLE_* hose pop. SOFT_LOCK_CYCLE_PULSE_ENABLED = False drops
-# the cycle pulse only (cycle still switches lock).
+# full acquire snap FOV / accents spam). Milder/snappier than
+# SOFT_LOCK_RETICLE_* hose pop. Deepened cream cue (#210 deepen): stronger
+# cycle cream ring + quiet cycle cream wash so cycling reads juicier —
+# distinct from acquire reticle pulse (#92) and i-frame cream wash deepen
+# (#228). SOFT_LOCK_CYCLE_PULSE_ENABLED = False drops the cycle pulse only
+# (cycle still switches lock).
 SOFT_LOCK_CYCLE_PULSE_ENABLED = True
 # (sx, sy, sz, sec) multipliers of settle scale — flat then tall, snappier.
 SOFT_LOCK_CYCLE_PULSE_SQUASH = (1.35, 1.35, 0.72, 0.035)
 SOFT_LOCK_CYCLE_PULSE_STRETCH = (0.82, 0.82, 1.28, 0.05)
 SOFT_LOCK_CYCLE_PULSE_SETTLE_SEC = 0.06
-# Short cream pulse ring on cycle — quieter/faster than acquire ring (#92).
-# Reuses acquire ring half / colors / bin; only peak/sec/alpha differ.
-# SOFT_LOCK_CYCLE_PULSE_RING_ENABLED = False drops the ring only.
+# Deepened cream pulse ring on cycle — juicier than original #210 ring,
+# still quieter/faster than acquire ring (#92). Reuses acquire ring half /
+# colors / bin; peak/sec/alpha deepened. SOFT_LOCK_CYCLE_PULSE_RING_ENABLED
+# = False drops the ring only.
 SOFT_LOCK_CYCLE_PULSE_RING_ENABLED = True
-SOFT_LOCK_CYCLE_PULSE_RING_PEAK = 1.65
-SOFT_LOCK_CYCLE_PULSE_RING_SEC = 0.14
-SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA = 0.48
+SOFT_LOCK_CYCLE_PULSE_RING_PEAK = 1.90
+SOFT_LOCK_CYCLE_PULSE_RING_SEC = 0.18
+SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA = 0.58
+
+# Soft-lock cycle cream wash — quiet aspect2d veil after deepened cycle
+# cream ring so Tab/` switches read juicier. SoftLockCreamWashPulse (#155)
+# / SoftLockFovCreamWashPulse (#160) grammar; quieter/faster under acquire
+# reticle wash. Cream/pastel only. Distinct from dodge i-frame cream wash
+# deepen (#228). Toggle SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED = False drops
+# wash only (cycle pulse + ring still fire).
+SOFT_LOCK_CYCLE_CREAM_WASH_ENABLED = True
+SOFT_LOCK_CYCLE_CREAM_WASH_DELAY_SEC = 0.12  # after cycle start; mid-ring
+SOFT_LOCK_CYCLE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+SOFT_LOCK_CYCLE_CREAM_WASH_PEAK = 0.06
+SOFT_LOCK_CYCLE_CREAM_WASH_MID = 0.035
+SOFT_LOCK_CYCLE_CREAM_WASH_IN_SEC = 0.04
+SOFT_LOCK_CYCLE_CREAM_WASH_PULSE_SEC = 0.06
+SOFT_LOCK_CYCLE_CREAM_WASH_HOLD_SEC = 0.03
+SOFT_LOCK_CYCLE_CREAM_WASH_OUT_SEC = 0.18
+SOFT_LOCK_CYCLE_CREAM_WASH_BIN = 27  # under acquire reticle wash (28)
 
 
 def softLockCyclePulseScaleKeys(settle=None):
@@ -60,6 +81,15 @@ def softLockCyclePulseScaleKeys(settle=None):
         (settle * float(sx), settle * float(sy), settle * float(sz)),
         (settle * float(tx), settle * float(ty), settle * float(tz)),
     )
+
+
+def softLockCycleCreamWashPeakAtSec(delay=None, inSec=None):
+    """Seconds from cycle pulse start until cycle cream wash reaches peak."""
+    if delay is None:
+        delay = SOFT_LOCK_CYCLE_CREAM_WASH_DELAY_SEC
+    if inSec is None:
+        inSec = SOFT_LOCK_CYCLE_CREAM_WASH_IN_SEC
+    return max(0.0, float(delay)) + max(0.0, float(inSec))
 
 
 # Combo: 3 stretch punches, cartoon cadence with overshoot on the finisher.
@@ -1081,5 +1111,5 @@ DEMO_HINT = (
     'Stretch punches: F/LMB  |  Shift/X dodge i-frame cream wash  |  '
     'dodge→F cream flash  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash→F/Shift  |  '
-    'Tab/` soft-lock cycle pulse  |  hit soft-lock aim  |  ~melee'
+    'Tab/` soft-lock cycle cream  |  hit soft-lock aim  |  ~melee'
 )
