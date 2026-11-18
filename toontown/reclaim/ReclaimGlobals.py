@@ -283,6 +283,31 @@ CHEER_PITCH_VOLUME_WAVE = 0.7
 WAVE_CLEAR_BOUNCE_PEAK = 1.08
 WAVE_CLEAR_BOUNCE_SEC = 0.1
 
+# Rubber-hose cream burst on wave clear (aspect2d flash + flecks + soft ring).
+# Lighter cousin of purity restore burst — layers with cheer swell / street wash.
+# Sunny Toontown cream only (matches STREET_WASH / purity meter); no KH blue.
+WAVE_CLEAR_CREAM_ENABLED = True
+WAVE_CLEAR_CREAM_FLASH_PEAK = 0.34
+WAVE_CLEAR_CREAM_FLASH_IN_SEC = 0.05
+WAVE_CLEAR_CREAM_FLASH_HOLD_SEC = 0.06
+WAVE_CLEAR_CREAM_FLASH_OUT_SEC = 0.28
+WAVE_CLEAR_CREAM_COLOR = (1.0, 0.97, 0.82, 1.0)
+WAVE_CLEAR_CREAM_RING_PEAK = 1.85
+WAVE_CLEAR_CREAM_RING_SEC = 0.36
+WAVE_CLEAR_CREAM_RING_PEAK_ALPHA = 0.48
+WAVE_CLEAR_CREAM_FLECK_COUNT = 8
+WAVE_CLEAR_CREAM_FLECK_SIZE = 0.028
+WAVE_CLEAR_CREAM_FLECK_DRIFT = 0.42
+WAVE_CLEAR_CREAM_FLECK_SEC = 0.32
+WAVE_CLEAR_CREAM_FLECK_COLOR = (1.0, 0.96, 0.62, 0.95)
+WAVE_CLEAR_CREAM_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
+WAVE_CLEAR_CREAM_ORIGIN = (0.0, 0.0, 0.12)
+WAVE_CLEAR_CREAM_BIN = 52
+# Warm cream wave-clear banner (was icy cyan; keep rubber-hose sunny).
+WAVE_CLEAR_BANNER_COLOR = (1.0, 0.94, 0.62, 1.0)
+WAVE_CLEAR_SUB_BANNER_COLOR = (1.0, 0.97, 0.82, 1.0)
+WAVE_CLEAR_BANNER_HOLD_SEC = 1.4
+
 # Cartoon camera punch on purity restore (between finisher 12° and finale 18°).
 PURITY_FOV_PUNCH = 15.0
 PURITY_FOV_IN_SEC = 0.07

@@ -1,0 +1,247 @@
+"""Rubber-hose cream burst when a reclaim wave clears.
+
+Lighter cousin of the purity-restore burst: soft aspect2d cream flash,
+expanding ring, and sunny flecks. Layers with ReclaimCheer pitch swell and
+StreetColorWash — never stomps hood geom tint / fog / full purity FOV punch.
+Toontown spiritual-sequel tone only — no keyblades / no KH branding.
+"""
+
+from math import cos, pi, sin
+
+from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec4
+
+from direct.interval.IntervalGlobal import (
+    Func,
+    LerpColorScaleInterval,
+    LerpPosInterval,
+    LerpScaleInterval,
+    Parallel,
+    Sequence,
+    Wait,
+)
+from direct.showbase.DirectObject import DirectObject
+
+from toontown.reclaim import ReclaimGlobals
+
+
+class WaveCreamBurstFxClient(DirectObject):
+    """Listens for reclaimWaveCleared and plays a short cream juice beat."""
+
+    def __init__(self):
+        DirectObject.__init__(self)
+        self._ival = None
+        self._flashNP = None
+        self._ringNP = None
+        self._fleckNPs = []
+        self.accept('reclaimWaveCleared', self._onWaveCleared)
+
+    def destroy(self):
+        self.ignoreAll()
+        self.clear()
+
+    def _onWaveCleared(self, zoneId=None, waveIndex=0):
+        self.playBurst()
+
+    def playBurst(self):
+        """Soft cream flash + ring + flecks (no FOV / camera — purity owns that)."""
+        if not getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_ENABLED', True):
+            return
+        self.clear()
+        try:
+            parent = aspect2d  # noqa: F821
+        except Exception:
+            return
+
+        origin = getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_ORIGIN', (0.0, 0.0, 0.12))
+        try:
+            ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+        except Exception:
+            ox, oy, oz = 0.0, 0.0, 0.12
+
+        r, g, b, _a = getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_COLOR', (1.0, 0.97, 0.82, 1.0))
+        binSort = int(getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_BIN', 52))
+        parts = []
+
+        flashPart = self._spawnFlash(parent, ox, oy, oz, r, g, b, binSort)
+        if flashPart is not None:
+            parts.append(flashPart)
+
+        ringPart = self._spawnRing(parent, ox, oy, oz, r, g, b, binSort)
+        if ringPart is not None:
+            parts.append(ringPart)
+
+        fleckParts = self._spawnFlecks(parent, ox, oy, oz, binSort)
+        parts.extend(fleckParts)
+
+        if not parts:
+            return
+        self._ival = Sequence(
+            Parallel(*parts),
+            Func(self.clear),
+            name='reclaimWaveCreamBurst',
+        )
+        self._ival.start()
+
+    def _spawnFlash(self, parent, ox, oy, oz, r, g, b, binSort):
+        peak = float(getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLASH_PEAK', 0.34))
+        inSec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLASH_IN_SEC', 0.05))
+        holdSec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLASH_HOLD_SEC', 0.06))
+        outSec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLASH_OUT_SEC', 0.28))
+        try:
+            cm = CardMaker('reclaim-wave-cream-flash')
+            cm.setFrame(-2.0, 2.0, -2.0, 2.0)
+            flash = parent.attachNewNode(cm.generate())
+            flash.setTransparency(TransparencyAttrib.MAlpha)
+            flash.setColor(r, g, b, 1)
+            flash.setColorScale(r, g, b, 0)
+            flash.setPos(ox, oy, oz)
+            flash.setBin('fixed', binSort)
+            flash.setDepthTest(False)
+            flash.setDepthWrite(False)
+            self._flashNP = flash
+        except Exception:
+            self._flashNP = None
+            return None
+        return Sequence(
+            LerpColorScaleInterval(
+                flash, max(0.01, inSec), Vec4(r, g, b, peak),
+                blendType='easeOut'),
+            Wait(max(0.0, holdSec)),
+            LerpColorScaleInterval(
+                flash, max(0.01, outSec), Vec4(r, g, b, 0),
+                blendType='easeIn'),
+        )
+
+    def _spawnRing(self, parent, ox, oy, oz, r, g, b, binSort):
+        peakScale = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_RING_PEAK', 1.85))
+        sec = float(getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_RING_SEC', 0.36))
+        peakA = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_RING_PEAK_ALPHA', 0.48))
+        try:
+            cm = CardMaker('reclaim-wave-cream-ring')
+            cm.setFrame(-0.55, 0.55, -0.55, 0.55)
+            ring = parent.attachNewNode(cm.generate())
+            ring.setTransparency(TransparencyAttrib.MAlpha)
+            ring.setColor(r, g, b, 1)
+            ring.setColorScale(r, g, b, peakA)
+            ring.setScale(0.35)
+            ring.setPos(ox, oy, oz)
+            ring.setBin('fixed', binSort + 1)
+            ring.setDepthTest(False)
+            ring.setDepthWrite(False)
+            self._ringNP = ring
+        except Exception:
+            self._ringNP = None
+            return None
+        return Parallel(
+            LerpScaleInterval(
+                ring, max(0.01, sec), peakScale, blendType='easeOut'),
+            LerpColorScaleInterval(
+                ring, max(0.01, sec), Vec4(r, g, b, 0), blendType='easeIn'),
+        )
+
+    def _spawnFlecks(self, parent, ox, oy, oz, binSort):
+        count = int(getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLECK_COUNT', 8))
+        if count <= 0:
+            return []
+        size = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLECK_SIZE', 0.028))
+        drift = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLECK_DRIFT', 0.42))
+        sec = float(getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLECK_SEC', 0.32))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLECK_COLOR',
+            (1.0, 0.96, 0.62, 0.95))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLECK_END_COLOR',
+            (1.0, 0.92, 0.45, 0.0))
+
+        parts = []
+        for i in range(count):
+            try:
+                angle = (2.0 * pi * i) / float(count) + 0.22
+                cm = CardMaker('reclaim-wave-cream-fleck-%s' % i)
+                # Alternate chip vs fleck — rubber-hose cream bits.
+                if (i % 2) == 0:
+                    cm.setFrame(-size * 1.2, size * 1.2, -size * 0.55, size * 0.55)
+                else:
+                    cm.setFrame(-size, size, -size, size)
+                fleck = parent.attachNewNode(cm.generate())
+                fleck.setTransparency(TransparencyAttrib.MAlpha)
+                fleck.setColor(r, g, b, 1)
+                fleck.setColorScale(r, g, b, 0)
+                start = Point3(
+                    ox + cos(angle) * 0.05,
+                    oy,
+                    oz + sin(angle) * 0.04)
+                fleck.setPos(start)
+                fleck.setScale(0.45 + 0.08 * (i % 3))
+                fleck.setBin('fixed', binSort + 2)
+                fleck.setDepthTest(False)
+                fleck.setDepthWrite(False)
+                self._fleckNPs.append(fleck)
+            except Exception:
+                continue
+
+            end = Point3(
+                ox + cos(angle) * drift,
+                oy,
+                oz + sin(angle) * drift * 0.85 + 0.06)
+            delay = 0.018 * i
+            parts.append(Sequence(
+                Wait(delay),
+                Parallel(
+                    LerpColorScaleInterval(
+                        fleck, 0.06, Vec4(r, g, b, a), blendType='easeOut'),
+                    LerpScaleInterval(fleck, 0.06, 1.05, blendType='easeOut'),
+                ),
+                Parallel(
+                    LerpPosInterval(
+                        fleck, max(0.01, sec), end, blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec), 0.08, blendType='easeIn'),
+                    LerpColorScaleInterval(
+                        fleck, max(0.01, sec), Vec4(er, eg, eb, ea),
+                        blendType='easeIn'),
+                ),
+            ))
+        return parts
+
+    def clear(self):
+        if self._ival is not None:
+            try:
+                self._ival.pause()
+            except Exception:
+                pass
+            self._ival = None
+        for attr in ('_flashNP', '_ringNP'):
+            np = getattr(self, attr, None)
+            if np is not None and not np.isEmpty():
+                try:
+                    np.removeNode()
+                except Exception:
+                    pass
+            setattr(self, attr, None)
+        for np in self._fleckNPs:
+            if np is not None and not np.isEmpty():
+                try:
+                    np.removeNode()
+                except Exception:
+                    pass
+        self._fleckNPs = []
+
+
+_client = None
+
+
+def ensureWaveCreamBurstFxClient():
+    global _client
+    if _client is None:
+        _client = WaveCreamBurstFxClient()
+    return _client
