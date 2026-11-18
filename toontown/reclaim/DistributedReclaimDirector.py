@@ -39,6 +39,10 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._startFinalePhase = 0
         self._bannerNP = None
         self._subBannerNP = None
+        # KO fail plates — separate from reclaim HUD so IDLE clearHud does not
+        # wipe the authored lose beat before its hold finishes.
+        self._failBannerNP = None
+        self._failSubBannerNP = None
         self._telegraphCueNP = None
         self._hintNP = None
         self._statusNP = None
@@ -89,6 +93,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.__stopPressureWatch()
         self.__cancelSecuredHudHold()
         self.__clearHud()
+        self.__hideFailBanner()
+        self.__hideFailSubBanner()
         if self._restoreIval is not None:
             self._restoreIval.finish()
             self._restoreIval = None
@@ -302,6 +308,27 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         messenger.send(
             'reclaimWaveCleared', [self.reclaimZoneId, int(waveIndex)])
 
+    def announceReclaimFailed(self):
+        """Player KO mid-reclaim — readable fail plate before contested bail."""
+        self.__hideTelegraphCue()
+        self.__stopPressureWatch()
+        hold = float(getattr(
+            ReclaimGlobals, 'BANNER_FAILED_HOLD_SEC', 3.2))
+        color = getattr(
+            ReclaimGlobals, 'BANNER_FAILED_COLOR', (1.0, 0.42, 0.38, 1.0))
+        subColor = getattr(
+            ReclaimGlobals, 'BANNER_FAILED_SUB_COLOR',
+            (1.0, 0.78, 0.72, 1.0))
+        title = getattr(ReclaimGlobals, 'BANNER_FAILED', 'RECLAIM FAILED!')
+        sub = getattr(
+            ReclaimGlobals, 'BANNER_FAILED_SUB',
+            "Oswald: you got knocked out — ink's reclaiming the street!")
+        self.__showFailBanner(title, color, hold=hold, pop=True)
+        self.__showFailSubBanner(sub, subColor, hold=hold)
+        messenger.send(
+            'announceReclaimFailed',
+            [self.reclaimZoneId or getattr(self, 'zoneId', 0)])
+
     def announceReclaimComplete(self):
         self.__hideTelegraphCue()
         self.__stopPressureWatch()
@@ -395,6 +422,76 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         if self._bannerNP is not None and not self._bannerNP.isEmpty():
             self._bannerNP.removeNode()
         self._bannerNP = None
+
+    def __showFailBanner(self, text, color, hold=3.2, pop=False):
+        """KO fail title — not cleared by IDLE __clearHud (own timeout)."""
+        self.__hideFailBanner()
+        tn = TextNode('reclaim-fail-banner')
+        tn.setText(text)
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(*color)
+        tn.setShadow(0.05, 0.05)
+        tn.setShadowColor(0, 0, 0, 0.75)
+        np = aspect2d.attachNewNode(tn)
+        baseScale = 0.09
+        np.setScale(baseScale)
+        np.setPos(0, 0, 0.78)
+        self._failBannerNP = np
+        if pop:
+            popScale = ReclaimGlobals.PURITY_BANNER_POP_SCALE
+            popSec = ReclaimGlobals.PURITY_BANNER_POP_SEC
+            Sequence(
+                LerpScaleInterval(np, popSec, popScale),
+                LerpScaleInterval(np, 0.22, baseScale),
+            ).start()
+        taskMgr.doMethodLater(
+            max(0.5, float(hold)),
+            self.__failBannerTimeout,
+            self.uniqueName('reclaim-fail-banner'))
+
+    def __failBannerTimeout(self, task):
+        self.__hideFailBanner()
+        return task.done
+
+    def __hideFailBanner(self):
+        taskMgr.remove(self.uniqueName('reclaim-fail-banner'))
+        if self._failBannerNP is not None and not self._failBannerNP.isEmpty():
+            try:
+                self._failBannerNP.removeNode()
+            except Exception:
+                pass
+        self._failBannerNP = None
+
+    def __showFailSubBanner(self, text, color, hold=3.2):
+        self.__hideFailSubBanner()
+        tn = TextNode('reclaim-fail-sub-banner')
+        tn.setText(text)
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(*color)
+        tn.setShadow(0.04, 0.04)
+        tn.setShadowColor(0, 0, 0, 0.7)
+        np = aspect2d.attachNewNode(tn)
+        np.setScale(0.055)
+        np.setPos(0, 0, 0.68)
+        self._failSubBannerNP = np
+        taskMgr.doMethodLater(
+            max(0.5, float(hold)),
+            self.__failSubBannerTimeout,
+            self.uniqueName('reclaim-fail-sub'))
+
+    def __failSubBannerTimeout(self, task):
+        self.__hideFailSubBanner()
+        return task.done
+
+    def __hideFailSubBanner(self):
+        taskMgr.remove(self.uniqueName('reclaim-fail-sub'))
+        if (self._failSubBannerNP is not None
+                and not self._failSubBannerNP.isEmpty()):
+            try:
+                self._failSubBannerNP.removeNode()
+            except Exception:
+                pass
+        self._failSubBannerNP = None
 
     def __showSubBanner(self, text, color, hold=2.0):
         self.__hideSubBanner()

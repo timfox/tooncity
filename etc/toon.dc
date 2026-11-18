@@ -3319,6 +3319,8 @@ dclass DistributedReclaimDirector : DistributedObject {
   announcePackSpawn(uint8, uint8) broadcast;
   announceWaveCleared(uint8) broadcast;
   announceReclaimComplete() broadcast;
+  // Player KO mid-reclaim — fail banner before contested bail-out.
+  announceReclaimFailed() broadcast;
   // Spectacle sting when Silly Street flips phase 1 → 2.
   announceFinalePhaseTransition(uint8) broadcast;
 };

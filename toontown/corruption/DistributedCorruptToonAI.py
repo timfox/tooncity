@@ -618,6 +618,43 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._spitProjectile = None
         return Task.done
 
+    def __damageToonAndCheckReclaimKo(self, target, dmg, context='hit'):
+        """Apply takeDamage; if the toon goes sad, fail active street reclaim.
+
+        Thin KO hook for explore→fight→reclaim: reclaim director marks the
+        street contested (same as bail) so player knockout is an authored
+        fail, not a silent pack continue. Looks up air.reclaimDirectors to
+        avoid importing DistributedReclaimDirectorAI (circular with spawn).
+        """
+        try:
+            target.takeDamage(int(dmg))
+        except Exception:
+            self.notify.debug(
+                '%s takeDamage failed on av %s' % (
+                    context, getattr(target, 'doId', '?')))
+            return False
+        if getattr(target, 'hp', 1) > 0:
+            return True
+        directors = getattr(self.air, 'reclaimDirectors', None) or {}
+        zoneId = int(
+            getattr(target, 'zoneId', 0)
+            or getattr(self, 'zoneId', 0)
+            or 0)
+        director = directors.get(zoneId)
+        if director is None:
+            return True
+        if getattr(director, 'isDeleted', lambda: True)():
+            return True
+        fail = getattr(director, 'failStreetOnKnockout', None)
+        if callable(fail):
+            try:
+                fail(getattr(target, 'doId', None))
+            except Exception:
+                self.notify.debug(
+                    'reclaim KO fail hook errored for av %s' % getattr(
+                        target, 'doId', '?'))
+        return True
+
     def __applyBruteSpitSplash(self, spit, px, py, radius, damage,
                                nearMiss, trailOnly):
         """Damage / dodge-stamp toons inside a spit trail or land splash."""
@@ -646,13 +683,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                     continue
                 if doId:
                     trailIds.add(doId)
-            try:
-                target.takeDamage(int(damage))
+            if self.__damageToonAndCheckReclaimKo(
+                    target, int(damage), context='brute spit'):
                 spit['anyHit'] = True
-            except Exception:
-                self.notify.debug(
-                    'brute spit takeDamage failed on av %s' % getattr(
-                        target, 'doId', '?'))
 
     def __clearBruteSpitProjectile(self):
         self._spitProjectile = None
@@ -697,13 +730,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 continue
             if dist > hitRange:
                 continue
-            try:
-                target.takeDamage(dmg)
+            if self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='gag_lob'):
                 anyHit = True
-            except Exception:
-                self.notify.debug(
-                    'gag_lob takeDamage failed on av %s' % getattr(
-                        target, 'doId', '?'))
         if anyHit:
             self.sendUpdate('announceAttackHit', [])
         elif anyDodge:
@@ -775,12 +804,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
             if now < iframeUntil:
                 continue
-            try:
-                target.takeDamage(dmg)
-            except Exception:
-                self.notify.debug(
-                    'gagster linger takeDamage failed on av %s' % getattr(
-                        target, 'doId', '?'))
+            if not self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='gagster linger'):
                 continue
             # AI-side slow stamp (mirrors hackSlashIFrameUntil authority).
             # Client DistributedCorruptToon applies walk-slow while overlapping.
@@ -814,13 +839,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 continue
             if dist > hitRange:
                 continue
-            try:
-                target.takeDamage(dmg)
+            if self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='rain'):
                 anyHit = True
-            except Exception:
-                self.notify.debug(
-                    'rain takeDamage failed on av %s' % getattr(
-                        target, 'doId', '?'))
         if anyHit:
             self.sendUpdate('announceAttackHit', [])
         elif anyDodge:
@@ -850,10 +871,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if dist > hitRange:
             return Task.done
         dmg = self.__damageForMove(move)
-        try:
-            target.takeDamage(dmg)
-        except Exception:
-            self.notify.debug('takeDamage failed on av %s' % self._targetId)
+        self.__damageToonAndCheckReclaimKo(target, dmg, context='smack')
         # Balloon Snare: short planar reel toward the zip-flier (not damage-only).
         self.__yankTargetTowardSnare(target)
         self.sendUpdate('announceAttackHit', [])

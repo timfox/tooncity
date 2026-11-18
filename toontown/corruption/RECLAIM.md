@@ -50,6 +50,11 @@ Sections below remain **debug / magic-word** fallbacks.
    fog / tint / street audio follow the rising `setZonePollution`. A one-shot
    rubber-hose whisper warns toons still on the street. Pure / secured /
    purity-locked streets never auto-stain.
+7. Player knockout (laff ≤ 0 from CorruptToon `takeDamage`) while reclaim is
+   `STATE_ACTIVE` is an authored **fail**: director
+   `failStreetOnKnockout` → `announceReclaimFailed` → same contested bail-out
+   as step 6 (packs clear, street `STREET_CONTESTED`). Explore→fight→reclaim
+   therefore has a readable lose beat, not only a manual bail.
 
 ## Discoverable play (preferred)
 
