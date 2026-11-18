@@ -20,6 +20,7 @@ from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
 from toontown.corruption.SmudgeInkSplashFx import SmudgeInkSplash
 from toontown.corruption.SmudgeInkTelegraphFx import SmudgeInkTelegraphFist
+from toontown.corruption.SnareStringSnapSplashFx import SnareStringSnapSplash
 
 
 class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
@@ -72,6 +73,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._overlordCrown = None
         self._overlordInkRain = None
         self._snareTelegraphString = None
+        self._snareStringSnapSplash = None
         self._bruteTelegraphSpit = None
         self._bruteSludgeSplash = None
         self._smudgeTelegraphInk = None
@@ -141,6 +143,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
+        self.__clearSnareStringSnapSplash()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearSmudgeTelegraphInk()
@@ -951,6 +954,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
+        self.__clearSnareStringSnapSplash()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearSmudgeTelegraphInk()
@@ -972,6 +976,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Sludge Brute: green sludge splash so tank pops stay scannable.
         elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_BRUTE:
             self.__playBruteSludgeSplash(splatPos, kind='death')
+        # Balloon Snare: amber string-snap splash so zip-flier pops stay scannable.
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_SNARE:
+            self.__playSnareStringSnapSplash(splatPos, kind='death')
         if bodyPop is None:
             self.__playPurityReclaimPop()
             self.hide()
@@ -1206,6 +1213,29 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
         self._bruteSludgeSplash = None
 
+    def __playSnareStringSnapSplash(self, pos=None, kind='hit'):
+        """Amber string-snap splash — Balloon Snare hit / death readability only."""
+        if self.getArchetype() != CorruptionGlobals.ARCHETYPE_SNARE:
+            return
+        self.__clearSnareStringSnapSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = SnareStringSnapSplash()
+        self._snareStringSnapSplash = splash
+        splash.play(pos, kind=kind)
+
+    def __clearSnareStringSnapSplash(self):
+        splash = getattr(self, '_snareStringSnapSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._snareStringSnapSplash = None
+
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""
         messenger.send('corruptToonDefeatedFx', [
@@ -1270,6 +1300,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__pauseIdleInkDrip()
             self.__playBruteSludgeSplash(kind='hit')
             Sequence(Wait(0.3), Func(self.__resumeIdleInkDrip)).start()
+        # Balloon Snare: cheap amber splash so tagged Snares read vs pack.
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_SNARE:
+            self.__pauseIdleInkDrip()
+            self.__playSnareStringSnapSplash(kind='hit')
+            Sequence(Wait(0.26), Func(self.__resumeIdleInkDrip)).start()
         try:
             away = self.getPos(render) - attacker.getPos(render)
             away.setZ(0)

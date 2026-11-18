@@ -14,7 +14,9 @@ Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
 pop). Sludge Brute hits and deaths also flash BruteSludgeSplashFx (cheap
 green rubber-hose sludge splash; composes with spit / death / idle looks).
 Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
-rubber-hose string-lash pop). Ink Overlord phase telegraphs also flash
+rubber-hose string-lash pop). Balloon Snare hits and deaths also flash
+SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
+composes with string / death / idle looks). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
 OverlordPhaseInkRainFx (ink rain / ink fall shower). Defeat plays
 CorruptDeathPopFx (rubber-hose ink splat / balloon pop). Clearing them lowers

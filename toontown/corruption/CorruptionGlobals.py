@@ -333,6 +333,66 @@ BRUTE_SLUDGE_SPLASH_LOOK = {
         'binSort': 46,
     },
 }
+
+# Balloon Snare hit/death string-snap splash — cheap rubber-hose amber splash
+# so tagged/popped Snares stay scannable (client only). Composes with
+# BalloonSnareTelegraphFx / CorruptDeathPopFx / IdleInkDripFx palettes via
+# SnareStringSnapSplashFx.snareStringSnapSplashLook. Hit is the cheap scan
+# cue; death layers a slightly larger splash with DeathPop. Snappier / thinner
+# than SMUDGE_INK_SPLASH_LOOK to match fragile zip-flier silhouette; horizontal
+# smear bias reads as a rubber string break (not ink blob / sludge gob).
+SNARE_STRING_SNAP_SPLASH_LOOK = {
+    'hit': {
+        'id': 'snare-hit-splash',
+        'lift': 1.95,
+        'peakAlpha': 0.94,
+        'splatHalf': 0.24,
+        'splatPeak': 1.5,
+        'splatSec': 0.16,
+        'rimScale': 1.3,
+        'smearCount': 3,
+        'smearHalf': 0.08,
+        'smearSec': 0.18,
+        'smearSpread': 0.95,
+        'fleckCount': 2,
+        'fleckHalf': 0.1,
+        'fleckDist': 1.15,
+        'fleckLift': 0.45,
+        'fleckSec': 0.2,
+        'dripCount': 1,
+        'dripHalf': 0.07,
+        'dripSpread': 0.26,
+        'dripFall': 0.72,
+        'dripSec': 0.3,
+        'dripStagger': 0.03,
+        'binSort': 45,
+    },
+    'death': {
+        'id': 'snare-death-splash',
+        'lift': 1.4,
+        'peakAlpha': 0.97,
+        'splatHalf': 0.36,
+        'splatPeak': 2.0,
+        'splatSec': 0.24,
+        'rimScale': 1.36,
+        'smearCount': 4,
+        'smearHalf': 0.11,
+        'smearSec': 0.26,
+        'smearSpread': 1.25,
+        'fleckCount': 4,
+        'fleckHalf': 0.14,
+        'fleckDist': 1.85,
+        'fleckLift': 0.75,
+        'fleckSec': 0.28,
+        'dripCount': 2,
+        'dripHalf': 0.09,
+        'dripSpread': 0.38,
+        'dripFall': 1.0,
+        'dripSec': 0.4,
+        'dripStagger': 0.04,
+        'binSort': 46,
+    },
+}
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
 ATTACK_HIT_FLASH_PEAK = 0.55
 ATTACK_HIT_FLASH_IN = 0.04
