@@ -7,13 +7,15 @@ cue — not a single toast line. Finale victory keeps the Oswald twist beat.
 Title lands with the same squash→stretch→settle rubber-hose scale pop as
 PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
-Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
-+ cream-sparkle pop (CampaignHandoffConfetti) framed by a soft cream edge
-pulse and a delayed soft cream wash pulse tuned to the carnival glitter —
-no KH / keyblade framing. Campaign victory fires a soft cream confetti
-swell + cream sparkle on the purity cheer only, framed by a victory-tuned
-cream edge and a delayed soft cream wash pulse; it clears before the
-Oswald twist / FinalePhaseFx reveal so the bittersweet sting stays intact.
+Oswald cheer/lead subtitle, framed by a soft cream edge pulse and a
+delayed soft cream wash pulse (no carnival / no twist spoilers). Act
+handoffs fire a short confetti / streamer + cream-sparkle pop
+(CampaignHandoffConfetti) framed by a soft cream edge pulse and a delayed
+soft cream wash pulse tuned to the carnival glitter — no KH / keyblade
+framing. Campaign victory fires a soft cream confetti swell + cream
+sparkle on the purity cheer only, framed by a victory-tuned cream edge
+and a delayed soft cream wash pulse; it clears before the Oswald twist /
+FinalePhaseFx reveal so the bittersweet sting stays intact.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -47,6 +49,10 @@ from toontown.campaign.CampaignPower import applyPowerBump
 from toontown.campaign.HandoffCreamWashFx import (
     clearHandoffCreamWash,
     playHandoffCreamWash,
+)
+from toontown.campaign.OswaldTrustCreamWashFx import (
+    clearOswaldTrustCreamWash,
+    playOswaldTrustCreamWash,
 )
 from toontown.campaign.VictoryCreamWashFx import (
     clearVictoryCreamWash,
@@ -287,6 +293,12 @@ class CampaignHandoffClient(DirectObject):
                 playOswaldTrustBannerCreamEdge()
             except Exception:
                 pass
+            # Soft cream wash pulse after trust cream edge (#117) — handoff /
+            # victory wash grammar (#141/#138). Trusted early/mid only.
+            try:
+                playOswaldTrustCreamWash()
+            except Exception:
+                pass
 
         try:
             cm = CardMaker('campaign-handoff-card')
@@ -508,6 +520,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearOswaldTrustBannerCreamEdge()
+        except Exception:
+            pass
+        try:
+            clearOswaldTrustCreamWash()
         except Exception:
             pass
         if self._rootNP and not self._rootNP.isEmpty():
