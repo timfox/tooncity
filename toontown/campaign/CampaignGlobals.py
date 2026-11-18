@@ -609,15 +609,20 @@ HANDOFF_CREAM_EDGE_SPARKLE_SEC = 0.40
 HANDOFF_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.90)
 HANDOFF_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 HANDOFF_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.38)
-# Brief rubber-hose scale settle after handoff cream edge peak (#124).
-# Overshoot → rest so Loopy→Punchline→Silly neighborhood transitions
-# read juicier and the cream frame lands readable — Oswald trust banner
-# settle (#76) twin on the carnival edge. HANDOFF_CREAM_EDGE_SETTLE_ENABLED
-# = False drops settle only (edge + sparkle + wash remain). No keyblades /
+# Brief rubber-hose scale settle after handoff cream edge peak (#124 /
+# #222 deepen). Juicier overshoot → rest → micro rebound → rest so
+# Loopy→Punchline→Silly neighborhood transitions read carnival-juicy and
+# the cream frame lands readable — Oswald trust banner settle (#76) twin
+# on the carnival edge. Distinct from Punchline tip cream hose (#227) and
+# finale betrayal cream hose (#235) — those settle tip/title bars; this
+# settles the sunny edge frame only. HANDOFF_CREAM_EDGE_SETTLE_ENABLED =
+# False drops settle only (edge + sparkle + wash remain). No keyblades /
 # KH branding.
 HANDOFF_CREAM_EDGE_SETTLE_ENABLED = True
-HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT = (1.05, 1.0, 1.08, 0.07)  # sx, sy, sz, sec
-HANDOFF_CREAM_EDGE_SETTLE_REST_SEC = 0.10
+HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT = (1.08, 1.0, 1.13, 0.09)  # sx, sy, sz, sec
+HANDOFF_CREAM_EDGE_SETTLE_REST_SEC = 0.08
+HANDOFF_CREAM_EDGE_SETTLE_REBOUND = (1.03, 1.0, 1.05, 0.05)  # micro second bounce
+HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC = 0.08
 
 # Soft cream wash pulse after handoff cream edge / sparkle (#124/#99).
 # Perfect-dodge / melee hit / victory / Oswald-trust cream wash grammar —
@@ -629,7 +634,7 @@ HANDOFF_CREAM_EDGE_SETTLE_REST_SEC = 0.10
 # False drops wash only (carnival + sparkle + edge remain). No keyblades /
 # KH branding.
 HANDOFF_CREAM_WASH_ENABLED = True
-HANDOFF_CREAM_WASH_DELAY_SEC = 0.40  # after play; after edge peak (~0.20)
+HANDOFF_CREAM_WASH_DELAY_SEC = 0.50  # after play; after deepened edge settle
 HANDOFF_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
 HANDOFF_CREAM_WASH_PEAK = 0.14
 HANDOFF_CREAM_WASH_MID = 0.08

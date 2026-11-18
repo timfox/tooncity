@@ -13,9 +13,11 @@ and Punchline clears arm mid-act trust fracture: off-tone cheer copy +
 cooler cream edge that settles into soft shadow flecks (still no Silly
 twist spoilers). Act
 handoffs fire a short confetti / streamer + cream-sparkle pop
-(CampaignHandoffConfetti) framed by a soft cream edge pulse with a brief
-rubber-hose scale settle and a delayed soft cream wash pulse tuned to the
-carnival glitter — no KH / keyblade framing. Campaign victory fires a soft cream confetti swell + cream
+(CampaignHandoffConfetti) framed by a soft cream edge pulse with a
+deepened rubber-hose scale settle (overshoot → rest → micro rebound) and
+a delayed soft cream wash pulse tuned to the carnival glitter — no KH /
+keyblade framing. Distinct from tip/title cream hose settles.
+Campaign victory fires a soft cream confetti swell + cream
 sparkle on the purity cheer only, framed by a victory-tuned cream edge
 and a delayed soft cream wash pulse with a residual cream aftershock
 (flecks + soft halo); it clears before the Oswald twist / FinalePhaseFx
