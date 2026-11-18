@@ -307,8 +307,9 @@ HANDOFF_CREAM_SPARKLE_COLORS = (
 # Composes act/trust cream edge (#110/#117) with handoff cream sparkle —
 # sunny frame around the Loopy→Punchline (and act) carnival pop. Tuned a
 # touch longer than trust settle edge so the frame rides with cream glitter
-# (~0.68s). Early/mid trusted Oswald only — twist / victory / phase paths
-# stay edge-free. No keyblades / KH branding.
+# (~0.68s). Early/mid trusted Oswald only — twist / phase paths stay
+# edge-free (victory cream edge is a separate VICTORY_CREAM_EDGE_* path).
+# No keyblades / KH branding.
 HANDOFF_CREAM_EDGE_ENABLED = True
 HANDOFF_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)
 HANDOFF_CREAM_EDGE = 0.28  # strip thickness in aspect2d units
@@ -407,6 +408,43 @@ VICTORY_CREAM_SPARKLE_COLORS = (
     (0.96, 0.88, 0.64, 0.88),
     (1.0, 0.90, 0.74, 0.90),
 )
+
+# Cream edge pulse framing victory cream confetti / sparkle banners (#82/#105).
+# Composes handoff cream edge (#124) with victory cream swell + sparkle —
+# sunny frame around the purity cheer ("TOON CITY IS SAVED!") only. Tuned
+# longer than handoff carnival edge so the frame rides with victory glitter
+# (~0.88s) and cream chips (~1.05s). Clears before Oswald twist /
+# FinalePhaseFx reveal. No keyblades / KH branding.
+VICTORY_CREAM_EDGE_ENABLED = True
+VICTORY_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)
+VICTORY_CREAM_EDGE = 0.28  # strip thickness in aspect2d units
+VICTORY_CREAM_EDGE_PEAK = 0.40
+VICTORY_CREAM_EDGE_PULSE = 0.26  # mid-beat alpha after peak
+VICTORY_CREAM_EDGE_IN_SEC = 0.08
+VICTORY_CREAM_EDGE_HOLD_SEC = 0.12
+VICTORY_CREAM_EDGE_PULSE_SEC = 0.14
+VICTORY_CREAM_EDGE_OUT_SEC = 0.60  # covers victory cream sparkle hang
+# Below victory plate/title (60/62); under sparkle (65); above ink vignette (48).
+VICTORY_CREAM_EDGE_BIN = 58
+VICTORY_CREAM_EDGE_FLECK_COUNT = 8
+VICTORY_CREAM_EDGE_FLECK_SIZE = 0.024
+VICTORY_CREAM_EDGE_FLECK_DRIFT = 0.22
+VICTORY_CREAM_EDGE_FLECK_SEC = 0.36
+VICTORY_CREAM_EDGE_FLECK_COLOR = (1.0, 0.96, 0.62, 0.9)
+VICTORY_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
+# Tip flecks near the victory swell origin (~z 0.36).
+VICTORY_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.36)
+# Rising cream-sparkle flecks along the cream edge (handoff #124 twin).
+# Uses victory cream-sparkle warmth (#105); disable drops sparkles only.
+VICTORY_CREAM_EDGE_SPARKLE_ENABLED = True
+VICTORY_CREAM_EDGE_SPARKLE_COUNT = 10
+VICTORY_CREAM_EDGE_SPARKLE_SIZE = 0.018
+VICTORY_CREAM_EDGE_SPARKLE_RISE = 0.32
+VICTORY_CREAM_EDGE_SPARKLE_SPREAD = 1.15
+VICTORY_CREAM_EDGE_SPARKLE_SEC = 0.48
+VICTORY_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.90)
+VICTORY_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
+VICTORY_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.36)
 
 # Explicit Oswald twist after P2 clear (shown after purity victory flash).
 FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
