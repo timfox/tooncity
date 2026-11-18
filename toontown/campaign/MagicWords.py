@@ -12,9 +12,10 @@ class StartCampaign(MagicWord):
         'Uses CampaignDirector + ReclaimDirector. Oswald leads Loopy → '
         'Punchline → Silly two-phase Ink Overlord finale (P1 magenta rise / '
         'P2 crimson unleash telegraphs + ink crown silhouette flash + '
-        'FOV/flash sting; victory reveal sting: Oswald caused the '
-        'corruption — banner + rubber-hose silhouette shadow flash + '
-        'FOV/SFX + soft cream aftershock framed by cream edge). '
+        'FOV/flash sting; purity victory cheer: cream swell / sparkle / '
+        'edge + soft cream wash pulse; victory reveal sting: Oswald '
+        'caused the corruption — banner + rubber-hose silhouette shadow '
+        'flash + FOV/SFX + soft cream aftershock framed by cream edge). '
         'Toontown spiritual-sequel fantasy — no keyblades. '
         'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER

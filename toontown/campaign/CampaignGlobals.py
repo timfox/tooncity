@@ -446,6 +446,24 @@ VICTORY_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.90)
 VICTORY_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 VICTORY_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.36)
 
+# Soft cream wash pulse after victory cream edge / sparkle (#129/#105).
+# Perfect-dodge / melee hit cream wash grammar — delayed two-beat aspect2d
+# veil on the purity cheer ("TOON CITY IS SAVED!") only. Soft under edge
+# strips (bin 58) / plate (60); cream / pastel only. Clears before Oswald
+# twist / FinalePhaseFx reveal. VICTORY_CREAM_WASH_ENABLED = False drops
+# wash only (swell + sparkle + edge remain). No keyblades / KH branding.
+VICTORY_CREAM_WASH_ENABLED = True
+VICTORY_CREAM_WASH_DELAY_SEC = 0.48  # after play; after edge peak (~0.20)
+VICTORY_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+VICTORY_CREAM_WASH_PEAK = 0.16
+VICTORY_CREAM_WASH_MID = 0.09
+VICTORY_CREAM_WASH_IN_SEC = 0.07
+VICTORY_CREAM_WASH_PULSE_SEC = 0.12
+VICTORY_CREAM_WASH_HOLD_SEC = 0.10
+VICTORY_CREAM_WASH_OUT_SEC = 0.48  # rides with victory glitter hang
+# Under cream edge (58) / plate (60); soft veil settle beat.
+VICTORY_CREAM_WASH_BIN = 54
+
 # Explicit Oswald twist after P2 clear (shown after purity victory flash).
 FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
 FINALE_TWIST_TEASE_COLOR = (1.0, 0.55, 0.35, 1.0)
