@@ -12,7 +12,9 @@ distinct tunnel-mouth crumb-trail pulse (#216), crumb pulse cream deepen
 #241), crumb pip cream deepen past #258 (brighter/wider pip / longer
 hold / punchier rebound), playground pollution fog edge breath (#221),
 fog-edge cream deepen (cream mid-settle + rim #236), and fog cream rim
-deepen (juicier rim + mid hold + rebound; ≠ #246 / #236 / birds #285).
+deepen (juicier rim + mid hold + rebound; ≠ #246 / #236 / birds #285),
+and fog cream rim deepen past #250 (brighter/wider rim / longer hold /
+punchier rebound; ≠ tunnel #290 / birds #285 / crumb #270+).
 
 Run from repo root:
   python3 tests/test_corrupt_street_breadcrumb.py
@@ -853,6 +855,54 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         self.assertGreater(cream['rimHoldSec'], placemarker_cream['haloHoldSec'])
         self.assertLess(
             cream['rimReboundScale'], placemarker_cream['haloReboundScale'])
+
+    def test_playground_fog_cream_rim_deepen_past_250(self):
+        """Past-#250 deepen — brighter/wider rim / longer hold / punchier rebound."""
+        cream = self._fog_cream()
+        placemarker_cream = self._cream()
+        crumb_cream = self._crumb_cream()
+        fog = self._fog_pulse()
+        # Still local tunnel-lip rim rebound — not tunnel #290 / birds / crumb.
+        self.assertTrue(cream['localRim'])
+        self.assertTrue(cream['rimRebound'])
+        self.assertFalse(cream['birdsChirpFlecks'])
+        self.assertFalse(cream['fullscreenWash'])
+        self.assertFalse(cream['placemarkerHalo'])
+        # Floors past merged #250 fog cream rim deepen knobs.
+        self.assertGreater(cream['creamMidSec'], 0.14)
+        self.assertLessEqual(cream['creamMidSec'], 0.22)
+        self.assertGreater(cream['creamMidAlpha'], fog['restAlpha'])
+        self.assertLess(cream['creamMidAlpha'], fog['peakAlpha'])
+        self.assertGreater(cream['rimPeakAlpha'], 0.38)
+        self.assertLess(cream['rimPeakAlpha'], 0.50)
+        self.assertGreater(cream['rimMidAlpha'], 0.20)
+        self.assertLess(cream['rimMidAlpha'], cream['rimPeakAlpha'])
+        self.assertGreater(cream['rimScalePeak'], 1.22)
+        self.assertLess(cream['rimScalePeak'], placemarker_cream['haloScalePeak'])
+        self.assertLess(cream['rimScalePeak'], crumb_cream['pipScalePeak'])
+        self.assertGreater(cream['rimHalfW'], 3.55)
+        self.assertGreater(cream['rimHalfH'], 1.14)
+        self.assertGreater(cream['rimHoldSec'], 0.10)
+        self.assertLessEqual(cream['rimHoldSec'], 0.20)
+        self.assertGreater(cream['rimHoldSec'], placemarker_cream['haloHoldSec'])
+        self.assertGreater(cream['rimHoldSec'], crumb_cream['pipHoldSec'])
+        self.assertGreater(cream['rimReboundScale'], 1.06)
+        self.assertLess(cream['rimReboundScale'], placemarker_cream['haloReboundScale'])
+        self.assertLess(cream['rimReboundScale'], crumb_cream['pipReboundScale'])
+        self.assertGreater(cream['rimReboundSec'], 0.08)
+        self.assertLessEqual(cream['rimReboundSec'], 0.16)
+        self.assertGreater(cream['rimReboundSec'], placemarker_cream['haloReboundSec'])
+        self.assertGreater(cream['rimReboundSec'], crumb_cream['pipReboundSec'])
+        self.assertGreater(cream['rimReboundAlpha'], 0.10)
+        self.assertLess(cream['rimReboundAlpha'], cream['rimMidAlpha'])
+        # Slightly juicier fog billow past #250; still soft opacity breath.
+        self.assertGreater(fog['billow'], 1.12)
+        self.assertLess(fog['billow'], 1.25)
+        # Distinctness vs placemarker / crumb / birds vocabulary.
+        self.assertNotIn('haloHoldSec', cream)
+        self.assertNotIn('pipHoldSec', cream)
+        self.assertNotIn('rimHoldSec', placemarker_cream)
+        self.assertNotIn('rimReboundScale', crumb_cream)
 
     def test_tt_playground_wires_breadcrumbs(self):
         playground = (
