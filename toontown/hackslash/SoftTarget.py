@@ -7,9 +7,10 @@ Includes manual soft-lock cycle (next/prev) so players can switch focus
 among sticky-range hostiles during stretch-punch melee — KH-feel targeting
 without KH branding / keyblades.
 
-Auto-acquire (and fresh Tab with no lock) also prefers Ink Overlord /
-Corrupted Oswald over nearer pack Smudge adds so climax and twist fights
-do not glue onto trash.
+Auto-acquire (and fresh Tab with no lock) prefers Ink Overlord /
+Corrupted Oswald over nearer pack Smudge adds. Sticky hold also yields
+from glued adds when a priority Overlord/Oswald enters the acquire cone
+so climax and twist fights do not stay stuck on trash.
 """
 
 import math
@@ -43,6 +44,23 @@ def pickSoftLockAcquire(scoredRows):
             bestKey = key
             best = payload
     return best
+
+
+def shouldStickyYieldToPriority(
+        lockedIsPriority, hasPriorityCandidate, enabled=None):
+    """True when sticky hold on a pack add should yield to Overlord/Oswald.
+
+    Sticky still glues onto the current target when already on a priority
+    subject, when no priority candidate is in the acquire cone, or when
+    TARGET_PRIORITY_ENABLED is off. Pure helper for headless tests.
+    """
+    if enabled is None:
+        enabled = HackSlashConfig.TARGET_PRIORITY_ENABLED
+    if not enabled:
+        return False
+    if lockedIsPriority:
+        return False
+    return bool(hasPriorityCandidate)
 
 
 def nextCycleIndex(count, currentIndex, direction=1):
@@ -254,13 +272,33 @@ class SoftTargetFinder:
 
         # Sticky soft-lock: keep the current target while alive and roughly
         # in front / in sticky range (wider than fresh acquisition cone).
+        # Yield sticky glue on pack adds when Overlord / Corrupted Oswald is
+        # already in the fresh-acquire cone so climax/twist do not stay
+        # stuck on Smudge trash after #339 fresh-acquire priority.
         if self._lockedKey is not None and now < self._lockedUntil:
             locked = byKey.get(self._lockedKey)
             if locked is not None and self._isValid(locked) and self._inStickyCone(locked):
-                # Refresh hold while the target remains sticky-valid.
-                self._lockedUntil = now + HackSlashConfig.TARGET_LOCK_HOLD_SEC
-                return locked
-            self._lockedKey = None
+                lockedIsPriority = self._isPriorityTarget(locked)
+                hasPriorityCandidate = False
+                if not lockedIsPriority:
+                    for target in candidates:
+                        if self._key(target) == self._lockedKey:
+                            continue
+                        if not self._isValid(target):
+                            continue
+                        if not self._inCone(target):
+                            continue
+                        if self._isPriorityTarget(target):
+                            hasPriorityCandidate = True
+                            break
+                if not shouldStickyYieldToPriority(
+                        lockedIsPriority, hasPriorityCandidate):
+                    # Refresh hold while the target remains sticky-valid.
+                    self._lockedUntil = now + HackSlashConfig.TARGET_LOCK_HOLD_SEC
+                    return locked
+                # Fall through to fresh priority scoring (snap onto boss).
+            else:
+                self._lockedKey = None
 
         scored = []
         for target in candidates:

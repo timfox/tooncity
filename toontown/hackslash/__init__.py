@@ -37,6 +37,7 @@ from .SoftTarget import (
     pickCycleChoice,
     pickSoftLockAcquire,
     shouldAssistAimOnHit,
+    shouldStickyYieldToPriority,
     signedYawDeltaDeg,
     softLockAcquireRank,
 )
@@ -96,6 +97,7 @@ __all__ = [
     'pickCycleChoice',
     'pickSoftLockAcquire',
     'shouldAssistAimOnHit',
+    'shouldStickyYieldToPriority',
     'signedYawDeltaDeg',
     'softLockAcquireRank',
     'DemoHostile',
