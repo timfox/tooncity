@@ -3,10 +3,12 @@
 World-space CardMaker juice that fires when the green spit blob lands after
 the telegraph spit-gob wind-up — sunny cream / pastel contrast against the
 green BRUTE_SPIT_BLOB_* so the tank spit reads juicy (rubber-hose corruption
-feel). Immediate cream splat/flecks, then a soft settling aftershock (halo +
-residual flecks) matching telegraph cream warn aftershock grammar (#121) /
-Gunk puddle cream splash (#218) / Snare counter cream splash (#214). Wired
-from DistributedCorruptToon.__playSpitBlob. Client only. Toontown spiritual
+feel). Deepened spit-land juice: juicier splat/flecks, vertical cream drip
+filaments (spit-gob fall read), then a wider settling aftershock (halo +
+residual flecks) — distinct from Snare counter cream deepen (#245, horizontal
+whip filaments) and Gunk puddle cream deepen (#238, flat ground bloom). Same
+residual grammar as telegraph cream warn aftershock (#121). Wired from
+DistributedCorruptToon.__playSpitBlob. Client only. Toontown spiritual
 sequel — no keyblades / no KH branding.
 """
 
@@ -87,6 +89,17 @@ class BruteSpitCreamSplash(object):
         if splat is not None:
             parts.append(splat)
 
+        dripCount = max(0, int(look.get('dripCount', 0)))
+        if look.get(
+                'dripEnabled',
+                getattr(
+                    CorruptionGlobals,
+                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_ENABLED', True)):
+            for i in range(dripCount):
+                part = self._spawnDripFilament(parentNP, origin, look, i)
+                if part is not None:
+                    parts.append(part)
+
         fleckCount = max(0, int(look.get('fleckCount', 0)))
         for i in range(fleckCount):
             part = self._spawnFleck(parentNP, origin, look, i, fleckCount)
@@ -136,7 +149,7 @@ class BruteSpitCreamSplash(object):
     def _spawnSplat(self, parentNP, origin, look):
         """Tiny billboard cream blob — spit-land readability core."""
         try:
-            half = float(look.get('splatHalf', 0.24))
+            half = float(look.get('splatHalf', 0.3))
             cm = CardMaker('brute-spit-cream-splash-core')
             cm.setFrame(-half, half, -half * 0.92, half * 0.92)
             splat = parentNP.attachNewNode(cm.generate())
@@ -148,7 +161,7 @@ class BruteSpitCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'BRUTE_SPIT_CREAM_SPLASH_COLOR',
-                    (1.0, 0.97, 0.82, 0.94)))
+                    (1.0, 0.97, 0.82, 0.96)))
             splat.setColor(color[0], color[1], color[2], color[3])
             splat.setColorScale(1, 1, 1, 0)
             splat.setScale(0.32)
@@ -156,7 +169,7 @@ class BruteSpitCreamSplash(object):
             splat.setDepthWrite(False)
             self._nodes.append(splat)
 
-            rimHalf = half * float(look.get('rimScale', 1.3))
+            rimHalf = half * float(look.get('rimScale', 1.36))
             cmRim = CardMaker('brute-spit-cream-splash-rim')
             cmRim.setFrame(-rimHalf, rimHalf, -rimHalf * 0.9, rimHalf * 0.9)
             rim = parentNP.attachNewNode(cmRim.generate())
@@ -168,7 +181,7 @@ class BruteSpitCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'BRUTE_SPIT_CREAM_SPLASH_RIM_COLOR',
-                    (1.0, 0.98, 0.88, 0.7)))
+                    (1.0, 0.98, 0.88, 0.78)))
             rim.setColor(rimColor[0], rimColor[1], rimColor[2], rimColor[3])
             rim.setColorScale(1, 1, 1, 0)
             rim.setScale(0.28)
@@ -176,9 +189,9 @@ class BruteSpitCreamSplash(object):
             rim.setDepthWrite(False)
             self._nodes.append(rim)
 
-            peak = float(look.get('splatPeak', 1.5))
-            sec = float(look.get('splatSec', 0.15))
-            peakA = float(look.get('peakAlpha', 0.94))
+            peak = float(look.get('splatPeak', 1.72))
+            sec = float(look.get('splatSec', 0.17))
+            peakA = float(look.get('peakAlpha', 0.96))
             return Parallel(
                 Sequence(
                     LerpColorScaleInterval(
@@ -203,13 +216,108 @@ class BruteSpitCreamSplash(object):
         except Exception:
             return None
 
+    def _spawnDripFilament(self, parentNP, origin, look, index):
+        """Vertical cream drip filament — spit-gob fall / land cue.
+
+        Distinct from Snare horizontal whip filaments (#245) and Gunk flat
+        puddle-plane bloom (#238): tall downward cream smear matching green
+        spit-blob land grammar (BruteSpitTelegraphFx gob cousin).
+        """
+        try:
+            side = -1.0 if (index % 2) == 0 else 1.0
+            t = 0.45 + 0.2 * (index // 2)
+            # Bias downward so the cream drip reads as spit gob settling.
+            spreadX = side * (0.18 + 0.12 * index) * t
+            spreadY = (0.08 * ((index % 3) - 1)) * t
+            fall = float(look.get(
+                'dripFall',
+                getattr(
+                    CorruptionGlobals,
+                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_FALL', 0.95)))
+            end = Point3(
+                origin[0] + spreadX,
+                origin[1] + spreadY,
+                origin[2] - fall * (0.7 + 0.12 * (index % 3)),
+            )
+            half = float(look.get(
+                'dripHalf',
+                getattr(
+                    CorruptionGlobals,
+                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_HALF', 0.08)))
+            cm = CardMaker(
+                'brute-spit-cream-splash-drip-%s' % index)
+            # Tall / thin frame — cream drip, not whip filament / puddle bloom.
+            cm.setFrame(-half * 0.55, half * 0.55, -half * 1.55, half * 1.55)
+            drip = parentNP.attachNewNode(cm.generate())
+            start = Point3(
+                origin[0] + side * 0.04,
+                origin[1] + 0.02 * ((index % 2) - 0.5),
+                origin[2] + 0.12 + 0.04 * (index % 3),
+            )
+            drip.setPos(start)
+            drip.setBillboardPointEye()
+            drip.setTransparency(TransparencyAttrib.MAlpha)
+            color = look.get(
+                'dripColor',
+                getattr(
+                    CorruptionGlobals,
+                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_COLOR',
+                    (1.0, 0.97, 0.84, 0.92)))
+            tint = 0.92 + 0.06 * (index % 3)
+            drip.setColor(
+                min(1.4, color[0] * tint),
+                min(1.4, color[1] * tint),
+                min(1.4, color[2] * tint),
+                color[3])
+            drip.setColorScale(1, 1, 1, 0)
+            drip.setScale(Point3(0.45, 0.45, 0.55))
+            drip.setBin('fixed', int(look.get('binSort', 41)) + 1)
+            drip.setDepthWrite(False)
+            self._nodes.append(drip)
+            travel = float(look.get(
+                'dripSec',
+                getattr(
+                    CorruptionGlobals,
+                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_SEC', 0.22)))
+            peakA = float(look.get(
+                'dripPeakAlpha',
+                getattr(
+                    CorruptionGlobals,
+                    'BRUTE_SPIT_CREAM_SPLASH_DRIP_PEAK_ALPHA',
+                    0.9)))
+            delay = 0.014 * index
+            return Sequence(
+                Wait(delay),
+                Parallel(
+                    LerpPosInterval(drip, travel, end, blendType='easeIn'),
+                    Sequence(
+                        LerpScaleInterval(
+                            drip, travel * 0.35, Point3(0.7, 0.7, 1.55),
+                            blendType='easeOut'),
+                        LerpScaleInterval(
+                            drip, travel * 0.65, Point3(0.2, 0.2, 1.85),
+                            blendType='easeIn'),
+                    ),
+                    Sequence(
+                        LerpColorScaleInterval(
+                            drip, travel * 0.22, Vec4(1, 1, 1, peakA),
+                            blendType='easeOut'),
+                        LerpColorScaleInterval(
+                            drip, travel * 0.78, Vec4(1, 1, 1, 0),
+                            blendType='easeIn'),
+                    ),
+                ),
+            )
+        except Exception:
+            return None
+
     def _spawnFleck(self, parentNP, origin, look, index, count):
         """Outward cream fleck — telegraph cream warn / spit-land cousin."""
         try:
             angle = (2.0 * pi * index) / max(1, count) + (0.16 * (index % 3))
-            dist = float(look.get('fleckDist', 0.95)) * (
+            dist = float(look.get('fleckDist', 1.05)) * (
                 0.55 + 0.16 * (index % 4))
-            lift = float(look.get('fleckLift', 0.38)) * (
+            lift = float(look.get('fleckLift', 0.48)) * (
                 0.4 + 0.18 * (index % 3))
             end = Point3(
                 origin[0] + sin(angle) * dist,
@@ -271,7 +379,7 @@ class BruteSpitCreamSplash(object):
             return None
         delay = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_DELAY_SEC', 0.16))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_DELAY_SEC', 0.14))
         parts = []
 
         if getattr(
@@ -283,10 +391,10 @@ class BruteSpitCreamSplash(object):
 
         creamCount = max(0, int(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT', 3)))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT', 5)))
         streakCount = max(0, int(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT', 1)))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT', 2)))
         for i in range(creamCount):
             part = self._spawnAftershockSpark(
                 parentNP, origin, i, creamCount, elongated=False)
@@ -308,19 +416,19 @@ class BruteSpitCreamSplash(object):
     def _spawnAftershockHalo(self, parentNP, origin):
         half = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF', 0.44))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF', 0.54))
         startScale = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_START', 0.28))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_START', 0.3))
         peakScale = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK', 1.45))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK', 1.6))
         sec = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_SEC', 0.28))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_SEC', 0.32))
         peakA = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.2))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.24))
         r, g, b, _a = getattr(
             CorruptionGlobals,
             'BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_COLOR',
@@ -387,13 +495,13 @@ class BruteSpitCreamSplash(object):
             angleBias = 0.18
         drift = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_DRIFT', 0.6))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_DRIFT', 0.72))
         fall = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_FALL', 0.38))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_FALL', 0.55))
         sec = float(getattr(
             CorruptionGlobals,
-            'BRUTE_SPIT_CREAM_AFTERSHOCK_SEC', 0.32))
+            'BRUTE_SPIT_CREAM_AFTERSHOCK_SEC', 0.36))
         angle = (2.0 * pi * index) / float(count) + angleBias
         try:
             cm = CardMaker(
@@ -422,11 +530,11 @@ class BruteSpitCreamSplash(object):
         except Exception:
             return None
 
-        # Settle mostly sideways / slightly down after the spit land.
+        # Settle with a stronger downward bias after spit land (drip residual).
         end = Point3(
-            origin[0] + cos(angle) * drift * 0.6,
-            origin[1] + sin(angle) * drift * 0.6,
-            origin[2] - fall - 0.06 * (index % 3))
+            origin[0] + cos(angle) * drift * 0.55,
+            origin[1] + sin(angle) * drift * 0.55,
+            origin[2] - fall - 0.08 * (index % 3))
         peak = size * (1.15 + 0.08 * (index % 2))
         self._nodes.append(spark)
         stagger = 0.02 * (index % 3)
