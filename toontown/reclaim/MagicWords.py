@@ -42,7 +42,10 @@ class StartReclaim(MagicWord):
         'short contested tip under the purity meter and flashes the meter '
         'rim warm (danger blink, not the secured green lock). Full clear '
         'purity-locks the street so re-creep cannot undo it (HUD secured '
-        'tip + green-cream sparkle sting). Pair with '
+        'tip + green-cream sparkle sting), then after the purity '
+        'celebration settles the meter hose-settles so the finish reads '
+        'clearly (soft tall stretch, not wave-start squash or lock soft '
+        'scale). Pair with '
         '~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

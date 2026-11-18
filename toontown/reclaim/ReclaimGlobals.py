@@ -498,6 +498,21 @@ SECURED_LOCK_STING_SETTLE_SEC = 0.10
 SECURED_LOCK_METER_POP_SCALE = 1.12
 SECURED_LOCK_METER_POP_SEC = 0.09
 
+# Purity-complete meter hose settle — after restore celebration settles
+# (purityRestoreSettled), soft tall stretch → longer settle on the full meter
+# so the finish reads clearly. Distinct from wave-start squash→stretch pop
+# (#220) and secured-lock green soft uniform scale (#209). Sunny pure cream
+# rim accent only; no KH branding. Toggle PURITY_COMPLETE_METER_SETTLE_ENABLED
+# = False drops meter settle only (celebration / lock tip still fire).
+PURITY_COMPLETE_METER_SETTLE_ENABLED = True
+# Mild tall stretch (no flat squash — that is wave-start's signature).
+PURITY_COMPLETE_METER_SETTLE_STRETCH = (1.05, 1.0, 1.22, 0.08)  # sx, sy, sz, sec
+PURITY_COMPLETE_METER_SETTLE_SEC = 0.16
+PURITY_COMPLETE_METER_SETTLE_RIM_COLOR = (1.0, 0.97, 0.70, 0.82)  # pure cream
+PURITY_COMPLETE_METER_SETTLE_RIM_SEC = 0.28
+# Keep meter up through restore celebration + hose settle (not just lock confirm).
+PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC = 0.55
+
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.
 # Composes with EntryCreamWashPulseFx (bin 32), PlayEntry ink edge vignette
