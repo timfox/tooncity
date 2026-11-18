@@ -1156,7 +1156,7 @@ class MeleeCombatController(DirectObject):
                 pass
 
     def _playHitSpark(self, hitIndex, target=None):
-        """Short cream/ink fleck sparkles at the hit — layers with impact squash."""
+        """Cream/ink flecks + delayed cream spark aftershock — layers with squash."""
         origin = None
         lift = float(HackSlashConfig.HIT_SPARK_LIFT)
         if target is not None:
