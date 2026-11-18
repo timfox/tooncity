@@ -137,6 +137,14 @@ ACTS = (
         # Tip-only unease: longer fracture hose settle on entry. Do NOT set
         # trustFracture here — victory / twist stay on the sunny reveal path.
         'entryTipUnease': True,
+        # Mid-act Silly Street approach tip (PlayEntry, after entry tip):
+        # Oswald almost confesses — uneasy half-truth before the finale
+        # reveal. Deepens #200 Overlord foreshadow; still no full twist
+        # spoiler / no "Oswald caused the corruption" / no KH branding.
+        'approachTip': (
+            'Oswald almost confesses — "the ink… maybe my gag went wrong—" '
+            'then laughs too loud: Overlord first!  |  '
+            'F fight  |  Shift dodge  |  C campaign'),
         # Twist: trusted Oswald was the source of the neighborhood pollution.
         'handoffTitle': 'VICTORY…?',
         'handoff': (
@@ -265,12 +273,18 @@ PUNCHLINE_ACT_TIP_CREAM_WASH_BIN = 49
 # the Ink Overlord finale beat. entryTipUnease deepens Punchline half-beat
 # off (#198): cheer feels wrong beside the Overlord fight — foreshadow only
 # (no twist spoilers). Soft sunny settle kept as fallback; PlayEntry swaps
-# to OSWALD_TRUST_FRACTURE_* when entryTipUnease is armed. No KH branding.
+# to OSWALD_TRUST_FRACTURE_* when entryTipUnease is armed. Mid-act approach
+# tip (approachTip) almost-confesses an uneasy half-truth after entry —
+# same fracture hose settle, still no full twist spoil. No KH branding.
 SILLY_ACT_TIP_POP_SQUASH = (1.68, 1.0, 0.46, 0.05)   # sx, sy, sz, sec
 SILLY_ACT_TIP_POP_STRETCH = (0.70, 1.0, 1.52, 0.08)
 SILLY_ACT_TIP_POP_SETTLE_SEC = 0.10
 SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.07)
 SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
+# Delay after Silly Street enter before the mid-act almost-confess tip
+# replaces the entry tip (PlayEntry). Longer than SILLY_AUTO_RECLAIM so
+# the explore / entry foreshadow beat lands first.
+SILLY_APPROACH_TIP_DELAY_SEC = 3.85
 
 # Soft cream wash pulse after Silly Act 3 tip hose pop (#95).
 # Act-banner / Punchline tip wash grammar (#154/#158) — delayed two-beat

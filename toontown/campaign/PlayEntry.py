@@ -16,9 +16,11 @@ Punchline Place Act 2 uses a campaign-owned entry tip (Brute/Snare cues,
 trusted Oswald lead) with a slightly punchier tip hose pop + trust settle
 and a delayed soft cream wash pulse (act-banner / trust wash twin).
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
-trusted Oswald lead) with a slightly heavier tip hose pop + trust settle
-and a delayed soft cream wash pulse (Punchline tip / act-banner wash twin;
-FinalePhaseFx twist stays separate — no KH branding).
+cheer-feels-wrong foreshadow) with a slightly heavier tip hose pop +
+fracture trust settle and a delayed soft cream wash pulse; a mid-act
+approach tip then almost-confesses an uneasy half-truth before the
+finale reveal (Punchline tip / act-banner wash twin; FinalePhaseFx twist
+stays separate — no KH branding).
 """
 
 from panda3d.core import (
@@ -46,6 +48,8 @@ LOOPY_AUTO_RECLAIM_DELAY_SEC = 1.55
 PUNCHLINE_AUTO_RECLAIM_DELAY_SEC = 1.85
 # Silly Overlord finale: longer explore beat before Overlord packs field.
 SILLY_AUTO_RECLAIM_DELAY_SEC = 2.15
+# Fallback if CampaignGlobals.SILLY_APPROACH_TIP_DELAY_SEC is missing.
+_SILLY_APPROACH_TIP_DELAY_FALLBACK_SEC = 3.85
 
 
 def _face():
@@ -67,6 +71,7 @@ class PlayEntryClient(DirectObject):
         self._vignetteIval = None
         self._armedZone = None
         self._autoReclaimZone = None
+        self._approachTipZone = None
         self._reclaimLive = False
         # Soft next-street cue survives hub / playground hops until the
         # pointed ACTS street is entered (no magic words / zone ids).
@@ -103,6 +108,7 @@ class PlayEntryClient(DirectObject):
         except Exception:
             pass
         self._cancelAutoReclaim()
+        self._cancelSillyApproachTip()
         self._clearTip()
         self._clearFlash()
         self._clearVignette()
@@ -124,6 +130,7 @@ class PlayEntryClient(DirectObject):
             return
         zoneId = int(zoneId)
         self._cancelAutoReclaim()
+        self._cancelSillyApproachTip()
         self._reclaimLive = False
         hubZone = int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
         if zoneId == hubZone:
@@ -159,6 +166,7 @@ class PlayEntryClient(DirectObject):
         # Campaign ACTS entryTip wins (Punchline Act 2 sludge mix + Oswald
         # unease tip; Silly Act 3 Ink Overlord + cheer-feels-wrong foreshadow).
         # Else STREET_PACK tip; finale without entryTip keeps Overlord vs line.
+        # Finale also arms a delayed mid-act approachTip (almost-confess).
         if act and act.get('entryTip'):
             tip = act['entryTip']
             if act.get('id') == 'punchline':
@@ -183,6 +191,8 @@ class PlayEntryClient(DirectObject):
         else:
             self._clearVignette()
             self._showTip(tip, tipHose=tipHose)
+        if act and act.get('id') == 'finale' and act.get('approachTip'):
+            self._armSillyApproachTip(zoneId)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field the **campaign** act (not street-pack R) so C and auto
@@ -276,6 +286,54 @@ class PlayEntryClient(DirectObject):
         self._requestCampaign()
         self._flashBanner(
             ReclaimGlobals.streetAutoFlash(zoneId, face=_face()))
+        return task.done
+
+    def _sillyApproachTipTaskName(self, zoneId):
+        return 'playEntrySillyApproachTip-%s' % int(zoneId)
+
+    def _armSillyApproachTip(self, zoneId):
+        """Schedule mid-act almost-confess tip after Silly Street entry."""
+        self._cancelSillyApproachTip()
+        act = self._actForZone(zoneId)
+        if act is None or not act.get('approachTip'):
+            return
+        delay = float(getattr(
+            CampaignGlobals, 'SILLY_APPROACH_TIP_DELAY_SEC',
+            _SILLY_APPROACH_TIP_DELAY_FALLBACK_SEC))
+        delay = max(0.5, delay)
+        self._approachTipZone = int(zoneId)
+        taskMgr.doMethodLater(  # noqa: F821
+            delay,
+            self._showSillyApproachTip,
+            self._sillyApproachTipTaskName(zoneId))
+
+    def _cancelSillyApproachTip(self):
+        zoneId = self._approachTipZone
+        self._approachTipZone = None
+        if zoneId is None:
+            return
+        try:
+            taskMgr.remove(self._sillyApproachTipTaskName(zoneId))  # noqa: F821
+        except Exception:
+            pass
+
+    def _showSillyApproachTip(self, task):
+        """Swap tip bar to Oswald almost-confess half-truth (mid-act)."""
+        zoneId = self._approachTipZone
+        self._approachTipZone = None
+        if zoneId is None:
+            return task.done
+        av = getattr(base, 'localAvatar', None)  # noqa: F821
+        if av is None or int(getattr(av, 'zoneId', -1)) != int(zoneId):
+            return task.done
+        act = self._actForZone(zoneId)
+        if act is None or act.get('id') != 'finale':
+            return task.done
+        tip = act.get('approachTip')
+        if not tip:
+            return task.done
+        # Reuse Silly tipHose — entryTipUnease keeps fracture settle.
+        self._showTip(tip, tipHose='silly')
         return task.done
 
     def _showHubTip(self):
@@ -524,8 +582,9 @@ class PlayEntryClient(DirectObject):
         deepen), settle holds a rubbery beat longer (unease tip). tipHose=
         'silly' uses Act 3 Silly Overlord tunables + trust settle; when the
         finale act carries entryTipUnease, settle holds the longer fracture
-        beat (cheer feels wrong — Overlord foreshadow, no twist spoil).
-        Default path keeps the shared PLAY_ENTRY_TIP_* hose pop.
+        beat (entry foreshadow + mid-act almost-confess approach tip —
+        no twist spoil). Default path keeps the shared PLAY_ENTRY_TIP_* hose
+        pop.
         """
         if tipNP is None:
             return None

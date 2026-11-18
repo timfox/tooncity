@@ -389,7 +389,8 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertGreater(tip_idx, 0)
         punch_idx = play_src.find("tipHose == 'punchline'", tip_idx)
         silly_idx = play_src.find("tipHose == 'silly'", tip_idx)
-        else_idx = play_src.find('else:', silly_idx if silly_idx > 0 else tip_idx)
+        # Outer tipHose else follows the silly branch (skip nested else:).
+        else_idx = play_src.find('\n        else:', silly_idx if silly_idx > 0 else tip_idx)
         self.assertGreater(punch_idx, 0)
         self.assertGreater(silly_idx, punch_idx)
         punch_snip = play_src[punch_idx:silly_idx]
@@ -397,11 +398,13 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn("punchAct.get('trustFracture')", punch_snip)
         self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', punch_snip)
         self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC', punch_snip)
-        # Silly tip stays sunny trust settle — not fracture attrs.
-        silly_snip = play_src[silly_idx:else_idx if else_idx > silly_idx else silly_idx + 900]
+        # #200 — Silly tipHose uses fracture settle when entryTipUnease armed.
+        silly_end = else_idx if else_idx > silly_idx else silly_idx + 1600
+        silly_snip = play_src[silly_idx:silly_end]
+        self.assertIn("sillyAct.get('entryTipUnease')", silly_snip)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', silly_snip)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC', silly_snip)
         self.assertIn('SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT', silly_snip)
-        self.assertNotIn(
-            'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', silly_snip)
         magic_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'MagicWords.py'
@@ -412,6 +415,46 @@ class CampaignActParamsTest(unittest.TestCase):
         # Advanced desc explicitly rejects KH props (word appears only as ban).
         self.assertIn('no keyblades', magic_l)
         self.assertNotIn('kingdom hearts', magic_l)
+
+    def test_silly_approach_almost_confess_tip(self):
+        """Silly mid-act approach tip almost-confesses before finale reveal."""
+        camp = self.camp
+        finale = self.acts_by_id['finale']
+        entry = finale.get('entryTip') or ''
+        approach = finale.get('approachTip') or ''
+        self.assertTrue(finale.get('entryTipUnease'))
+        self.assertFalse(bool(finale.get('trustFracture')))
+        self.assertIn('cheer feels wrong', entry.lower())
+        self.assertIn('ink overlord', entry.lower())
+        self.assertIn('almost confess', approach.lower())
+        self.assertIn('gag went wrong', approach.lower())
+        self.assertIn('overlord', approach.lower())
+        # Half-truth only — full twist stays on victory reveal.
+        for banned in (
+                'keyblade', 'kingdom hearts', 'caused the corruption',
+                'his all along', 'betrayed', 'villain', 'sora'):
+            self.assertNotIn(banned, approach.lower())
+            self.assertNotIn(banned, entry.lower())
+        self.assertGreater(camp.SILLY_APPROACH_TIP_DELAY_SEC, 0.0)
+        self.assertGreaterEqual(
+            camp.SILLY_APPROACH_TIP_DELAY_SEC,
+            2.15)  # after Silly auto-reclaim explore beat
+        play_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'PlayEntry.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('_armSillyApproachTip', play_src)
+        self.assertIn('_showSillyApproachTip', play_src)
+        self.assertIn('_cancelSillyApproachTip', play_src)
+        self.assertIn('approachTip', play_src)
+        self.assertIn('SILLY_APPROACH_TIP_DELAY_SEC', play_src)
+        magic_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8')
+        magic_l = magic_src.lower()
+        self.assertIn('almost confess', magic_l)
+        self.assertIn('half-truth', magic_l)
 
     def test_act_param_keys_present_for_director(self):
         for act_id, act in self.acts_by_id.items():

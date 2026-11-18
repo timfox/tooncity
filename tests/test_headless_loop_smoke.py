@@ -679,6 +679,22 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('Silly Street', finale_tip)
         self.assertIn('SILLY_ACT_TIP_POP_SQUASH', play_src)
         self.assertIn('SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT', play_src)
+        # Silly mid-act almost-confess approach tip (before finale reveal).
+        approach_tip = finale.get('approachTip') or ''
+        if isinstance(approach_tip, list):
+            approach_tip = ''.join(str(part) for part in approach_tip)
+        approach_l = str(approach_tip).lower()
+        self.assertIn('almost confess', approach_l)
+        self.assertIn('gag went wrong', approach_l)
+        self.assertTrue(finale.get('entryTipUnease'))
+        self.assertFalse(bool(finale.get('trustFracture')))
+        self.assertIn('SILLY_APPROACH_TIP_DELAY_SEC', campaign_names)
+        self.assertIn('_armSillyApproachTip', play_src)
+        self.assertIn('_showSillyApproachTip', play_src)
+        for banned in (
+                'keyblade', 'kingdom hearts', 'caused the corruption', 'sora'):
+            self.assertNotIn(banned, approach_l)
+            self.assertNotIn(banned, str(finale_tip).lower())
 
         # Reclaim cheer cream sparkle flecks (#98) — mid-screen flecks with pitch swell.
         cheer_sparkle_rel = 'toontown/reclaim/CheerCreamSparkleFx.py'
@@ -2790,8 +2806,24 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         camp_magic_l = camp_magic_src.lower()
         self.assertIn('tip unease', camp_magic_l)
         self.assertIn('punchline', camp_magic_l)
+        self.assertIn('almost confess', camp_magic_l)
         self.assertIn('no keyblades', camp_magic_l)
         self.assertNotIn('kingdom hearts', camp_magic_l)
+        # Silly tipHose fracture settle when entryTipUnease (#200).
+        silly_else = play_src.find('\n        else:', silly_idx)
+        silly_end = silly_else if silly_else > silly_idx else silly_idx + 1600
+        silly_snip = play_src[silly_idx:silly_end]
+        self.assertIn("sillyAct.get('entryTipUnease')", silly_snip)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', silly_snip)
+        self.assertIn('SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT', silly_snip)
+        # Mid-act almost-confess approach tip before finale reveal.
+        finale_approach = finale_act.get('approachTip') or ''
+        if isinstance(finale_approach, list):
+            finale_approach = ''.join(str(part) for part in finale_approach)
+        self.assertIn('almost confess', str(finale_approach).lower())
+        self.assertTrue(finale_act.get('entryTipUnease'))
+        self.assertIn('_armSillyApproachTip', play_src)
+        self.assertIn('SILLY_APPROACH_TIP_DELAY_SEC', campaign_names)
 
         # TTC polluted tunnel placemarkers (#192) — hub discoverability.
         crumb_rel = 'toontown/safezone/CorruptStreetBreadcrumb.py'
