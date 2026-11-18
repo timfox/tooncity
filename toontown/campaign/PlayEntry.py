@@ -15,7 +15,8 @@ trusted Oswald lead) with a slightly punchier tip hose pop + trust settle
 and a delayed soft cream wash pulse (act-banner / trust wash twin).
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
 trusted Oswald lead) with a slightly heavier tip hose pop + trust settle
-(FinalePhaseFx twist stays separate — no KH branding).
+and a delayed soft cream wash pulse (Punchline tip / act-banner wash twin;
+FinalePhaseFx twist stays separate — no KH branding).
 """
 
 from panda3d.core import (
@@ -353,11 +354,13 @@ class PlayEntryClient(DirectObject):
             hose = self._tipHosePopInterval(tipNP, tipHose=tipHose)
             if hose is not None:
                 tipParts.append(hose)
-            # Arm Punchline tip cream wash when hose starts (not at
-            # vignette t=0) so DELAY_SEC tracks hose settle like clean path.
+            # Arm tip cream wash when hose starts (not at vignette t=0)
+            # so DELAY_SEC tracks hose settle like clean path.
             tipLand = [Parallel(*tipParts)]
             if tipHose == 'punchline':
                 tipLand.append(Func(self._armPunchlineTipCreamWash))
+            elif tipHose == 'silly':
+                tipLand.append(Func(self._armSillyTipCreamWash))
             parts.append(Sequence(
                 Wait(tipDelay),
                 Parallel(*tipLand),
@@ -529,11 +532,20 @@ class PlayEntryClient(DirectObject):
         except Exception:
             pass
 
+    def _armSillyTipCreamWash(self):
+        """Soft cream wash after Silly tip hose (#95) — tip path only."""
+        try:
+            from toontown.campaign.SillyTipCreamWashFx import (
+                playSillyTipCreamWash)
+            playSillyTipCreamWash()
+        except Exception:
+            pass
+
     def _playTipHosePop(self, tipNP, tipHose=None):
         """Short rubber-hose scale pop when the street-entry tip lands.
 
-        Punchline Act 2 tipHose also arms a delayed soft cream wash pulse
-        (act-banner / trust wash twin) under the tip bar.
+        Punchline Act 2 / Silly Act 3 tipHose also arm a delayed soft cream
+        wash pulse (act-banner / trust wash twin) under the tip bar.
         """
         if self._tipIval:
             try:
@@ -548,6 +560,8 @@ class PlayEntryClient(DirectObject):
         self._tipIval.start()
         if tipHose == 'punchline':
             self._armPunchlineTipCreamWash()
+        elif tipHose == 'silly':
+            self._armSillyTipCreamWash()
 
     def _clearTip(self):
         if self._tipIval:
@@ -563,6 +577,12 @@ class PlayEntryClient(DirectObject):
             from toontown.campaign.PunchlineTipCreamWashFx import (
                 clearPunchlineTipCreamWash)
             clearPunchlineTipCreamWash()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.SillyTipCreamWashFx import (
+                clearSillyTipCreamWash)
+            clearSillyTipCreamWash()
         except Exception:
             pass
 

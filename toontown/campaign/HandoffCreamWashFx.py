@@ -7,10 +7,11 @@ HitSparkCreamWashPulse / VictoryCreamWashPulse / OswaldTrustCreamWashPulse
 beat. Soft under the handoff plate + edge strips; cream / pastel only (not
 ink). Wired from CampaignHandoff confetti (act handoff path only) beside
 the cream edge. Act-enter wash lives in ActBannerCreamWashFx; Punchline
-tip wash lives in PunchlineTipCreamWashFx; Oswald trust wash lives in
-OswaldTrustCreamWashFx; finale-reveal wash lives in
-FinaleRevealCreamWashFx; phase stays wash-free here. Client only.
-Toontown spiritual sequel — no keyblades / no KH branding.
+tip wash lives in PunchlineTipCreamWashFx; Silly tip wash lives in
+SillyTipCreamWashFx; Oswald trust wash lives in OswaldTrustCreamWashFx;
+finale-reveal wash lives in FinaleRevealCreamWashFx; phase stays
+wash-free here. Client only. Toontown spiritual sequel — no keyblades /
+no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4

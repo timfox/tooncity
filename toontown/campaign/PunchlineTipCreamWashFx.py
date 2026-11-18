@@ -6,8 +6,9 @@ ActBannerCreamWashPulse / OswaldTrustCreamWashPulse / HandoffCreamWashPulse
 / VictoryCreamWashPulse / FinaleRevealCreamWashPulse overlay grammar as a
 brief Act-2 tip settle beat. Soft under the tip bar; cream / pastel only
 (not ink). Wired from PlayEntry tipHose='punchline' path only. Loopy /
-Silly / default tip hose, act-enter banner wash, trust / handoff / victory
-/ finale-reveal wash live in their own modules. Client only. Toontown
+default tip hose stay wash-free; Silly tip wash lives in
+SillyTipCreamWashFx; act-enter banner wash, trust / handoff / victory /
+finale-reveal wash live in their own modules. Client only. Toontown
 spiritual sequel — no keyblades / no KH branding.
 """
 

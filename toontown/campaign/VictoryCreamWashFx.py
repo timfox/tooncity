@@ -8,11 +8,12 @@ as a brief purity-cheer settle beat. Soft under the victory plate + edge
 strips; cream / pastel only (not ink). Wired from CampaignHandoff
 creamSwell (victory path only) beside the cream edge. Act-enter wash
 lives in ActBannerCreamWashFx; Punchline tip wash lives in
-PunchlineTipCreamWashFx; handoff carnival wash lives in
-HandoffCreamWashFx; Oswald trust wash lives in OswaldTrustCreamWashFx;
-finale-reveal wash lives in FinaleRevealCreamWashFx. Clears before
-Oswald twist / FinalePhaseFx reveal. Client only. Toontown spiritual
-sequel — no keyblades / no KH branding.
+PunchlineTipCreamWashFx; Silly tip wash lives in SillyTipCreamWashFx;
+handoff carnival wash lives in HandoffCreamWashFx; Oswald trust wash
+lives in OswaldTrustCreamWashFx; finale-reveal wash lives in
+FinaleRevealCreamWashFx. Clears before Oswald twist / FinalePhaseFx
+reveal. Client only. Toontown spiritual sequel — no keyblades / no KH
+branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4
