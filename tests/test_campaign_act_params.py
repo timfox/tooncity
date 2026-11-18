@@ -539,20 +539,23 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('micro rebound', magic_l)
 
     def test_silly_tip_cream_hose_settle_tunables(self):
-        """#207 Silly almost-confess tip gets juicier cream hose settle."""
+        """#207 / #232 Silly almost-confess tip cream hose settle deepen."""
         camp = self.camp
         self.assertTrue(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED)
         over = camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
         self.assertEqual(len(over), 4)
-        self.assertGreater(float(over[0]), 1.0)
-        self.assertGreater(float(over[2]), 1.0)
-        self.assertGreater(float(over[3]), 0.0)
-        self.assertGreater(
-            float(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC), 0.0)
-        # Distinct from Punchline #227.
+        # Past #232 floors (1.09 / 1.14 / 0.07 / rest 0.11).
+        self.assertGreaterEqual(float(over[0]), 1.11)
+        self.assertGreaterEqual(float(over[2]), 1.17)
+        self.assertGreaterEqual(float(over[3]), 0.08)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC), 0.12)
+        # Distinct from Punchline #227 / #256.
         self.assertNotEqual(
             tuple(over),
             tuple(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT))
+        self.assertFalse(hasattr(
+            camp, 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
         play_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'PlayEntry.py'
@@ -563,17 +566,21 @@ class CampaignActParamsTest(unittest.TestCase):
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'MagicWords.py'
         ).read_text(encoding='utf-8').lower()
-        self.assertIn('cream hose settle', magic_l)
+        self.assertIn('deepened cream hose settle', magic_l)
         self.assertIn('almost confess', magic_l)
 
     def test_silly_tip_cream_wash_deepen_tunables(self):
-        """#200 Silly Overlord foreshadow tip gets juicier cream wash + aftershock."""
+        """#200 / #251 Silly almost-confess tip cream wash deepen."""
         camp = self.camp
         self.assertTrue(camp.SILLY_ACT_TIP_CREAM_WASH_ENABLED)
         self.assertTrue(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED)
-        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK), 0.14)
-        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_MID), 0.08)
-        self.assertGreater(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT, 0)
+        # Past #251 floors (0.14 / 0.08 / aftershock 4).
+        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK), 0.15)
+        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_MID), 0.09)
+        self.assertGreaterEqual(
+            int(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT), 5)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK), 1.18)
         origin = camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN
         self.assertEqual(len(origin), 3)
         self.assertLess(float(origin[2]), 0.0)
@@ -586,18 +593,22 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertNotEqual(
             float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK),
             float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT[0]))
+        self.assertLess(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK),
+            float(camp.VICTORY_CREAM_WASH_PEAK))
         wash_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'SillyTipCreamWashFx.py'
         ).read_text(encoding='utf-8')
         self.assertIn('SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK', wash_src)
         self.assertIn('_buildAftershock', wash_src)
+        self.assertIn('almost-confess', wash_src.lower())
         magic_l = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'MagicWords.py'
         ).read_text(encoding='utf-8').lower()
-        self.assertIn(
-            'deepened soft cream wash pulse + cream aftershock', magic_l)
+        self.assertIn('deepened soft cream wash pulse', magic_l)
+        self.assertIn('cream aftershock', magic_l)
 
     def test_betrayal_banner_cream_hose_settle_tunables(self):
         """#212 / #235 deepen — betrayal banner gets juicier cream hose + rebound."""

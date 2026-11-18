@@ -21,12 +21,13 @@ wash twin). Distinct from Silly almost-confess tip cream hose (#232) and
 Silly Overlord tip cream wash aftershock (#251).
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
 cheer-feels-wrong foreshadow) with a slightly heavier tip hose pop +
-fracture trust settle, a juicier cream hose settle so the trust-fracture
-/ almost-confess tip lands rubber-hose and clear (taller/longer primary
-overshoot; no tip rebound — Punchline deepen owns that), and a delayed
-soft cream wash pulse; a mid-act approach tip then almost-confesses an
-uneasy half-truth before the finale reveal (Punchline tip / act-banner
-wash twin; FinalePhaseFx betrayal banner stays separate — no KH branding).
+fracture trust settle, a deepened cream hose settle past #232 so the
+trust-fracture / almost-confess tip lands rubber-hose and clear
+(taller/longer primary overshoot; no tip rebound — Punchline deepen owns
+that), and a deepened delayed soft cream wash pulse + cream aftershock
+past #251; a mid-act approach tip then almost-confesses an uneasy
+half-truth before the finale reveal (Punchline tip / act-banner wash
+twin; FinalePhaseFx betrayal banner stays separate — no KH branding).
 """
 
 from panda3d.core import (
@@ -674,10 +675,10 @@ class PlayEntryClient(DirectObject):
             else:
                 trustOvershootAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
                 trustRestAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'
-            # Juicier cream hose settle after fracture bounce (#207 path).
+            # Deepened cream hose settle after fracture bounce (#207 / #232).
             # Taller/longer primary overshoot only — no tip rebound
-            # (Punchline deepen owns that micro bounce; #232 / #251 stay
-            # on wash / almost-confess paths).
+            # (Punchline deepen owns that micro bounce; wash aftershock
+            # deepen past #251 rides tipHose='silly' beside this settle).
             creamHoseSettle = bool(getattr(
                 CampaignGlobals,
                 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', True))
@@ -778,7 +779,7 @@ class PlayEntryClient(DirectObject):
             pass
 
     def _armSillyTipCreamWash(self):
-        """Soft cream wash after Silly tip hose (#95) — tip path only."""
+        """Deepened cream wash + aftershock after Silly tip (#95 / #251)."""
         try:
             from toontown.campaign.SillyTipCreamWashFx import (
                 playSillyTipCreamWash)

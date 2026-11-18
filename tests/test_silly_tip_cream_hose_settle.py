@@ -2,8 +2,9 @@
 """Behavioral headless tests for Silly tip cream hose settle.
 
 Panda-free: loads CampaignGlobals + AST-checks PlayEntry tipHose='silly'
-wires a juicier cream overshoot→rest after trust/fracture settle (#207
-almost-confess path). Distinct from Punchline tip cream hose settle (#227).
+wires a deepened cream overshoot→rest after trust/fracture settle (#207 /
+#232 almost-confess path deepen). Distinct from Punchline tip cream hose
+settle (#227 / #256).
 
 Run from repo root:
   python3 tests/test_silly_tip_cream_hose_settle.py
@@ -91,7 +92,13 @@ class SillyTipCreamHoseSettleTest(unittest.TestCase):
         self.assertGreater(total, 0.08)
         wash_delay = float(camp.SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC)
         self.assertGreaterEqual(wash_delay, total)
-        # Distinct from Punchline tip cream hose deepen (#227 deepen).
+        # Deepened past #232 (1.09 / 1.14 / 0.07 / rest 0.11).
+        self.assertGreaterEqual(float(ox), 1.11)
+        self.assertGreaterEqual(float(oz), 1.17)
+        self.assertGreaterEqual(float(over_sec), 0.08)
+        self.assertGreaterEqual(rest, 0.12)
+        self.assertGreaterEqual(wash_delay, 0.62)
+        # Distinct from Punchline tip cream hose deepen (#227 / #256).
         punch_over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
         self.assertNotEqual(tuple(over), tuple(punch_over))
         self.assertNotEqual(
@@ -104,13 +111,18 @@ class SillyTipCreamHoseSettleTest(unittest.TestCase):
             camp, 'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
         self.assertFalse(hasattr(
             camp, 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
+        # Under betrayal primary overshoot Z so twist hose stays bigger.
+        betrayal_z = float(
+            camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT[2])
+        self.assertLess(float(oz), betrayal_z)
         # No KH product nouns in the settle block comments.
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('silly_act_tip_cream_hose_settle_enabled')
         self.assertGreater(idx, 0)
-        snip = src[max(0, idx - 500):idx + 500]
+        snip = src[max(0, idx - 550):idx + 550]
         self.assertIn('no keyblades', snip)
         self.assertIn('almost-confess', snip)
+        self.assertIn('#232', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
             self.assertNotIn(banned, snip)
 
@@ -140,7 +152,7 @@ class SillyTipCreamHoseSettleTest(unittest.TestCase):
 
     def test_magicwords_mention_cream_hose_settle(self):
         magic_src = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('cream hose settle', magic_src)
+        self.assertIn('deepened cream hose settle', magic_src)
         self.assertIn('silly', magic_src)
         self.assertIn('almost confess', magic_src)
         self.assertIn('no keyblades', magic_src)
