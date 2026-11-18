@@ -52,6 +52,20 @@ class PollutionManagerAI(DistributedObjectAI):
             amount = CorruptionGlobals.POLLUTION_PER_DEFEAT
         return self.adjustPollution(zoneId, -abs(float(amount)))
 
+    def requestHackSlashIFrame(self, durationMs):
+        """Client dodge/hit i-frame window — CorruptToonAI skips takeDamage while active."""
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        if toon is None:
+            return
+        # Cap so a buggy client can't stay invuln forever.
+        durationMs = max(0, min(900, int(durationMs)))
+        if durationMs <= 0:
+            toon.hackSlashIFrameUntil = 0.0
+            return
+        toon.hackSlashIFrameUntil = (
+            globalClock.getFrameTime() + (durationMs / 1000.0))  # noqa: F821
+
     def requestStreetEvent(self, eventType):
         """Player-facing entry: start reclaim (0) or campaign act (1) in sender zone."""
         avId = self.air.getAvatarIdFromSender()

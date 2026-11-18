@@ -68,6 +68,10 @@ class PollutionManager(DistributedObject.DistributedObject):
         """0=start reclaim in this street, 1=start/resume campaign act."""
         self.sendUpdate('requestStreetEvent', [int(eventType)])
 
+    def d_requestHackSlashIFrame(self, durationMs):
+        """Tell AI the local toon is invulnerable for durationMs (capped server-side)."""
+        self.sendUpdate('requestHackSlashIFrame', [max(0, int(durationMs))])
+
     def __handleZoneChange(self, zoneId=None):
         if zoneId is None and hasattr(base, 'localAvatar'):
             zoneId = getattr(base.localAvatar, 'zoneId', None)

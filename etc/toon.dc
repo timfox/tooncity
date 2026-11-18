@@ -3284,6 +3284,8 @@ dclass PollutionManager : DistributedObject {
   requestZonePollution(uint32) airecv clsend;
   // Player-facing street loop entry (0=reclaim, 1=campaign act). No magic words required.
   requestStreetEvent(uint8) airecv clsend;
+  // Client reports dodge/hit i-frame window (milliseconds) so AI skips CorruptToon damage.
+  requestHackSlashIFrame(uint16) airecv clsend;
 };
 
 dclass DistributedCorruptToon : DistributedNode {
