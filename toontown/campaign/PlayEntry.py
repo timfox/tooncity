@@ -21,6 +21,12 @@ from toontown.campaign import CampaignGlobals
 AUTO_RECLAIM_DELAY_SEC = 1.35
 
 
+def _face():
+    return getattr(
+        CampaignGlobals, 'RECLAIM_FACE',
+        getattr(CampaignGlobals, 'PROTAGONIST', 'Oswald'))
+
+
 class PlayEntryClient(DirectObject):
     """Player-facing entry prompts + auto melee on corrupt streets."""
 
@@ -34,8 +40,9 @@ class PlayEntryClient(DirectObject):
         self._reclaimLive = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
-        # Reclaim director also shows banners; listen for DO messenger-less path:
+        # CampaignHandoff owns the celebration; tip bar latches the next cue.
         self.accept('purityRestoreFx', self._onPurity)
+        self.accept('campaignHandoffCue', self._onHandoffCue)
         try:
             from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
             ensureReclaimCheerClient()
@@ -44,6 +51,12 @@ class PlayEntryClient(DirectObject):
         try:
             from toontown.reclaim.PurityBurstFx import ensurePurityBurstFxClient
             ensurePurityBurstFxClient()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.CampaignHandoff import (
+                ensureCampaignHandoffClient)
+            ensureCampaignHandoffClient()
         except Exception:
             pass
         taskMgr.doMethodLater(2.0, self._bootZone, 'playEntryBoot')  # noqa: F821
@@ -86,13 +99,14 @@ class PlayEntryClient(DirectObject):
         self._armMelee(zoneId)
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
+        face = _face()
         tip = (
-            'Oswald: CORRUPTION on %s — packs incoming  |  '
-            'F fight  |  Shift dodge  |  C campaign' % name)
+            '%s: CORRUPTION on %s — packs incoming  |  '
+            'F fight  |  Shift dodge  |  C campaign' % (face, name))
         if act and act.get('finale'):
             tip = (
-                'Oswald vs the Ink Overlord on %s  |  '
-                'F fight  |  Shift dodge  |  C campaign' % name)
+                '%s vs the Ink Overlord on %s  |  '
+                'F fight  |  Shift dodge  |  C campaign' % (face, name))
         self._showTip(tip)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
@@ -118,7 +132,9 @@ class PlayEntryClient(DirectObject):
         try:
             av.enableHackSlashMelee(spawnHostiles=False)
             self._armedZone = zoneId
-            self._flashBanner('Oswald: STRETCH PUNCHES — Press F / LMB')
+            # Keep #33 stretch-punch combat framing (no keyblade / KH copy).
+            self._flashBanner(
+                '%s: STRETCH PUNCHES — Press F / LMB' % _face())
         except Exception:
             pass
 
@@ -145,7 +161,7 @@ class PlayEntryClient(DirectObject):
         if self._reclaimLive:
             return task.done
         self._requestReclaim()
-        self._flashBanner('Oswald: CORRUPT PACKS INCOMING — Fight!')
+        self._flashBanner('%s fields the packs — Fight!' % _face())
         return task.done
 
     def _onReclaimStart(self, *args):
@@ -157,18 +173,47 @@ class PlayEntryClient(DirectObject):
                 av.enableHackSlashMelee(spawnHostiles=False)
             except Exception:
                 pass
-        self._flashBanner('Oswald: RECLAIM LIVE — Clear Corrupt Toons with F!')
+        self._flashBanner(
+            'RECLAIM LIVE — %s says clear them with F!' % _face())
 
     def _onPurity(self, zoneId):
+        """Yield the celebration banner to CampaignHandoff; tip shows next street."""
         self._reclaimLive = False
-        zoneId = int(zoneId) if zoneId is not None else None
-        act = self._actForZone(zoneId) if zoneId is not None else None
+        act, nxt = self._actsAroundZone(zoneId)
+        face = _face()
         if act and act.get('finale'):
-            self._flashBanner(
-                "STREET CLEAR — Oswald's smile feels… wrong")
+            tip = act.get('nextCue') or (
+                getattr(CampaignGlobals, 'FINALE_TWIST_TEASE', None)
+                or "%s's smile feels… wrong" % face)
+        elif act and act.get('nextCue'):
+            tip = act['nextCue']
+        elif nxt is not None:
+            tip = '%s points the tunnel → %s' % (
+                face, nxt.get('name', 'the next street'))
         else:
-            self._flashBanner(
-                'Oswald: STREET PURIFIED — Head to the next hood!')
+            tip = '%s cheers — purity holds!' % face
+        # Persist next-street / twist cue on the tip bar (no competing toast).
+        self._showTip('%s  |  F fight  |  C campaign' % tip)
+
+    def _onHandoffCue(self, nextStreet=None, cueText=None):
+        """Latch CampaignHandoff's next-street beat onto the tip bar."""
+        text = cueText
+        if not text and nextStreet:
+            text = '%s points the way → %s' % (_face(), nextStreet)
+        if text:
+            self._showTip('%s  |  F fight  |  C campaign' % text)
+
+    def _actsAroundZone(self, zoneId):
+        if zoneId is None:
+            return None, None
+        zoneId = int(zoneId)
+        for i, act in enumerate(CampaignGlobals.ACTS):
+            if int(act['zoneId']) == zoneId:
+                nxt = (
+                    CampaignGlobals.ACTS[i + 1]
+                    if i + 1 < len(CampaignGlobals.ACTS) else None)
+                return act, nxt
+        return None, None
 
     def _requestReclaim(self):
         if self._reclaimLive:
@@ -177,14 +222,14 @@ class PlayEntryClient(DirectObject):
         if pm is None:
             return
         pm.d_requestStreetEvent(0)
-        self._flashBanner('Calling street reclaim…')
+        self._flashBanner('%s is calling street reclaim…' % _face())
 
     def _requestCampaign(self):
         pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
         if pm is None:
             return
         pm.d_requestStreetEvent(1)
-        self._flashBanner('Calling campaign act…')
+        self._flashBanner('%s is calling the next act…' % _face())
 
     def _showTip(self, text):
         self._clearTip()

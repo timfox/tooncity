@@ -1,10 +1,17 @@
-"""Client-visible campaign handoff banners + melee power bump on reclaim."""
+"""Client-visible campaign handoff banners + melee power bump on reclaim.
 
-from panda3d.core import TextNode, Vec4
+Act clears (Loopy → Punchline → Silly) play as a short Toontown reclaim
+celebration — Oswald as the trusted face, title pop, clear next-street cue —
+not a single toast line. Finale victory keeps the Oswald twist beat.
+"""
+
+from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
 
 from direct.interval.IntervalGlobal import (
     Func,
     LerpColorScaleInterval,
+    LerpScaleInterval,
+    Parallel,
     Sequence,
     Wait,
 )
@@ -13,13 +20,36 @@ from direct.showbase.DirectObject import DirectObject
 from toontown.campaign import CampaignGlobals
 from toontown.campaign.CampaignPower import applyPowerBump
 
+# Celebration timing — readable rubber-hose reclaim beat, not a flash toast.
+_TITLE_BASE = 0.078
+_TITLE_POP = 0.118
+_SUB_SCALE = 0.048
+_CUE_SCALE = 0.052
+_POWER_SCALE = 0.036
+_HOLD_SEC = 4.6
+_CARD_COLOR = (0.12, 0.28, 0.22, 0.55)
+_TITLE_COLOR = Vec4(0.55, 1.0, 0.78, 1)
+_SUB_COLOR = Vec4(0.95, 1.0, 0.88, 1)
+_CUE_COLOR = Vec4(1.0, 0.92, 0.42, 1)
+_POWER_COLOR = Vec4(0.75, 0.95, 1.0, 1)
+_VICTORY_COLOR = Vec4(1.0, 0.95, 0.45, 1)
+_TWIST_COLOR = Vec4(1.0, 0.55, 0.35, 1)
+_PHASE_COLOR = Vec4(1.0, 0.55, 0.35, 1)
+_FINALE_P2_COLOR = Vec4(1.0, 0.35, 0.55, 1)
+
+
+def _face():
+    return getattr(
+        CampaignGlobals, 'RECLAIM_FACE',
+        getattr(CampaignGlobals, 'PROTAGONIST', 'Oswald'))
+
 
 class CampaignHandoffClient(DirectObject):
     """Shows next-hood / phase / victory copy when streets are reclaimed."""
 
     def __init__(self):
         DirectObject.__init__(self)
-        self._bannerNP = None
+        self._rootNP = None
         self._ival = None
         self._localReclaimCount = 0
         self._finaleClears = 0
@@ -41,29 +71,61 @@ class CampaignHandoffClient(DirectObject):
     def _onPurityRestore(self, zoneId):
         self._localReclaimCount += 1
         mult = applyPowerBump(self._localReclaimCount)
+        face = _face()
         act, nxt = self._actsForZone(zoneId)
         if act and act.get('finale'):
             self._finaleClears += 1
             if self._finaleClears <= 1:
                 phase2 = act.get('phase2') or {}
-                self._flash(
+                self._celebrate(
                     phase2.get('banner') or 'Finale Phase 2!',
-                    Vec4(1.0, 0.35, 0.55, 1))
+                    subtitle='%s urges you on — the Overlord is not done!' % face,
+                    nextCue='Stay on Silly Street — Phase 2 packs inbound',
+                    color=_FINALE_P2_COLOR,
+                    powerMult=mult,
+                    nextStreet=None)
             else:
-                self._flash(
-                    act.get('handoff') or 'Toon City is saved!',
-                    Vec4(1.0, 0.95, 0.45, 1))
+                tease = getattr(
+                    CampaignGlobals, 'FINALE_TWIST_TEASE', '') or (
+                    act.get('nextCue') or 'Oswald caused the corruption')
+                self._celebrate(
+                    act.get('handoffTitle') or 'VICTORY…?',
+                    subtitle=act.get('handoff') or (
+                        '%s smiles too wide…' % face),
+                    nextCue=tease,
+                    color=_TWIST_COLOR,
+                    powerMult=mult,
+                    nextStreet=None)
             return
+        if act is None:
+            self._celebrate(
+                'Neighborhood reclaimed!',
+                subtitle='%s tips his hat — corruption washed clean' % face,
+                nextCue='Scout the next polluted street',
+                color=_TITLE_COLOR,
+                powerMult=mult,
+                nextStreet=None)
+            return
+        title = act.get('handoffTitle') or (
+            '%s IS PURE!' % act.get('name', 'Street').upper())
+        subtitle = act.get('handoff') or (
+            '%s beams — another street saved!' % face)
         if nxt is not None:
-            msg = act.get('handoff') or (
-                'Next hood: %s (zone %s)' % (nxt['name'], nxt['zoneId']))
-            self._flash(
-                '%s  |  melee x%.2f' % (msg, mult),
-                Vec4(0.55, 1.0, 0.75, 1))
+            nextStreet = (
+                act.get('nextStreet') or nxt.get('name') or 'the next hood')
+            nextCue = act.get('nextCue') or (
+                '%s points the way → %s' % (face, nextStreet))
         else:
-            self._flash(
-                'Neighborhood reclaimed!  melee x%.2f' % mult,
-                Vec4(0.55, 1.0, 0.75, 1))
+            nextStreet = None
+            nextCue = act.get('nextCue') or (
+                'Take a victory lap with %s' % face)
+        self._celebrate(
+            title,
+            subtitle=subtitle,
+            nextCue=nextCue,
+            color=_TITLE_COLOR,
+            powerMult=mult,
+            nextStreet=nextStreet)
 
     def _actsForZone(self, zoneId):
         zoneId = int(zoneId)
@@ -76,69 +138,169 @@ class CampaignHandoffClient(DirectObject):
         return None, None
 
     def _onVictory(self, reclaimCount=0):
-        # Purity flash, then Oswald twist (FINALE_TWIST_TEASE) after hold.
-        purity = Vec4(1.0, 0.95, 0.45, 1)
+        # Purity cheer, then Oswald twist tease on the celebration plate.
+        face = _face()
         tease = getattr(CampaignGlobals, 'FINALE_TWIST_TEASE', '')
         teaseColor = Vec4(*getattr(
             CampaignGlobals, 'FINALE_TWIST_TEASE_COLOR',
             (1.0, 0.55, 0.35, 1.0)))
         if not tease:
-            self._flash('CAMPAIGN VICTORY!  Toon City is pure', purity)
+            self._celebrate(
+                'TOON CITY IS SAVED!',
+                subtitle='%s leads the neighborhood cheer' % face,
+                nextCue='Purity holds — take a victory lap!',
+                color=_VICTORY_COLOR,
+                powerMult=None,
+                nextStreet=None)
             return
+
         self._clear()
-        tn = TextNode('campaign-handoff')
-        tn.setText('CAMPAIGN VICTORY!  Toon City is pure')
-        tn.setAlign(TextNode.ACenter)
-        tn.setTextColor(purity[0], purity[1], purity[2], 1)
-        tn.setShadow(0.05, 0.05)
-        tn.setShadowColor(0, 0, 0, 0.75)
-        np = aspect2d.attachNewNode(tn)  # noqa: F821
-        np.setScale(0.065)
-        np.setPos(0, 0, 0.55)
-        np.setColorScale(1, 1, 1, 0)
-        self._bannerNP = np
-
-        def _showTwist():
-            self._flash(tease, teaseColor)
-
-        self._ival = Sequence(
-            LerpColorScaleInterval(np, 0.2, Vec4(1, 1, 1, 1)),
-            Wait(2.6),
-            LerpColorScaleInterval(np, 0.35, Vec4(1, 1, 1, 0)),
-            Func(_showTwist),
-        )
-        self._ival.start()
+        self._celebrate(
+            'TOON CITY IS SAVED!',
+            subtitle='%s leads the neighborhood cheer' % face,
+            nextCue='Purity holds…',
+            color=_VICTORY_COLOR,
+            powerMult=None,
+            nextStreet=None,
+            holdSec=2.4,
+            onDone=lambda: self._celebrate(
+                'VICTORY…?',
+                subtitle=tease,
+                nextCue="Oswald's smile was the stain all along",
+                color=teaseColor,
+                powerMult=None,
+                nextStreet=None,
+                holdSec=3.8))
 
     def _onPhase(self, phaseIndex, message):
-        # Skip duplicate flash when FinalePhaseFx / reclaim banners already
-        # own the phase-2 transition moment.
+        # Skip duplicate flash when finale phase FX already own phase 2.
         phase = int(phaseIndex) + 1
         if phase >= 2:
             return
-        self._flash(
-            'PHASE %s — %s' % (phase, message),
-            Vec4(1.0, 0.45, 0.85, 1))
+        face = _face()
+        self._celebrate(
+            'PHASE %s' % phase,
+            subtitle=message or ('%s rallies the reclaim!' % face),
+            nextCue='Clear the street — reclaim purity!',
+            color=_PHASE_COLOR,
+            powerMult=None,
+            nextStreet=None)
 
-    def _flash(self, text, color):
+    def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
+                   powerMult=None, nextStreet=None, holdSec=None, onDone=None):
+        """Staged rubber-hose celebration: card → title pop → cue → hold."""
         self._clear()
-        tn = TextNode('campaign-handoff')
+        root = aspect2d.attachNewNode('campaign-handoff-root')  # noqa: F821
+        root.setPos(0, 0, 0.42)
+        root.setTransparency(TransparencyAttrib.MAlpha)
+        root.setColorScale(1, 1, 1, 0)
+        self._rootNP = root
+        hold = _HOLD_SEC if holdSec is None else float(holdSec)
+
+        try:
+            cm = CardMaker('campaign-handoff-card')
+            cm.setFrame(-1.15, 1.15, -0.28, 0.22)
+            card = root.attachNewNode(cm.generate())
+            card.setTransparency(TransparencyAttrib.MAlpha)
+            card.setColor(*_CARD_COLOR)
+            card.setBin('fixed', 60)
+            card.setDepthTest(False)
+            card.setDepthWrite(False)
+        except Exception:
+            pass
+
+        titleNP = self._makeLine(
+            root, 'campaign-handoff-title', title, color, _TITLE_BASE, 0.08)
+        subNP = None
+        if subtitle:
+            subNP = self._makeLine(
+                root, 'campaign-handoff-sub', subtitle, _SUB_COLOR,
+                _SUB_SCALE, -0.02)
+            subNP.setColorScale(1, 1, 1, 0)
+        cueText = nextCue
+        if nextStreet and nextStreet not in (nextCue or ''):
+            cueText = nextCue or ('Next street → %s' % nextStreet)
+        cueNP = None
+        if cueText:
+            cueNP = self._makeLine(
+                root, 'campaign-handoff-cue', cueText, _CUE_COLOR,
+                _CUE_SCALE, -0.11)
+            cueNP.setColorScale(1, 1, 1, 0)
+            cueNP.setScale(_CUE_SCALE * 0.55)
+        powerNP = None
+        if powerMult is not None:
+            powerNP = self._makeLine(
+                root, 'campaign-handoff-power',
+                'Melee power  x%.2f' % float(powerMult),
+                _POWER_COLOR, _POWER_SCALE, -0.20)
+            powerNP.setColorScale(1, 1, 1, 0)
+
+        parts = [
+            LerpColorScaleInterval(root, 0.18, Vec4(1, 1, 1, 1)),
+            Parallel(
+                LerpScaleInterval(titleNP, 0.14, _TITLE_POP),
+                Sequence(
+                    Wait(0.08),
+                    LerpScaleInterval(titleNP, 0.16, _TITLE_BASE * 0.92),
+                    LerpScaleInterval(titleNP, 0.12, _TITLE_BASE),
+                ),
+            ),
+        ]
+        if subNP is not None:
+            parts.append(Sequence(
+                Wait(0.22),
+                LerpColorScaleInterval(subNP, 0.2, Vec4(1, 1, 1, 1)),
+            ))
+        if cueNP is not None:
+            parts.append(Sequence(
+                Wait(0.42),
+                Parallel(
+                    LerpColorScaleInterval(cueNP, 0.18, Vec4(1, 1, 1, 1)),
+                    LerpScaleInterval(cueNP, 0.22, _CUE_SCALE * 1.08),
+                ),
+                LerpScaleInterval(cueNP, 0.14, _CUE_SCALE),
+            ))
+        if powerNP is not None:
+            parts.append(Sequence(
+                Wait(0.55),
+                LerpColorScaleInterval(powerNP, 0.2, Vec4(1, 1, 1, 1)),
+            ))
+
+        try:
+            messenger.send(  # noqa: F821
+                'campaignHandoffCue',
+                [nextStreet, cueText or nextCue or title])
+        except Exception:
+            pass
+
+        tail = [Func(self._clear)]
+        if onDone is not None:
+            tail = [Func(onDone)]
+
+        self._ival = Sequence(
+            Parallel(*parts),
+            Wait(hold),
+            LerpColorScaleInterval(root, 0.35, Vec4(1, 1, 1, 0)),
+            *tail,
+            name='campaignHandoffCelebrate',
+        )
+        self._ival.start()
+
+    def _makeLine(self, parent, name, text, color, scale, z):
+        tn = TextNode(name)
         tn.setText(text)
         tn.setAlign(TextNode.ACenter)
         tn.setTextColor(color[0], color[1], color[2], 1)
         tn.setShadow(0.05, 0.05)
-        tn.setShadowColor(0, 0, 0, 0.75)
-        np = aspect2d.attachNewNode(tn)  # noqa: F821
-        np.setScale(0.065)
-        np.setPos(0, 0, 0.55)
-        np.setColorScale(1, 1, 1, 0)
-        self._bannerNP = np
-        self._ival = Sequence(
-            LerpColorScaleInterval(np, 0.2, Vec4(1, 1, 1, 1)),
-            Wait(3.4),
-            LerpColorScaleInterval(np, 0.45, Vec4(1, 1, 1, 0)),
-            Func(self._clear),
-        )
-        self._ival.start()
+        tn.setShadowColor(0, 0, 0, 0.8)
+        tn.setWordwrap(28)
+        np = parent.attachNewNode(tn)
+        np.setScale(scale)
+        np.setPos(0, 0, z)
+        np.setBin('fixed', 62)
+        np.setDepthTest(False)
+        np.setDepthWrite(False)
+        return np
 
     def _clear(self):
         if self._ival:
@@ -147,9 +309,9 @@ class CampaignHandoffClient(DirectObject):
             except Exception:
                 pass
             self._ival = None
-        if self._bannerNP and not self._bannerNP.isEmpty():
-            self._bannerNP.removeNode()
-        self._bannerNP = None
+        if self._rootNP and not self._rootNP.isEmpty():
+            self._rootNP.removeNode()
+        self._rootNP = None
 
 
 _client = None
