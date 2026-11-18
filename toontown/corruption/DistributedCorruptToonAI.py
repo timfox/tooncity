@@ -10,11 +10,16 @@ from toontown.toon.DistributedToonAI import DistributedToonAI
 
 
 class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
-    """Hostile corrupt toon: chase, telegraphed smack, defeat → pollution reclaim."""
+    """Hostile corrupt toon: chase, telegraphed smack, defeat → pollution reclaim.
+
+    Ink Overlord (finalePhase 1/2) uses phase combat instead of Smudge chase:
+    P1 ink-rain AoE, P2 enrage rain + close slam. Street archetypes unchanged.
+    """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedCorruptToonAI')
 
-    def __init__(self, air, name=None, maxHp=None, archetype=None):
+    def __init__(self, air, name=None, maxHp=None, archetype=None,
+                 finalePhase=0):
         DistributedNodeAI.__init__(self, air)
         self.archetype = (
             CorruptionGlobals.ARCHETYPE_INK
@@ -32,6 +37,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._targetId = None
         self._attackReadyAt = 0.0
         self._stats = stats
+        self._attackMove = 'smack'
+        self.finalePhase = 0
+        self.setFinalePhase(finalePhase)
 
     def generate(self):
         DistributedNodeAI.generate(self)
@@ -55,6 +63,41 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def setArchetype(self, archetype):
         self.archetype = int(archetype)
         self._stats = CorruptionGlobals.archetypeStats(self.archetype)
+        self._applyOverlordCombatStats()
+
+    def getFinalePhase(self):
+        return int(self.finalePhase)
+
+    def setFinalePhase(self, phase):
+        """Bind Overlord phase combat (0 = street archetype AI)."""
+        self.finalePhase = CorruptionGlobals.normalizeFinalePhase(phase)
+        self._applyOverlordCombatStats()
+
+    def _applyOverlordCombatStats(self):
+        """Overlay Overlord phase combat onto archetype base stats."""
+        base = CorruptionGlobals.archetypeStats(self.archetype)
+        combat = CorruptionGlobals.overlordPhaseCombat(self.finalePhase)
+        if not combat:
+            self._stats = dict(base)
+            return
+        merged = dict(base)
+        for key in (
+                'chaseSpeed', 'meleeRange', 'attackHitRange',
+                'attackNearMissRange', 'attackDamage', 'telegraphDelay',
+                'attackCooldown'):
+            if key in combat:
+                merged[key] = combat[key]
+        merged['aoe'] = bool(combat.get('aoe', False))
+        merged['moveMode'] = str(combat.get('moveMode', 'rain'))
+        for key in (
+                'slamHitRange', 'slamNearMissRange', 'slamDamage',
+                'slamTelegraphDelay', 'slamCooldown', 'slamMeleeRange'):
+            if key in combat:
+                merged[key] = combat[key]
+        self._stats = merged
+
+    def _isOverlord(self):
+        return int(self.finalePhase) >= 1
 
     def b_setHp(self, hp):
         self.setHp(hp)
@@ -108,8 +151,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
         self._targetId = target.doId
         dist = self.__planarDist(target)
-        meleeRange = float(self._stats.get('meleeRange', CorruptionGlobals.MELEE_RANGE))
-        if dist <= meleeRange:
+        engage = self.__engageRange()
+        if dist <= engage:
             now = globalClock.getFrameTime()
             if now >= self._attackReadyAt:
                 self.__beginAttack(target)
@@ -118,6 +161,17 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if dist <= CorruptionGlobals.AGGRO_RANGE:
             self.__chaseToward(target)
         return Task.again
+
+    def __engageRange(self):
+        """Distance at which the AI starts a telegraphed attack."""
+        if self._isOverlord() and self._stats.get('moveMode') == 'enrage':
+            # Enrage: slam when close, else rain from mid-range.
+            slamEngage = float(self._stats.get(
+                'slamMeleeRange', self._stats.get('meleeRange', 5.2)))
+            rainEngage = float(self._stats.get(
+                'meleeRange', CorruptionGlobals.MELEE_RANGE))
+            return max(slamEngage, rainEngage)
+        return float(self._stats.get('meleeRange', CorruptionGlobals.MELEE_RANGE))
 
     def __findNearestToon(self):
         best = None
@@ -134,6 +188,16 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 bestDist = dist
                 best = obj
         return best
+
+    def __iterZoneToons(self):
+        for obj in list(self.air.doId2do.values()):
+            if not isinstance(obj, DistributedToonAI):
+                continue
+            if getattr(obj, 'zoneId', None) != self.zoneId:
+                continue
+            if getattr(obj, 'hp', 1) <= 0:
+                continue
+            yield obj
 
     def __planarDist(self, other):
         try:
@@ -170,21 +234,109 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def __beginAttack(self, target):
         self._attacking = True
         self._targetId = target.doId
+        move = self.__pickOverlordMove(target) if self._isOverlord() else 'smack'
+        self._attackMove = move
         self.sendUpdate('announceAttackTelegraph', [])
-        delay = float(self._stats.get(
-            'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY))
+        delay = self.__telegraphDelayForMove(move)
         taskMgr.doMethodLater(
             delay,
             self.__resolveAttack,
             self.uniqueName('corrupt-attack'))
 
+    def __pickOverlordMove(self, target):
+        """P1 always rains; P2 slams in close range else rains."""
+        mode = str(self._stats.get('moveMode', 'rain'))
+        if mode != 'enrage':
+            return 'rain'
+        dist = self.__planarDist(target)
+        slamRange = float(self._stats.get(
+            'slamMeleeRange', self._stats.get('slamHitRange', 5.2)))
+        if dist <= slamRange:
+            return 'slam'
+        return 'rain'
+
+    def __telegraphDelayForMove(self, move):
+        if move == 'slam':
+            return float(self._stats.get(
+                'slamTelegraphDelay',
+                self._stats.get(
+                    'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
+        return float(self._stats.get(
+            'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY))
+
+    def __cooldownForMove(self, move):
+        if move == 'slam':
+            return float(self._stats.get(
+                'slamCooldown',
+                self._stats.get(
+                    'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
+        return float(self._stats.get(
+            'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN))
+
+    def __hitRangesForMove(self, move):
+        if move == 'slam':
+            hit = float(self._stats.get(
+                'slamHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
+            near = float(self._stats.get(
+                'slamNearMissRange', CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+            return hit, near
+        hit = float(self._stats.get(
+            'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
+        near = float(self._stats.get(
+            'attackNearMissRange', CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+        return hit, near
+
+    def __damageForMove(self, move):
+        if move == 'slam':
+            return int(self._stats.get(
+                'slamDamage',
+                self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
+        return int(self._stats.get(
+            'attackDamage', CorruptionGlobals.ATTACK_DAMAGE))
+
     def __resolveAttack(self, task):
         self._attacking = False
-        cool = float(self._stats.get(
-            'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN))
+        move = getattr(self, '_attackMove', 'smack') or 'smack'
+        cool = self.__cooldownForMove(move)
         self._attackReadyAt = globalClock.getFrameTime() + cool  # noqa: F821
         if self._defeated or self.isDeleted():
             return Task.done
+
+        if self._isOverlord() and move == 'rain' and self._stats.get('aoe'):
+            return self.__resolveOverlordRain()
+        return self.__resolveSingleTargetHit(move)
+
+    def __resolveOverlordRain(self):
+        """Ink-rain AoE — damage every in-zone toon inside the puddle radius."""
+        hitRange, nearMiss = self.__hitRangesForMove('rain')
+        dmg = self.__damageForMove('rain')
+        now = globalClock.getFrameTime()  # noqa: F821
+        anyHit = False
+        anyDodge = False
+        for target in self.__iterZoneToons():
+            dist = self.__planarDist(target)
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            iframes = now < iframeUntil
+            if iframes and dist <= max(hitRange, nearMiss):
+                anyDodge = True
+                continue
+            if dist > hitRange:
+                continue
+            try:
+                target.takeDamage(dmg)
+                anyHit = True
+            except Exception:
+                self.notify.debug(
+                    'rain takeDamage failed on av %s' % getattr(
+                        target, 'doId', '?'))
+        if anyHit:
+            self.sendUpdate('announceAttackHit', [])
+        elif anyDodge:
+            self.sendUpdate('announceAttackDodged', [])
+        return Task.done
+
+    def __resolveSingleTargetHit(self, move='smack'):
         target = self.air.doId2do.get(self._targetId)
         if target is None or not isinstance(target, DistributedToonAI):
             return Task.done
@@ -192,10 +344,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.done
         if getattr(target, 'hp', 1) <= 0:
             return Task.done
-        hitRange = float(self._stats.get(
-            'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
-        nearMiss = float(self._stats.get(
-            'attackNearMissRange', CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+        hitRange, nearMiss = self.__hitRangesForMove(move)
         dist = self.__planarDist(target)
         # Honor client-reported dodge / hit i-frames (PollutionManager.requestHackSlashIFrame).
         iframeUntil = float(getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
@@ -203,13 +352,13 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if iframes and dist <= max(hitRange, nearMiss):
             # Hit eaten by i-frames, or near-miss while i-frames are live.
             self.notify.debug(
-                'attack dodged — av %s i-framed (dist=%.2f)' % (
-                    self._targetId, dist))
+                'attack dodged — av %s i-framed (dist=%.2f move=%s)' % (
+                    self._targetId, dist, move))
             self.sendUpdate('announceAttackDodged', [])
             return Task.done
         if dist > hitRange:
             return Task.done
-        dmg = int(self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE))
+        dmg = self.__damageForMove(move)
         try:
             target.takeDamage(dmg)
         except Exception:

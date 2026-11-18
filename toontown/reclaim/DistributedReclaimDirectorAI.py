@@ -42,6 +42,10 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._waveScripts = None
         self.finalePhase = 0
         self._transitionSting = False
+        self._addCount = None
+        self._addWaveStart = None
+        self._addHp = None
+        self._addName = None
 
     def getState(self):
         return self.state
@@ -105,12 +109,13 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
               bruteFraction=None, bruteWaveStart=None, bruteName=None,
               snareFraction=None, snareWaveStart=None, snareName=None,
               waveScripts=None,
-              finalePhase=0, transitionSting=False):
+              finalePhase=0, transitionSting=False,
+              addCount=None, addWaveStart=None, addHp=None, addName=None):
         """Seed pollution and spawn the first escalating corrupt wave.
 
         Optional overrides support multi-act campaign difficulty,
         Sludge Brute / Balloon Snare mix ratios, per-wave scripts, and
-        Ink Overlord finale.
+        Ink Overlord finale (phase combat + optional P2 Smudge adds).
         """
         self.reclaimZoneId = int(zoneId)
         self._anchorPos = (
@@ -137,6 +142,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             None if snareWaveStart is None else int(snareWaveStart))
         self._waveScripts = waveScripts
         self._transitionSting = bool(transitionSting)
+        self._addCount = None if addCount is None else int(addCount)
+        self._addWaveStart = (
+            None if addWaveStart is None else int(addWaveStart))
+        self._addHp = None if addHp is None else int(addHp)
+        self._addName = addName
         self._clearPack(delete=True)
         self._packsSpawned = 0
         self._cancelWaveDelay()
@@ -176,6 +186,10 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self.b_setFinalePhase(0)
         self._transitionSting = False
         self._waveScripts = None
+        self._addCount = None
+        self._addWaveStart = None
+        self._addHp = None
+        self._addName = None
         self.b_setState(ReclaimGlobals.STATE_IDLE)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
 
@@ -335,7 +349,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
                     slotIndex=i,
                     packCount=count)
             corrupt = DistributedCorruptToonAI(
-                self.air, name=name, maxHp=hp, archetype=archetype)
+                self.air, name=name, maxHp=hp, archetype=archetype,
+                finalePhase=self.finalePhase if mixOff else 0)
             # Fan packs slightly farther each wave so the street fills forward.
             # Brutes sit a bit back so spit telegraph reads at mid-range;
             # Snares press forward so zip-lash reads in front of the pack.
@@ -356,10 +371,50 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             corrupt.setH(heading + 180.0)
             corrupt.generateWithRequired(self.reclaimZoneId)
             spawned.append(corrupt)
+        # P2 Unleashed: Smudge adds on later waves for arena pressure.
+        addSpawned = self._spawnOverlordAdds(
+            wave, heading, rad, baseX, baseY, baseZ)
+        spawned.extend(addSpawned)
         self._pack.extend(spawned)
         self.b_setPackAlive(len(spawned))
         self.sendUpdate('announcePackSpawn', [len(spawned), wave])
         self.notify.debug(
-            'reclaim zone %s wave #%s/%s pack=%s brutes=%s snares=%s' % (
+            'reclaim zone %s wave #%s/%s pack=%s brutes=%s snares=%s adds=%s '
+            'finalePhase=%s' % (
                 self.reclaimZoneId, wave, self._maxPacks, len(spawned),
-                bruteCount, snareCount))
+                bruteCount, snareCount, len(addSpawned), self.finalePhase))
+
+    def _spawnOverlordAdds(self, wave, heading, rad, baseX, baseY, baseZ):
+        """Spawn street Smudge adds beside Unleashed Overlord (P2 wave 2+)."""
+        if int(self.finalePhase) < 2:
+            return []
+        count = CorruptionGlobals.overlordP2AddCount(
+            wave,
+            addCount=self._addCount,
+            addWaveStart=self._addWaveStart)
+        if count <= 0:
+            return []
+        hp = (
+            CorruptionGlobals.OVERLORD_P2_ADD_HP
+            if self._addHp is None else int(self._addHp))
+        name = self._addName or CorruptionGlobals.OVERLORD_P2_ADD_NAME
+        spacing = float(CorruptionGlobals.OVERLORD_P2_ADD_SPACING)
+        forward = float(CorruptionGlobals.OVERLORD_P2_ADD_FORWARD)
+        spawned = []
+        for i in range(count):
+            addName = name if count == 1 else '%s %s' % (name, i + 1)
+            corrupt = DistributedCorruptToonAI(
+                self.air,
+                name=addName,
+                maxHp=hp,
+                archetype=CorruptionGlobals.ARCHETYPE_INK,
+                finalePhase=0)
+            lateral = (i - (count - 1) / 2.0) * spacing
+            offset = forward + ((wave - 1) * 0.8)
+            x = baseX - math.sin(rad) * offset - math.cos(rad) * lateral
+            y = baseY + math.cos(rad) * offset - math.sin(rad) * lateral
+            corrupt.setPos(x, y, baseZ)
+            corrupt.setH(heading + 180.0)
+            corrupt.generateWithRequired(self.reclaimZoneId)
+            spawned.append(corrupt)
+        return spawned
