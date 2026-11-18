@@ -6,8 +6,10 @@ bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
 
 On polluted ACTS street enter: brief rubber-hose ink edge vignette that
 fades as the tip bar appears. Tip bar and act-enter flash banners play a
-short rubber-hose scale pop when they land. Early/mid Oswald trusted
-reclaim-lead act banners add a soft settle bounce after that pop.
+short rubber-hose scale pop when they land. Act-enter ACTS banners also
+pulse a soft cream edge frame + tip flecks (wave-announce cream edge twin).
+Early/mid Oswald trusted reclaim-lead act banners add a soft settle bounce
+after that pop.
 Punchline Place Act 2 uses a campaign-owned entry tip (Brute/Snare cues,
 trusted Oswald lead) with a slightly punchier tip hose pop + trust settle.
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
@@ -206,13 +208,14 @@ class PlayEntryClient(DirectObject):
         try:
             av.enableHackSlashMelee(spawnHostiles=False)
             self._armedZone = zoneId
-            # Act-enter banner first (hose-pop); stretch-punch stays on tip.
-            # Early/mid trusted Oswald lead banners get settle bounce.
+            # Act-enter banner first (hose-pop + cream edge); tip keeps
+            # stretch-punch. Early/mid trusted Oswald lead banners settle.
             act = self._actForZone(zoneId)
             banner = act.get('banner') if act else None
             trustSettle = bool(act) and not act.get('finale')
             if banner:
-                self._flashBanner(banner, trustSettle=trustSettle)
+                self._flashBanner(
+                    banner, trustSettle=trustSettle, creamEdge=True)
             else:
                 # Keep #33 stretch-punch combat framing (no keyblade / KH copy).
                 self._flashBanner(
@@ -581,8 +584,12 @@ class PlayEntryClient(DirectObject):
                 bannerNP, restSec, settlePt, blendType='easeIn'))
         return Sequence(*parts, name='playEntryBannerHosePop')
 
-    def _flashBanner(self, text, trustSettle=False):
-        """Act-enter / reclaim cue flash with tip-matched rubber-hose pop."""
+    def _flashBanner(self, text, trustSettle=False, creamEdge=False):
+        """Act-enter / reclaim cue flash with tip-matched rubber-hose pop.
+
+        Act-enter ACTS banners (creamEdge=True) also pulse a soft cream
+        edge frame + tip flecks — wave-announce cream edge twin (#87).
+        """
         self._clearFlash()
         tn = TextNode('play-entry-flash')
         tn.setText(text)
@@ -605,6 +612,13 @@ class PlayEntryClient(DirectObject):
         hose = self._bannerHosePopInterval(np, trustSettle=trustSettle)
         if hose is not None:
             land.append(hose)
+        if creamEdge:
+            try:
+                from toontown.campaign.ActBannerCreamEdgeFx import (
+                    playActBannerCreamEdge)
+                playActBannerCreamEdge()
+            except Exception:
+                pass
         self._flashIval = Sequence(
             Parallel(*land),
             Wait(hold),
@@ -624,6 +638,12 @@ class PlayEntryClient(DirectObject):
         if self._flashNP and not self._flashNP.isEmpty():
             self._flashNP.removeNode()
         self._flashNP = None
+        try:
+            from toontown.campaign.ActBannerCreamEdgeFx import (
+                clearActBannerCreamEdge)
+            clearActBannerCreamEdge()
+        except Exception:
+            pass
 
 
 _client = None
