@@ -17,6 +17,7 @@ from toontown.corruption.CorruptTelegraphCreamSparkleFx import TelegraphCreamSpa
 from toontown.corruption.CorruptTelegraphCreamWarnFx import TelegraphCreamWarnFlecks
 from toontown.corruption.CorruptTelegraphCreamWashFx import TelegraphCreamWashPulse
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
+from toontown.corruption.GagsterPuddleTelegraphFx import GagsterPuddleTelegraphWarn
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.CorruptSilhouetteCreamRimFx import SilhouetteCreamRimFlecks
 from toontown.corruption.CorruptSilhouetteCreamSparkleFx import SilhouetteCreamSparkles
@@ -108,6 +109,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._smudgeTelegraphInk = None
         self._smudgeInkSplash = None
         self._smudgeHitCreamWash = None
+        self._gagsterTelegraphPuddle = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -199,6 +201,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamWash()
+        self.__clearGagsterTelegraphPuddle()
         self.__clearDeathPopSplat()
 
     def __buildGeom(self):
@@ -603,6 +606,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__playSnareTelegraphString()
         else:
             self.__clearSnareTelegraphString()
+        # Gunk Gagster-only: teal bounce-pie + cream/ink puddle warn for lob read.
+        if isGagster and not look:
+            self.__playGagsterTelegraphPuddle()
+        else:
+            self.__clearGagsterTelegraphPuddle()
         # Overlord-only: ink crown + ink rain for phase telegraph read.
         if look and phase >= 1:
             self.__playOverlordTelegraphCrown(look, phase)
@@ -650,7 +658,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / cream warn / sparkle / wash / crown / rain / snare / spit / smudge fist so impact owns the frame.
+        # Clear telegraph drip / cream warn / sparkle / wash / crown / rain / snare / spit / smudge fist / gagster puddle warn so impact owns the frame.
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearTelegraphCreamSparkle()
@@ -660,6 +668,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
+        self.__clearGagsterTelegraphPuddle()
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
@@ -1219,6 +1228,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamWash()
+        self.__clearGagsterTelegraphPuddle()
         self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
         look = deathPopLook(self.getArchetype())
@@ -1783,6 +1793,34 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._bruteTelegraphSpit = None
+
+    def __playGagsterTelegraphPuddle(self):
+        """Teal bounce-pie + cream/ink puddle warn — Gunk Gagster wind-ups only."""
+        self.__clearGagsterTelegraphPuddle()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        warnPos = None
+        la = getattr(base, 'localAvatar', None)  # noqa: F821
+        if la is not None:
+            try:
+                if not la.isEmpty():
+                    warnPos = la.getPos(render)
+            except Exception:
+                warnPos = None
+        warn = GagsterPuddleTelegraphWarn()
+        self._gagsterTelegraphPuddle = warn
+        warn.play(pos, warnPos=warnPos)
+
+    def __clearGagsterTelegraphPuddle(self):
+        warn = getattr(self, '_gagsterTelegraphPuddle', None)
+        if warn is not None:
+            try:
+                warn.clear()
+            except Exception:
+                pass
+        self._gagsterTelegraphPuddle = None
 
     def __playSmudgeTelegraphInk(self):
         """Purple ink-fist telegraph pop — Ink Smudge melee wind-ups only."""

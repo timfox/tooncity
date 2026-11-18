@@ -1320,6 +1320,57 @@ GAGSTER_PUDDLE_HALF = 1.15
 GAGSTER_PUDDLE_PEAK = 2.35
 GAGSTER_PUDDLE_SEC = 0.28
 
+# Gunk Gagster telegraph puddle warn — short rubber-hose teal bounce-pie +
+# cream/ink ground puddle warn on announceAttackTelegraph (client only).
+# Distinct from hit-time GAGSTER_LOB_* / GAGSTER_PUDDLE_* and from Brute spit /
+# Snare string / Smudge fist telegraphs: lob charge silhouette + landing trap
+# warn so Punchline players can dodge out during wind-up.
+GAGSTER_TELEGRAPH_PUDDLE_LOOK = {
+    'id': 'teal-gag-puddle-warn',
+    'lift': 2.35,
+    'scale': 1.0,
+    'peakAlpha': 0.97,
+    'fadeInSec': 0.04,
+    'holdSec': 0.18,
+    'fadeOutSec': 0.26,
+    'squash': (1.55, 1.0, 0.48),
+    'stretch': (0.62, 1.0, 2.05),
+    'squashSec': 0.05,
+    'stretchSec': 0.12,
+    'settleSec': 0.14,
+    'bounceDeg': 14.0,
+    'pieHalf': 0.36,
+    'rimScale': 1.3,
+    'hotHalf': 0.13,
+    'pieColor': (0.18, 0.82, 0.88, 1.0),
+    'creamRimColor': (1.15, 1.05, 0.82, 1.0),
+    'flashColor': (0.45, 1.35, 1.45, 1.0),
+    'dropletCount': 4,
+    'dropletHalf': 0.09,
+    'dropletSec': 0.3,
+    'dropletSpread': 0.85,
+    'dropletColor': (0.22, 0.85, 0.9, 0.9),
+    # Ground cream/ink puddle warn at predicted lob landing.
+    'puddleLift': 0.1,
+    'puddleHalf': 1.05,
+    'puddlePeak': 2.2,
+    'puddleDelay': 0.06,
+    'puddleInSec': 0.14,
+    'puddleHoldSec': 0.28,
+    'puddleOutSec': 0.32,
+    'puddleInkColor': (0.12, 0.62, 0.72, 0.82),
+    'puddleCreamColor': (1.12, 1.02, 0.78, 0.72),
+    'puddleCreamScale': 1.22,
+    'puddleCreamPeakScale': 1.12,
+    'creamFleckCount': 5,
+    'creamFleckHalf': 0.1,
+    'creamFleckSec': 0.34,
+    'creamFleckSpread': 1.05,
+    'creamFleckLift': 0.55,
+    'creamFleckColor': (1.15, 1.05, 0.8, 0.92),
+    'binSort': 44,
+}
+
 # Defeat pop juice — rubber-hose ink splat / balloon pop on announceDefeat.
 # Per-archetype palette so Smudge (purple), Brute (green), Snare (amber) read.
 # Cream fleck burst (DEATH_CREAM_FLECK_*) layers sunny purity chips on top via

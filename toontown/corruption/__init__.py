@@ -37,7 +37,9 @@ green rubber-hose sludge splash; composes with spit / death / idle looks).
 Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
 rubber-hose string-lash pop). Balloon Snare hits and deaths also flash
 SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
-composes with string / death / idle looks). Ink Overlord phase telegraphs also flash
+composes with string / death / idle looks). Gunk Gagster wind-ups also flash
+GagsterPuddleTelegraphFx (teal bounce-pie charge + cream/ink ground puddle
+warn at the lob landing). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
 OverlordPhaseInkRainFx (ink rain / ink fall shower). Ink Overlord hits and
 deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
