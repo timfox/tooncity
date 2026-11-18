@@ -4,7 +4,9 @@ Sunny Toontown cream chips that pop with the telegraph ink drip / silhouette
 — warn readability contrast against dark ink, not another ink spray — then a
 delayed cream aftershock settles downward (soft halo + residual flecks /
 streaks). Composes lift with CorruptTelegraphInkFx.telegraphInkLook; aftershock
-grammar matches hit-spark / perfect-dodge / hang cream aftershock. Wired from
+grammar matches hit-spark / perfect-dodge / hang cream aftershock.
+CorruptTelegraphCreamSparkleFx layers rising cream sparkles from this warn
+spray (silhouette cream sparkle grammar). Wired from
 DistributedCorruptToon.announceAttackTelegraph. Client only. Toontown
 spiritual sequel — no keyblades / no KH branding.
 """

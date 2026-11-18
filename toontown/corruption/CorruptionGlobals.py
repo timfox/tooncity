@@ -626,6 +626,51 @@ TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_SEC = 0.32
 TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_PEAK_ALPHA = 0.26
 TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_COLOR = (1.0, 0.96, 0.78, 1.0)
 
+# Rising cream sparkle flecks on telegraph cream warn — soft sunny chips that
+# rise from the CorruptTelegraphCreamWarnFx warn spray (client only).
+# Compose lift / warn radius via CorruptTelegraphCreamSparkleFx.telegraphCreamSparkleLook
+# → telegraphCreamWarnLook (#102); fleck size/timing/rise borrows silhouette
+# cream sparkle (#131) twinkle grammar. Distinct from outward warn flecks and
+# settling aftershock: starts near warn spray, rises mostly upward with twinkle.
+# Not ink-colored. TELEGRAPH_CREAM_SPARKLE_ENABLED = False drops rising sparkles only.
+TELEGRAPH_CREAM_SPARKLE_ENABLED = True
+TELEGRAPH_CREAM_SPARKLE_BIN = 44
+TELEGRAPH_CREAM_SPARKLE_COLORS = (
+    (1.0, 0.97, 0.82, 0.88),  # sunny cream
+    (1.0, 0.96, 0.62, 0.82),  # butter
+    (1.0, 0.9, 0.78, 0.78),   # soft peach pastel
+    (0.98, 0.94, 0.88, 0.74),  # warm parchment
+)
+TELEGRAPH_CREAM_SPARKLE_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+TELEGRAPH_CREAM_SPARKLE_LOOK = {
+    'id': 'telegraph-cream-sparkle',
+    # lift / warnRadius composed with telegraphCreamWarnLook when played; fallbacks below.
+    'lift': 2.15,
+    'startDelaySec': 0.04,
+    'fleckCount': 3,
+    'fleckHalf': 0.065,
+    'fleckHalfScale': 1.05,
+    'warnRadius': 0.48,
+    'warnRadiusScale': 0.42,
+    'warnZJitter': 0.19,
+    'warnZJitterScale': 0.35,
+    'fleckDist': 0.14,
+    'fleckDistScale': 1.15,
+    'fleckLift': 0.6,
+    'fleckLiftScale': 1.08,
+    'fleckSec': 0.37,
+    'fleckSecScale': 0.92,
+    'fleckStagger': 0.038,
+    'fleckColors': TELEGRAPH_CREAM_SPARKLE_COLORS,
+    'fleckEndColors': TELEGRAPH_CREAM_SPARKLE_END_COLORS,
+    'binSort': TELEGRAPH_CREAM_SPARKLE_BIN,
+}
+
 # Ambient idle ink drip — sparse rubber-hose pollution presence between
 # telegraphs (client only). Cheaper than TELEGRAPH_INK_DRIP_*: 1–2 drips,
 # no splat pop, longer period, lower alpha. Pauses while telegraph juice
