@@ -258,9 +258,9 @@ class FinalePhaseFxClient(DirectObject):
         except Exception:
             pass
         # Soft cream wash pulse + delayed cream aftershock after cream edge
-        # (#133) — trust / handoff / victory wash + victory wash aftershock
-        # grammar (#145/#141/#138/#168). Twist residual only; wash client
-        # owns the flecks/halo residual.
+        # (#133) — trust / handoff / victory wash + trust/victory wash
+        # aftershock grammar (#145/#141/#138/#176/#168). Twist residual
+        # only; wash client owns the flecks/halo residual.
         try:
             playFinaleRevealCreamWash()
         except Exception:

@@ -10,10 +10,10 @@ victory cream wash aftershock (#168) / reclaim entry cream wash aftershock
 (#132) / purity-complete cream aftershock (#136). Soft under the reveal
 edge strips; cream / pastel only (not ink). Wired from FinalePhaseFx cream
 aftershock arm (Oswald-twist path only) beside the cream edge. Act-enter /
-Punchline tip / Silly tip / trust / handoff / victory wash live in their
-own modules. Supports the twist without undoing it or replaying victory
-cheer wash / aftershock. Client only. Toontown spiritual sequel — no
-keyblades / no KH branding.
+Punchline tip / Silly tip / trust (+ trust wash aftershock) / handoff /
+victory wash live in their own modules. Supports the twist without
+undoing it or replaying victory cheer wash / aftershock. Client only.
+Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi
