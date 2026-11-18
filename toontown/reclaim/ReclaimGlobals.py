@@ -54,6 +54,55 @@ DEMO_HINT = (
     'Oswald: clear Corrupt Toons with melee (~hackslash 0)  |  '
     '~stopreclaim to end'
 )
+
+# Per-street reclaim packs for auto / R / ~startreclaim (PlayEntry path).
+# Punchline is the Act 2 explore → fight → reclaim beat: denser sludge,
+# Brutes + Balloon Snares from wave 1. Campaign C still uses ACTS params;
+# this table keeps discoverable auto-reclaim matched to that hood fantasy.
+# Keys match DistributedReclaimDirectorAI.start() kwargs (+ copy helpers).
+_STREET_PACK_START_KEYS = (
+    'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
+    'bruteFraction', 'bruteWaveStart', 'bruteName',
+    'snareFraction', 'snareWaveStart', 'snareName',
+)
+STREET_PACKS = {
+    # Act 2 — Punchline Place sludge street (second hood).
+    ToontownGlobals.PunchlinePlace: {
+        'packId': 'punchline-sludge',
+        'name': 'Punchline Place',
+        'seedPollution': 0.70,
+        'packSize': 4,
+        'maxPacks': 4,
+        'corruptHp': 40,
+        'corruptName': 'Gunk Gagster',
+        'bruteFraction': 0.4,
+        'bruteWaveStart': 1,
+        'bruteName': 'Sludge Brute',
+        'snareFraction': 0.25,
+        'snareWaveStart': 1,
+        'snareName': 'Balloon Snare',
+        'bannerStart': 'OSWALD: RECLAIM PUNCHLINE PLACE!',
+        'bannerStartSub': (
+            'Explore the sludge street — then stretch-punch '
+            'Brutes & Balloon Snares!'),
+        'bannerStartColor': (0.72, 0.92, 0.55, 1.0),
+        'bannerComplete': 'PUNCHLINE PLACE LAUGHS CLEAN!',
+        'bannerCompleteSub': (
+            'Oswald tips his ears — Silly Street finale awaits!'),
+        'demoHint': (
+            'Oswald: dodge Brute spit, snip Balloon Snares  |  '
+            'F fight  |  C campaign'),
+        'playEntryTip': (
+            'Oswald: Punchline Place — explore the sludge  →  '
+            'F fight packs  →  reclaim  |  Shift dodge  |  C campaign'),
+        'autoFlash': (
+            'Oswald fields Punchline sludge packs — '
+            'Brutes & Balloon Snares!'),
+        'reclaimLiveFlash': (
+            'PUNCHLINE RECLAIM LIVE — clear Brutes & Snares with F!'),
+        'statusLabel': 'SLUDGE',
+    },
+}
 # Finale pack banners keep the street reading as a boss fight.
 FINALE_PACK_BANNER = {
     1: 'Ink Overlord swell — Oswald holds the line!',
@@ -183,6 +232,133 @@ OSWALD_WAVE_TIPS_DEFAULT = (
     'Oswald: clear the ink, save the neighborhood!',
     'Oswald cheers: final pack — reclaim it!',
 )
+
+
+def streetPack(zoneId):
+    """Return the STREET_PACKS entry for a zone, or None."""
+    return STREET_PACKS.get(int(zoneId or 0))
+
+
+def streetPackId(zoneId):
+    """Stable pack id string (e.g. 'punchline-sludge'), or None."""
+    pack = streetPack(zoneId)
+    if not pack:
+        return None
+    return pack.get('packId')
+
+
+def streetPackParams(zoneId):
+    """Kwargs for DistributedReclaimDirectorAI.start() from STREET_PACKS.
+
+    Empty dict → caller keeps ReclaimGlobals defaults (Loopy-style Smudge
+    wave 1). Punchline returns Brute + Snare mix from wave 1.
+    """
+    pack = streetPack(zoneId)
+    if not pack:
+        return {}
+    out = {}
+    for key in _STREET_PACK_START_KEYS:
+        if key in pack:
+            out[key] = pack[key]
+    return out
+
+
+def streetBannerStart(zoneId, finalePhase=0):
+    """Start banner title for a street pack (finale uses CampaignGlobals)."""
+    if int(finalePhase or 0) >= 1:
+        return BANNER_START
+    pack = streetPack(zoneId)
+    if pack and pack.get('bannerStart'):
+        return pack['bannerStart']
+    return BANNER_START
+
+
+def streetBannerStartSub(zoneId, finalePhase=0):
+    """Optional start sub-banner (explore → fight beat for Punchline)."""
+    if int(finalePhase or 0) >= 1:
+        return ''
+    pack = streetPack(zoneId)
+    if pack:
+        return pack.get('bannerStartSub') or ''
+    return ''
+
+
+def streetBannerStartColor(zoneId, finalePhase=0):
+    """Start banner color; Punchline leans gag-green."""
+    if int(finalePhase or 0) >= 1:
+        return (1.0, 0.92, 0.45, 1.0)
+    pack = streetPack(zoneId)
+    if pack and pack.get('bannerStartColor'):
+        return tuple(pack['bannerStartColor'])
+    return (1.0, 0.92, 0.45, 1.0)
+
+
+def streetBannerComplete(zoneId, finalePhase=0):
+    """Complete banner title (Punchline laughs-clean beat)."""
+    if int(finalePhase or 0) >= 2:
+        return BANNER_COMPLETE
+    pack = streetPack(zoneId)
+    if pack and pack.get('bannerComplete'):
+        return pack['bannerComplete']
+    return BANNER_COMPLETE
+
+
+def streetBannerCompleteSub(zoneId, finalePhase=0):
+    """Complete sub-banner; Punchline cues Silly finale."""
+    pack = streetPack(zoneId)
+    if pack and pack.get('bannerCompleteSub') and int(finalePhase or 0) < 2:
+        return pack['bannerCompleteSub']
+    return BANNER_COMPLETE_SUB
+
+
+def streetDemoHint(zoneId, finalePhase=0):
+    """Persistent demo / combat hint under the tip bar."""
+    if int(finalePhase or 0) >= 1:
+        return DEMO_HINT
+    pack = streetPack(zoneId)
+    if pack and pack.get('demoHint'):
+        return pack['demoHint']
+    return DEMO_HINT
+
+
+def streetPlayEntryTip(zoneId, face='Oswald', fallbackName='this street'):
+    """PlayEntry tip for explore → fight → reclaim (Punchline-aware)."""
+    pack = streetPack(zoneId)
+    if pack and pack.get('playEntryTip'):
+        # Tips already name Oswald; keep face substitution if copy uses %s.
+        tip = pack['playEntryTip']
+        if '%s' in tip:
+            return tip % face
+        return tip
+    return (
+        '%s: CORRUPTION on %s — packs incoming  |  '
+        'F fight  |  Shift dodge  |  C campaign' % (face, fallbackName))
+
+
+def streetAutoFlash(zoneId, face='Oswald'):
+    """Flash when PlayEntry auto-fields reclaim packs."""
+    pack = streetPack(zoneId)
+    if pack and pack.get('autoFlash'):
+        return pack['autoFlash']
+    return '%s fields the packs — Fight!' % face
+
+
+def streetReclaimLiveFlash(zoneId, face='Oswald'):
+    """Flash when announceReclaimStart lands on the client."""
+    pack = streetPack(zoneId)
+    if pack and pack.get('reclaimLiveFlash'):
+        return pack['reclaimLiveFlash']
+    return 'RECLAIM LIVE — %s says clear them with F!' % face
+
+
+def streetStatusLabel(zoneId, finalePhase=0):
+    """Optional status HUD prefix (e.g. SLUDGE on Punchline)."""
+    if int(finalePhase or 0) >= 1:
+        return None
+    pack = streetPack(zoneId)
+    if pack:
+        return pack.get('statusLabel')
+    return None
 
 
 def waveLabel(waveIndex, maxWaves):

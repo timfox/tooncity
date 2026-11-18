@@ -96,6 +96,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             self.__showStatusHud()
 
     def announceReclaimStart(self):
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         if self.finalePhase >= 1:
             title = CampaignGlobals.FINALE_PHASE_BANNER.get(
                 self.finalePhase, ReclaimGlobals.BANNER_START)
@@ -107,7 +108,16 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             if sub:
                 self.__showSubBanner(sub, color, hold=2.8)
         else:
-            self.__showBanner(ReclaimGlobals.BANNER_START, (1.0, 0.92, 0.45, 1.0))
+            # Punchline STREET_PACK: gag-green reclaim plate + explore→fight sub.
+            title = ReclaimGlobals.streetBannerStart(
+                zoneId, finalePhase=self.finalePhase)
+            color = ReclaimGlobals.streetBannerStartColor(
+                zoneId, finalePhase=self.finalePhase)
+            self.__showBanner(title, color, hold=2.8)
+            sub = ReclaimGlobals.streetBannerStartSub(
+                zoneId, finalePhase=self.finalePhase)
+            if sub:
+                self.__showSubBanner(sub, color, hold=2.8)
         # Discoverable play: arm melee without demo dummies when reclaim goes live.
         av = getattr(base, 'localAvatar', None)
         if av is not None and hasattr(av, 'enableHackSlashMelee'):
@@ -197,8 +207,14 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     def announceReclaimComplete(self):
         self.__hideTelegraphCue()
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
+        completeTitle = ReclaimGlobals.streetBannerComplete(
+            zoneId, finalePhase=self.finalePhase)
+        completeColor = (0.55, 1.0, 0.7, 1.0)
+        if ReclaimGlobals.streetPackId(zoneId) == 'punchline-sludge':
+            completeColor = (0.72, 0.92, 0.55, 1.0)
         self.__showBanner(
-            ReclaimGlobals.BANNER_COMPLETE, (0.55, 1.0, 0.7, 1.0),
+            completeTitle, completeColor,
             hold=3.4, pop=True)
         # Finale P2 clear: purity cheer + soft Oswald-twist tease (copy only).
         if self.finalePhase >= 2:
@@ -216,7 +232,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             messenger.send('oswaldRevealSting', [0])
         else:
             self.__showSubBanner(
-                ReclaimGlobals.BANNER_COMPLETE_SUB, (0.85, 1.0, 0.9, 1.0),
+                ReclaimGlobals.streetBannerCompleteSub(
+                    zoneId, finalePhase=self.finalePhase),
+                (0.85, 1.0, 0.9, 1.0),
                 hold=3.4)
         self.__playRestoreFx()
         self.__hideStatusHud()
@@ -345,11 +363,20 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             self.maxWaves,
             self.pollutionHint * 100.0,
             self.packAlive)
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         if self.finalePhase >= 1:
             phaseLabel = CampaignGlobals.FINALE_PHASE_HUD.get(
                 self.finalePhase, 'OVERLORD · P%s' % self.finalePhase)
             text = '%s  |  %s' % (phaseLabel, text)
+        else:
+            hoodLabel = ReclaimGlobals.streetStatusLabel(
+                zoneId, finalePhase=self.finalePhase)
+            if hoodLabel:
+                text = '%s  |  %s' % (hoodLabel, text)
         statusColor = self.__finaleStatusColor()
+        if (self.finalePhase < 1
+                and ReclaimGlobals.streetPackId(zoneId) == 'punchline-sludge'):
+            statusColor = (0.78, 0.95, 0.62, 1.0)
         if self._statusNP is not None and not self._statusNP.isEmpty():
             node = self._statusNP.node()
             node.setText(text)
@@ -389,8 +416,10 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
     def __showDemoHint(self):
         if self._demoHintNP is not None and not self._demoHintNP.isEmpty():
             return
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         tn = TextNode('reclaim-demo-hint')
-        tn.setText(ReclaimGlobals.DEMO_HINT)
+        tn.setText(ReclaimGlobals.streetDemoHint(
+            zoneId, finalePhase=self.finalePhase))
         tn.setAlign(TextNode.ACenter)
         tn.setTextColor(1.0, 1.0, 0.8, 1.0)
         tn.setShadow(0.04, 0.04)

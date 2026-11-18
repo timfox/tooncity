@@ -99,11 +99,18 @@ class PollutionManagerAI(DistributedObjectAI):
                 director = DistributedReclaimDirectorAI(self.air, zoneId=zoneId)
                 director.generateWithRequired(zoneId)
                 directors[zoneId] = director
+                # Hood street packs (Punchline sludge mix) deepen auto / R reclaim.
+                packKwargs = ReclaimGlobals.streetPackParams(zoneId)
                 director.start(
                     zoneId,
                     (toon.getX(), toon.getY(), toon.getZ()),
-                    toon.getH())
-                msg = 'Reclaim started in zone %s' % zoneId
+                    toon.getH(),
+                    **packKwargs)
+                packId = ReclaimGlobals.streetPackId(zoneId)
+                if packId:
+                    msg = 'Reclaim started in zone %s (%s)' % (zoneId, packId)
+                else:
+                    msg = 'Reclaim started in zone %s' % zoneId
             except Exception:
                 self.notify.warning('requestStreetEvent reclaim failed')
                 return

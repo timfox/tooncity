@@ -61,7 +61,12 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 
 - Loopy campaign / reclaim wave 1: Ink Smudge only (`bruteFraction`/`snareFraction` 0, wave starts at 2)
 - Default reclaim waves 2+: ~⅓ Sludge Brutes + ~⅕ Balloon Snares
-- Punchline campaign: Brutes + Balloon Snares from wave 1
+- **Punchline street pack** (`ReclaimGlobals.STREET_PACKS['punchline-sludge']`, zone `2300`):
+  auto / R / `~startreclaim` and campaign C both field Brutes + Balloon Snares
+  from wave 1 (seed 0.70, pack 4×4, Gunk Gagster / Sludge Brute / Balloon Snare).
+  PlayEntry tip reads explore → fight → reclaim; start banner is gag-green.
+- Punchline campaign ACTS params stay the source of truth for **C**; STREET_PACKS
+  mirrors that mix so discoverable auto-reclaim matches the second-hood beat.
 - Silly finale: Overlord only (no Brute / Snare mix)
 
 ```
