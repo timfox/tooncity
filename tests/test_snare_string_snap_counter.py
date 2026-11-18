@@ -121,6 +121,7 @@ class SnareStringSnapCounterTest(unittest.TestCase):
     def test_config_cream_splash_tunables(self):
         self.assertTrue(self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED)
         self.assertTrue(self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED)
+        self.assertTrue(self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_ENABLED)
         self.assertGreater(
             self.cfg.SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC, 0.0)
         self.assertGreaterEqual(
@@ -128,7 +129,13 @@ class SnareStringSnapCounterTest(unittest.TestCase):
         look = self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK
         self.assertEqual(
             look.get('id'), 'snare-string-counter-cream-splash')
-        self.assertGreater(int(look.get('fleckCount', 0)), 0)
+        # Deepened string-snap splash vs #214 baseline (3 flecks / 3 aftershock).
+        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 5)
+        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.65)
+        self.assertGreaterEqual(float(look.get('fleckDist', 0)), 1.15)
+        self.assertTrue(look.get('whipEnabled'))
+        self.assertGreaterEqual(int(look.get('whipCount', 0)), 2)
+        self.assertGreater(float(look.get('whipSpread', 0)), 0.0)
         look_id = str(look.get('id', '')).lower()
         self.assertNotIn('keyblade', look_id)
         self.assertNotIn('kingdom hearts', look_id)
@@ -137,6 +144,76 @@ class SnareStringSnapCounterTest(unittest.TestCase):
         self.assertGreaterEqual(float(color[0]), 0.9)
         self.assertGreaterEqual(float(color[1]), 0.9)
         self.assertGreaterEqual(float(color[2]), 0.55)
+        whip = self.cfg.SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COLOR
+        self.assertGreaterEqual(float(whip[0]), 0.9)
+        self.assertGreaterEqual(float(whip[1]), 0.9)
+        self.assertGreaterEqual(float(whip[2]), 0.55)
+        self.assertGreater(
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC, 0.0)
+        # Deepened string residual — juicier than #214; distinct from Gunk bloom.
+        self.assertGreaterEqual(
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT, 4)
+        self.assertGreaterEqual(
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT, 2)
+        self.assertGreaterEqual(
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT, 0.8)
+        self.assertGreaterEqual(
+            self.cfg.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF, 0.5)
+        # Distinct from Gunk puddle / Smudge hit cream splash ids.
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cfg, 'GAGSTER_PUDDLE_CREAM_SPLASH_LOOK', {}).get('id'))
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cfg, 'SMUDGE_HIT_CREAM_SPLASH_LOOK', {}).get('id'))
+
+    def test_cream_splash_fx_module_and_wiring(self):
+        import ast
+
+        rel = 'toontown/corruption/SnareStringCounterCreamSplashFx.py'
+        path = REPO_ROOT / rel
+        self.assertTrue(path.is_file(), msg='missing %s' % rel)
+        src = path.read_text(encoding='utf-8')
+        tree = ast.parse(src)
+        names = {
+            node.name for node in tree.body
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef))
+        }
+        self.assertIn('SnareStringCounterCreamSplash', names)
+        self.assertIn('snareStringCounterCreamSplashLook', names)
+        methods = set()
+        for node in tree.body:
+            if isinstance(node, ast.ClassDef) and (
+                    node.name == 'SnareStringCounterCreamSplash'):
+                for child in node.body:
+                    if isinstance(child, ast.FunctionDef):
+                        methods.add(child.name)
+        for name in (
+                'play', 'clear', '_spawnSplat', '_spawnWhipFilament',
+                '_spawnFleck', '_buildAftershock'):
+            self.assertIn(
+                name, methods,
+                msg='SnareStringCounterCreamSplash missing %s' % name)
+        self.assertIn('SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK', src)
+        self.assertIn('_spawnWhipFilament', src)
+        self.assertIn('Gunk', src)  # docstring distinctness vs #238
+        self.assertIn('Smudge', src)  # docstring distinctness vs #231
+        # CardMaker / interval names stay Toontown cream — no KH brand ids.
+        self.assertNotIn("'keyblade", src.lower())
+        self.assertNotIn('"keyblade', src.lower())
+        self.assertNotIn('kingdom_hearts', src.lower())
+        wire = (REPO_ROOT / 'toontown' / 'corruption' /
+                'DistributedCorruptToon.py').read_text(encoding='utf-8')
+        self.assertIn('SnareStringCounterCreamSplash', wire)
+        self.assertIn('__playSnareStringCounterCreamSplash', wire)
+        self.assertIn('__consumeSnareStringCounterCreamSplash', wire)
+        init_src = (REPO_ROOT / 'toontown' / 'corruption' /
+                    '__init__.py').read_text(encoding='utf-8')
+        self.assertIn('SnareStringCounterCreamSplashFx', init_src)
+        reclaim = (REPO_ROOT / 'toontown' / 'corruption' /
+                   'RECLAIM.md').read_text(encoding='utf-8')
+        self.assertIn('SnareStringCounterCreamSplashFx', reclaim)
+        self.assertIn('whip filament', reclaim.lower())
 
     def test_cream_splash_eligible_helper(self):
         eligible = self.cfg.isSnareStringCounterCreamSplashEligible

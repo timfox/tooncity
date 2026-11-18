@@ -2,11 +2,14 @@
 
 World-space CardMaker juice that fires when a Snare string-snap punish /
 counter lands successfully — sunny cream / pastel contrast against the amber
-SnareStringSnapSplashFx (#84) so the rewarded window reads juicy. Immediate
-cream splat/flecks, then a soft settling aftershock (halo + residual flecks)
-matching telegraph cream warn aftershock grammar (#121). Wired from
-DistributedCorruptToon hit reaction when the string-snap counter juice window
-is live. Client only. Toontown spiritual sequel — no keyblades / no KH branding.
+SnareStringSnapSplashFx (#84) so the rewarded window reads juicy. Deepened
+string-snap juice: juicier splat/flecks, horizontal cream whip filaments
+(rubber-string break read), then a wider settling aftershock (halo + residual
+flecks) — distinct from Gunk puddle cream deepen (#238, flat ground bloom) and
+Smudge hit cream splash (#231, mid-body radial). Same residual grammar as
+telegraph cream warn aftershock (#121). Wired from DistributedCorruptToon hit
+reaction when the string-snap counter juice window is live. Client only.
+Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -93,6 +96,17 @@ class SnareStringCounterCreamSplash(object):
         splat = self._spawnSplat(parentNP, origin, look)
         if splat is not None:
             parts.append(splat)
+
+        whipCount = max(0, int(look.get('whipCount', 0)))
+        if look.get(
+                'whipEnabled',
+                getattr(
+                    CorruptionGlobals,
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_ENABLED', True)):
+            for i in range(whipCount):
+                part = self._spawnWhipFilament(parentNP, origin, look, i)
+                if part is not None:
+                    parts.append(part)
 
         fleckCount = max(0, int(look.get('fleckCount', 0)))
         for i in range(fleckCount):
@@ -206,6 +220,100 @@ class SnareStringCounterCreamSplash(object):
                 ),
                 LerpScaleInterval(
                     rim, sec, peak * 1.12, blendType='easeOut'),
+            )
+        except Exception:
+            return None
+
+    def _spawnWhipFilament(self, parentNP, origin, look, index):
+        """Horizontal cream whip filament — rubber-string break cue.
+
+        Distinct from Gunk flat puddle-plane bloom (#238) and Smudge mid-body
+        radial cream splash (#231): sideways cream smear matching amber
+        SnareStringSnapSplashFx string-break grammar.
+        """
+        try:
+            side = -1.0 if (index % 2) == 0 else 1.0
+            t = 0.55 + 0.22 * (index // 2)
+            # Bias sideways so the cream whip reads as a rubber string snap.
+            angle = (pi * 0.06) + side * (0.32 + 0.18 * index)
+            spread = float(look.get(
+                'whipSpread',
+                getattr(
+                    CorruptionGlobals,
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SPREAD', 1.15)))
+            end = Point3(
+                origin[0] + cos(angle) * spread * t,
+                origin[1] + sin(angle) * spread * 0.32,
+                origin[2] + 0.05 + sin(pi * 0.18 * index) * 0.16,
+            )
+            half = float(look.get(
+                'whipHalf',
+                getattr(
+                    CorruptionGlobals,
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_HALF', 0.1)))
+            cm = CardMaker(
+                'snare-string-counter-cream-splash-whip-%s' % index)
+            # Wider / flatter frame — cream filament, not ink blob / puddle bloom.
+            cm.setFrame(-half * 1.45, half * 1.45, -half * 0.7, half * 0.7)
+            whip = parentNP.attachNewNode(cm.generate())
+            start = Point3(
+                origin[0] + side * 0.05,
+                origin[1] + 0.02,
+                origin[2] + 0.03 * ((index % 3) - 1),
+            )
+            whip.setPos(start)
+            whip.setBillboardPointEye()
+            whip.setTransparency(TransparencyAttrib.MAlpha)
+            color = look.get(
+                'whipColor',
+                getattr(
+                    CorruptionGlobals,
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COLOR',
+                    (1.0, 0.97, 0.84, 0.9)))
+            tint = 0.92 + 0.06 * (index % 3)
+            whip.setColor(
+                min(1.4, color[0] * tint),
+                min(1.4, color[1] * tint),
+                min(1.4, color[2] * tint),
+                color[3])
+            whip.setColorScale(1, 1, 1, 0)
+            whip.setScale(Point3(0.5, 0.45, 0.5))
+            whip.setBin('fixed', int(look.get('binSort', 46)) + 1)
+            whip.setDepthWrite(False)
+            self._nodes.append(whip)
+            travel = float(look.get(
+                'whipSec',
+                getattr(
+                    CorruptionGlobals,
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SEC', 0.2)))
+            peakA = float(look.get(
+                'whipPeakAlpha',
+                getattr(
+                    CorruptionGlobals,
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_PEAK_ALPHA',
+                    0.88)))
+            delay = 0.012 * index
+            return Sequence(
+                Wait(delay),
+                Parallel(
+                    LerpPosInterval(whip, travel, end, blendType='easeOut'),
+                    Sequence(
+                        LerpScaleInterval(
+                            whip, travel * 0.35, Point3(1.65, 0.6, 0.95),
+                            blendType='easeOut'),
+                        LerpScaleInterval(
+                            whip, travel * 0.65, Point3(0.18, 0.18, 1.4),
+                            blendType='easeIn'),
+                    ),
+                    Sequence(
+                        LerpColorScaleInterval(
+                            whip, travel * 0.22, Vec4(1, 1, 1, peakA),
+                            blendType='easeOut'),
+                        LerpColorScaleInterval(
+                            whip, travel * 0.78, Vec4(1, 1, 1, 0),
+                            blendType='easeIn'),
+                    ),
+                ),
             )
         except Exception:
             return None
