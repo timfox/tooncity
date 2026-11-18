@@ -15,6 +15,7 @@ from toontown.corruption.BruteSludgeSplashFx import BruteSludgeSplash
 from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphCreamSparkleFx import TelegraphCreamSparkles
 from toontown.corruption.CorruptTelegraphCreamWarnFx import TelegraphCreamWarnFlecks
+from toontown.corruption.CorruptTelegraphCreamWashFx import TelegraphCreamWashPulse
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.CorruptSilhouetteCreamRimFx import SilhouetteCreamRimFlecks
@@ -80,6 +81,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._telegraphInkDrip = None
         self._telegraphCreamWarn = None
         self._telegraphCreamSparkle = None
+        self._telegraphCreamWash = None
         self._idleInkDrip = None
         self._idleCreamDrip = None
         self._idleCreamDripSparkle = None
@@ -165,6 +167,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearTelegraphCreamSparkle()
+        self.__clearTelegraphCreamWash()
         self.__clearIdleInkDrip()
         self.__clearIdleCreamDrip()
         self.__clearIdleCreamDripSparkle()
@@ -554,6 +557,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playTelegraphCreamWarn(look)
         # Rising cream / pastel sparkles from the telegraph cream warn spray.
         self.__playTelegraphCreamSparkle(look)
+        # Soft cream wash pulse against ink telegraph (silhouette / idle wash vocab).
+        self.__playTelegraphCreamWash(look)
         # Ink Smudge-only: purple ink-fist telegraph pop for melee wind-up read.
         if (not look) and (not isBrute) and (not isSnare):
             self.__playSmudgeTelegraphInk()
@@ -616,10 +621,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / cream warn / sparkle / crown / rain / snare / spit / smudge fist so impact owns the frame.
+        # Clear telegraph drip / cream warn / sparkle / wash / crown / rain / snare / spit / smudge fist so impact owns the frame.
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearTelegraphCreamSparkle()
+        self.__clearTelegraphCreamWash()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
@@ -1020,6 +1026,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearTelegraphCreamSparkle()
+        self.__clearTelegraphCreamWash()
         self.__clearIdleInkDrip()
         self.__clearIdleCreamDrip()
         self.__clearIdleCreamDripSparkle()
@@ -1150,6 +1157,25 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._telegraphCreamSparkle = None
+
+    def __playTelegraphCreamWash(self, finaleLook=None):
+        """Soft cream wash pulse against ink telegraph cream warn / sparkle."""
+        self.__clearTelegraphCreamWash()
+        wash = TelegraphCreamWashPulse()
+        self._telegraphCreamWash = wash
+        wash.play(
+            archetype=self.getArchetype(),
+            finaleLook=finaleLook,
+        )
+
+    def __clearTelegraphCreamWash(self):
+        wash = getattr(self, '_telegraphCreamWash', None)
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
+        self._telegraphCreamWash = None
 
     def __startIdleInkDrip(self):
         """Ambient pollution drips between telegraphs (client-only presence)."""

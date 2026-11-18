@@ -108,6 +108,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # sunny cream / pastel warn flecks + delayed cream aftershock
 # (CorruptTelegraphCreamWarnFx — contrast to ink) plus rising cream /
 # pastel sparkle flecks on the warn spray (CorruptTelegraphCreamSparkleFx)
+# plus soft cream wash pulse against ink telegraph
+# (CorruptTelegraphCreamWashFx — silhouette / idle cream-wash grammar)
 # plus squash/SFX so wind-ups read without a combat HUD; impact flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
 # Melee hits on Smudge flash SmudgeInkSplashFx (cheap purple ink splash);
@@ -201,6 +203,18 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # sparkle flecks rising from the warn spray
 # (CorruptTelegraphCreamSparkleFx — silhouette cream sparkle grammar).
 # TELEGRAPH_CREAM_SPARKLE_ENABLED = False drops rising sparkles only.
+```
+
+## Telegraph cream wash pulse demo
+
+```
+~spawncorrupt 2
+~hackslash 0
+# Close range — telegraph cream warn / aftershock / rising sparkles, then
+# soft cream wash pulse against ink telegraph
+# (CorruptTelegraphCreamWashFx — silhouette / idle / death cream-wash
+# two-beat grammar). Contrast to ink.
+# TELEGRAPH_CREAM_WASH_ENABLED = False drops wash only.
 ```
 
 ## Death cream fleck burst demo

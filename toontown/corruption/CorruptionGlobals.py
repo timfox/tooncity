@@ -671,6 +671,40 @@ TELEGRAPH_CREAM_SPARKLE_LOOK = {
     'binSort': TELEGRAPH_CREAM_SPARKLE_BIN,
 }
 
+# Soft cream wash pulse on telegraph cream warn / sparkle stack — aspect2d
+# veil after warn flecks (#102) + aftershock (#121) + rising sparkles (#135)
+# (client only). Matches CorruptSilhouetteCreamWashFx (#153) /
+# IdleCreamWashPulseFx (#146) / CorruptDeathCreamWashFx (#119) two-beat
+# grammar. Delay composed via CorruptTelegraphCreamWashFx.telegraphCreamWashLook
+# → telegraphCreamSparkleLook. Soft cream/pastel contrast against ink telegraph.
+# TELEGRAPH_CREAM_WASH_ENABLED = False drops wash only (warn / sparkle stay).
+TELEGRAPH_CREAM_WASH_ENABLED = True
+TELEGRAPH_CREAM_WASH_DELAY_SEC = 0.30  # fallback; look prefers sparkle compose
+TELEGRAPH_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+TELEGRAPH_CREAM_WASH_PEAK = 0.065  # quieter than death (0.14) / melee (0.10);
+# slightly above idle (0.055) / silhouette (0.05) so telegraph event reads
+TELEGRAPH_CREAM_WASH_MID = 0.036
+TELEGRAPH_CREAM_WASH_IN_SEC = 0.06
+TELEGRAPH_CREAM_WASH_PULSE_SEC = 0.10
+TELEGRAPH_CREAM_WASH_HOLD_SEC = 0.08
+TELEGRAPH_CREAM_WASH_OUT_SEC = 0.40
+TELEGRAPH_CREAM_WASH_BIN = 39  # soft veil under telegraph flecks (43) / sparkles (44)
+TELEGRAPH_CREAM_WASH_LOOK = {
+    'id': 'telegraph-cream-wash',
+    # delaySec composed with telegraphCreamSparkleLook when played; fallbacks below.
+    'delaySec': TELEGRAPH_CREAM_WASH_DELAY_SEC,
+    'delayScale': 0.72,
+    'delayBias': 0.12,
+    'color': TELEGRAPH_CREAM_WASH_COLOR,
+    'peak': TELEGRAPH_CREAM_WASH_PEAK,
+    'mid': TELEGRAPH_CREAM_WASH_MID,
+    'inSec': TELEGRAPH_CREAM_WASH_IN_SEC,
+    'pulseSec': TELEGRAPH_CREAM_WASH_PULSE_SEC,
+    'holdSec': TELEGRAPH_CREAM_WASH_HOLD_SEC,
+    'outSec': TELEGRAPH_CREAM_WASH_OUT_SEC,
+    'binSort': TELEGRAPH_CREAM_WASH_BIN,
+}
+
 # Ambient idle ink drip — sparse rubber-hose pollution presence between
 # telegraphs (client only). Cheaper than TELEGRAPH_INK_DRIP_*: 1–2 drips,
 # no splat pop, longer period, lower alpha. Pauses while telegraph juice

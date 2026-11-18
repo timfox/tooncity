@@ -6,8 +6,10 @@ CorruptTelegraphCreamWarnFx.telegraphCreamWarnLook (#102) and borrows
 rising / twinkle size/timing from
 CorruptSilhouetteCreamSparkleFx.silhouetteCreamSparkleLook (#131) so telegraph
 rising sparkles sit beside warn flecks + delayed aftershock without reading as
-another outward warn spray. Wired from DistributedCorruptToon beside
-TelegraphCreamWarnFlecks (play / clear together). Client only. Toontown
+another outward warn spray. CorruptTelegraphCreamWashFx layers a soft cream
+wash pulse after this stack (silhouette / idle wash grammar). Wired from
+DistributedCorruptToon beside TelegraphCreamWarnFlecks +
+TelegraphCreamWashPulse (play / clear together). Client only. Toontown
 spiritual sequel — no keyblades / no KH branding.
 """
 
