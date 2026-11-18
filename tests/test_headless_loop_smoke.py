@@ -2650,6 +2650,48 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         if isinstance(dodge_cd, float):
             self.assertLessEqual(pd_window, dodge_cd + 0.05)
 
+        # Mid-wave purity pressure tip — contested whisper after re-creep #194.
+        for pressure_key in (
+                'PURITY_PRESSURE_TIP_ENABLED',
+                'PURITY_PRESSURE_STALL_SEC',
+                'PURITY_PRESSURE_RISE_THRESHOLD',
+                'PURITY_PRESSURE_COOLDOWN_SEC',
+                'PURITY_PRESSURE_TIP_STALL',
+                'PURITY_PRESSURE_TIP_RISE',
+                'PURITY_PRESSURE_RIM_WARN_COLOR'):
+            self.assertIn(
+                pressure_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % pressure_key)
+        pressure_helpers = _class_and_func_names(self.reclaim_tree)
+        for pressure_helper in (
+                'isMidWavePressureContext',
+                'purityPressureReason',
+                'purityPressureTipText'):
+            self.assertIn(
+                pressure_helper, pressure_helpers,
+                msg='ReclaimGlobals missing %s' % pressure_helper)
+        pressure_assigns = _assign_map(self.reclaim_tree)
+        self.assertIs(
+            pressure_assigns.get('PURITY_PRESSURE_TIP_ENABLED'), True)
+        stall_tip = str(
+            pressure_assigns.get('PURITY_PRESSURE_TIP_STALL', '')).lower()
+        rise_tip = str(
+            pressure_assigns.get('PURITY_PRESSURE_TIP_RISE', '')).lower()
+        self.assertIn('purity', stall_tip)
+        self.assertIn('ink', rise_tip)
+        self.assertIn('contested', rise_tip)
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
+            self.assertNotIn(banned, stall_tip)
+            self.assertNotIn(banned, rise_tip)
+        pressure_director_src = _read(
+            'toontown/reclaim/DistributedReclaimDirector.py')
+        self.assertIn('__evaluatePurityPressure', pressure_director_src)
+        self.assertIn('__showPressureTip', pressure_director_src)
+        self.assertIn('warnPressure', pressure_director_src)
+        pressure_hud_methods = _class_method_names(
+            _module_ast('toontown/reclaim/PurityMeterHud.py'), 'PurityMeterHud')
+        self.assertIn('warnPressure', pressure_hud_methods)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)

@@ -400,6 +400,35 @@ PURITY_METER_FILL_CREAM_WASH_HOLD_SEC = 0.06
 PURITY_METER_FILL_CREAM_WASH_OUT_SEC = 0.34
 PURITY_METER_FILL_CREAM_WASH_BIN = 48  # soft veil under fill shimmer (49) / aftershock (50)
 
+# Mid-wave purity pressure tip — contested rubber-hose whisper after incomplete
+# reclaim re-creep (#194). Client-only: when purity stalls or ink rises mid-wave
+# with packs still alive, director shows a short HUD tip + meter rim warn.
+# Toggle PURITY_PRESSURE_TIP_ENABLED = False drops whisper + rim warn only.
+# Sunny/warm Toontown tone — no KH branding.
+PURITY_PRESSURE_TIP_ENABLED = True
+PURITY_PRESSURE_MIN_WAVE = 1  # waveIndex >= this counts as mid-wave pressure
+PURITY_PRESSURE_STALL_SEC = 8.0
+PURITY_PRESSURE_RISE_THRESHOLD = 0.04  # pollution bump that counts as ink pressure
+PURITY_PRESSURE_ADVANCE_THRESHOLD = 0.04  # purity climb that resets stall clock
+PURITY_PRESSURE_COOLDOWN_SEC = 12.0
+PURITY_PRESSURE_TIP_HOLD_SEC = 2.4
+PURITY_PRESSURE_TIP_SCALE = 0.038
+PURITY_PRESSURE_TIP_POS = (0.0, 0.0, 0.40)  # under purity meter (z 0.50)
+PURITY_PRESSURE_TIP_COLOR = (1.0, 0.88, 0.55, 1.0)
+PURITY_PRESSURE_TIP_POP_SCALE = 0.052
+PURITY_PRESSURE_TIP_POP_SEC = 0.10
+PURITY_PRESSURE_REASON_STALL = 'stall'
+PURITY_PRESSURE_REASON_RISE = 'rise'
+PURITY_PRESSURE_TIP_STALL = (
+    "Whoa — purity's stalling! Keep punching or the ink digs in!"
+)
+PURITY_PRESSURE_TIP_RISE = (
+    "Ink's pushing back! Don't let this wave go contested!"
+)
+# Brief contested rim flash on PurityMeterHud when the tip whispers.
+PURITY_PRESSURE_RIM_WARN_COLOR = (1.0, 0.55, 0.35, 0.78)
+PURITY_PRESSURE_RIM_WARN_SEC = 0.55
+
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.
 # Composes with EntryCreamWashPulseFx (bin 32), PlayEntry ink edge vignette
@@ -1097,6 +1126,58 @@ def waveClearedOswaldTip(waveIndex, zoneId=None):
     if zone == ToontownGlobals.SillyStreet:
         return 'Oswald: Silly pause — next Overlord swell incoming'
     return 'Wave %s down — next surge incoming' % wave
+
+
+def isMidWavePressureContext(state, waveIndex, packAlive, minWave=None):
+    """True when an active reclaim wave can whisper purity pressure."""
+    if int(state) != STATE_ACTIVE:
+        return False
+    floor = (
+        PURITY_PRESSURE_MIN_WAVE if minWave is None else int(minWave))
+    if int(waveIndex) < int(floor):
+        return False
+    return int(packAlive) > 0
+
+
+def purityPressureReason(pollutionDelta, stallAgeSec,
+                         riseThreshold=None, stallSec=None,
+                         enabled=None):
+    """Return stall/rise reason for a mid-wave pressure whisper, or None.
+
+    Prefer ink-rise over stall when both fire on the same beat. Callers must
+    already gate on ``isMidWavePressureContext`` + cooldown.
+    """
+    if enabled is None:
+        enabled = PURITY_PRESSURE_TIP_ENABLED
+    if not enabled:
+        return None
+    rise = (
+        PURITY_PRESSURE_RISE_THRESHOLD
+        if riseThreshold is None else float(riseThreshold))
+    stall = (
+        PURITY_PRESSURE_STALL_SEC if stallSec is None else float(stallSec))
+    try:
+        delta = float(pollutionDelta)
+    except (TypeError, ValueError):
+        delta = 0.0
+    try:
+        age = float(stallAgeSec)
+    except (TypeError, ValueError):
+        age = 0.0
+    if delta >= rise:
+        return PURITY_PRESSURE_REASON_RISE
+    if age >= stall:
+        return PURITY_PRESSURE_REASON_STALL
+    return None
+
+
+def purityPressureTipText(reason):
+    """Rubber-hose contested tip copy for a pressure reason."""
+    if reason == PURITY_PRESSURE_REASON_RISE:
+        return PURITY_PRESSURE_TIP_RISE
+    if reason == PURITY_PRESSURE_REASON_STALL:
+        return PURITY_PRESSURE_TIP_STALL
+    return PURITY_PRESSURE_TIP_STALL
 
 
 def wavePackSize(baseSize, waveIndex, waveScript=None):
