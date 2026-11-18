@@ -21,6 +21,8 @@ Sections below remain **debug / magic-word** fallbacks.
    `requestHackSlashHit` → AI `takeHackSlashDamage`.
 4. Defeats lower pollution via `PollutionManagerAI.onCorruptToonDefeated`.
    HUD shows wave / corruption % / pack remaining; scene tint + fog react to pollution.
+   Ink Overlord + Corrupted Oswald also drive a thin client life bar
+   (`BossHpBarHud` from `DistributedCorruptToon` `setHp`/`setMaxHp`).
    Fog / ink haze / color grade / street-prop tint are **hood-specific** (Loopy purple
    ink, Punchline sludge green-brown, Silly hot magenta) via `HOOD_POLLUTION_BIAS`
    and `PollutionPropTint` (geom colorScale — does not stomp reclaim render bloom).

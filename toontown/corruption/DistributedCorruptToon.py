@@ -11,6 +11,9 @@ from direct.task import Task
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathPopFx import (
     DeathPopSplat, buildBodyPopInterval, deathPopLook)
+from toontown.reclaim.BossHpBarHud import (
+    releaseCorruptToon as releaseBossHpBar,
+    syncFromCorruptToon as syncBossHpBar)
 from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphString
 from toontown.corruption.BruteSludgeSplashFx import BruteSludgeSplash
 from toontown.corruption.BruteSpitCreamSplashFx import BruteSpitCreamSplash
@@ -147,11 +150,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__startSilhouetteCreamWash()
 
     def disable(self):
+        releaseBossHpBar(self)
         self.__stopIntervals()
         self.detachNode()
         DistributedNode.DistributedNode.disable(self)
 
     def delete(self):
+        releaseBossHpBar(self)
         self.__stopIntervals()
         self.__cleanupActor()
         for attr in ('geom', 'armGeom', 'headGeom', 'legGeomL', 'legGeomR',
@@ -449,6 +454,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.name = name
         if self.nametagNP is not None:
             self.nametagNP.node().setText(name)
+        syncBossHpBar(self)
 
     def getName(self):
         return self.name
@@ -471,6 +477,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__startSilhouetteCreamSparkle()
         if getattr(self, '_silhouetteCreamWash', None) is not None:
             self.__startSilhouetteCreamWash()
+        syncBossHpBar(self)
 
     def getArchetype(self):
         return int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
@@ -496,12 +503,14 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
     def setHp(self, hp):
         self.hp = int(hp)
+        syncBossHpBar(self)
 
     def getHp(self):
         return self.hp
 
     def setMaxHp(self, maxHp):
         self.maxHp = int(maxHp)
+        syncBossHpBar(self)
 
     def getMaxHp(self):
         return self.maxHp
@@ -1353,6 +1362,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self._gagPuddleNP = None
 
     def announceDefeat(self):
+        releaseBossHpBar(self)
         if self._defeatIval is not None:
             self._defeatIval.finish()
         if self._pulseIval is not None:
