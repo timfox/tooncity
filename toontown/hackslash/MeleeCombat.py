@@ -24,6 +24,7 @@ from otp.avatar import Emote
 
 from . import HackSlashConfig
 from . import HitJuice
+from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
 from .DemoHostile import spawnDemoHostiles
 from .DodgePerfectFx import DodgePerfectFx
@@ -53,7 +54,6 @@ class MeleeCombatController(DirectObject):
         self._flashIval = None
         self._flashNP = None
         self._launchIval = None
-        self._launchSparkNodes = []
         self._dodgeIval = None
         self._iframeUntil = 0.0
         self._dodgeIFrameUntil = 0.0
@@ -65,6 +65,7 @@ class MeleeCombatController(DirectObject):
         self._hitSpark = HitSparkFx(avatar)
         self._slamDust = SlamDustFx(avatar)
         self._creamSlamFlash = CreamSlamFlashFx(avatar)
+        self._creamHangSparkle = CreamHangSparkleFx(avatar)
         # Soft-lock FOV punch defers while HitStopFx is active (#68 compose).
         self._softLockReticle = SoftLockReticleFx(
             avatar,
@@ -178,6 +179,10 @@ class MeleeCombatController(DirectObject):
             pass
         try:
             self._creamSlamFlash.clear()
+        except Exception:
+            pass
+        try:
+            self._creamHangSparkle.clear()
         except Exception:
             pass
         try:
@@ -612,28 +617,22 @@ class MeleeCombatController(DirectObject):
             node, peak, hangSec, hoverAmp, stretch,
             name=self.avatar.uniqueName('hackslashLaunchHang'))
 
-        def startHangSparks():
+        def startCreamHangSparkle():
+            # World-space cream flecks + halo at apex — HitJuice hang still
+            # owns hover/squash; CreamSlamFlashFx stays aspect2d on connect.
             try:
                 parent = render  # noqa: F821
             except Exception:
                 parent = None
-            sparkIval, sparkNodes = HitJuice.spawnHangSparks(
-                peak, parent=parent,
-                name=self.avatar.uniqueName('hackslashHangSparks'))
-            self._launchSparkNodes = sparkNodes
-            if sparkIval is not None:
-                try:
-                    sparkIval.start()
-                except Exception:
-                    HitJuice.clearHangSparks(sparkNodes)
-                    self._launchSparkNodes = []
+            self._creamHangSparkle.play(
+                origin=peak, hitIndex=hitIndex, parent=parent)
 
         self._launchIval = Sequence(
             Parallel(
                 LerpPosInterval(node, upSec, peak),
                 LerpScaleInterval(node, upSec, stretch),
             ),
-            Func(startHangSparks),
+            Func(startCreamHangSparkle),
             hangIval,
             Parallel(
                 LerpPosInterval(node, downSec, start),
@@ -696,8 +695,10 @@ class MeleeCombatController(DirectObject):
         self._selfHopIval.start()
 
     def _clearLaunchSparks(self):
-        HitJuice.clearHangSparks(self._launchSparkNodes)
-        self._launchSparkNodes = []
+        try:
+            self._creamHangSparkle.clear()
+        except Exception:
+            pass
 
     def _clearLaunch(self):
         if self._launchIval:

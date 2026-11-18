@@ -20,7 +20,8 @@ class ToggleHackSlash(MagicWord):
         'reticle hose pop + brief FOV punch on '
         'acquire/snap, and an on-screen punch counter that ticks on hits then '
         'fades when the string breaks (finisher also cream-slam-flashes + '
-        'FOV-punches). '
+        'FOV-punches; mid/finisher air juggle hangs with cream sparkle at '
+        'apex). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
@@ -45,6 +46,7 @@ class ToggleHackSlash(MagicWord):
                 '(ink sparkle on perfect dodge). Connects squash/stretch; '
                 'punch counter + soft-lock '
                 'reticle pop / FOV punch / orbit + hit flash (cream slam flash '
-                'on finisher). Soft-targets demo hostiles (and street suits).'
+                'on finisher; cream sparkle at air-juggle hang). Soft-targets '
+                'demo hostiles (and street suits).'
             )
         return 'Stretch-punch melee OFF.'
