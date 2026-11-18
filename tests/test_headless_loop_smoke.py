@@ -2839,9 +2839,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('dodgeCancelCreamWashPeakAtSec', hack_init)
         self.assertIn('dodgeCancelCreamWashAftershockAtSec', hack_init)
 
-        # Hurt-stagger cream wash deepen (#215 deepen) — juicier smack→recovery
-        # wash + residual aftershock. Distinct from dodge-cancel flash (#242) /
-        # i-frame cream (#228).
+        # Hurt-stagger cream wash deepen past #247 — juicier smack→recovery
+        # wash + richer residual aftershock. Distinct from dodge-cancel flash
+        # (#242 / #257) / i-frame cream (#228).
         hurt_wash_rel = 'toontown/hackslash/HurtStaggerCreamWashFx.py'
         _assert_module_file(hurt_wash_rel)
         hurt_wash_names = _class_and_func_names(_module_ast(hurt_wash_rel))
@@ -2869,9 +2869,12 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('hurtStaggerCreamWashAftershockAtSec', hurt_wash_funcs)
         hurt_wash_assigns = _assign_map(config_tree)
         self.assertGreaterEqual(
-            hurt_wash_assigns.get('HURT_STAGGER_CREAM_WASH_PEAK'), 0.095)
+            hurt_wash_assigns.get('HURT_STAGGER_CREAM_WASH_PEAK'), 0.098)
         self.assertGreaterEqual(
-            hurt_wash_assigns.get('HURT_STAGGER_CREAM_WASH_HOLD_SEC'), 0.07)
+            hurt_wash_assigns.get('HURT_STAGGER_CREAM_WASH_HOLD_SEC'), 0.085)
+        self.assertGreaterEqual(
+            hurt_wash_assigns.get('HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT'),
+            5)
         self.assertIs(
             hurt_wash_assigns.get(
                 'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_ENABLED'),

@@ -2,10 +2,10 @@
 """Behavioral headless tests for hurt-stagger cream wash aftershock helpers.
 
 Loads HackSlashConfig hurt-stagger cream wash helpers without Panda3D. Covers
-deepened tunables + peak timing so the wash reads during committed stagger
-(#199 / #215 deepen) before the F/Shift recovery cancel window, plus residual
-wash aftershock. Distinct from dodge-cancel cream flash deepen (#242) and
-i-frame cream wash deepen (#228).
+deepened-past tunables + peak timing so the wash reads during committed
+stagger (#199 / #215 / #247 deepen) before the F/Shift recovery cancel
+window, plus residual wash aftershock. Distinct from dodge-cancel cream flash
+deepen (#242 / #257) and i-frame cream wash deepen (#228).
 
 Run from repo root:
   python3 tests/test_hurt_stagger_cream_wash.py
@@ -75,7 +75,7 @@ def _top_level_names(tree: ast.AST) -> set[str]:
 
 
 class HurtStaggerCreamWashTest(unittest.TestCase):
-    """Config + AST checks for deepened hurt-stagger cream wash aftershock."""
+    """Config + AST checks for deepened-past hurt-stagger cream wash."""
 
     @classmethod
     def setUpClass(cls):
@@ -90,13 +90,13 @@ class HurtStaggerCreamWashTest(unittest.TestCase):
         self.assertLess(
             self.cfg.HURT_STAGGER_CREAM_WASH_MID,
             self.cfg.HURT_STAGGER_CREAM_WASH_PEAK)
-        # Deepened readability: juicier than original #215 hurt wash.
+        # Deepened-past readability: juicier than merged #247 hurt wash.
         self.assertGreaterEqual(
-            self.cfg.HURT_STAGGER_CREAM_WASH_PEAK, 0.095)
+            self.cfg.HURT_STAGGER_CREAM_WASH_PEAK, 0.098)
         self.assertGreaterEqual(
-            self.cfg.HURT_STAGGER_CREAM_WASH_HOLD_SEC, 0.07)
+            self.cfg.HURT_STAGGER_CREAM_WASH_HOLD_SEC, 0.085)
         self.assertGreaterEqual(
-            self.cfg.HURT_STAGGER_CREAM_WASH_MID, 0.055)
+            self.cfg.HURT_STAGGER_CREAM_WASH_MID, 0.065)
         # Quieter / earlier than hit-connect wash — smacks fire often.
         self.assertLess(
             self.cfg.HURT_STAGGER_CREAM_WASH_PEAK,
@@ -107,8 +107,8 @@ class HurtStaggerCreamWashTest(unittest.TestCase):
         self.assertLess(
             self.cfg.HURT_STAGGER_CREAM_WASH_BIN,
             self.cfg.HIT_SPARK_CREAM_WASH_BIN)
-        # Distinct from dodge-cancel cream flash deepen (#242) — quieter,
-        # delayed stagger settle (not instant cancel flash).
+        # Distinct from dodge-cancel cream flash deepen (#242 / #257) —
+        # quieter, delayed stagger settle (not instant cancel flash).
         self.assertLess(
             self.cfg.HURT_STAGGER_CREAM_WASH_PEAK,
             self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK)
@@ -122,9 +122,13 @@ class HurtStaggerCreamWashTest(unittest.TestCase):
         # Peak during committed stagger, before cancel window opens.
         peak_at = self.cfg.hurtStaggerCreamWashPeakAtSec()
         self.assertLess(peak_at, self.cfg.HURT_STAGGER_SEC)
-        # Quiet residual wash aftershock after the deepened veil.
+        # Richer residual wash aftershock after the deepened-past veil.
         self.assertGreaterEqual(
-            self.cfg.HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT, 4)
+            self.cfg.HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT, 5)
+        self.assertGreaterEqual(
+            self.cfg.HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK, 1.25)
+        self.assertGreaterEqual(
+            self.cfg.HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA, 0.12)
         self.assertTrue(
             self.cfg.HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
         self.assertGreater(
@@ -178,8 +182,9 @@ class HurtStaggerCreamWashTest(unittest.TestCase):
         # Ban phrasing only — no KH product names as branding.
         self.assertIn('no keyblades', src.lower())
         self.assertNotIn('kingdom hearts', src.lower())
-        # Distinct from dodge-cancel / i-frame deepen cues.
+        # Distinct from dodge-cancel / i-frame deepen cues; past #247.
         self.assertIn('distinct from', src.lower())
+        self.assertIn('deepened past #247', src.lower())
 
     def test_ast_melee_wires_hurt_cream_wash(self):
         melee_rel = 'toontown/hackslash/MeleeCombat.py'
