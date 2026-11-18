@@ -12,6 +12,14 @@ POLLUTION_SCALE = 1000
 CORRUPT_TOON_DEFAULT_HP = 30
 CORRUPT_TOON_DEFAULT_NAME = 'Corrupt Toon'
 
+# Archetypes: 0 = Ink Smudge (fast melee), 1 = Sludge Brute (tank + spit).
+ARCHETYPE_SMUDGE = 0
+ARCHETYPE_BRUTE = 1
+ARCHETYPE_NAMES = {
+    ARCHETYPE_SMUDGE: 'Ink Smudge',
+    ARCHETYPE_BRUTE: 'Sludge Brute',
+}
+
 # Defeating one corrupt toon reduces local pollution by this amount.
 # Slice 3 reclaim loop will tune pack sizes against this contribution.
 POLLUTION_PER_DEFEAT = 0.15
@@ -19,7 +27,7 @@ POLLUTION_PER_DEFEAT = 0.15
 # Magic-word pollute/purify default step when no amount is given.
 POLLUTION_STEP_DEFAULT = 0.25
 
-# Chase / aggro / telegraphed melee (Depth D2).
+# Chase / aggro / telegraphed melee (Depth D2) — Smudge defaults.
 AI_TICK_DT = 0.25
 AGGRO_RANGE = 35.0
 MELEE_RANGE = 4.5
@@ -30,15 +38,90 @@ ATTACK_DAMAGE = 2
 ATTACK_COOLDOWN = 1.75
 DEFEAT_DELETE_DELAY = 0.85
 
+# Per-archetype combat / presentation overrides (falls back to Smudge globals).
+ARCHETYPE_STATS = {
+    ARCHETYPE_SMUDGE: {
+        'id': 'smudge',
+        'defaultHp': CORRUPT_TOON_DEFAULT_HP,
+        'defaultName': 'Ink Smudge',
+        'chaseSpeed': CHASE_SPEED,
+        'aggroRange': AGGRO_RANGE,
+        'engageRange': MELEE_RANGE,
+        'attackHitRange': ATTACK_HIT_RANGE,
+        'telegraphDelay': ATTACK_TELEGRAPH_DELAY,
+        'attackDamage': ATTACK_DAMAGE,
+        'attackCooldown': ATTACK_COOLDOWN,
+        'ranged': False,
+        'actorScale': 1.08,
+        'actorTint': (0.18, 0.06, 0.28, 1.0),
+        'cardTint': (0.22, 0.05, 0.32, 0.92),
+        'cardArmTint': (0.12, 0.02, 0.18, 0.78),
+        'pulseHot': (0.55, 0.12, 0.75, 1.0),
+        'nameColor': (0.9, 0.55, 1.0, 1.0),
+        'telegraphCharge': (2.15, 0.25, 2.4, 1.0),
+        'telegraphHold': (1.55, 0.2, 1.85, 1.0),
+        'spitProjectile': False,
+    },
+    ARCHETYPE_BRUTE: {
+        'id': 'brute',
+        # Slower tank: bulk + HP, holds mid-range and telegraphs an ink spit.
+        'defaultHp': 55,
+        'defaultName': 'Sludge Brute',
+        'chaseSpeed': 4.2,
+        'aggroRange': 32.0,
+        'engageRange': 11.0,
+        'attackHitRange': 14.0,
+        'telegraphDelay': 0.85,
+        'attackDamage': 4,
+        'attackCooldown': 2.35,
+        'ranged': True,
+        'actorScale': 1.42,
+        'actorTint': (0.12, 0.22, 0.08, 1.0),
+        'cardTint': (0.16, 0.28, 0.10, 0.95),
+        'cardArmTint': (0.08, 0.16, 0.05, 0.85),
+        'pulseHot': (0.35, 0.72, 0.18, 1.0),
+        'nameColor': (0.55, 0.95, 0.35, 1.0),
+        'telegraphCharge': (1.55, 2.35, 0.45, 1.0),
+        'telegraphHold': (1.15, 1.85, 0.35, 1.0),
+        'spitProjectile': True,
+        'spitColor': (0.45, 0.95, 0.22, 0.95),
+        'shadowScale': 0.72,
+    },
+}
+
 # Visual ink / sickly palette (not classic cog gray).
-CORRUPT_TINT = (0.22, 0.05, 0.32, 0.92)
-CORRUPT_TINT_HOT = (0.55, 0.12, 0.75, 1.0)
-CORRUPT_ARM_TINT = (0.12, 0.02, 0.18, 0.78)
+CORRUPT_TINT = ARCHETYPE_STATS[ARCHETYPE_SMUDGE]['cardTint']
+CORRUPT_TINT_HOT = ARCHETYPE_STATS[ARCHETYPE_SMUDGE]['pulseHot']
+CORRUPT_ARM_TINT = ARCHETYPE_STATS[ARCHETYPE_SMUDGE]['cardArmTint']
 # DNA Actor base multiply — keeps silhouette readable as ink-black toon.
-CORRUPT_ACTOR_TINT = (0.18, 0.06, 0.28, 1.0)
-CORRUPT_ACTOR_SCALE = 1.08
+CORRUPT_ACTOR_TINT = ARCHETYPE_STATS[ARCHETYPE_SMUDGE]['actorTint']
+CORRUPT_ACTOR_SCALE = ARCHETYPE_STATS[ARCHETYPE_SMUDGE]['actorScale']
 CORRUPT_FOG_COLOR = (0.18, 0.12, 0.22)
 CORRUPT_FOG_EXP_MAX = 0.012
+
+
+def normalizeArchetype(archetype):
+    """Clamp unknown ids to Ink Smudge."""
+    try:
+        value = int(archetype)
+    except (TypeError, ValueError):
+        return ARCHETYPE_SMUDGE
+    if value in ARCHETYPE_STATS:
+        return value
+    return ARCHETYPE_SMUDGE
+
+
+def archetypeStats(archetype):
+    """Combat + look dict for an archetype id."""
+    return ARCHETYPE_STATS[normalizeArchetype(archetype)]
+
+
+def archetypeDefaultHp(archetype):
+    return int(archetypeStats(archetype)['defaultHp'])
+
+
+def archetypeDefaultName(archetype):
+    return str(archetypeStats(archetype)['defaultName'])
 
 # Per-street ambient corruption look (branch zone ids).
 # fog: RGB base; fogExpScale: density multiplier vs CORRUPT_FOG_EXP_MAX

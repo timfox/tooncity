@@ -22,6 +22,8 @@ ACTS = (
         'maxPacks': 3,
         'corruptHp': 30,
         'corruptName': 'Ink Smudge',
+        # Pure Smudge packs — Act 1 stays the familiar melee tutorial.
+        'bruteFraction': 0.0,
         'banner': 'Act 1 — Corruption stains Loopy Lane!',
         'handoff': 'Loopy Lane is pure again! Next: Punchline Place (zone 2300).',
     },
@@ -34,6 +36,10 @@ ACTS = (
         'maxPacks': 4,
         'corruptHp': 40,
         'corruptName': 'Gunk Gagster',
+        # Mix in Sludge Brutes (tank + spit) with Gunk Gagster Smudges.
+        'bruteFraction': 0.5,
+        'bruteWaveStart': 1,
+        'bruteName': 'Sludge Brute',
         'banner': 'Act 2 — Punchline Place is drowning in sludge!',
         'handoff': 'Punchline Place laughs clean! Finale awaits on Silly Street (zone 2100).',
     },
@@ -46,6 +52,8 @@ ACTS = (
         'maxPacks': 2,
         'corruptHp': 90,
         'corruptName': 'Ink Overlord',
+        # Boss fight stays Overlord-only (no Brute mix).
+        'bruteFraction': 0.0,
         'banner': 'Finale Phase 1 — The Ink Overlord rises on Silly Street!',
         'handoff': 'Toon City is saved! Purity restored across every neighborhood.',
         'finale': True,
@@ -61,6 +69,7 @@ ACTS = (
             'banner': 'Finale Phase 2 — Ink Overlord Unleashed! Finish it!',
             'finalePhase': 2,
             'transitionSting': True,
+            'bruteFraction': 0.0,
         },
     },
 )

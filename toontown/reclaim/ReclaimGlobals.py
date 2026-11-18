@@ -20,6 +20,13 @@ WAVE_HP_SCALE = 0.18
 WAVE_SPAWN_DELAY = 1.4
 WAVE_MAX_EXTRA = 3
 
+# Sludge Brute mix for non-campaign reclaim (Ink Smudge stays majority).
+# Wave 1 = pure Smudge; later waves introduce a few tanks.
+BRUTE_WAVE_START = 2
+BRUTE_FRACTION = 0.34
+BRUTE_NAME = 'Sludge Brute'
+SMUDGE_NAME = 'Ink Smudge'
+
 # Director FSM states (mirrored on client for banner / HUD).
 STATE_IDLE = 0
 STATE_ACTIVE = 1
@@ -101,3 +108,54 @@ def waveCorruptHp(baseHp, waveIndex):
     wave = max(1, int(waveIndex))
     scale = 1.0 + ((wave - 1) * WAVE_HP_SCALE)
     return max(1, int(round(float(baseHp) * scale)))
+
+
+def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
+                      bruteWaveStart=None):
+    """Choose Smudge (0) or Brute (1) for one pack slot.
+
+    Keeps wave-1 / zero-fraction packs as pure Ink Smudge so Loopy demos
+    and early reclaim stay familiar.
+    """
+    from toontown.corruption import CorruptionGlobals
+    wave = max(1, int(waveIndex))
+    start = BRUTE_WAVE_START if bruteWaveStart is None else int(bruteWaveStart)
+    fraction = BRUTE_FRACTION if bruteFraction is None else float(bruteFraction)
+    if wave < start or fraction <= 0.0 or packCount <= 0:
+        return CorruptionGlobals.ARCHETYPE_SMUDGE
+    # Spread brutes across the pack instead of clumping at the end.
+    bruteSlots = max(1, int(round(packCount * fraction)))
+    bruteSlots = min(bruteSlots, packCount)
+    # Prefer center / rear slots so front-liners still read as Smudge melee.
+    startSlot = max(0, packCount - bruteSlots)
+    if int(slotIndex) >= startSlot:
+        return CorruptionGlobals.ARCHETYPE_BRUTE
+    return CorruptionGlobals.ARCHETYPE_SMUDGE
+
+
+def packSlotName(archetype, smudgeName=None, bruteName=None, slotIndex=0,
+                 packCount=1):
+    """Display name for a pack slot (numbered when pack has multiples)."""
+    from toontown.corruption import CorruptionGlobals
+    arch = CorruptionGlobals.normalizeArchetype(archetype)
+    if arch == CorruptionGlobals.ARCHETYPE_BRUTE:
+        base = bruteName or BRUTE_NAME
+    else:
+        base = smudgeName or SMUDGE_NAME
+    if packCount > 1 and int(slotIndex) > 0:
+        return '%s %s' % (base, int(slotIndex) + 1)
+    return base
+
+
+def packSlotHp(archetype, baseHp, waveIndex):
+    """HP for a pack slot; Brutes use their higher default when base is unset."""
+    from toontown.corruption import CorruptionGlobals
+    arch = CorruptionGlobals.normalizeArchetype(archetype)
+    if baseHp is None:
+        hpBase = CorruptionGlobals.archetypeDefaultHp(arch)
+    elif arch == CorruptionGlobals.ARCHETYPE_BRUTE:
+        # Campaign/act base HP is tuned for Smudge — bump Brutes ~1.6x.
+        hpBase = max(int(baseHp), int(round(float(baseHp) * 1.6)))
+    else:
+        hpBase = int(baseHp)
+    return waveCorruptHp(hpBase, waveIndex)

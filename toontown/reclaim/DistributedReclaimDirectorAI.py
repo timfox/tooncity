@@ -33,6 +33,9 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._maxPacks = ReclaimGlobals.MAX_PACKS
         self._corruptHp = None
         self._corruptName = None
+        self._bruteName = None
+        self._bruteFraction = None
+        self._bruteWaveStart = None
         self.finalePhase = 0
         self._transitionSting = False
 
@@ -95,11 +98,12 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
     def start(self, zoneId, anchorPos, anchorH=0.0,
               seedPollution=None, packSize=None, maxPacks=None,
               corruptHp=None, corruptName=None,
+              bruteFraction=None, bruteWaveStart=None, bruteName=None,
               finalePhase=0, transitionSting=False):
         """Seed pollution and spawn the first escalating corrupt wave.
 
-        Optional overrides support multi-act campaign difficulty and
-        Ink Overlord finale phase presentation (client-readable).
+        Optional overrides support multi-act campaign difficulty,
+        Sludge Brute mix ratios, and Ink Overlord finale presentation.
         """
         self.reclaimZoneId = int(zoneId)
         self._anchorPos = (
@@ -114,6 +118,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             ReclaimGlobals.MAX_PACKS if maxPacks is None else int(maxPacks))
         self._corruptHp = None if corruptHp is None else int(corruptHp)
         self._corruptName = corruptName
+        self._bruteName = bruteName
+        self._bruteFraction = (
+            None if bruteFraction is None else float(bruteFraction))
+        self._bruteWaveStart = (
+            None if bruteWaveStart is None else int(bruteWaveStart))
         self._transitionSting = bool(transitionSting)
         self._clearPack(delete=True)
         self._packsSpawned = 0
@@ -268,7 +277,6 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
     def _spawnPack(self):
         wave = self._packsSpawned + 1
         count = ReclaimGlobals.wavePackSize(self._packSize, wave)
-        hp = ReclaimGlobals.waveCorruptHp(self._corruptHp, wave)
         self._packsSpawned = wave
         self.b_setWaveIndex(wave)
         self.b_setMaxWaves(self._maxPacks)
@@ -277,19 +285,46 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         heading = self._anchorH
         rad = math.radians(heading)
         spawned = []
+        bruteCount = 0
         for i in range(count):
-            name = self._corruptName
-            if name and count > 1 and i > 0:
-                name = '%s %s' % (self._corruptName, i + 1)
-            elif name is None and wave > 1:
-                name = 'Corrupt Wave %s' % wave
+            archetype = ReclaimGlobals.pickPackArchetype(
+                wave, i, count,
+                bruteFraction=self._bruteFraction,
+                bruteWaveStart=self._bruteWaveStart)
+            if archetype == CorruptionGlobals.ARCHETYPE_BRUTE:
+                bruteCount += 1
+            hp = ReclaimGlobals.packSlotHp(archetype, self._corruptHp, wave)
+            # Finale / explicit single-name packs keep Overlord naming.
+            if (self._corruptName
+                    and self._bruteFraction is not None
+                    and float(self._bruteFraction) <= 0.0):
+                name = self._corruptName
+                if count > 1 and i > 0:
+                    name = '%s %s' % (self._corruptName, i + 1)
+            elif self._corruptName or self._bruteName:
+                name = ReclaimGlobals.packSlotName(
+                    archetype,
+                    smudgeName=self._corruptName,
+                    bruteName=self._bruteName,
+                    slotIndex=i,
+                    packCount=count)
+            elif wave > 1:
+                name = ReclaimGlobals.packSlotName(
+                    archetype, slotIndex=i, packCount=count)
+            else:
+                name = ReclaimGlobals.packSlotName(
+                    archetype, slotIndex=i, packCount=count)
             corrupt = DistributedCorruptToonAI(
-                self.air, name=name, maxHp=hp)
+                self.air, name=name, maxHp=hp, archetype=archetype)
             # Fan packs slightly farther each wave so the street fills forward.
+            # Brutes sit a bit back so spit telegraph reads at mid-range.
+            bruteBias = (
+                2.2 if archetype == CorruptionGlobals.ARCHETYPE_BRUTE else 0.0)
             offset = (
                 ReclaimGlobals.SPAWN_FORWARD
                 + (i * 0.15)
-                + ((wave - 1) * 1.5))
+                + ((wave - 1) * 1.5)
+                + bruteBias)
             lateral = (i - (count - 1) / 2.0) * ReclaimGlobals.SPAWN_SPACING
             x = baseX - math.sin(rad) * offset - math.cos(rad) * lateral
             y = baseY + math.cos(rad) * offset - math.sin(rad) * lateral
@@ -301,5 +336,6 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self.b_setPackAlive(len(spawned))
         self.sendUpdate('announcePackSpawn', [len(spawned), wave])
         self.notify.debug(
-            'reclaim zone %s wave #%s/%s pack=%s hp=%s' % (
-                self.reclaimZoneId, wave, self._maxPacks, len(spawned), hp))
+            'reclaim zone %s wave #%s/%s pack=%s brutes=%s' % (
+                self.reclaimZoneId, wave, self._maxPacks, len(spawned),
+                bruteCount))

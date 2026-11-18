@@ -121,6 +121,9 @@ class CampaignDirectorAI(DirectObject):
             'maxPacks': act.get('maxPacks'),
             'corruptHp': act.get('corruptHp'),
             'corruptName': act.get('corruptName'),
+            'bruteFraction': act.get('bruteFraction'),
+            'bruteWaveStart': act.get('bruteWaveStart'),
+            'bruteName': act.get('bruteName'),
             'banner': act.get('banner'),
             'finalePhase': 0,
             'transitionSting': False,
@@ -166,6 +169,9 @@ class CampaignDirectorAI(DirectObject):
             maxPacks=params.get('maxPacks'),
             corruptHp=params.get('corruptHp'),
             corruptName=params.get('corruptName'),
+            bruteFraction=params.get('bruteFraction'),
+            bruteWaveStart=params.get('bruteWaveStart'),
+            bruteName=params.get('bruteName'),
             finalePhase=params.get('finalePhase', 0),
             transitionSting=params.get('transitionSting', False))
         banner = params.get('banner') or act.get('banner')

@@ -4,8 +4,8 @@ from panda3d.core import (
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed import DistributedNode
 from direct.interval.IntervalGlobal import (
-    LerpColorScaleInterval, LerpScaleInterval, Parallel, Sequence, Func,
-    Wait)
+    LerpColorScaleInterval, LerpPosInterval, LerpScaleInterval, Parallel,
+    Sequence, Func, Wait)
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.HackSlashTarget import HackSlashTarget
@@ -22,6 +22,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.hp = CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
         self.maxHp = CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
         self.name = CorruptionGlobals.CORRUPT_TOON_DEFAULT_NAME
+        self.archetype = CorruptionGlobals.ARCHETYPE_SMUDGE
         self.geom = None
         self.armGeom = None
         self.headGeom = None
@@ -42,6 +43,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._attackFlashNP = None
         self._attackFlashIval = None
         self._purityFlashIval = None
+        self._spitIval = None
+        self._spitNP = None
         self._telegraphSfx = None
         self._attackHitSfx = None
 
@@ -92,12 +95,63 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
     def __stopIntervals(self):
         for attr in ('_defeatIval', '_hitIval', '_pulseIval',
                      '_telegraphIval', '_attackHitIval',
-                     '_attackFlashIval', '_purityFlashIval'):
+                     '_attackFlashIval', '_purityFlashIval', '_spitIval'):
             ival = getattr(self, attr, None)
             if ival is not None:
                 ival.finish()
                 setattr(self, attr, None)
         self.__clearAttackFlash()
+        self.__clearSpit()
+
+    def _stats(self):
+        return CorruptionGlobals.archetypeStats(self.archetype)
+
+    def setArchetype(self, archetype):
+        self.archetype = CorruptionGlobals.normalizeArchetype(archetype)
+        self.__applyArchetypeLook()
+
+    def getArchetype(self):
+        return self.archetype
+
+    def __applyArchetypeLook(self):
+        """Tint / scale / nametag for Smudge vs Sludge Brute."""
+        stats = self._stats()
+        if self.toonActor is not None:
+            try:
+                self.toonActor.setScale(float(stats['actorScale']))
+                self.toonActor.setColorScale(*stats['actorTint'])
+            except Exception:
+                pass
+        elif self.geom is not None:
+            try:
+                self.geom.setColor(*stats['cardTint'])
+            except Exception:
+                pass
+            if self.armGeom is not None:
+                try:
+                    self.armGeom.setColor(*stats['cardArmTint'])
+                except Exception:
+                    pass
+            # Brute card silhouette: bulkier body frame.
+            if self.archetype == CorruptionGlobals.ARCHETYPE_BRUTE:
+                try:
+                    self.visualRoot.setScale(1.35, 1.35, 1.2)
+                except Exception:
+                    pass
+        if self.shadow is not None and not self.shadow.isEmpty():
+            try:
+                self.shadow.setScale(float(stats.get(
+                    'shadowScale', 0.5 if self._useActor else 0.45)))
+            except Exception:
+                pass
+        if self.nametagNP is not None and not self.nametagNP.isEmpty():
+            try:
+                self.nametagNP.node().setTextColor(*stats['nameColor'])
+            except Exception:
+                pass
+        # Restart pulse with archetype hot color.
+        if self.visualRoot is not None:
+            self.__startInkPulse()
 
     def __buildGeom(self):
         self.visualRoot = self.attachNewNode('corrupt-visual')
@@ -137,12 +191,18 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             toon.setPos(0, 0, 0)
             toon.setH(0)
             look, _phase = self.__finalePhaseLook()
+            stats = self._stats()
             actorScale = (
                 float(look['actorScale']) if look
-                else CorruptionGlobals.CORRUPT_ACTOR_SCALE)
+                else float(stats['actorScale']))
             toon.setScale(actorScale)
-            # Ink-black multiply — corruption read stays strong over DNA colors.
-            toon.setColorScale(*CorruptionGlobals.CORRUPT_ACTOR_TINT)
+            # Archetype multiply — Smudge ink-black; Brute sludge green.
+            tint = look.get('actorTint', stats['actorTint']) if look else stats['actorTint']
+            # Finale looks don't carry actorTint; keep Overlord ink tint.
+            if look:
+                toon.setColorScale(*CorruptionGlobals.CORRUPT_ACTOR_TINT)
+            else:
+                toon.setColorScale(*tint)
             try:
                 toon.stopBlink()
             except Exception:
@@ -188,51 +248,57 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
     def __buildCardSilhouette(self):
         """Improved rubber-hose ink cards when DNA/Actor assets are unavailable."""
+        stats = self._stats()
+        bulk = 1.25 if self.archetype == CorruptionGlobals.ARCHETYPE_BRUTE else 1.0
         cm = CardMaker('corrupt-body')
-        cm.setFrame(-0.7, 0.7, 0.55, 2.15)
+        cm.setFrame(-0.7 * bulk, 0.7 * bulk, 0.55, 2.15 * bulk)
         body = self.visualRoot.attachNewNode(cm.generate())
-        body.setColor(*CorruptionGlobals.CORRUPT_TINT)
+        body.setColor(*stats['cardTint'])
         body.setBillboardPointEye()
         body.setTransparency(TransparencyAttrib.MAlpha)
         self.geom = body
 
         arm = CardMaker('corrupt-arm')
-        arm.setFrame(-1.85, 1.85, 0.95, 1.35)
+        arm.setFrame(-1.85 * bulk, 1.85 * bulk, 0.95, 1.35)
         armNP = self.visualRoot.attachNewNode(arm.generate())
-        armNP.setColor(*CorruptionGlobals.CORRUPT_ARM_TINT)
+        armNP.setColor(*stats['cardArmTint'])
         armNP.setBillboardPointEye()
         armNP.setTransparency(TransparencyAttrib.MAlpha)
         self.armGeom = armNP
 
         head = CardMaker('corrupt-head')
-        head.setFrame(-0.55, 0.55, 0.0, 1.05)
+        head.setFrame(-0.55 * bulk, 0.55 * bulk, 0.0, 1.05)
         headNP = self.visualRoot.attachNewNode(head.generate())
-        headNP.setPos(0, 0, 2.15)
-        headNP.setColor(0.1, 0.02, 0.16, 1.0)
+        headNP.setPos(0, 0, 2.15 * bulk)
+        headTint = stats['cardTint']
+        headNP.setColor(
+            headTint[0] * 0.55, headTint[1] * 0.55, headTint[2] * 0.55, 1.0)
         headNP.setBillboardPointEye()
         headNP.setTransparency(TransparencyAttrib.MAlpha)
         self.headGeom = headNP
 
         legL = CardMaker('corrupt-leg-l')
-        legL.setFrame(-0.55, -0.08, 0.0, 0.7)
+        legL.setFrame(-0.55 * bulk, -0.08 * bulk, 0.0, 0.7)
         legLNP = self.visualRoot.attachNewNode(legL.generate())
-        legLNP.setColor(0.14, 0.03, 0.22, 0.9)
+        legLNP.setColor(*stats['cardArmTint'])
         legLNP.setBillboardPointEye()
         legLNP.setTransparency(TransparencyAttrib.MAlpha)
         self.legGeomL = legLNP
 
         legR = CardMaker('corrupt-leg-r')
-        legR.setFrame(0.08, 0.55, 0.0, 0.7)
+        legR.setFrame(0.08 * bulk, 0.55 * bulk, 0.0, 0.7)
         legRNP = self.visualRoot.attachNewNode(legR.generate())
-        legRNP.setColor(0.14, 0.03, 0.22, 0.9)
+        legRNP.setColor(*stats['cardArmTint'])
         legRNP.setBillboardPointEye()
         legRNP.setTransparency(TransparencyAttrib.MAlpha)
         self.legGeomR = legRNP
 
     def __buildShadowAndNametag(self):
+        stats = self._stats()
         try:
             self.shadow = loader.loadModel('phase_3/models/props/drop_shadow')
-            self.shadow.setScale(0.5 if self._useActor else 0.45)
+            self.shadow.setScale(float(stats.get(
+                'shadowScale', 0.5 if self._useActor else 0.45)))
             self.shadow.setColor(0.05, 0.0, 0.1, 0.55)
             self.shadow.setZ(0.025)
             self.shadow.reparentTo(self)
@@ -246,14 +312,21 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if look:
             text.setTextColor(*look['nameColor'])
         else:
-            text.setTextColor(0.9, 0.55, 1.0, 1.0)
+            text.setTextColor(*stats['nameColor'])
         text.setShadow(0.05, 0.05)
         self.nametagNP = self.attachNewNode(text)
-        tagScale = 0.52 if look else 0.42
+        if look:
+            tagScale = 0.52
+        elif self.archetype == CorruptionGlobals.ARCHETYPE_BRUTE:
+            tagScale = 0.5
+        else:
+            tagScale = 0.42
         self.nametagNP.setScale(tagScale)
         z = 3.6 if self._useActor else 3.35
         if look:
             z += 0.35 * (float(look.get('actorScale', 1.0)) - 1.0)
+        elif self.archetype == CorruptionGlobals.ARCHETYPE_BRUTE:
+            z += 0.55
         self.nametagNP.setPos(0, 0, z)
         self.nametagNP.setBillboardPointEye()
 
@@ -263,16 +336,18 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._pulseIval is not None:
             self._pulseIval.finish()
         look, phase = self.__finalePhaseLook()
+        stats = self._stats()
         if look:
             hot = Vec4(*look['pulseHot'])
             amp = float(look.get('pulseAmp', 0.08))
         else:
-            hot = Vec4(*CorruptionGlobals.CORRUPT_TINT_HOT)
-            amp = 0.06
+            hot = Vec4(*stats['pulseHot'])
+            amp = 0.08 if self.archetype == CorruptionGlobals.ARCHETYPE_BRUTE else 0.06
         cool = Vec4(1.0, 1.0, 1.0, 1.0)
         up = Point3(1.0 + amp, 1.0 + amp, 1.0 - amp * 0.8)
         down = Point3(1.0 - amp, 1.0 - amp, 1.0 + amp)
-        beat = 0.55 if phase >= 2 else 0.7
+        beat = 0.55 if phase >= 2 else (
+            0.9 if self.archetype == CorruptionGlobals.ARCHETYPE_BRUTE else 0.7)
         self._pulseIval = Sequence(
             Parallel(
                 LerpColorScaleInterval(self.visualRoot, beat, hot),
@@ -359,6 +434,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self._pulseIval.pause()
         target = self.visualRoot if self.visualRoot is not None else self
         look, _phase = self.__finalePhaseLook()
+        stats = self._stats()
+        spit = (not look) and bool(stats.get('spitProjectile'))
         if look:
             charge = Vec4(*look['telegraphCharge'])
             hold = Vec4(*look['telegraphHold'])
@@ -366,6 +443,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             stretch = Point3(*look['stretch'])
             mid = Point3(
                 squash[0] * 0.88, squash[1] * 0.88, max(0.4, squash[2] * 1.2))
+        elif spit:
+            charge = Vec4(*stats['telegraphCharge'])
+            hold = Vec4(*stats['telegraphHold'])
+            # Brute rears back then lunges a spit blob forward.
+            squash = Point3(1.55, 1.55, 0.55)
+            mid = Point3(1.35, 1.35, 0.7)
+            stretch = Point3(0.75, 0.75, 1.45)
         else:
             charge = Vec4(*CorruptionGlobals.TELEGRAPH_CHARGE_COLOR)
             hold = Vec4(*CorruptionGlobals.TELEGRAPH_HOLD_COLOR)
@@ -374,6 +458,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             stretch = Point3(0.62, 0.62, 1.7)
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
+        if spit:
+            self.__playSpitTelegraph()
         # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
         # wind-up reads clearly before announceAttackHit's slam lands.
         self._telegraphIval = Sequence(
@@ -391,7 +477,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             ),
             # Linger stretched so the strike pose sticks until impact.
             # On miss (no announceAttackHit), ease back and resume ink pulse.
-            Wait(0.12),
+            Wait(0.12 if not spit else 0.28),
             Parallel(
                 LerpScaleInterval(target, 0.1, Point3(1.0, 1.0, 1.0)),
                 LerpColorScaleInterval(target, 0.1, Vec4(1, 1, 1, 1)),
@@ -413,9 +499,14 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
         look, _phase = self.__finalePhaseLook()
+        stats = self._stats()
         if look:
             impactScale = Point3(*look['impactScale'])
             impactColor = Vec4(*look['impactColor'])
+        elif stats.get('spitProjectile'):
+            impactScale = Point3(1.35, 1.35, 0.7)
+            impactColor = Vec4(*stats.get('spitColor', (0.45, 0.95, 0.22, 1.0)))
+            self.__clearSpit()
         else:
             impactScale = Point3(1.55, 1.55, 0.55)
             impactColor = Vec4(2.2, 0.9, 2.4, 1.0)
@@ -551,6 +642,48 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
             self._attackFlashNP = None
 
+    def __playSpitTelegraph(self):
+        """Brief sludge blob that flies forward during Brute spit wind-up."""
+        self.__clearSpit()
+        stats = self._stats()
+        try:
+            cm = CardMaker('corrupt-spit')
+            cm.setFrame(-0.35, 0.35, -0.35, 0.35)
+            blob = self.attachNewNode(cm.generate())
+            blob.setPos(0, 1.2, 1.6)
+            blob.setColor(*stats.get('spitColor', (0.45, 0.95, 0.22, 0.95)))
+            blob.setBillboardPointEye()
+            blob.setTransparency(TransparencyAttrib.MAlpha)
+            self._spitNP = blob
+            end = Point3(0, 12.0, 1.35)
+            self._spitIval = Sequence(
+                LerpScaleInterval(blob, 0.2, Point3(1.4, 1.4, 1.4)),
+                LerpPosInterval(blob, 0.55, end),
+                Parallel(
+                    LerpScaleInterval(blob, 0.12, Point3(2.2, 2.2, 0.3)),
+                    LerpColorScaleInterval(blob, 0.12, Vec4(1, 1, 1, 0)),
+                ),
+                Func(self.__clearSpit),
+            )
+            self._spitIval.start()
+        except Exception:
+            self.__clearSpit()
+
+    def __clearSpit(self):
+        if self._spitIval is not None:
+            try:
+                self._spitIval.pause()
+            except Exception:
+                pass
+            self._spitIval = None
+        if self._spitNP is not None:
+            try:
+                if not self._spitNP.isEmpty():
+                    self._spitNP.removeNode()
+            except Exception:
+                pass
+            self._spitNP = None
+
     def announceDefeat(self):
         if self._defeatIval is not None:
             self._defeatIval.finish()
@@ -564,6 +697,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self._attackHitIval.finish()
             self._attackHitIval = None
         self.__clearAttackFlash()
+        self.__clearSpit()
         target = self.visualRoot if self.visualRoot is not None else self
         # Satisfying ink splat + purity reclaim flash tied to pollution drop.
         self._defeatIval = Sequence(

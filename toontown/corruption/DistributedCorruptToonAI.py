@@ -10,14 +10,18 @@ from toontown.toon.DistributedToonAI import DistributedToonAI
 
 
 class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
-    """Hostile corrupt toon: chase, telegraphed smack, defeat → pollution reclaim."""
+    """Hostile corrupt toon: chase / spit telegraph, defeat → pollution reclaim."""
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedCorruptToonAI')
 
-    def __init__(self, air, name=None, maxHp=None):
+    def __init__(self, air, name=None, maxHp=None, archetype=None):
         DistributedNodeAI.__init__(self, air)
-        self.name = name or CorruptionGlobals.CORRUPT_TOON_DEFAULT_NAME
-        self.maxHp = maxHp if maxHp is not None else CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
+        self.archetype = CorruptionGlobals.normalizeArchetype(
+            CorruptionGlobals.ARCHETYPE_SMUDGE if archetype is None else archetype)
+        stats = CorruptionGlobals.archetypeStats(self.archetype)
+        self.name = name or stats['defaultName']
+        self.maxHp = (
+            maxHp if maxHp is not None else int(stats['defaultHp']))
         self.hp = self.maxHp
         self._defeated = False
         self._attacking = False
@@ -39,6 +43,15 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     def getMaxHp(self):
         return self.maxHp
+
+    def getArchetype(self):
+        return self.archetype
+
+    def setArchetype(self, archetype):
+        self.archetype = CorruptionGlobals.normalizeArchetype(archetype)
+
+    def _stats(self):
+        return CorruptionGlobals.archetypeStats(self.archetype)
 
     def b_setHp(self, hp):
         self.setHp(hp)
@@ -85,26 +98,28 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if self._attacking:
             return Task.again
 
-        target = self.__findNearestToon()
+        stats = self._stats()
+        target = self.__findNearestToon(stats['aggroRange'])
         if target is None:
             self._targetId = None
             return Task.again
 
         self._targetId = target.doId
         dist = self.__planarDist(target)
-        if dist <= CorruptionGlobals.MELEE_RANGE:
+        engage = float(stats['engageRange'])
+        if dist <= engage:
             now = globalClock.getFrameTime()
             if now >= self._attackReadyAt:
-                self.__beginAttack(target)
+                self.__beginAttack(target, stats)
             return Task.again
 
-        if dist <= CorruptionGlobals.AGGRO_RANGE:
-            self.__chaseToward(target)
+        if dist <= float(stats['aggroRange']):
+            self.__chaseToward(target, stats)
         return Task.again
 
-    def __findNearestToon(self):
+    def __findNearestToon(self, aggroRange):
         best = None
-        bestDist = CorruptionGlobals.AGGRO_RANGE
+        bestDist = float(aggroRange)
         for obj in list(self.air.doId2do.values()):
             if not isinstance(obj, DistributedToonAI):
                 continue
@@ -126,7 +141,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return 9999.0
         return math.sqrt(dx * dx + dy * dy)
 
-    def __chaseToward(self, target):
+    def __chaseToward(self, target, stats):
         try:
             tx, ty = target.getX(), target.getY()
             x, y, z = self.getX(), self.getY(), self.getZ()
@@ -137,7 +152,15 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         dist = math.sqrt(dx * dx + dy * dy)
         if dist < 0.05:
             return
-        step = CorruptionGlobals.CHASE_SPEED * CorruptionGlobals.AI_TICK_DT
+        # Ranged brutes stop around engage range instead of hugging the toon.
+        if stats.get('ranged'):
+            stopAt = float(stats['engageRange']) * 0.85
+            if dist <= stopAt:
+                heading = -math.degrees(math.atan2(dx, dy))
+                self.setH(heading)
+                self.sendUpdate('setXYZH', [x, y, z, heading])
+                return
+        step = float(stats['chaseSpeed']) * CorruptionGlobals.AI_TICK_DT
         if step >= dist:
             nx, ny = tx, ty
         else:
@@ -149,19 +172,20 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         # Same compound broadcast pattern elevators / crushables use for Node pos.
         self.sendUpdate('setXYZH', [nx, ny, z, heading])
 
-    def __beginAttack(self, target):
+    def __beginAttack(self, target, stats):
         self._attacking = True
         self._targetId = target.doId
         self.sendUpdate('announceAttackTelegraph', [])
         taskMgr.doMethodLater(
-            CorruptionGlobals.ATTACK_TELEGRAPH_DELAY,
+            float(stats['telegraphDelay']),
             self.__resolveAttack,
             self.uniqueName('corrupt-attack'))
 
     def __resolveAttack(self, task):
         self._attacking = False
+        stats = self._stats()
         self._attackReadyAt = (
-            globalClock.getFrameTime() + CorruptionGlobals.ATTACK_COOLDOWN)
+            globalClock.getFrameTime() + float(stats['attackCooldown']))
         if self._defeated or self.isDeleted():
             return Task.done
         target = self.air.doId2do.get(self._targetId)
@@ -171,7 +195,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.done
         if getattr(target, 'hp', 1) <= 0:
             return Task.done
-        if self.__planarDist(target) > CorruptionGlobals.ATTACK_HIT_RANGE:
+        if self.__planarDist(target) > float(stats['attackHitRange']):
             return Task.done
         # Honor client-reported dodge / hit i-frames (PollutionManager.requestHackSlashIFrame).
         iframeUntil = float(getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
@@ -179,7 +203,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.notify.debug('attack whiffed — av %s i-framed' % self._targetId)
             return Task.done
         try:
-            target.takeDamage(CorruptionGlobals.ATTACK_DAMAGE)
+            target.takeDamage(int(stats['attackDamage']))
         except Exception:
             self.notify.debug('takeDamage failed on av %s' % self._targetId)
         self.sendUpdate('announceAttackHit', [])

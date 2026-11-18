@@ -56,6 +56,27 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Melee (F / LMB) splat-defeats them; purity pop + pollution drop.
 ```
 
+## Sludge Brute (second archetype)
+
+Archetypes: `0` Ink Smudge (fast melee), `1` Sludge Brute (slow tank + spit).
+
+```
+# Pure Ink Smudge (Act 1 / default reclaim wave 1 unchanged)
+~spawncorrupt 2 0 0
+~hackslash 0
+
+# Sludge Brute — bulkier green sludge, holds mid-range, telegraphs spit blob
+~spawncorrupt 1 0 1
+~hackslash 0
+# Watch wind-up: green charge + flying spit card; dodge with Shift before hit.
+```
+
+Spawn tables:
+- **Loopy campaign / reclaim wave 1** — Ink Smudge only.
+- **Default reclaim waves 2+** — ~1/3 Sludge Brutes mixed in.
+- **Punchline campaign** — ~50% Sludge Brute from wave 1 (`Gunk Gagster` + `Sludge Brute`).
+- **Silly finale** — Ink Overlord only (no Brute mix).
+
 ## Ink Overlord finale phases
 
 Silly Street campaign (`~advancecampaign force` to skip ahead, then
