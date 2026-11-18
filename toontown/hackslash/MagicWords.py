@@ -19,7 +19,8 @@ class ToggleHackSlash(MagicWord):
         'when those i-frames eat a CorruptToon telegraph), soft-lock cream/ink '
         'reticle hose pop + brief FOV punch on '
         'acquire/snap, and an on-screen punch counter that ticks on hits then '
-        'fades when the string breaks (finisher also FOV-punches). '
+        'fades when the string breaks (finisher also cream-slam-flashes + '
+        'FOV-punches). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
@@ -43,7 +44,7 @@ class ToggleHackSlash(MagicWord):
                 'Shift/X to dodge with a smear trail + cream/ink i-frame pulse '
                 '(ink sparkle on perfect dodge). Connects squash/stretch; '
                 'punch counter + soft-lock '
-                'reticle pop / FOV punch / orbit + hit flash. Soft-targets '
-                'demo hostiles (and street suits).'
+                'reticle pop / FOV punch / orbit + hit flash (cream slam flash '
+                'on finisher). Soft-targets demo hostiles (and street suits).'
             )
         return 'Stretch-punch melee OFF.'
