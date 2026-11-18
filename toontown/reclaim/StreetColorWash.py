@@ -274,7 +274,8 @@ class StreetColorWash(object):
         self.__applyPresented(self._presentedPurity)
 
     def __onPurityRestore(self, zoneId):
-        # Burst owns the payoff — soft-clear cream veil / geom override.
+        # Soft-clear progressive wash; PurityCompleteCreamWashFx owns the
+        # discrete cream pulse layered with StreetSparkleFx.
         if zoneId and self._zoneId and int(zoneId) != int(self._zoneId):
             return
         self._active = False

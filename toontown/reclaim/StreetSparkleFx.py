@@ -1,10 +1,10 @@
 """Rubber-hose street sparkle when reclaim hits full purity.
 
 Cream glitter rises from the street horizon after wash clears — a hood-wide
-payoff layered with StreetColorWash soft-clear, PurityBurstFx FOV/rays, and
-the lighter wave cream burst. Birds return stays on the corruption audio path
-via the same purityRestoreFx messenger. Toontown spiritual-sequel tone only —
-no keyblades / no KH branding.
+payoff layered with StreetColorWash soft-clear, PurityCompleteCreamWashFx
+cream pulse, PurityBurstFx FOV/rays, and the lighter wave cream burst. Birds
+return stays on the corruption audio path via the same purityRestoreFx
+messenger. Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
