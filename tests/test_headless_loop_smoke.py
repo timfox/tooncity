@@ -2941,7 +2941,11 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'PURITY_PRESSURE_COOLDOWN_SEC',
                 'PURITY_PRESSURE_TIP_STALL',
                 'PURITY_PRESSURE_TIP_RISE',
-                'PURITY_PRESSURE_RIM_WARN_COLOR'):
+                'PURITY_PRESSURE_RIM_WARN_COLOR',
+                'PURITY_PRESSURE_RIM_FLASH_ENABLED',
+                'PURITY_PRESSURE_RIM_FLASH_PULSES',
+                'PURITY_PRESSURE_RIM_FLASH_HOLD_SEC',
+                'PURITY_PRESSURE_RIM_FLASH_SCALE'):
             self.assertIn(
                 pressure_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % pressure_key)
@@ -2974,6 +2978,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         pressure_hud_methods = _class_method_names(
             _module_ast('toontown/reclaim/PurityMeterHud.py'), 'PurityMeterHud')
         self.assertIn('warnPressure', pressure_hud_methods)
+        self.assertIn('_buildRimWarnPulse', pressure_hud_methods)
+        self.assertIs(
+            pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_ENABLED'), True)
+        self.assertGreaterEqual(
+            int(pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_PULSES', 0)), 2)
+        pressure_hud_src = _read('toontown/reclaim/PurityMeterHud.py')
+        self.assertIn('PURITY_PRESSURE_RIM_FLASH', pressure_hud_src)
+        self.assertIn('_buildRimWarnPulse', pressure_hud_src)
 
 
 def main() -> int:

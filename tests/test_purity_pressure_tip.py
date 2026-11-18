@@ -157,9 +157,28 @@ class PurityPressureTipTest(unittest.TestCase):
         methods = _class_method_names(tree, 'PurityMeterHud')
         self.assertIn('warnPressure', methods)
         self.assertIn('_clearPressureWarn', methods)
+        self.assertIn('_buildRimWarnPulse', methods)
+        self.assertIn('_setRimWarnColor', methods)
+        self.assertIn('_resetRimScale', methods)
         src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('PURITY_PRESSURE_RIM_WARN', src)
+        self.assertIn('PURITY_PRESSURE_RIM_FLASH', src)
         self.assertIn('reclaimPurityMeterPressureWarn', src)
+        # Danger flash stays distinct from secured-lock celebration.
+        self.assertNotIn('SECURED_LOCK_RIM_COLOR', src.split('def warnPressure')[1].split('def confirmSecured')[0])
+
+    def test_rim_flash_tunables_are_warm_danger_not_secured_green(self):
+        rg = self.rg
+        self.assertTrue(rg.PURITY_PRESSURE_RIM_FLASH_ENABLED)
+        self.assertGreaterEqual(int(rg.PURITY_PRESSURE_RIM_FLASH_PULSES), 2)
+        warn = rg.PURITY_PRESSURE_RIM_WARN_COLOR
+        lock = rg.SECURED_LOCK_RIM_COLOR
+        # Warm/orange warn vs green secured — channels must not match.
+        self.assertGreater(float(warn[0]), float(warn[1]))
+        self.assertGreater(float(lock[1]), float(lock[0]))
+        self.assertNotEqual(warn, lock)
+        self.assertGreater(float(rg.PURITY_PRESSURE_RIM_FLASH_SCALE), 1.0)
+        self.assertLess(float(rg.PURITY_PRESSURE_RIM_FLASH_HOLD_SEC), 0.5)
 
 
 def main() -> int:

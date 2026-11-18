@@ -425,9 +425,18 @@ PURITY_PRESSURE_TIP_STALL = (
 PURITY_PRESSURE_TIP_RISE = (
     "Ink's pushing back! Don't let this wave go contested!"
 )
-# Brief contested rim flash on PurityMeterHud when the tip whispers.
+# Contested rim flash on PurityMeterHud when the tip whispers (#202 deepen).
+# Warm double-pulse blink so danger reads clearly mid-wave — distinct from
+# secured-lock green hold + whole-meter hose-pop (#209). No KH branding.
+PURITY_PRESSURE_RIM_FLASH_ENABLED = True
 PURITY_PRESSURE_RIM_WARN_COLOR = (1.0, 0.55, 0.35, 0.78)
-PURITY_PRESSURE_RIM_WARN_SEC = 0.55
+PURITY_PRESSURE_RIM_FLASH_PULSES = 2
+PURITY_PRESSURE_RIM_FLASH_ON_SEC = 0.10
+PURITY_PRESSURE_RIM_FLASH_OFF_SEC = 0.08
+PURITY_PRESSURE_RIM_FLASH_HOLD_SEC = 0.14  # final peak dwell
+PURITY_PRESSURE_RIM_FLASH_SCALE = 1.16  # rim-only nudge (not whole meter)
+# Legacy alias kept for older reads; flash hold prefers FLASH_HOLD_SEC.
+PURITY_PRESSURE_RIM_WARN_SEC = 0.14
 
 # Secured purity lock tip — after full reclaim, confirm ink cannot re-creep
 # (#194 complement). Client HUD tip + meter rim confirm; AI lock lives on
