@@ -337,7 +337,8 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # or ~spawnsnare 1 0 2
 ~hackslash 0
 # Snare: amber horizontal rubber stretch + string-lash telegraph pop
-# (BalloonSnareTelegraphFx) + vine zip SFX; string line snaps on hit.
+# (BalloonSnareTelegraphFx) + vine zip SFX; string line snaps on hit and
+# reels the toon a short planar yank toward the zip-flier (not damage-only).
 # After the string telegraph reads, a short string-snap counter window
 # arms — F / LMB for a bumped snappy punish opener (same reward path as
 # perfect-dodge counter); melee mid-telegraph interrupts the wind-up.

@@ -1490,6 +1490,46 @@ SNARE_LASH_HALF_H = 0.55
 SNARE_LASH_TRAVEL = 0.18
 SNARE_LASH_Z = 2.1
 
+# Balloon Snare string-lash yank — short planar reel toward the zip-flier when
+# the lash lands (not damage-only). Archetype identity: string pulls you in.
+# Gameplay displace — not cream FX deepen. SNARE_LASH_YANK_ENABLED = False
+# restores damage-only resolve. Wired from DistributedCorruptToonAI
+# __resolveSingleTargetHit + thin hackslash hurt-react lerp.
+SNARE_LASH_YANK_ENABLED = True
+SNARE_LASH_YANK_DIST = 2.35  # planar units toward Snare
+SNARE_LASH_YANK_STOP = 1.4  # never pull closer than this gap
+SNARE_LASH_YANK_SEC = 0.11  # client lerp duration (hackslash hurt react)
+
+
+def snareLashYankDelta(sx, sy, tx, ty, dist=None, stop=None):
+    """Planar (dx, dy) to add to toon at (tx, ty) to reel toward Snare (sx, sy).
+
+    Pulls up to ``dist`` but never closer than ``stop`` to the Snare. Returns
+    (0.0, 0.0) if already inside the stop radius or coincident.
+    """
+    if dist is None:
+        dist = SNARE_LASH_YANK_DIST
+    if stop is None:
+        stop = SNARE_LASH_YANK_STOP
+    dist = max(0.0, float(dist))
+    stop = max(0.0, float(stop))
+    dx = float(sx) - float(tx)
+    dy = float(sy) - float(ty)
+    planar = (dx * dx + dy * dy) ** 0.5
+    if planar <= stop or planar < 1e-6 or dist <= 0.0:
+        return (0.0, 0.0)
+    pull = min(dist, planar - stop)
+    if pull <= 0.0:
+        return (0.0, 0.0)
+    return (dx / planar * pull, dy / planar * pull)
+
+
+def snareLashYankPos(sx, sy, tx, ty, dist=None, stop=None):
+    """Return (nx, ny) after applying :func:`snareLashYankDelta`."""
+    ddx, ddy = snareLashYankDelta(sx, sy, tx, ty, dist=dist, stop=stop)
+    return (float(tx) + ddx, float(ty) + ddy)
+
+
 # Balloon Snare telegraph string-lash pop — short rubber-hose amber whip on
 # announceAttackTelegraph (client only). Distinct from hit-time SNARE_LASH_*
 # snap and from generic TELEGRAPH_INK_DRIP amber drips: horizontal lash silhouette.
