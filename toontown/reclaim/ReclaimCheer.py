@@ -2,8 +2,8 @@
 
 Listens for reclaim purity / wave-clear messengers and plays a local Happy/wave
 beat plus a short rubber-hose cheer SFX with a pitch swell so the fantasy pays
-off beyond the aspect2d burst. Cream sparkle flecks (CheerCreamSparkleFx) arm
-with this client and layer on the same swell messengers.
+off beyond the aspect2d burst. Cream sparkle flecks + delayed cream aftershock
+(CheerCreamSparkleFx) arm with this client and layer on the same swell messengers.
 """
 
 from panda3d.core import Point3

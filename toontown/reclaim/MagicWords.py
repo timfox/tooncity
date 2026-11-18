@@ -23,9 +23,9 @@ class StartReclaim(MagicWord):
     advancedDesc = (
         'Seeds partial pollution, spawns CorruptToon packs via ReclaimDirector, '
         'and drives purity restore when pollution hits 0 (cream wash pulse + '
-        'street sparkle, cheer pitch swell + cream flecks). Wave announce '
-        'plates get a cream edge pulse with cream sparkle flecks. Pair with '
-        '~hackslash 0 for melee without demo dummies.')
+        'street sparkle, cheer pitch swell + cream flecks + delayed cream '
+        'aftershock). Wave announce plates get a cream edge pulse with cream '
+        'sparkle flecks. Pair with ~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]
