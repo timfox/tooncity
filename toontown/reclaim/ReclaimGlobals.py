@@ -196,6 +196,30 @@ WAVE_SUB_BANNER_COLOR_PUNCHLINE = (0.88, 0.98, 0.78, 1.0)
 WAVE_BANNER_COLOR_SILLY = (1.0, 0.55, 0.95, 1.0)
 WAVE_SUB_BANNER_COLOR_SILLY = (1.0, 0.82, 0.98, 1.0)
 
+# Cream edge pulse framing wave-announce banners (aspect2d border strips).
+# Soft rubber-hose cream frame that pops with the plate — lighter than wave-clear
+# center burst (#73) and opposite of PlayEntry ink edge vignette (corruption).
+# Sunny cream only; no keyblades / KH branding.
+WAVE_ANNOUNCE_CREAM_EDGE_ENABLED = True
+WAVE_ANNOUNCE_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)
+WAVE_ANNOUNCE_CREAM_EDGE = 0.28  # strip thickness in aspect2d units
+WAVE_ANNOUNCE_CREAM_EDGE_PEAK = 0.42
+WAVE_ANNOUNCE_CREAM_EDGE_PULSE = 0.28  # mid-beat alpha after peak
+WAVE_ANNOUNCE_CREAM_EDGE_IN_SEC = 0.08
+WAVE_ANNOUNCE_CREAM_EDGE_HOLD_SEC = 0.10
+WAVE_ANNOUNCE_CREAM_EDGE_PULSE_SEC = 0.12
+WAVE_ANNOUNCE_CREAM_EDGE_OUT_SEC = 0.36
+# Below wave-clear cream burst (52); above purity meter (45) / entry shimmer (36).
+WAVE_ANNOUNCE_CREAM_EDGE_BIN = 50
+WAVE_ANNOUNCE_CREAM_EDGE_FLECK_COUNT = 6
+WAVE_ANNOUNCE_CREAM_EDGE_FLECK_SIZE = 0.022
+WAVE_ANNOUNCE_CREAM_EDGE_FLECK_DRIFT = 0.18
+WAVE_ANNOUNCE_CREAM_EDGE_FLECK_SEC = 0.28
+WAVE_ANNOUNCE_CREAM_EDGE_FLECK_COLOR = (1.0, 0.96, 0.62, 0.9)
+WAVE_ANNOUNCE_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
+# Flecks cluster near the wave plate (banner ~z 0.78).
+WAVE_ANNOUNCE_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.72)
+
 # Persistent reclaim purity meter (aspect2d bar: pollution → purity fill).
 # Empty bar = street still inky; fills warm as packs clear pollution.
 PURITY_METER_POS = (0.0, 0.0, 0.50)
