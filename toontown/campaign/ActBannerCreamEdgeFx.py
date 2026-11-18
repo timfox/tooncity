@@ -3,6 +3,7 @@
 Soft cream border strips + tip flecks that frame:
   * PlayEntry act-enter flash banners (#70 hose pop) — #110
   * Early/mid Oswald trust handoff banners (#76 hose settle) — #117
+  * Mid-act Oswald trust fracture (Loopy clear) — cool cream → shadow flecks
   * Hood handoff cream-sparkle carnival banners (#99) — #124
   * Victory cream confetti / sparkle banners (#82/#105) — #129
   * Finale reveal cream aftershock banners (#86) — TC-136
@@ -19,12 +20,13 @@ finale #176 / victory #168 / entry / purity-complete #132/#136 twin).
 Punchline Act 2 tip hose (#91) and Silly Act 3 tip hose (#95) arm their
 own tip washes (PunchlineTipCreamWashFx / SillyTipCreamWashFx) without
 this edge. Mirrors reclaim wave-announce cream edge (#87) — sunny
-Toontown cream only, opposite of the polluted ink edge vignette.
-Campaign-owned; no keyblades / KH branding. Oswald stays trusted
-mid-campaign (no twist spoilers on early trust cream edge / wash /
-wash aftershock). Victory cream edge + wash + aftershock clear before
-the Oswald twist; finale-reveal cream edge + wash + wash aftershock
-frame residual cream aftershock (#86) only.
+Toontown cream only, opposite of the polluted ink edge vignette —
+except trust-fracture cool cream / shadow-fade flecks (mid-act unease,
+no twist spoilers). Campaign-owned; no keyblades / KH branding. Oswald
+stays trusted mid-campaign (no twist spoilers on early trust cream edge
+/ wash / wash aftershock). Victory cream edge + wash + aftershock clear
+before the Oswald twist; finale-reveal cream edge + wash + wash
+aftershock frame residual cream aftershock (#86) only.
 """
 
 from math import cos, pi, sin
@@ -46,11 +48,13 @@ from toontown.campaign import CampaignGlobals
 # CampaignGlobals prefix → defaults for fleck origin / node name.
 _CFG_ACT = 'PLAY_ENTRY_BANNER_CREAM_EDGE'
 _CFG_TRUST = 'OSWALD_TRUST_BANNER_CREAM_EDGE'
+_CFG_TRUST_FRACTURE = 'OSWALD_TRUST_FRACTURE_CREAM_EDGE'
 _CFG_HANDOFF = 'HANDOFF_CREAM_EDGE'
 _CFG_VICTORY = 'VICTORY_CREAM_EDGE'
 _CFG_FINALE_REVEAL = 'FINALE_REVEAL_CREAM_EDGE'
 _DEFAULT_ORIGIN_ACT = (0.0, 0.0, 0.72)
 _DEFAULT_ORIGIN_TRUST = (0.0, 0.0, 0.42)
+_DEFAULT_ORIGIN_TRUST_FRACTURE = (0.0, 0.0, 0.42)
 _DEFAULT_ORIGIN_HANDOFF = (0.0, 0.0, 0.40)
 _DEFAULT_ORIGIN_VICTORY = (0.0, 0.0, 0.36)
 _DEFAULT_ORIGIN_FINALE_REVEAL = (0.0, 0.0, 0.10)
@@ -58,6 +62,7 @@ _DEFAULT_ORIGIN_FINALE_REVEAL = (0.0, 0.0, 0.10)
 _TAG_BY_CFG = {
     _CFG_ACT: 'act-banner',
     _CFG_TRUST: 'oswald-trust',
+    _CFG_TRUST_FRACTURE: 'oswald-trust-fracture',
     _CFG_HANDOFF: 'handoff',
     _CFG_VICTORY: 'victory',
     _CFG_FINALE_REVEAL: 'finale-reveal',
@@ -65,6 +70,7 @@ _TAG_BY_CFG = {
 _IVAL_BY_CFG = {
     _CFG_ACT: 'actBanner',
     _CFG_TRUST: 'oswaldTrust',
+    _CFG_TRUST_FRACTURE: 'oswaldTrustFracture',
     _CFG_HANDOFF: 'handoff',
     _CFG_VICTORY: 'victory',
     _CFG_FINALE_REVEAL: 'finaleReveal',
@@ -97,6 +103,8 @@ class ActBannerCreamEdgeFx(object):
             return _DEFAULT_ORIGIN_VICTORY
         if self._cfgPrefix == _CFG_HANDOFF:
             return _DEFAULT_ORIGIN_HANDOFF
+        if self._cfgPrefix == _CFG_TRUST_FRACTURE:
+            return _DEFAULT_ORIGIN_TRUST_FRACTURE
         if self._cfgPrefix == _CFG_TRUST:
             return _DEFAULT_ORIGIN_TRUST
         return getattr(
@@ -398,6 +406,7 @@ class ActBannerCreamEdgeFx(object):
 
 _actFx = None
 _trustFx = None
+_trustFractureFx = None
 _handoffFx = None
 _victoryFx = None
 _finaleRevealFx = None
@@ -415,6 +424,13 @@ def _sharedTrust():
     if _trustFx is None:
         _trustFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_TRUST)
     return _trustFx
+
+
+def _sharedTrustFracture():
+    global _trustFractureFx
+    if _trustFractureFx is None:
+        _trustFractureFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_TRUST_FRACTURE)
+    return _trustFractureFx
 
 
 def _sharedHandoff():
@@ -458,6 +474,17 @@ def clearOswaldTrustBannerCreamEdge():
     """Tear down any in-flight Oswald trust cream edge pulse."""
     if _trustFx is not None:
         _trustFx.clear()
+
+
+def playOswaldTrustFractureCreamEdge():
+    """Fire cool cream → shadow fleck edge on mid-act trust fracture."""
+    _sharedTrustFracture().play()
+
+
+def clearOswaldTrustFractureCreamEdge():
+    """Tear down any in-flight Oswald trust-fracture cream edge pulse."""
+    if _trustFractureFx is not None:
+        _trustFractureFx.clear()
 
 
 def playHandoffCreamEdge():
