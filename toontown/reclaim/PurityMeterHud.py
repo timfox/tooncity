@@ -26,15 +26,16 @@ secured-lock green soft uniform scale + tip-near green-cream sparkle
 sparkle (#234 / #275 / #229 / #273).
 
 Mid-wave purity pressure (director tip): further-deepened warm triple-pulse
-contested rim flash + richer local cream flecks / soft halo past #234 when
+contested rim flash + richer local cream flecks / soft halo past #275 when
 purity stalls or ink pressure rises — rubber-hose urgency after re-creep #194
-so danger reads juicier still (distinct from secured-lock #209 / #261,
-wave-clear sparkle #229 / #273, complete hose settle #225 / #266, wave-start
-sunny hose cream).
+so danger reads juicier still (distinct from secured-lock #209 / #261 / #286,
+wave-clear sparkle #229 / #273 / #297, complete hose settle #225 / #266 / #292,
+wave-start sunny hose cream).
 Full reclaim secured lock: brief cream/green rim confirm + juicier soft meter
 hose-pop that purity is locked (pairs with deepened SecuredLockSparkleFx
 green-cream flecks / aftershock / pitch sting — tip-near, not wave-clear
-sparkle #229 / #273, rim-flash cream #234, or wave-start hose #239).
+sparkle #229 / #273 / #297, rim-flash cream #234 / #275, or wave-start hose
+#239).
 """
 
 from math import cos, pi, sin
@@ -466,11 +467,11 @@ class PurityMeterHud(object):
         """Further-deepened warm triple-pulse contested rim flash + cream.
 
         Danger blink on the meter rim with richer local warm cream chips /
-        soft halo past #234 so mid-wave pressure reads juicier still — not
-        secured-lock green hold / whole-meter hose-pop (#209 / #261), not
-        wave-start sunny hose (#220 / #239), not wave-clear mid-screen
-        sparkle (#229 / #273), and not purity-complete hose settle
-        (#225 / #266).
+        soft halo past #275 so mid-wave pressure reads juicier still — not
+        secured-lock green hold / whole-meter hose-pop (#209 / #261 / #286),
+        not wave-start sunny hose (#220 / #239), not wave-clear mid-screen
+        sparkle (#229 / #273 / #297), and not purity-complete hose settle
+        (#225 / #266 / #292).
         """
         if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_ENABLED', True):
             return
@@ -481,18 +482,18 @@ class PurityMeterHud(object):
         self._clearPressureWarn()
         warnColor = getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_COLOR',
-            (1.0, 0.66, 0.40, 0.96))
+            (1.0, 0.70, 0.38, 1.0))
         pulses = max(1, int(getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_PULSES', 3)))
         onSec = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_ON_SEC', 0.10))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_ON_SEC', 0.11))
         offSec = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_OFF_SEC', 0.05))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_OFF_SEC', 0.04))
         holdSec = float(getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_HOLD_SEC',
-            getattr(ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_SEC', 0.20)))
+            getattr(ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_SEC', 0.24)))
         scalePeak = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_SCALE', 1.32))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_SCALE', 1.40))
 
         parts = []
         for i in range(pulses):
@@ -574,19 +575,19 @@ class PurityMeterHud(object):
         if self._root is None or self._root.isEmpty():
             return None
         half = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_HALF', 0.084))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_HALF', 0.096))
         start = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_START', 0.38))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_START', 0.34))
         peak = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK', 1.38))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK', 1.48))
         sec = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_SEC', 0.30))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_SEC', 0.36))
         peakA = float(getattr(
             ReclaimGlobals,
-            'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK_ALPHA', 0.22))
+            'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK_ALPHA', 0.26))
         r, g, b, a = getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_COLOR',
-            (1.0, 0.95, 0.74, 1.0))
+            (1.0, 0.96, 0.76, 1.0))
         binSort = int(getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_BIN', 48))
         try:
@@ -626,24 +627,24 @@ class PurityMeterHud(object):
     def _spawnRimWarnCreamFlecks(self):
         """Warm cream chips that burst off the meter rim during pressure flash."""
         count = int(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT', 7))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT', 9))
         if count <= 0 or self._root is None or self._root.isEmpty():
             return []
         halfW = float(ReclaimGlobals.PURITY_METER_WIDTH) * 0.5
         halfH = float(ReclaimGlobals.PURITY_METER_HEIGHT) * 0.5
         pad = float(ReclaimGlobals.PURITY_METER_RIM_PAD)
         size = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_SIZE', 0.014))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_SIZE', 0.016))
         drift = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_DRIFT', 0.13))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_DRIFT', 0.16))
         sec = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_SEC', 0.34))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_SEC', 0.40))
         r, g, b, a = getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR',
-            (1.0, 0.96, 0.70, 0.96))
+            (1.0, 0.97, 0.72, 1.0))
         er, eg, eb, ea = getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_END_COLOR',
-            (1.0, 0.90, 0.50, 0.0))
+            (1.0, 0.92, 0.52, 0.0))
         fleckBin = int(getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_BIN', 48))
 

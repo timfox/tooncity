@@ -462,41 +462,42 @@ PURITY_PRESSURE_TIP_STALL = (
 PURITY_PRESSURE_TIP_RISE = (
     "Ink's pushing back! Don't let this wave go contested!"
 )
-# Contested rim flash on PurityMeterHud when the tip whispers (#213 / #234
-# deepen). Further-deepened warm triple-pulse cream-accent blink so mid-wave
-# pressure reads juicier still — distinct from secured-lock green hold +
-# whole-meter hose-pop (#209 / #261), wave-clear mid-screen cream sparkle
-# (#229 / #273), and purity-complete meter hose settle (#225 / #266). No KH
-# branding. Toggle PURITY_PRESSURE_RIM_FLASH_ENABLED = False drops flash +
-# cream flecks.
+# Contested rim flash on PurityMeterHud when the tip whispers (#213 / #234 /
+# #275 deepen). Further-deepened warm triple-pulse cream-accent blink so
+# mid-wave pressure reads juicier still past #275 — distinct from secured-lock
+# green hold + whole-meter hose-pop (#209 / #261 / #286), wave-clear mid-screen
+# cream sparkle (#229 / #273 / #297), and purity-complete meter hose settle
+# (#225 / #266 / #292). No KH branding. Toggle
+# PURITY_PRESSURE_RIM_FLASH_ENABLED = False drops flash + cream flecks.
 PURITY_PRESSURE_RIM_FLASH_ENABLED = True
-PURITY_PRESSURE_RIM_WARN_COLOR = (1.0, 0.66, 0.40, 0.96)  # creamier warm danger
+PURITY_PRESSURE_RIM_WARN_COLOR = (1.0, 0.70, 0.38, 1.0)  # creamier warm danger past #275
 PURITY_PRESSURE_RIM_FLASH_PULSES = 3
-PURITY_PRESSURE_RIM_FLASH_ON_SEC = 0.10
-PURITY_PRESSURE_RIM_FLASH_OFF_SEC = 0.05
-PURITY_PRESSURE_RIM_FLASH_HOLD_SEC = 0.20  # final peak dwell past #234
-PURITY_PRESSURE_RIM_FLASH_SCALE = 1.32  # juicier rim-only nudge (not whole meter)
+PURITY_PRESSURE_RIM_FLASH_ON_SEC = 0.11
+PURITY_PRESSURE_RIM_FLASH_OFF_SEC = 0.04
+PURITY_PRESSURE_RIM_FLASH_HOLD_SEC = 0.24  # final peak dwell past #275
+PURITY_PRESSURE_RIM_FLASH_SCALE = 1.40  # juicier rim-only nudge (not whole meter)
 # Legacy alias kept for older reads; flash hold prefers FLASH_HOLD_SEC.
-PURITY_PRESSURE_RIM_WARN_SEC = 0.20
+PURITY_PRESSURE_RIM_WARN_SEC = 0.24
 # Richer warm cream flecks + soft halo layered on the rim flash so contested
-# danger pops juicier still past #234 without restaging wave-clear glitter or
-# complete hose settle. Local to the purity meter root. Toggle
-# PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED = False drops flecks + halo only.
+# danger pops juicier still past #275 without restaging wave-clear glitter,
+# lock celebration, or complete / wave-start hose. Local to the purity meter
+# root. Toggle PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED = False drops flecks +
+# halo only.
 PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED = True
-PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT = 7
-PURITY_PRESSURE_RIM_FLASH_CREAM_SIZE = 0.014
-PURITY_PRESSURE_RIM_FLASH_CREAM_DRIFT = 0.13
-PURITY_PRESSURE_RIM_FLASH_CREAM_SEC = 0.34
-PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR = (1.0, 0.96, 0.70, 0.96)
-PURITY_PRESSURE_RIM_FLASH_CREAM_END_COLOR = (1.0, 0.90, 0.50, 0.0)
+PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT = 9
+PURITY_PRESSURE_RIM_FLASH_CREAM_SIZE = 0.016
+PURITY_PRESSURE_RIM_FLASH_CREAM_DRIFT = 0.16
+PURITY_PRESSURE_RIM_FLASH_CREAM_SEC = 0.40
+PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR = (1.0, 0.97, 0.72, 1.0)
+PURITY_PRESSURE_RIM_FLASH_CREAM_END_COLOR = (1.0, 0.92, 0.52, 0.0)
 PURITY_PRESSURE_RIM_FLASH_CREAM_BIN = 48  # over meter rim (45); under fill shimmer (49)
 PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_ENABLED = True
-PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_HALF = 0.084
-PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_START = 0.38
-PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK = 1.38
-PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_SEC = 0.30
-PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK_ALPHA = 0.22
-PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_COLOR = (1.0, 0.95, 0.74, 1.0)
+PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_HALF = 0.096
+PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_START = 0.34
+PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK = 1.48
+PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_SEC = 0.36
+PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK_ALPHA = 0.26
+PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_COLOR = (1.0, 0.96, 0.76, 1.0)
 
 # Secured purity lock tip — after full reclaim, confirm ink cannot re-creep
 # (#194 complement). Client HUD tip + meter rim confirm; AI lock lives on

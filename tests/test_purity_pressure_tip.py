@@ -3,9 +3,10 @@
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
 isMidWavePressureContext / purityPressureReason / tip copy, further-deepened
-rim flash cream tunables past #234, plus AST hooks on
+rim flash cream tunables past #275, plus AST hooks on
 DistributedReclaimDirector + PurityMeterHud. Distinct from wave-clear
-sparkle (#229 / #273) and purity-complete meter hose settle (#225 / #266).
+sparkle (#297), lock celebration, wave-start hose, and purity-complete
+meter hose settle.
 
 Run from repo root:
   python3 tests/test_purity_pressure_tip.py
@@ -189,7 +190,7 @@ class PurityPressureTipTest(unittest.TestCase):
         rg = self.rg
         self.assertTrue(rg.PURITY_PRESSURE_RIM_FLASH_ENABLED)
         self.assertTrue(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED)
-        # Further-deepened juice past #234: triple pulse + juicier rim nudge.
+        # Further-deepened juice past #275: triple pulse + juicier rim nudge.
         self.assertGreaterEqual(int(rg.PURITY_PRESSURE_RIM_FLASH_PULSES), 3)
         warn = rg.PURITY_PRESSURE_RIM_WARN_COLOR
         lock = rg.SECURED_LOCK_RIM_COLOR
@@ -197,28 +198,28 @@ class PurityPressureTipTest(unittest.TestCase):
         self.assertGreater(float(warn[0]), float(warn[1]))
         self.assertGreater(float(lock[1]), float(lock[0]))
         self.assertNotEqual(warn, lock)
-        self.assertGreaterEqual(float(warn[3]), 0.94)
-        self.assertGreaterEqual(float(rg.PURITY_PRESSURE_RIM_FLASH_SCALE), 1.28)
+        self.assertGreaterEqual(float(warn[3]), 0.98)
+        self.assertGreaterEqual(float(rg.PURITY_PRESSURE_RIM_FLASH_SCALE), 1.36)
         self.assertGreaterEqual(
-            float(rg.PURITY_PRESSURE_RIM_FLASH_HOLD_SEC), 0.18)
+            float(rg.PURITY_PRESSURE_RIM_FLASH_HOLD_SEC), 0.22)
         self.assertLess(float(rg.PURITY_PRESSURE_RIM_FLASH_HOLD_SEC), 0.5)
         # Local cream flecks stay warm cream (not secured green glitter).
         cream = rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR
         self.assertGreater(float(cream[0]), 0.9)
         self.assertGreater(float(cream[1]), float(cream[2]))
-        self.assertGreaterEqual(float(cream[3]), 0.94)
-        self.assertGreaterEqual(int(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT), 6)
+        self.assertGreaterEqual(float(cream[3]), 0.98)
+        self.assertGreaterEqual(int(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT), 8)
         self.assertGreaterEqual(
-            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_SIZE), 0.013)
+            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_SIZE), 0.015)
         self.assertGreaterEqual(
-            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_DRIFT), 0.12)
+            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_DRIFT), 0.14)
         self.assertGreaterEqual(
-            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_SEC), 0.30)
+            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_SEC), 0.36)
         self.assertTrue(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_ENABLED)
         self.assertGreaterEqual(
-            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK), 1.32)
+            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK), 1.42)
         self.assertGreaterEqual(
-            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK_ALPHA), 0.20)
+            float(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK_ALPHA), 0.24)
         # Distinct from wave-clear mid-screen sparkle and complete hose settle.
         self.assertNotEqual(
             rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR,
@@ -226,12 +227,15 @@ class PurityPressureTipTest(unittest.TestCase):
         self.assertNotEqual(
             rg.PURITY_PRESSURE_RIM_WARN_COLOR,
             rg.PURITY_COMPLETE_METER_SETTLE_RIM_COLOR)
+        self.assertNotEqual(
+            rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR,
+            rg.WAVE_START_METER_CREAM_COLOR)
 
     def test_magic_word_mentions_rim_flash_cream(self):
         src = _read('toontown/reclaim/MagicWords.py').lower()
         self.assertIn('cream flecks', src)
         self.assertIn('rim', src)
-        self.assertIn('past #234', src)
+        self.assertIn('past #275', src)
         for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
             self.assertNotIn(banned, src)
 
