@@ -246,6 +246,21 @@ LAUNCH_HANG_CREAM_AFTERSHOCK_HALO_PEAK = 1.55
 LAUNCH_HANG_CREAM_AFTERSHOCK_HALO_SEC = 0.32
 LAUNCH_HANG_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.26
 LAUNCH_HANG_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.96, 0.78, 1.0)
+# Air-juggle hang cream wash pulse — soft aspect2d veil after cream aftershock
+# (#111). Combo / finisher / dodge-trail cream wash grammar. Soft settle beat
+# after hang sparkle (#83). LAUNCH_HANG_CREAM_ENABLED = False drops cream path
+# (sparkle + aftershock + wash). LAUNCH_HANG_CREAM_WASH_ENABLED = False drops
+# wash only.
+LAUNCH_HANG_CREAM_WASH_ENABLED = True
+LAUNCH_HANG_CREAM_WASH_DELAY_SEC = 0.40  # after play; after aftershock (0.20)
+LAUNCH_HANG_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+LAUNCH_HANG_CREAM_WASH_PEAK = 0.10
+LAUNCH_HANG_CREAM_WASH_MID = 0.06
+LAUNCH_HANG_CREAM_WASH_IN_SEC = 0.05
+LAUNCH_HANG_CREAM_WASH_PULSE_SEC = 0.09
+LAUNCH_HANG_CREAM_WASH_HOLD_SEC = 0.06
+LAUNCH_HANG_CREAM_WASH_OUT_SEC = 0.34
+LAUNCH_HANG_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
 LAUNCH_DOWN_SEC = (0.0, 0.16, 0.22)
 # Local toon hop cue on finisher so the juggle reads as a shared air beat.
 FINISHER_SELF_HOP = 1.15
