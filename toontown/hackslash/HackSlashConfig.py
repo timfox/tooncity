@@ -358,6 +358,21 @@ PERFECT_DODGE_CREAM_AFTERSHOCK_HALO_SEC = 0.36
 PERFECT_DODGE_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.28
 PERFECT_DODGE_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.96, 0.78, 1.0)
 
+# Perfect-dodge cream wash pulse — soft aspect2d veil after cream aftershock
+# (#89). Entry / purity cream wash grammar (CorruptDeathCreamWashFx family).
+# Quieter than street purity-complete; cream/pastel only. Toggle
+# PERFECT_DODGE_CREAM_WASH_ENABLED = False drops wash only.
+PERFECT_DODGE_CREAM_WASH_ENABLED = True
+PERFECT_DODGE_CREAM_WASH_DELAY_SEC = 0.40  # after play; after aftershock (0.22)
+PERFECT_DODGE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+PERFECT_DODGE_CREAM_WASH_PEAK = 0.12
+PERFECT_DODGE_CREAM_WASH_MID = 0.07
+PERFECT_DODGE_CREAM_WASH_IN_SEC = 0.06
+PERFECT_DODGE_CREAM_WASH_PULSE_SEC = 0.10
+PERFECT_DODGE_CREAM_WASH_HOLD_SEC = 0.08
+PERFECT_DODGE_CREAM_WASH_OUT_SEC = 0.40
+PERFECT_DODGE_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
+
 # Squash / stretch pulses (scale xyz multipliers over short windows).
 # Read as exaggerated rubber-hose hit frames, not realistic physics.
 HOSE_SQUASH = (
