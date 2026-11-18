@@ -8,6 +8,7 @@ from .MeleeCombat import MeleeCombatController
 from .SoftTarget import SoftTargetFinder, HackSlashTarget
 from .DemoHostile import DemoHostile
 from . import HitJuice
+from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 
 __all__ = [
@@ -16,5 +17,6 @@ __all__ = [
     'HackSlashTarget',
     'DemoHostile',
     'HitJuice',
+    'DodgePerfectFx',
     'DodgeTrailFx',
 ]

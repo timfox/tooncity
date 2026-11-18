@@ -194,12 +194,20 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.done
         hitRange = float(self._stats.get(
             'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
-        if self.__planarDist(target) > hitRange:
-            return Task.done
+        nearMiss = float(self._stats.get(
+            'attackNearMissRange', CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+        dist = self.__planarDist(target)
         # Honor client-reported dodge / hit i-frames (PollutionManager.requestHackSlashIFrame).
         iframeUntil = float(getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
-        if globalClock.getFrameTime() < iframeUntil:  # noqa: F821
-            self.notify.debug('attack whiffed — av %s i-framed' % self._targetId)
+        iframes = globalClock.getFrameTime() < iframeUntil  # noqa: F821
+        if iframes and dist <= max(hitRange, nearMiss):
+            # Hit eaten by i-frames, or near-miss while i-frames are live.
+            self.notify.debug(
+                'attack dodged — av %s i-framed (dist=%.2f)' % (
+                    self._targetId, dist))
+            self.sendUpdate('announceAttackDodged', [])
+            return Task.done
+        if dist > hitRange:
             return Task.done
         dmg = int(self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE))
         try:

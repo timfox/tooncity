@@ -25,6 +25,7 @@ from otp.avatar import Emote
 from . import HackSlashConfig
 from . import HitJuice
 from .DemoHostile import spawnDemoHostiles
+from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 from .SoftTarget import SoftTargetFinder
 
@@ -51,9 +52,11 @@ class MeleeCombatController(DirectObject):
         self._launchSparkNodes = []
         self._dodgeIval = None
         self._iframeUntil = 0.0
+        self._dodgeIFrameUntil = 0.0
         self._dodgeReadyAt = 0.0
         self._dodging = False
         self._dodgeTrail = DodgeTrailFx(avatar)
+        self._dodgePerfect = DodgePerfectFx(avatar)
         self._origScale = None
         self._baseFov = None
         self._shakeAmp = 0.0
@@ -76,6 +79,7 @@ class MeleeCombatController(DirectObject):
         self.comboWindowOpen = False
         self.busy = False
         self._iframeUntil = 0.0
+        self._dodgeIFrameUntil = 0.0
         self._dodgeReadyAt = 0.0
         self._dodging = False
         self._comboHits = 0
@@ -88,6 +92,7 @@ class MeleeCombatController(DirectObject):
         self.accept(HackSlashConfig.DODGE_KEY, self._onDodgePressed)
         self.accept(HackSlashConfig.DODGE_KEY_ALT, self._onDodgePressed)
         self.accept('corruptToonHitPlayer', self._onCorruptHitPlayer)
+        self.accept('corruptToonAttackDodged', self._onCorruptAttackDodged)
         self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
         # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
@@ -105,6 +110,7 @@ class MeleeCombatController(DirectObject):
         self.ignore(HackSlashConfig.DODGE_KEY)
         self.ignore(HackSlashConfig.DODGE_KEY_ALT)
         self.ignore('corruptToonHitPlayer')
+        self.ignore('corruptToonAttackDodged')
         self.ignore('hackslash-hit')
         taskMgr.remove(self._taskName)  # noqa: F821
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
@@ -118,8 +124,10 @@ class MeleeCombatController(DirectObject):
         self._clearHitFlash()
         self._clearLaunch()
         self._clearDodge()
+        self._clearPerfectDodge()
         self._clearComboCounter()
         self._iframeUntil = 0.0
+        self._dodgeIFrameUntil = 0.0
         self._dodging = False
         self._comboHits = 0
         self.targetFinder.clear()
@@ -134,6 +142,10 @@ class MeleeCombatController(DirectObject):
         self.disable()
         try:
             self._dodgeTrail.clear()
+        except Exception:
+            pass
+        try:
+            self._dodgePerfect.clear()
         except Exception:
             pass
         self.ignoreAll()
@@ -650,6 +662,15 @@ class MeleeCombatController(DirectObject):
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
         messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
 
+    def _onCorruptAttackDodged(self, corrupt=None):
+        """Telegraph resolved into Shift/X dodge i-frames — ink sparkle juice."""
+        if not self.enabled:
+            return
+        # Only celebrate player-initiated dodge windows, not post-hit i-frames.
+        if not self.isDodgeInvulnerable():
+            return
+        self._playPerfectDodge()
+
     def _reportIFrameToAI(self, durationSec):
         """So CorruptToonAI can skip takeDamage during the window."""
         try:
@@ -669,6 +690,7 @@ class MeleeCombatController(DirectObject):
         self._dodging = True
         self._dodgeReadyAt = now + HackSlashConfig.DODGE_COOLDOWN_SEC
         self._iframeUntil = now + HackSlashConfig.DODGE_IFRAME_SEC
+        self._dodgeIFrameUntil = self._iframeUntil
         self.avatar.hackSlashIFrameUntil = self._iframeUntil
         self._reportIFrameToAI(HackSlashConfig.DODGE_IFRAME_SEC)
         messenger.send(
@@ -739,8 +761,27 @@ class MeleeCombatController(DirectObject):
         except Exception:
             pass
 
+    def _playPerfectDodge(self):
+        """Short rubber-hose ink sparkle / star pop at the local toon."""
+        try:
+            self._dodgePerfect.play()
+        except Exception:
+            pass
+        self._playHitFlash(peakAlpha=HackSlashConfig.PERFECT_DODGE_FLASH_ALPHA)
+        messenger.send('hackslash-perfect-dodge', [self.avatar])  # noqa: F821
+
+    def _clearPerfectDodge(self):
+        try:
+            self._dodgePerfect.clear()
+        except Exception:
+            pass
+
     def isInvulnerable(self):
         return globalClock.getFrameTime() < self._iframeUntil  # noqa: F821
+
+    def isDodgeInvulnerable(self):
+        """True only during Shift/X dodge i-frames (not post-hit window)."""
+        return globalClock.getFrameTime() < self._dodgeIFrameUntil  # noqa: F821
 
     def _playHitstop(self, hitIndex):
         """Brief attack freeze so contacts read as rubber-hose impacts."""
