@@ -1,5 +1,15 @@
 # Corruption → reclaim (slice 3)
 
+## Discoverable play smoke (preferred)
+
+Happy path needs **no magic words**: enter Loopy → Punchline → Silly, use on-screen
+**F / Shift / C** (auto melee + auto packs via `toontown/campaign/PlayEntry.py`).
+
+Full step checklist (Project store): `docs/loopy-to-silly-smoke.md`
+(absolute: `/cursor/stores/bc-ca83d784-15c5-4fcc-9fbe-2cab276c6f17/docs/loopy-to-silly-smoke.md`).
+
+Sections below remain **debug / magic-word** fallbacks.
+
 ## Loop
 
 1. `PollutionManager` holds per-zone pollution `0..1` (pure → polluted).
