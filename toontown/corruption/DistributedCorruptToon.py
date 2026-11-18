@@ -1318,7 +1318,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._idleCreamDripSparkle = None
 
     def __startIdleCreamWash(self):
-        """Soft cream wash pulse against idle ink drips (client-only)."""
+        """Soft cream wash + delayed cream aftershock against idle ink drips."""
         self.__clearIdleCreamWash()
         if self._defeatedHidden():
             return
