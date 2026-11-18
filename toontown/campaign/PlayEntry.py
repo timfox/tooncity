@@ -14,17 +14,19 @@ Early/mid Oswald trusted reclaim-lead act banners add a soft settle bounce
 after that pop.
 Punchline Place Act 2 uses a campaign-owned entry tip (Brute/Snare cues,
 trusted Oswald lead / unease) with a slightly punchier tip hose pop +
-trust/fracture settle, a brief cream hose settle so the tip lands
-rubber-hose and clear, and a delayed soft cream wash pulse (act-banner /
-trust wash twin).
+trust/fracture settle, a deepened cream hose settle (juicier overshoot →
+rest → micro rebound) so the Act 2 unease tip lands rubber-hose and
+reads juicier, and a delayed soft cream wash pulse (act-banner / trust
+wash twin). Distinct from Silly almost-confess tip cream hose (#232) and
+Silly Overlord tip cream wash aftershock (#251).
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
 cheer-feels-wrong foreshadow) with a slightly heavier tip hose pop +
 fracture trust settle, a juicier cream hose settle so the trust-fracture
-/ almost-confess tip lands rubber-hose and clear (distinct from Punchline
-#227), and a delayed soft cream wash pulse; a mid-act approach tip then
-almost-confesses an uneasy half-truth before the finale reveal (Punchline
-tip / act-banner wash twin; FinalePhaseFx betrayal banner stays separate
-— no KH branding).
+/ almost-confess tip lands rubber-hose and clear (taller/longer primary
+overshoot; no tip rebound — Punchline deepen owns that), and a delayed
+soft cream wash pulse; a mid-act approach tip then almost-confesses an
+uneasy half-truth before the finale reveal (Punchline tip / act-banner
+wash twin; FinalePhaseFx betrayal banner stays separate — no KH branding).
 """
 
 from panda3d.core import (
@@ -585,14 +587,16 @@ class PlayEntryClient(DirectObject):
         tipHose='punchline' uses Act 2 Punchline tunables + Oswald-trust
         settle bounce. When the Punchline act carries trustFracture (#190
         deepen), settle holds a rubbery beat longer (unease tip), then a
-        brief cream hose settle so the tip lands rubber-hose and clear.
-        tipHose='silly' uses Act 3 Silly Overlord tunables + trust settle;
-        when the finale act carries entryTipUnease, settle holds the longer
-        fracture beat (entry foreshadow + mid-act almost-confess approach
-        tip — no twist spoil), then a juicier cream hose settle so the
-        trust-fracture tip lands rubber-hose and clear (distinct from
-        Punchline #227). Default path keeps the shared PLAY_ENTRY_TIP_*
-        hose pop.
+        deepened cream hose settle (juicier overshoot → rest → micro
+        rebound) so the Act 2 unease tip lands rubber-hose and reads
+        juicier. tipHose='silly' uses Act 3 Silly Overlord tunables +
+        trust settle; when the finale act carries entryTipUnease, settle
+        holds the longer fracture beat (entry foreshadow + mid-act
+        almost-confess approach tip — no twist spoil), then a juicier
+        cream hose settle so the trust-fracture tip lands rubber-hose and
+        clear (taller/longer primary overshoot; no tip rebound —
+        Punchline deepen owns that; distinct from #251 wash aftershock).
+        Default path keeps the shared PLAY_ENTRY_TIP_* hose pop.
         """
         if tipNP is None:
             return None
@@ -607,6 +611,8 @@ class PlayEntryClient(DirectObject):
         creamHoseSettle = False
         creamHoseOvershootAttr = None
         creamHoseRestAttr = None
+        creamHoseReboundAttr = None
+        creamHoseReboundRestAttr = None
         if tipHose == 'punchline':
             sx, sy, sz, squashSec = getattr(
                 CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SQUASH',
@@ -630,7 +636,8 @@ class PlayEntryClient(DirectObject):
             else:
                 trustOvershootAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
                 trustRestAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC'
-            # Brief cream hose settle after trust/fracture bounce (#198 path).
+            # Deepened cream hose settle after trust/fracture bounce
+            # (#198 / #227 deepen) — juicier overshoot → rest → micro rebound.
             creamHoseSettle = bool(getattr(
                 CampaignGlobals,
                 'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', True))
@@ -639,6 +646,10 @@ class PlayEntryClient(DirectObject):
                     'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT')
                 creamHoseRestAttr = (
                     'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC')
+                creamHoseReboundAttr = (
+                    'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND')
+                creamHoseReboundRestAttr = (
+                    'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC')
         elif tipHose == 'silly':
             sx, sy, sz, squashSec = getattr(
                 CampaignGlobals, 'SILLY_ACT_TIP_POP_SQUASH',
@@ -664,6 +675,9 @@ class PlayEntryClient(DirectObject):
                 trustOvershootAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
                 trustRestAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'
             # Juicier cream hose settle after fracture bounce (#207 path).
+            # Taller/longer primary overshoot only — no tip rebound
+            # (Punchline deepen owns that micro bounce; #232 / #251 stay
+            # on wash / almost-confess paths).
             creamHoseSettle = bool(getattr(
                 CampaignGlobals,
                 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', True))
@@ -729,6 +743,29 @@ class PlayEntryClient(DirectObject):
                 parts.append(LerpScaleInterval(
                     tipNP, max(0.01, creamRestSec), settlePt,
                     blendType='easeIn'))
+                # Optional micro rebound — Punchline tip cream hose deepen.
+                if creamHoseReboundAttr:
+                    creamRebound = getattr(
+                        CampaignGlobals, creamHoseReboundAttr, None)
+                    rx = ry = rz = reboundSec = None
+                    if creamRebound:
+                        try:
+                            rx, ry, rz, reboundSec = creamRebound
+                            reboundSec = float(reboundSec)
+                        except Exception:
+                            reboundSec = None
+                    if reboundSec is not None and reboundSec > 0.0:
+                        reboundRestSec = float(getattr(
+                            CampaignGlobals, creamHoseReboundRestAttr, 0.06))
+                        reboundPt = Point3(
+                            settle * float(rx), settle * float(ry),
+                            settle * float(rz))
+                        parts.append(LerpScaleInterval(
+                            tipNP, max(0.01, reboundSec), reboundPt,
+                            blendType='easeOut'))
+                        parts.append(LerpScaleInterval(
+                            tipNP, max(0.01, reboundRestSec), settlePt,
+                            blendType='easeIn'))
         return Sequence(*parts, name='playEntryTipHosePop')
 
     def _armPunchlineTipCreamWash(self):
@@ -752,11 +789,13 @@ class PlayEntryClient(DirectObject):
     def _playTipHosePop(self, tipNP, tipHose=None):
         """Short rubber-hose scale pop when the street-entry tip lands.
 
-        Punchline Act 2 tipHose appends a brief cream hose settle after the
-        trust/fracture bounce, then arms a delayed soft cream wash pulse.
-        Silly Act 3 tipHose appends a juicier cream hose settle after the
-        fracture bounce (almost-confess / trust-fracture tip), then arms
-        the cream wash (act-banner / trust wash twin) under the tip bar.
+        Punchline Act 2 tipHose appends a deepened cream hose settle
+        (overshoot → rest → micro rebound) after the trust/fracture
+        bounce, then arms a delayed soft cream wash pulse. Silly Act 3
+        tipHose appends a juicier cream hose settle after the fracture
+        bounce (almost-confess / trust-fracture tip; no tip rebound),
+        then arms the cream wash (act-banner / trust wash twin) under
+        the tip bar.
         """
         if self._tipIval:
             try:

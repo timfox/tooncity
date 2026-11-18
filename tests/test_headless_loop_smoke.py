@@ -2294,15 +2294,19 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'PUNCHLINE_ACT_TIP_CREAM_WASH_BIN',
                 'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED',
                 'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT',
-                'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC'):
+                'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC',
+                'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND',
+                'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC'):
             self.assertIn(
                 tip_wash_key, campaign_names,
                 msg='CampaignGlobals missing %s' % tip_wash_key)
         self.assertIn('playPunchlineTipCreamWash', play_src)
         self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT', play_src)
+        self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND', play_src)
         self.assertIn('creamHoseSettle', play_src)
         magic_src_l = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('cream hose settle', magic_src_l)
+        self.assertIn('deepened cream hose settle', magic_src_l)
+        self.assertIn('micro rebound', magic_src_l)
 
         # Street cream wash aftershock (#159) — delayed residual after street wash.
         street_wash_rel = 'toontown/reclaim/StreetColorWash.py'
