@@ -1,12 +1,13 @@
 """Rubber-hose cream slam flash on combo-finisher connect.
 
 Warm cream aspect2d flash + expanding cream ring when the 3rd stretch-punch
-slam lands, then a delayed cream sparkle hang (soft veil + flecks/streaks)
-so the slam settles sunny — same residual grammar as HitSparkFx cream
-aftershock. Layers with SlamDustFx (feet thud), HitJuice finisher slam scale,
-HitStopFx freeze (flash reads during the stick), and soft-lock FOV (#74) —
-finisher FOV still owns the lens after resume. Toontown spiritual-sequel tone
-only — no keyblades / no KH branding.
+slam lands, then a delayed cream sparkle hang (soft veil + flecks/streaks),
+then a delayed cream aftershock (softer flecks + soft halo) so the slam
+settles sunny — same residual grammar as CreamHangSparkleFx / HitJuice
+combo cream aftershock. Layers with SlamDustFx (feet thud), HitJuice
+finisher slam scale, HitStopFx freeze (flash reads during the stick), and
+soft-lock FOV (#74) — finisher FOV still owns the lens after resume.
+Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -27,7 +28,7 @@ from . import HackSlashConfig
 
 
 class CreamSlamFlashFx(object):
-    """Owns cream screen flash + ring, then delayed cream sparkle hang."""
+    """Owns cream screen flash + ring, sparkle hang, then cream aftershock."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -35,10 +36,12 @@ class CreamSlamFlashFx(object):
         self._flashNP = None
         self._ringNP = None
         self._hangVeilNP = None
+        self._aftershockHaloNP = None
         self._hangNodes = []
+        self._aftershockNodes = []
 
     def play(self):
-        """Spawn cream flash + ring, then delayed sparkle hang.
+        """Spawn cream flash + ring, sparkle hang, then delayed aftershock.
 
         Returns started Sequence or None.
         """
@@ -66,41 +69,43 @@ class CreamSlamFlashFx(object):
             return None
 
         hang = self._buildSparkleHang(parent)
+        # Residual cream aftershock after hang sparkle — only when hang fires.
+        aftershock = None
         if hang is not None:
-            # Flash/ring Parallel already owns the connect punch; hang rides
-            # beside it so residual cream lingers after the slam settles.
-            self._ival = Sequence(
-                Parallel(
-                    Parallel(*parts),
-                    hang,
-                ),
-                Func(self.clear),
-                name=self.avatar.uniqueName('hackslashCreamSlamFlash'),
-            )
-        else:
-            self._ival = Sequence(
-                Parallel(*parts),
-                Func(self.clear),
-                name=self.avatar.uniqueName('hackslashCreamSlamFlash'),
-            )
+            aftershock = self._buildAftershock(parent)
+
+        layers = [Parallel(*parts)]
+        if hang is not None:
+            layers.append(hang)
+        if aftershock is not None:
+            layers.append(aftershock)
+
+        self._ival = Sequence(
+            Parallel(*layers),
+            Func(self.clear),
+            name=self.avatar.uniqueName('hackslashCreamSlamFlash'),
+        )
         self._ival.start()
         return self._ival
 
     def clear(self):
-        """Stop the flash/hang and remove cream nodes."""
+        """Stop the flash/hang/aftershock and remove cream nodes."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
-        for attr in ('_flashNP', '_ringNP', '_hangVeilNP'):
+        for attr in ('_flashNP', '_ringNP', '_hangVeilNP', '_aftershockHaloNP'):
             np = getattr(self, attr, None)
             setattr(self, attr, None)
             self._retireNode(np)
         for np in self._hangNodes:
             self._retireNode(np)
         self._hangNodes = []
+        for np in self._aftershockNodes:
+            self._retireNode(np)
+        self._aftershockNodes = []
 
     def _spawnFlash(self, parent, r, g, b, binSort):
         peak = float(HackSlashConfig.FINISHER_CREAM_SLAM_FLASH_PEAK)
@@ -202,6 +207,49 @@ class CreamSlamFlashFx(object):
             Parallel(*parts),
         )
 
+    def _buildAftershock(self, parent):
+        """Delayed soft cream flecks (+ optional halo) after hang sparkle.
+
+        Delay is measured from hang fire (hang delay + aftershock delay from
+        flash). Cream/pastel only — no ink.
+        """
+        if not getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_ENABLED', True):
+            return None
+        hangDelay = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_SPARKLE_HANG_DELAY_SEC', 0.24))
+        delay = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_DELAY_SEC', 0.18))
+        parts = []
+
+        if getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_HALO_ENABLED', True):
+            halo = self._spawnAftershockHalo(parent)
+            if halo is not None:
+                parts.append(halo)
+
+        creamCount = int(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_COUNT', 3))
+        streakCount = int(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_STREAK_COUNT', 2))
+        for i in range(creamCount):
+            part = self._spawnAftershockSpark(
+                parent, i, creamCount, elongated=False)
+            if part is not None:
+                parts.append(part)
+        for i in range(streakCount):
+            part = self._spawnAftershockSpark(
+                parent, i, streakCount, elongated=True)
+            if part is not None:
+                parts.append(part)
+
+        if not parts:
+            return None
+        return Sequence(
+            Wait(max(0.0, hangDelay + delay)),
+            Parallel(*parts),
+        )
+
     def _spawnHangVeil(self, parent):
         """Soft mid-screen cream veil — residual hang, not a second flash."""
         if not getattr(
@@ -250,7 +298,7 @@ class CreamSlamFlashFx(object):
         )
 
     def _spawnHangSpark(self, parent, index, total, elongated=False):
-        """Softer cream fleck / streak that settles — residual aftershock hang."""
+        """Softer cream fleck / streak that settles — residual hang sparkle."""
         count = max(1, int(total))
         if elongated:
             size = float(getattr(
@@ -318,6 +366,140 @@ class CreamSlamFlashFx(object):
         peak = 1.05 + 0.08 * (index % 2)
         self._hangNodes.append(spark)
         stagger = 0.018 * (index % 4)
+        return Sequence(
+            Wait(stagger),
+            Parallel(
+                LerpColorScaleInterval(
+                    spark, 0.05, Vec4(r, g, b, a), blendType='easeOut'),
+                LerpScaleInterval(
+                    spark, sec * 0.28, peak, blendType='easeOut'),
+            ),
+            Parallel(
+                LerpPosInterval(spark, sec * 0.72, end, blendType='easeIn'),
+                LerpScaleInterval(
+                    spark, sec * 0.72, 0.05, blendType='easeIn'),
+                LerpColorScaleInterval(
+                    spark, sec * 0.72, Vec4(er, eg, eb, ea),
+                    blendType='easeIn'),
+            ),
+        )
+
+    def _spawnAftershockHalo(self, parent):
+        """Soft cream halo pulse on aspect2d behind residual aftershock flecks."""
+        half = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_HALO_HALF', 0.38))
+        startScale = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_HALO_START', 0.4))
+        peakScale = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_HALO_PEAK', 1.45))
+        sec = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_HALO_SEC', 0.28))
+        peakA = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.2))
+        r, g, b, _a = getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_HALO_COLOR',
+            (1.0, 0.96, 0.78, 1.0))
+        binSort = int(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_BIN', 58))
+        oz = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_SPARKLE_HANG_ORIGIN_Z', 0.04))
+        try:
+            cm = CardMaker('hackslash-cream-slam-aftershock-halo')
+            cm.setFrame(-half, half, -half, half)
+            halo = parent.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, peakA)
+            halo.setPos(0.0, 0.0, oz + 0.02)
+            halo.setScale(startScale)
+            # Under flecks so residual glitter reads on top of the soft wash.
+            halo.setBin('fixed', max(0, binSort - 1))
+            halo.setDepthTest(False)
+            halo.setDepthWrite(False)
+            self._aftershockHaloNP = halo
+        except Exception:
+            self._aftershockHaloNP = None
+            return None
+        return Parallel(
+            LerpScaleInterval(
+                halo, max(0.01, sec), peakScale, blendType='easeOut'),
+            Sequence(
+                Wait(max(0.0, sec * 0.2)),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.8), Vec4(r, g, b, 0),
+                    blendType='easeIn'),
+            ),
+        )
+
+    def _spawnAftershockSpark(self, parent, index, total, elongated=False):
+        """Softer cream fleck / streak that settles — residual hang aftershock."""
+        count = max(1, int(total))
+        if elongated:
+            size = float(getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_STREAK_SIZE',
+                0.009))
+            r, g, b, a = getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_STREAK_COLOR',
+                (1.0, 0.98, 0.82, 0.82))
+            er, eg, eb, ea = getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_STREAK_END',
+                (1.0, 0.9, 0.5, 0.0))
+            nameSuffix = 'streak'
+            angleBias = 0.55
+        else:
+            size = float(getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_SIZE', 0.012))
+            r, g, b, a = getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_COLOR',
+                (1.0, 0.96, 0.72, 0.86))
+            er, eg, eb, ea = getattr(
+                HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_END',
+                (1.0, 0.92, 0.55, 0.0))
+            nameSuffix = 'cream'
+            angleBias = 0.22
+        drift = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_DRIFT', 0.32))
+        settle = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_SETTLE', 0.22))
+        sec = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_SEC', 0.34))
+        binSort = int(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_AFTERSHOCK_BIN', 58))
+        oz = float(getattr(
+            HackSlashConfig, 'FINISHER_CREAM_SPARKLE_HANG_ORIGIN_Z', 0.04))
+        angle = (2.0 * pi * index) / float(count) + angleBias
+        try:
+            cm = CardMaker(
+                'hackslash-cream-slam-aftershock-%s-%s' % (
+                    nameSuffix, index))
+            if elongated:
+                cm.setFrame(
+                    -size * 0.35, size * 0.35,
+                    -size * 1.2, size * 1.2)
+            else:
+                cm.setFrame(-size, size, -size * 0.9, size * 0.9)
+            spark = parent.attachNewNode(cm.generate())
+            spark.setTransparency(TransparencyAttrib.MAlpha)
+            spark.setColor(r, g, b, 1)
+            spark.setColorScale(r, g, b, 0)
+            startX = cos(angle) * 0.06
+            startZ = oz + sin(angle) * 0.04 + 0.01 * (index % 3)
+            spark.setPos(startX, 0.0, startZ)
+            spark.setScale(0.28 + 0.08 * (index % 3))
+            spark.setBin('fixed', binSort + (index % 2))
+            spark.setDepthTest(False)
+            spark.setDepthWrite(False)
+        except Exception:
+            return None
+
+        # Settle downward — residual cream aftershock, not the hang glitter.
+        end = Point3(
+            startX + cos(angle) * drift * 0.55,
+            0.0,
+            startZ - settle * (0.55 + 0.2 * (index % 3)))
+        peak = 0.95 + 0.08 * (index % 2)
+        self._aftershockNodes.append(spark)
+        stagger = 0.016 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(
