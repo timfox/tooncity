@@ -844,7 +844,7 @@ class MeleeCombatController(DirectObject):
             pass
 
     def _playPerfectDodge(self):
-        """Short rubber-hose ink sparkle / star pop at the local toon."""
+        """Ink sparkle / star pop + cream star aftershock at the local toon."""
         try:
             self._dodgePerfect.play()
         except Exception:
