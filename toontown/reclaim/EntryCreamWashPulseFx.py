@@ -4,10 +4,11 @@ Fullscreen soft cream veil that pulses with EntryCreamShimmerFx — StreetColorW
 overlay grammar as a discrete entry beat (sibling of PurityCompleteCreamWashFx,
 softer / not a purity payoff). A delayed cream aftershock (softer flecks settling
 downward + soft halo) follows the wash pulse — same residual grammar as
-wave-clear cream aftershock (#127) and cheer cream aftershock (#118). Owns
-reclaim STREET_PACK zone enter only; composes with PlayEntry ink edge vignette,
-progressive StreetColorWash, and entry cream shimmer flecks. Toontown
-spiritual-sequel tone only — no keyblades / no KH branding.
+wave-clear cream aftershock (#127) and cheer cream aftershock (#118) — then a
+soft cream wash pulse (CheerCreamWashPulse / PurityFovCreamWashPulse
+vocabulary). Owns reclaim STREET_PACK zone enter only; composes with PlayEntry
+ink edge vignette, progressive StreetColorWash, and entry cream shimmer flecks.
+Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi
@@ -26,10 +27,12 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.EntryAftershockCreamWashFx import (
+    EntryAftershockCreamWashPulse)
 
 
 class EntryCreamWashPulseFxClient(DirectObject):
-    """Listens for reclaim-street zone enter; owns cream wash pulse + aftershock."""
+    """Listens for reclaim-street zone enter; owns wash pulse + aftershock + settle wash."""
 
     def __init__(self):
         DirectObject.__init__(self)
@@ -38,6 +41,7 @@ class EntryCreamWashPulseFxClient(DirectObject):
         self._washNP = None
         self._fleckNPs = []
         self._haloNP = None
+        self._creamWash = None
         self._armedZone = None
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('localToonLeftZone', self._onLeftZone)
@@ -116,7 +120,7 @@ class EntryCreamWashPulseFxClient(DirectObject):
         return float(pack.get('seedPollution', 0.0)) >= minLevel
 
     def playPulse(self):
-        """Two-beat cream wash pulse under entry shimmer + delayed aftershock."""
+        """Two-beat cream wash pulse + delayed aftershock + settle wash."""
         if not getattr(ReclaimGlobals, 'ENTRY_CREAM_WASH_PULSE_ENABLED', True):
             return
         self.clear()
@@ -200,20 +204,52 @@ class EntryCreamWashPulseFxClient(DirectObject):
         aftershock = self._buildAftershock(parent, ox, oy, oz)
         if aftershock is not None:
             # Wash Sequence already started; hold its lifetime beside aftershock.
-            self._ival = Sequence(
-                Parallel(
-                    Wait(washLifetime + 0.04),
-                    aftershock,
-                ),
-                Func(self.clear),
-                name='reclaimEntryCreamWashPulse',
+            burst = Parallel(
+                Wait(washLifetime + 0.04),
+                aftershock,
             )
         else:
-            self._ival = Sequence(
-                Wait(washLifetime + 0.04),
-                Func(self.clear),
-                name='reclaimEntryCreamWashPulse',
-            )
+            burst = Wait(washLifetime + 0.04)
+
+        # Soft cream wash pulse after cream aftershock — cheer / FOV grammar.
+        washHold = 0.0
+        try:
+            settle = EntryAftershockCreamWashPulse()
+            if settle.play() is not None:
+                self._creamWash = settle
+                # Hold teardown beside delayed settle wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        ReclaimGlobals,
+                        'ENTRY_AFTERSHOCK_CREAM_WASH_DELAY_SEC', 0.40))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'ENTRY_AFTERSHOCK_CREAM_WASH_IN_SEC', 0.05))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'ENTRY_AFTERSHOCK_CREAM_WASH_PULSE_SEC', 0.09))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'ENTRY_AFTERSHOCK_CREAM_WASH_HOLD_SEC', 0.06))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'ENTRY_AFTERSHOCK_CREAM_WASH_OUT_SEC', 0.34))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        hold = [burst]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
+        self._ival = Sequence(
+            Parallel(*hold),
+            Func(self.clear),
+            name='reclaimEntryCreamWashPulse',
+        )
         self._ival.start()
 
     def _buildAftershock(self, parent, ox, oy, oz):
@@ -360,13 +396,20 @@ class EntryCreamWashPulseFxClient(DirectObject):
         )
 
     def clear(self):
-        """Stop wash/aftershock and remove every cream entry wash node."""
+        """Stop wash/aftershock/settle wash and remove every cream entry wash node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        settle = self._creamWash
+        self._creamWash = None
+        if settle is not None:
+            try:
+                settle.clear()
+            except Exception:
+                pass
         if self._washPlayIval is not None:
             try:
                 self._washPlayIval.pause()

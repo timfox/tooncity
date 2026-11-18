@@ -383,8 +383,8 @@ ENTRY_CREAM_WASH_PULSE_HOLD_SEC = 0.12
 ENTRY_CREAM_WASH_PULSE_OUT_SEC = 0.50
 # Cream aftershock after entry cream wash pulse (#109) — residual flecks settle
 # downward with a soft cream halo (wave-clear cream aftershock #127 grammar).
-# Quieter than wave-clear residual; not a second wash pulse. Sunny pastel only;
-# no KH blue. Above wash pulse (32); below entry shimmer (36).
+# Quieter than wave-clear residual; settle cream wash arms after this residual.
+# Sunny pastel only; no KH blue. Above wash pulse (32); below entry shimmer (36).
 ENTRY_CREAM_WASH_AFTERSHOCK_ENABLED = True
 ENTRY_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.22
 ENTRY_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.08)
@@ -403,6 +403,21 @@ ENTRY_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.15
 ENTRY_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.26
 ENTRY_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.12
 ENTRY_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+# Soft cream wash pulse after entry cream aftershock (#132) / wash pulse (#109).
+# Cheer (#142) / FOV purity (#164) / wave-clear (#144) cream wash grammar.
+# Quieter than the entry wash pulse (peak 0.16); cream/pastel only. Arms from
+# EntryCreamWashPulseFx.playPulse (delay relative to pulse start). Toggle
+# ENTRY_AFTERSHOCK_CREAM_WASH_ENABLED = False drops settle wash only.
+ENTRY_AFTERSHOCK_CREAM_WASH_ENABLED = True
+ENTRY_AFTERSHOCK_CREAM_WASH_DELAY_SEC = 0.40  # after pulse; after aftershock (0.22)
+ENTRY_AFTERSHOCK_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+ENTRY_AFTERSHOCK_CREAM_WASH_PEAK = 0.09
+ENTRY_AFTERSHOCK_CREAM_WASH_MID = 0.045
+ENTRY_AFTERSHOCK_CREAM_WASH_IN_SEC = 0.05
+ENTRY_AFTERSHOCK_CREAM_WASH_PULSE_SEC = 0.09
+ENTRY_AFTERSHOCK_CREAM_WASH_HOLD_SEC = 0.06
+ENTRY_AFTERSHOCK_CREAM_WASH_OUT_SEC = 0.34
+ENTRY_AFTERSHOCK_CREAM_WASH_BIN = 30  # soft veil under wash pulse (32) / aftershock (34)
 
 # Progressive street cream wash while reclaim purity fills (geom + soft veil).
 # Matches purity-meter / burst cream — rubber-hose sunny clear, not KH blue.
