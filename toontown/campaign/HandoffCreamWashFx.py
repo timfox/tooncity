@@ -4,7 +4,7 @@ Fullscreen soft cream veil that settles *after* hood handoff cream-sparkle
 carnival (#99) and cream edge (#124) — same PerfectDodgeCreamWashPulse /
 HitSparkCreamWashPulse / VictoryCreamWashPulse / OswaldTrustCreamWashPulse
 / FinaleRevealCreamWashPulse overlay grammar as a brief act-handoff settle
-beat. Delay tracks the juicier cream edge settle past #240. Soft under the
+beat. Delay tracks the juicier cream edge settle past #271. Soft under the
 handoff plate + edge strips; cream / pastel only (not ink). Wired from
 CampaignHandoff confetti (act handoff path only) beside the cream edge.
 Act-enter wash lives in ActBannerCreamWashFx; Punchline tip wash lives in

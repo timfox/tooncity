@@ -14,7 +14,7 @@ cooler cream edge that settles into soft shadow flecks (still no Silly
 twist spoilers). Act
 handoffs fire a short confetti / streamer + cream-sparkle pop
 (CampaignHandoffConfetti) framed by a soft cream edge pulse with a
-juicier deepened rubber-hose scale settle past #240 (overshoot → rest →
+juicier deepened rubber-hose scale settle past #271 (overshoot → rest →
 micro rebound) and a delayed soft cream wash pulse tuned to the carnival
 glitter — no KH / keyblade framing. Distinct from tip/title cream hose
 settles.
@@ -30,9 +30,10 @@ complements almost-confess tip (#207) — and a deepened victory/confetti
 cream sting (VictoryTwistConfettiSting: juicier chips + taller micro cream
 pop rebound + richer soft cream aftershock, past #265) lands the hollow
 cheer that Oswald caused the corruption. Distinct from act handoff cream
-edge settle deepen (#240), Punchline tip cream hose rebound
+edge settle deepen (#240/#271), Punchline tip cream hose rebound
 (#256/#284 — tip bar, not betrayal title), betrayal banner cream hose
-(#235/#260/#288), and Silly almost-confess tip (#232/#279/#294).
+(#235/#260/#288), victory twist sting (#265/#300), and Silly
+almost-confess tip (#232/#279/#294).
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
