@@ -10,6 +10,7 @@ from .DemoHostile import DemoHostile
 from . import HitJuice
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
+from .DodgeTrailCreamWashFx import DodgeTrailCreamWashPulse
 from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
 from .HitSparkFx import HitSparkFx
@@ -29,6 +30,7 @@ __all__ = [
     'CreamSlamFlashFx',
     'DodgePerfectFx',
     'DodgeTrailFx',
+    'DodgeTrailCreamWashPulse',
     'HitSparkFx',
     'HitSparkCreamWashPulse',
     'HitStopFx',

@@ -4,9 +4,10 @@ Client juice for the Shift/X i-frame roll: brief translucent smear ghosts
 (and tiny spark pops) drip behind the toon while rolling. While dodge
 i-frames are active, short cream/ink pulses pop along the trail path.
 Cream/pastel sparkle flecks also drip along the smear path (no ink), then
-a delayed cream aftershock (softer flecks + soft halo) settles — same
-residual grammar as finisher / combo cream aftershock. Wired from
-MeleeCombat dodge start/end so hit-squash / hitstop paths stay untouched.
+a delayed cream aftershock (softer flecks + soft halo), then a soft cream
+wash pulse — same residual grammar as finisher / combo cream aftershock +
+perfect-dodge / melee-hit cream wash. Wired from MeleeCombat dodge
+start/end so hit-squash / hitstop paths stay untouched.
 
 Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
@@ -27,10 +28,11 @@ from direct.interval.IntervalGlobal import (
 from direct.task import Task
 
 from . import HackSlashConfig
+from .DodgeTrailCreamWashFx import DodgeTrailCreamWashPulse
 
 
 class DodgeTrailFx(object):
-    """Owns the drip task + ghost nodes for one avatar's dodge roll."""
+    """Owns trail drip + cream aftershock + cream wash for one dodge roll."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -38,6 +40,7 @@ class DodgeTrailFx(object):
         self._ghosts = []
         self._pulses = []
         self._creamSparkles = []
+        self._creamWash = None
         self._nextSpawnAt = 0.0
         self._nextPulseAt = 0.0
         self._nextCreamSparkleAt = 0.0
@@ -67,6 +70,8 @@ class DodgeTrailFx(object):
         self._spawnGhost(initial=True)
         self._spawnPulse()
         self._spawnCreamSparkles()
+        # Soft cream wash pulse after cream aftershock — hit/perfect-dodge grammar.
+        self._armCreamWash()
         try:
             taskMgr.add(self._tick, self._taskName)  # noqa: F821
         except Exception:
@@ -80,6 +85,7 @@ class DodgeTrailFx(object):
             self.clear()
             return
         # Keep the task alive while i-frame pulses can still fire.
+        # Cream wash self-clears; leave it running so the settle beat finishes.
         try:
             now = globalClock.getFrameTime()  # noqa: F821
         except Exception:
@@ -91,13 +97,20 @@ class DodgeTrailFx(object):
                 pass
 
     def clear(self):
-        """Hard-stop and remove every ghost/spark/pulse/cream fleck/aftershock."""
+        """Hard-stop and remove every ghost/spark/pulse/cream fleck/wash."""
         self._active = False
         self._iframeUntil = 0.0
         try:
             taskMgr.remove(self._taskName)  # noqa: F821
         except Exception:
             pass
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         for entry in list(self._ghosts):
             self._destroyEntry(entry)
         self._ghosts = []
@@ -107,6 +120,21 @@ class DodgeTrailFx(object):
         for entry in list(self._creamSparkles):
             self._destroyCreamSparkle(entry)
         self._creamSparkles = []
+
+    def _armCreamWash(self):
+        """Arm one delayed aspect2d cream wash per dodge start."""
+        try:
+            prior = self._creamWash
+            self._creamWash = None
+            if prior is not None:
+                prior.clear()
+            wash = DodgeTrailCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
 
     def _tick(self, task):
         try:
