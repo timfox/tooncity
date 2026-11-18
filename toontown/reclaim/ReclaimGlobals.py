@@ -312,6 +312,21 @@ PURITY_METER_FILL_AFTERSHOCK_HALO_PEAK = 1.35
 PURITY_METER_FILL_AFTERSHOCK_HALO_SEC = 0.26
 PURITY_METER_FILL_AFTERSHOCK_HALO_PEAK_ALPHA = 0.16
 PURITY_METER_FILL_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+# Purity-fill cream wash pulse — soft aspect2d veil after cream aftershock
+# (#123) / fill shimmer (#90). Cheer / wave-clear / entry / purity cream wash
+# grammar. Quieter than cheer wash (#142) / purity-complete wash (#104);
+# cream/pastel only. Toggle PURITY_METER_FILL_CREAM_WASH_ENABLED = False
+# drops wash only.
+PURITY_METER_FILL_CREAM_WASH_ENABLED = True
+PURITY_METER_FILL_CREAM_WASH_DELAY_SEC = 0.40  # after shimmer; after aftershock (0.18)
+PURITY_METER_FILL_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+PURITY_METER_FILL_CREAM_WASH_PEAK = 0.09
+PURITY_METER_FILL_CREAM_WASH_MID = 0.045
+PURITY_METER_FILL_CREAM_WASH_IN_SEC = 0.05
+PURITY_METER_FILL_CREAM_WASH_PULSE_SEC = 0.09
+PURITY_METER_FILL_CREAM_WASH_HOLD_SEC = 0.06
+PURITY_METER_FILL_CREAM_WASH_OUT_SEC = 0.34
+PURITY_METER_FILL_CREAM_WASH_BIN = 48  # soft veil under fill shimmer (49) / aftershock (50)
 
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.
