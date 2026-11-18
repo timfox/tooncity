@@ -2,8 +2,10 @@
 
 Sunny Toontown cream chips that pop with the defeat ink splat — purity flecks,
 not ink. Composes lift / origin with CorruptDeathPopFx.deathPopLook so the
-burst sits on the same death pop. Wired from DeathPopSplat.play. Client only.
-Toontown spiritual sequel — no keyblades / no KH branding.
+burst sits on the same death pop. CorruptDeathCreamWashFx layers a soft cream
+wash pulse after this burst (reclaim purity-wash grammar). Wired from
+DeathPopSplat.play. Client only. Toontown spiritual sequel — no keyblades /
+no KH branding.
 """
 
 from math import cos, pi, sin

@@ -2,9 +2,11 @@
 
 World-space scale-burst companion + brief CardMaker droplet spray, layered
 with CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
-not ink). Wired from DistributedCorruptToon.announceDefeat so Ink Smudge /
-Sludge Brute / Balloon Snare deaths read as a Toontown gag splat — never KH /
-keyblade framing.
+not ink) and CorruptDeathCreamWashFx (soft cream wash pulse after the fleck
+burst — reclaim purity-wash grammar). Wired from
+DistributedCorruptToon.announceDefeat so Ink Smudge / Sludge Brute /
+Balloon Snare deaths read as a Toontown gag splat — never KH / keyblade
+framing.
 """
 
 from math import cos, pi, sin
@@ -23,6 +25,7 @@ from direct.interval.IntervalGlobal import (
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathCreamFleckFx import DeathCreamFleckBurst
+from toontown.corruption.CorruptDeathCreamWashFx import DeathCreamWashPulse
 
 
 def deathPopLook(archetype):
@@ -83,6 +86,7 @@ class DeathPopSplat(object):
         self._ringNP = None
         self._sfx = None
         self._creamFlecks = None
+        self._creamWash = None
 
     def play(self, pos, archetype=None, parent=None):
         """Spawn splat at `pos` (render space). Returns started Sequence or None."""
@@ -120,11 +124,43 @@ class DeathPopSplat(object):
         except Exception:
             self._creamFlecks = None
 
-        if not parts:
+        # Soft cream wash pulse after fleck burst — reclaim purity-wash grammar.
+        washHold = 0.0
+        try:
+            wash = DeathCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+                # Hold splat teardown beside delayed wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        CorruptionGlobals, 'DEATH_CREAM_WASH_DELAY_SEC',
+                        0.20))
+                    + float(getattr(
+                        CorruptionGlobals, 'DEATH_CREAM_WASH_IN_SEC', 0.06))
+                    + float(getattr(
+                        CorruptionGlobals, 'DEATH_CREAM_WASH_PULSE_SEC', 0.10))
+                    + float(getattr(
+                        CorruptionGlobals, 'DEATH_CREAM_WASH_HOLD_SEC', 0.08))
+                    + float(getattr(
+                        CorruptionGlobals, 'DEATH_CREAM_WASH_OUT_SEC', 0.42))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        if not parts and washHold <= 0.0:
+            return None
+
+        hold = list(parts)
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+        if not hold:
             return None
 
         self._ival = Sequence(
-            Parallel(*parts),
+            Parallel(*hold),
             Func(self.clear),
             name='corruptDeathPopSplat',
         )
@@ -143,6 +179,13 @@ class DeathPopSplat(object):
         if cream is not None:
             try:
                 cream.clear()
+            except Exception:
+                pass
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
             except Exception:
                 pass
         if self._ringNP is not None:
