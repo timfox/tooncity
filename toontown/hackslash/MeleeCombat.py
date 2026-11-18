@@ -1203,8 +1203,9 @@ class MeleeCombatController(DirectObject):
             pass
 
     def _playCreamSlamFlash(self):
-        """Warm cream aspect2d flash + ring on finisher slam — during hitstop."""
+        """Warm cream slam flash + delayed cream sparkle hang — during hitstop."""
         # Drop any mid-combo white flash so cream owns the screen punch.
+        # CreamSlamFlashFx also schedules the residual sparkle hang aftershock.
         self._clearHitFlash()
         try:
             self._creamSlamFlash.play()
