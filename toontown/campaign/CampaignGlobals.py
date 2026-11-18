@@ -129,6 +129,17 @@ FINALE_PHASE_HUD = {
     1: 'OVERLORD · P1 RISE',
     2: 'OVERLORD · P2 UNLEASHED',
 }
+# PlayEntry tip bar — Oswald / combat cue strip at street enter.
+# Short rubber-hose scale pop when the tip appears (Toontown spiritual
+# sequel — no keyblades / KH branding). Tunables live here so PlayEntry
+# stays out of corruption/ while smudge telegraph juice lands elsewhere.
+PLAY_ENTRY_TIP_SCALE = 0.042
+PLAY_ENTRY_TIP_POS = (0.0, 0.0, -0.92)
+# Flat squash → tall stretch → settle (multipliers of PLAY_ENTRY_TIP_SCALE).
+PLAY_ENTRY_TIP_POP_SQUASH = (1.55, 1.0, 0.55, 0.05)   # sx, sy, sz, sec
+PLAY_ENTRY_TIP_POP_STRETCH = (0.78, 1.0, 1.42, 0.08)
+PLAY_ENTRY_TIP_POP_SETTLE_SEC = 0.10
+
 # Campaign handoff confetti / streamer pop (CampaignHandoffConfetti).
 # Short rubber-hose carnival burst on Loopy→Punchline (and act) handoffs.
 # Toontown spiritual sequel — no keyblades / KH branding.
