@@ -846,6 +846,39 @@ IDLE_CREAM_DRIP_SPARKLE_LOOK = {
     'binSort': IDLE_CREAM_DRIP_SPARKLE_BIN,
 }
 
+# Idle cream wash pulse — soft aspect2d veil between telegraphs (client only).
+# Matches CorruptDeathCreamWashFx (#119) / HitSparkCreamWashFx (#134) two-beat
+# grammar; quieter ambient contrast against IdleInkDripFx. Compose period via
+# IdleCreamWashPulseFx.idleCreamWashLook → idleCreamDripSparkleLook.
+# IDLE_CREAM_WASH_ENABLED = False drops wash only (drips / sparkles stay).
+IDLE_CREAM_WASH_ENABLED = True
+IDLE_CREAM_WASH_DELAY_SEC = 0.0  # loop settle handles spacing
+IDLE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+IDLE_CREAM_WASH_PEAK = 0.055  # quieter than death (0.14) / melee hit (0.10)
+IDLE_CREAM_WASH_MID = 0.032
+IDLE_CREAM_WASH_IN_SEC = 0.07
+IDLE_CREAM_WASH_PULSE_SEC = 0.12
+IDLE_CREAM_WASH_HOLD_SEC = 0.10
+IDLE_CREAM_WASH_OUT_SEC = 0.48
+IDLE_CREAM_WASH_BIN = 36  # soft veil under death wash (38) / idle drips
+IDLE_CREAM_WASH_LOOK = {
+    'id': 'idle-cream-wash',
+    # period composed with idleCreamDripSparkleLook when played; fallbacks below.
+    'periodSec': 3.2,
+    'periodScale': 2.15,
+    'settleSec': 1.05,
+    'settleBias': 0.48,
+    'delaySec': IDLE_CREAM_WASH_DELAY_SEC,
+    'color': IDLE_CREAM_WASH_COLOR,
+    'peak': IDLE_CREAM_WASH_PEAK,
+    'mid': IDLE_CREAM_WASH_MID,
+    'inSec': IDLE_CREAM_WASH_IN_SEC,
+    'pulseSec': IDLE_CREAM_WASH_PULSE_SEC,
+    'holdSec': IDLE_CREAM_WASH_HOLD_SEC,
+    'outSec': IDLE_CREAM_WASH_OUT_SEC,
+    'binSort': IDLE_CREAM_WASH_BIN,
+}
+
 # Silhouette cream rim rising sparkle flecks — soft sunny chips rising from
 # the CorruptSilhouetteCreamRimFx rim edge between telegraphs (client only).
 # Compose lift/period via CorruptSilhouetteCreamSparkleFx.silhouetteCreamSparkleLook

@@ -8,6 +8,8 @@ drips (archetype-tinted pollution presence) layered with
 IdleCreamDripContrastFx (soft cream / pastel drips — contrast to idle ink)
 plus IdleCreamDripSparkleFx (sunny cream / pastel sparkle flecks along the
 cream drip path — silhouette rim sparkle grammar) plus
+IdleCreamWashPulseFx (soft cream wash pulse — contrast against ink idle
+drips; death / melee cream-wash grammar) plus
 CorruptSilhouetteCreamRimFx (sunny cream / pastel rim flecks along the
 ink silhouette edge) plus CorruptSilhouetteCreamSparkleFx (sunny cream /
 pastel sparkle flecks rising from the silhouette cream rim). Telegraphs play CorruptTelegraphInkFx (short
@@ -15,7 +17,7 @@ rubber-hose ink drip / splat pop) layered with CorruptTelegraphCreamWarnFx
 (sunny cream / pastel warn flecks + delayed cream aftershock — contrast to
 ink) plus CorruptTelegraphCreamSparkleFx (sunny cream / pastel sparkle flecks
 rising from the telegraph cream warn spray — silhouette cream sparkle
-grammar) and pause idle drips / sparkles / rim flecks for the wind-up. Ink Smudge wind-ups also flash
+grammar) and pause idle drips / sparkles / wash / rim flecks for the wind-up. Ink Smudge wind-ups also flash
 SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Ink Smudge hits and
 deaths also flash SmudgeInkSplashFx (cheap purple rubber-hose ink splash for
 swarm readability; composes with telegraph / death / idle ink looks). Sludge

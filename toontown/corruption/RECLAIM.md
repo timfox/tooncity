@@ -96,11 +96,12 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
 # presence, layered with soft cream / pastel contrast drips
 # (IdleCreamDripContrastFx) plus sunny cream / pastel sparkle flecks on
-# the cream drip path (IdleCreamDripSparkleFx) plus sunny cream / pastel
-# rim flecks on the ink silhouette (CorruptSilhouetteCreamRimFx) plus
-# rising cream / pastel sparkle flecks on the silhouette cream rim
-# (CorruptSilhouetteCreamSparkleFx).
-# Telegraph wind-up pauses idle drips / sparkles / rim flecks and plays
+# the cream drip path (IdleCreamDripSparkleFx) plus soft cream wash pulse
+# against ink idle drips (IdleCreamWashPulseFx — death / melee cream-wash
+# grammar) plus sunny cream / pastel rim flecks on the ink silhouette
+# (CorruptSilhouetteCreamRimFx) plus rising cream / pastel sparkle flecks
+# on the silhouette cream rim (CorruptSilhouetteCreamSparkleFx).
+# Telegraph wind-up pauses idle drips / sparkles / wash / rim flecks and plays
 # a short ink drip / splat pop (CorruptTelegraphInkFx) layered with
 # sunny cream / pastel warn flecks + delayed cream aftershock
 # (CorruptTelegraphCreamWarnFx — contrast to ink) plus rising cream /
@@ -139,8 +140,19 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~hackslash 0
 # Watch idle cream contrast drips with sunny cream / pastel sparkle
 # flecks along the drip path (IdleCreamDripSparkleFx — silhouette rim
-# sparkle grammar). Telegraph pauses drips + sparkles + rim flecks.
+# sparkle grammar). Telegraph pauses drips + sparkles + wash + rim flecks.
 # IDLE_CREAM_DRIP_SPARKLE_ENABLED = False drops sparkles only.
+```
+
+## Idle cream wash pulse demo
+
+```
+~spawncorrupt 2
+~hackslash 0
+# Watch soft cream wash pulse against idle ink drips
+# (IdleCreamWashPulseFx — CorruptDeathCreamWashFx / HitSparkCreamWashFx
+# two-beat grammar, quieter ambient). Telegraph pauses wash with drips.
+# IDLE_CREAM_WASH_ENABLED = False drops wash only.
 ```
 
 ## Silhouette cream rim rising sparkle demo
