@@ -2,8 +2,10 @@
 
 World-space scale-burst companion + brief CardMaker droplet spray, layered
 with CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
-not ink) and CorruptDeathCreamWashFx (soft cream wash pulse after the fleck
-burst — reclaim purity-wash grammar). Wired from
+not ink), CorruptDeathCreamSparkleFx (rising cream / pastel sparkle flecks
+from the fleck burst — telegraph / silhouette cream sparkle grammar), and
+CorruptDeathCreamWashFx (soft cream wash pulse after the fleck burst —
+reclaim purity-wash grammar). Wired from
 DistributedCorruptToon.announceDefeat so Ink Smudge / Sludge Brute /
 Balloon Snare deaths read as a Toontown gag splat — never KH / keyblade
 framing.
@@ -25,6 +27,7 @@ from direct.interval.IntervalGlobal import (
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathCreamFleckFx import DeathCreamFleckBurst
+from toontown.corruption.CorruptDeathCreamSparkleFx import DeathCreamSparkles
 from toontown.corruption.CorruptDeathCreamWashFx import DeathCreamWashPulse
 
 
@@ -86,6 +89,7 @@ class DeathPopSplat(object):
         self._ringNP = None
         self._sfx = None
         self._creamFlecks = None
+        self._creamSparkles = None
         self._creamWash = None
 
     def play(self, pos, archetype=None, parent=None):
@@ -124,6 +128,27 @@ class DeathPopSplat(object):
         except Exception:
             self._creamFlecks = None
 
+        # Rising cream sparkles from the fleck burst — telegraph/silhouette grammar.
+        sparkleHold = 0.0
+        try:
+            from toontown.corruption.CorruptDeathCreamSparkleFx import (
+                deathCreamSparkleLook)
+            sparkles = DeathCreamSparkles()
+            if sparkles.play(pos, archetype=archetype, parent=parentNP) is not None:
+                self._creamSparkles = sparkles
+                sparkleLook = deathCreamSparkleLook(archetype)
+                fleckCount = max(0, int(sparkleLook.get('fleckCount', 0)))
+                sparkleHold = (
+                    float(sparkleLook.get('startDelaySec', 0.08))
+                    + float(sparkleLook.get('fleckSec', 0.39))
+                    + float(sparkleLook.get('fleckStagger', 0.038)) * max(
+                        0, fleckCount - 1)
+                    + 0.02)
+            else:
+                self._creamSparkles = None
+        except Exception:
+            self._creamSparkles = None
+
         # Soft cream wash pulse after fleck burst — reclaim purity-wash grammar.
         washHold = 0.0
         try:
@@ -150,12 +175,13 @@ class DeathPopSplat(object):
         except Exception:
             self._creamWash = None
 
-        if not parts and washHold <= 0.0:
+        layerHold = max(washHold, sparkleHold)
+        if not parts and layerHold <= 0.0:
             return None
 
         hold = list(parts)
-        if washHold > 0.0:
-            hold.append(Wait(washHold))
+        if layerHold > 0.0:
+            hold.append(Wait(layerHold))
         if not hold:
             return None
 
@@ -179,6 +205,13 @@ class DeathPopSplat(object):
         if cream is not None:
             try:
                 cream.clear()
+            except Exception:
+                pass
+        sparkles = self._creamSparkles
+        self._creamSparkles = None
+        if sparkles is not None:
+            try:
+                sparkles.clear()
             except Exception:
                 pass
         wash = self._creamWash

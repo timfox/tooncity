@@ -33,8 +33,10 @@ rubber-hose ink splash; phase-retinted; composes with crown / rain / death /
 idle looks — not street Smudge purple). Defeat plays CorruptDeathPopFx
 (rubber-hose ink splat / balloon pop) layered with
 CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
-not ink) and CorruptDeathCreamWashFx (soft cream wash pulse after the
-fleck burst — reclaim purity-wash grammar). Clearing them lowers
+not ink), CorruptDeathCreamSparkleFx (sunny cream / pastel sparkle flecks
+rising from the death cream fleck burst — telegraph / silhouette cream
+sparkle grammar), and CorruptDeathCreamWashFx (soft cream wash pulse after
+the fleck burst — reclaim purity-wash grammar). Clearing them lowers
 per-zone pollution via PollutionManager;
 hitting 0.0 unlocks purity restore (reclaim / campaign).
 
