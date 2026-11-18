@@ -4,8 +4,10 @@
 streetNeedsBreadcrumb respects act unlock (soft-gate parity with
 street-pack R). Locked polluted tunnels get streetBreadcrumbDimmed.
 Client accepts campaignActUnlocked (PlayEntry + CorruptStreetBreadcrumb)
-to latch unlock and refresh crumbs. No CampaignDirectorAI rewrite —
-messenger already sends. No cream deepen / no KH.
+to latch unlock and refresh crumbs. Login campaignProgressSync also
+raises the unlock latch so hub crumbs undim after relog. No
+CampaignDirectorAI rewrite — messenger already sends. No cream deepen
+/ no KH.
 
 Run from repo root:
   python3 tests/test_hub_breadcrumb_act_unlock.py
@@ -241,12 +243,32 @@ class HubBreadcrumbActUnlockTests(unittest.TestCase):
         # refresh passes unlockedThrough into streetNeedsBreadcrumb.
         self.assertIn('unlockedThrough=unlocked', self.src)
         self.assertIn('streetBreadcrumbDimmed', self.src)
+        # Login sync rehydrates unlock latch (dim → full after relog).
+        self.assertIn('_onCampaignProgressSync', self.src)
+        self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', self.src)
+        crumb_sync_idx = self.src.find('def _onCampaignProgressSync')
+        self.assertGreater(crumb_sync_idx, 0)
+        crumb_sync = self.src[crumb_sync_idx:crumb_sync_idx + 700]
+        self.assertIn('setClientUnlockedThrough', crumb_sync)
+        self.assertIn('noteCampaignActUnlocked', crumb_sync)
+        self.assertIn('unlockedThrough', crumb_sync)
 
         # PlayEntry thin accept + purity mirror (AI messenger is process-local).
         self.assertIn("self.accept('campaignActUnlocked'", self.play_src)
         self.assertIn('_onCampaignActUnlocked', self.play_src)
         self.assertIn('_mirrorCampaignActUnlocked', self.play_src)
         self.assertIn('noteCampaignActUnlocked', self.play_src)
+        # Progress sync raises crumb unlock latch (not tip-only).
+        play_sync_idx = self.play_src.find('def _onCampaignProgressSync')
+        self.assertGreater(play_sync_idx, 0)
+        play_sync_next = self.play_src.find('\n    def ', play_sync_idx + 1)
+        play_sync = self.play_src[
+            play_sync_idx:(
+                play_sync_next if play_sync_next > 0
+                else play_sync_idx + 2400)]
+        self.assertIn('noteCampaignActUnlocked', play_sync)
+        self.assertIn('CorruptStreetBreadcrumb', play_sync)
+        self.assertIn("mirror.get('unlockedThrough'", play_sync)
         # Purity mirror rebroadcasts so breadcrumb.accept fires on client.
         mirror_idx = self.play_src.find('def _mirrorCampaignActUnlocked')
         self.assertGreater(mirror_idx, 0)

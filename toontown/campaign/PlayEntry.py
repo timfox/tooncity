@@ -199,7 +199,7 @@ class PlayEntryClient(DirectObject):
 
     def _onCampaignProgressSync(
             self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
-        """Apply AI-persisted progress so hub tip survives relog."""
+        """Apply AI-persisted progress so hub tip + crumbs survive relog."""
         try:
             from toontown.campaign import CampaignProgressSave
             mirror = CampaignProgressSave.clientMirrorFromProgress({
@@ -213,6 +213,7 @@ class PlayEntryClient(DirectObject):
             return
         self._victoryEpilogue = bool(mirror.get('victoryEpilogue'))
         self._chasePending = bool(mirror.get('chasePending'))
+        unlocked = int(mirror.get('unlockedThrough', 0) or 0)
         if self._victoryEpilogue:
             # Victory / chase soft-end — drop mid-act soft cues.
             self._softNextCue = None
@@ -224,10 +225,18 @@ class PlayEntryClient(DirectObject):
             if softStreet:
                 self._softNextStreet = softStreet
                 self._softNextCue = None
-            elif int(mirror.get('unlockedThrough', 0) or 0) <= 0:
+            elif unlocked <= 0:
                 # Fresh campaign — clear stale soft cues from a prior local
                 # session if the AI says Act 1 only.
                 self._softNextStreet = None
+        # Raise hub crumb unlock latch so Punchline/Silly undim after relog
+        # without waiting for a live campaignActUnlocked.
+        try:
+            from toontown.safezone.CorruptStreetBreadcrumb import (
+                noteCampaignActUnlocked)
+            noteCampaignActUnlocked(unlocked)
+        except Exception:
+            pass
         # Refresh hub tip if the player is already on TTC.
         hubZone = int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
         av = getattr(base, 'localAvatar', None)  # noqa: F821
