@@ -286,6 +286,38 @@ SNARE_LASH_HALF_H = 0.55
 SNARE_LASH_TRAVEL = 0.18
 SNARE_LASH_Z = 2.1
 
+# Balloon Snare telegraph string-lash pop — short rubber-hose amber whip on
+# announceAttackTelegraph (client only). Distinct from hit-time SNARE_LASH_*
+# snap and from generic TELEGRAPH_INK_DRIP amber drips: horizontal lash silhouette.
+SNARE_TELEGRAPH_STRING_LOOK = {
+    'id': 'amber-string-lash',
+    'lift': 2.05,
+    'scale': 1.0,
+    'peakAlpha': 0.96,
+    'fadeInSec': 0.04,
+    'holdSec': 0.14,
+    'fadeOutSec': 0.22,
+    'squash': (0.45, 1.0, 1.55),
+    'stretch': (2.35, 1.0, 0.42),
+    'squashSec': 0.05,
+    'stretchSec': 0.1,
+    'settleSec': 0.12,
+    'whipDeg': 18.0,
+    'stringHalfW': 0.55,
+    'stringHalfH': 0.08,
+    'knotHalf': 0.11,
+    'tipHalf': 0.1,
+    'stringColor': (0.95, 0.55, 0.12, 1.0),
+    'tipColor': (1.15, 0.75, 0.28, 1.0),
+    'flashColor': (1.25, 0.8, 0.35, 1.0),
+    'streakCount': 3,
+    'streakHalf': 0.12,
+    'streakSec': 0.28,
+    'streakSpread': 1.15,
+    'streakColor': (1.05, 0.65, 0.22, 0.9),
+    'binSort': 43,
+}
+
 # Defeat pop juice — rubber-hose ink splat / balloon pop on announceDefeat.
 # Per-archetype palette so Smudge (purple), Brute (green), Snare (amber) read.
 DEATH_POP_SFX_VOLUME = 0.78
