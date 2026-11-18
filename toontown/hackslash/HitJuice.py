@@ -3,14 +3,24 @@
 Shared helpers so MeleeCombat, demo hostiles, and corrupt hit-reacts share one
 cartoon scale curve: brief flat squash → tall recover stretch → settle.
 Combo finishers use playFinisherSlam for a heavier rubber-hose slam beat.
+Launcher hang uses buildLaunchHangInterval + spawnHangSparks for a readable
+airborne float before fall.
 No keyblades / no KH framing — Toontown rubber-hose only.
 """
 
 import random
+from math import cos, pi, sin
 
-from panda3d.core import Point3, Vec3
+from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec3, Vec4
 
-from direct.interval.IntervalGlobal import LerpScaleInterval, Sequence
+from direct.interval.IntervalGlobal import (
+    LerpColorScaleInterval,
+    LerpPosInterval,
+    LerpScaleInterval,
+    Parallel,
+    Sequence,
+    Wait,
+)
 
 from . import HackSlashConfig
 
@@ -128,6 +138,128 @@ def playPlayerHitReact(node, finishScale=None, name='hackslashPlayerHitReact'):
         HackSlashConfig.PLAYER_HIT_REACT_SETTLE_SEC,
         finishScale=finishScale if finishScale is not None else Point3(1.0, 1.0, 1.0),
         name=name)
+
+
+def buildLaunchHangInterval(node, peak, hangSec, hoverAmp, stretchScale,
+                             name='hackslashLaunchHang'):
+    """Apex float: slight hover bob + flat squash → tall spring (does not start).
+
+    Replaces a frozen Wait at peak so launched corrupt toons read as rubber-hose
+    hang before fall. Returns a Sequence, or Wait(hangSec) if node/timing unusable.
+    """
+    hangSec = max(0.0, float(hangSec))
+    if hangSec <= 0.0 or node is None:
+        return Wait(hangSec) if hangSec > 0.0 else Wait(0.0)
+
+    hoverAmp = max(0.0, float(hoverAmp))
+    hover = Point3(peak[0], peak[1], peak[2] + hoverAmp)
+    # Split hang: rise bob, then settle; squash overlaps the rise, stretch the settle.
+    upSec = hangSec * 0.42
+    downSec = max(0.01, hangSec - upSec)
+    sx, sy, sz, squashSec = HackSlashConfig.LAUNCH_HANG_SQUASH
+    tx, ty, tz, stretchSec = HackSlashConfig.LAUNCH_HANG_STRETCH
+    # Cap scale beats inside the hang window so timing never overruns.
+    squashSec = min(float(squashSec), upSec)
+    stretchSec = min(float(stretchSec), downSec)
+    squashScale = Point3(sx, sy, sz)
+    hangStretch = Point3(tx, ty, tz)
+    holdStretch = stretchScale if stretchScale is not None else hangStretch
+
+    return Sequence(
+        Parallel(
+            LerpPosInterval(node, upSec, hover, blendType='easeOut'),
+            Sequence(
+                LerpScaleInterval(
+                    node, squashSec, squashScale, blendType='easeOut'),
+                LerpScaleInterval(
+                    node, max(0.01, upSec - squashSec), squashScale),
+            ),
+        ),
+        Parallel(
+            LerpPosInterval(node, downSec, peak, blendType='easeIn'),
+            Sequence(
+                LerpScaleInterval(
+                    node, stretchSec, hangStretch, blendType='easeOut'),
+                LerpScaleInterval(
+                    node, max(0.01, downSec - stretchSec), holdStretch),
+            ),
+        ),
+        name=name,
+    )
+
+
+def spawnHangSparks(origin, parent=None, name='hackslashHangSparks'):
+    """Warm cartoon spark pops at apex. Returns (Parallel|None, nodeList).
+
+    Caller owns cleanup of returned nodes (pause Parallel then removeNode).
+    """
+    count = int(HackSlashConfig.LAUNCH_HANG_SPARK_COUNT)
+    if count <= 0 or origin is None:
+        return None, []
+
+    parentNP = parent
+    if parentNP is None:
+        try:
+            parentNP = render  # noqa: F821
+        except Exception:
+            return None, []
+
+    size = float(HackSlashConfig.LAUNCH_HANG_SPARK_SIZE)
+    drift = float(HackSlashConfig.LAUNCH_HANG_SPARK_DRIFT)
+    lift = float(HackSlashConfig.LAUNCH_HANG_SPARK_LIFT)
+    sec = float(HackSlashConfig.LAUNCH_HANG_SPARK_SEC)
+    r, g, b, a = HackSlashConfig.LAUNCH_HANG_SPARK_COLOR
+    nodes = []
+    parts = []
+
+    for i in range(count):
+        try:
+            cm = CardMaker('%s-%s' % (name, i))
+            cm.setFrame(-size, size, -size, size)
+            spark = parentNP.attachNewNode(cm.generate())
+            spark.setTransparency(TransparencyAttrib.MAlpha)
+            spark.setColor(r, g, b, 1)
+            spark.setColorScale(r, g, b, a)
+            angle = (2.0 * pi * i) / float(count) + 0.35
+            ox = cos(angle) * 0.35
+            oy = sin(angle) * 0.35
+            spark.setPos(
+                origin[0] + ox,
+                origin[1] + oy,
+                origin[2] + lift * 0.35)
+            spark.setScale(0.45 + 0.08 * (i % 3))
+            spark.setBin('transparent', 22)
+            spark.setDepthWrite(False)
+            spark.setBillboardPointEye()
+        except Exception:
+            continue
+
+        end = Point3(
+            spark.getX() + cos(angle) * drift,
+            spark.getY() + sin(angle) * drift,
+            spark.getZ() + lift + 0.12 * (i % 2))
+        parts.append(Parallel(
+            LerpPosInterval(spark, sec, end, blendType='easeOut'),
+            LerpScaleInterval(spark, sec, 0.04, blendType='easeIn'),
+            LerpColorScaleInterval(
+                spark, sec, Vec4(r, g, b, 0), blendType='easeIn'),
+        ))
+        nodes.append(spark)
+
+    if not parts:
+        return None, []
+    ival = Parallel(*parts, name=name)
+    return ival, nodes
+
+
+def clearHangSparks(nodes):
+    """Remove spark CardMaker nodes spawned for a launch hang."""
+    for np in list(nodes or []):
+        try:
+            if np is not None and not np.isEmpty():
+                np.removeNode()
+        except Exception:
+            pass
 
 
 def finishInterval(ival, node=None, restoreScale=None):
