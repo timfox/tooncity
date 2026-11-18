@@ -91,15 +91,19 @@ class SillyTipCreamHoseSettleTest(unittest.TestCase):
         self.assertGreater(total, 0.08)
         wash_delay = float(camp.SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC)
         self.assertGreaterEqual(wash_delay, total)
-        # Distinct from Punchline #227 cream hose settle tunables.
+        # Distinct from Punchline tip cream hose deepen (#227 deepen).
         punch_over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
         self.assertNotEqual(tuple(over), tuple(punch_over))
         self.assertNotEqual(
             rest, float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC))
-        # Juicier than Punchline: taller Z and longer rest.
+        # Taller primary Z / longer rest than Punchline; Punchline owns rebound.
         self.assertGreater(float(oz), float(punch_over[2]))
         self.assertGreater(
             rest, float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC))
+        self.assertTrue(hasattr(
+            camp, 'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
+        self.assertFalse(hasattr(
+            camp, 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
         # No KH product nouns in the settle block comments.
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('silly_act_tip_cream_hose_settle_enabled')

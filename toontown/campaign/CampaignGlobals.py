@@ -250,15 +250,21 @@ PUNCHLINE_ACT_TIP_POP_STRETCH = (0.74, 1.0, 1.48, 0.08)
 PUNCHLINE_ACT_TIP_POP_SETTLE_SEC = 0.10
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.90, 1.0, 1.16, 0.07)
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
-# Brief cream hose settle after Punchline tip trust/fracture bounce (#198).
-# Outward overshoot → rest so the Act 2 unease tip lands rubber-hose and
-# readable — handoff cream edge settle (#222) twin on the tip bar. Armed
-# on tipHose='punchline' only. PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED
-# = False drops this cream settle only (hose pop + trust/fracture settle +
-# cream wash remain). No keyblades / KH branding.
+# Deepened cream hose settle after Punchline tip trust/fracture bounce
+# (#198 / #227 deepen). Juicier outward overshoot → rest → micro rebound
+# → rest so the Act 2 unease tip lands rubber-hose and reads juicier —
+# handoff cream edge settle rebound twin (#240) on the tip bar. Armed on
+# tipHose='punchline' only. Distinct from Silly almost-confess tip cream
+# hose settle (#232 — taller/longer primary overshoot, no tip rebound)
+# and Silly Overlord tip cream wash + aftershock deepen (#251 — wash
+# flecks/halo, not tip scale). PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED
+# = False drops this cream settle + rebound only (hose pop +
+# trust/fracture settle + cream wash remain). No keyblades / KH branding.
 PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = True
-PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.06, 1.0, 1.10, 0.06)  # sx, sy, sz, sec
-PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.09
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.08, 1.0, 1.12, 0.065)  # juicier than #227 (1.06/1.10/0.06)
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.10
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND = (1.03, 1.0, 1.05, 0.04)  # micro second bounce
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC = 0.06
 
 # Soft cream wash pulse after Punchline Act 2 tip hose pop (#91).
 # Act-banner / trust wash grammar (#154/#145) — delayed two-beat aspect2d
@@ -271,7 +277,7 @@ PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.09
 # (hose pop + trust settle + cream hose settle remain). No keyblades / KH
 # branding.
 PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = True
-PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.52  # after play; after cream hose settle
+PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.62  # after play; after cream hose settle + rebound
 PUNCHLINE_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
 PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK = 0.12
 PUNCHLINE_ACT_TIP_CREAM_WASH_MID = 0.07
@@ -297,12 +303,13 @@ SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 # Brief cream hose settle after Silly tip fracture bounce (#207 path).
 # Juicier outward overshoot → rest so the almost-confess / trust-fracture
 # tip lands rubber-hose and readable — Punchline tip cream hose settle
-# (#227) twin on the tip bar, taller/longer for Act 3 unease. Armed on
-# tipHose='silly' only (entry foreshadow + mid-act approachTip). Distinct
-# from Punchline #227 tunables and finale betrayal banner (#212).
-# SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = False drops this cream settle
-# only (hose pop + trust/fracture settle + cream wash remain).
-# No keyblades / KH branding.
+# (#227 deepen) twin on the tip bar, taller/longer primary overshoot for
+# Act 3 unease (no tip rebound — Punchline deepen owns that micro bounce).
+# Armed on tipHose='silly' only (entry foreshadow + mid-act approachTip).
+# Distinct from Punchline tip cream hose deepen tunables and finale
+# betrayal banner (#212). SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = False
+# drops this cream settle only (hose pop + trust/fracture settle + cream
+# wash remain). No keyblades / KH branding.
 SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = True
 SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.09, 1.0, 1.14, 0.07)  # sx, sy, sz, sec
 SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.11

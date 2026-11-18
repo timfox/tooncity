@@ -492,27 +492,46 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('deepened edge settle', magic_l)
 
     def test_punchline_tip_cream_hose_settle_tunables(self):
-        """#198 Punchline tip gets brief cream hose settle after trust bounce."""
+        """#198 / #227 deepen — Punchline tip gets juicier cream hose + rebound."""
         camp = self.camp
         self.assertTrue(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED)
         over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
         self.assertEqual(len(over), 4)
-        self.assertGreater(float(over[0]), 1.0)
-        self.assertGreater(float(over[2]), 1.0)
-        self.assertGreater(float(over[3]), 0.0)
+        self.assertGreaterEqual(float(over[0]), 1.08)
+        self.assertGreaterEqual(float(over[2]), 1.12)
+        self.assertGreaterEqual(float(over[3]), 0.065)
+        self.assertGreaterEqual(
+            float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC), 0.10)
+        rebound = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND
+        self.assertEqual(len(rebound), 4)
+        self.assertGreater(float(rebound[0]), 1.0)
+        self.assertGreater(float(rebound[2]), 1.0)
+        self.assertLess(float(rebound[0]), float(over[0]))
         self.assertGreater(
-            float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC), 0.0)
+            float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC),
+            0.0)
+        # Distinct from Silly almost-confess (#232) and wash aftershock (#251).
+        self.assertNotEqual(
+            tuple(over),
+            tuple(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT))
+        self.assertFalse(hasattr(
+            camp, 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
+        self.assertNotEqual(
+            float(over[2]),
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN[2]))
         play_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'PlayEntry.py'
         ).read_text(encoding='utf-8')
         self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', play_src)
         self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT', play_src)
+        self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND', play_src)
         magic_l = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'MagicWords.py'
         ).read_text(encoding='utf-8').lower()
-        self.assertIn('cream hose settle', magic_l)
+        self.assertIn('deepened cream hose settle', magic_l)
+        self.assertIn('micro rebound', magic_l)
 
     def test_silly_tip_cream_hose_settle_tunables(self):
         """#207 Silly almost-confess tip gets juicier cream hose settle."""

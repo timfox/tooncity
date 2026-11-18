@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for Punchline tip cream hose settle.
+"""Behavioral headless tests for Punchline tip cream hose settle deepen.
 
 Panda-free: loads CampaignGlobals + AST-checks PlayEntry tipHose='punchline'
-wires a brief cream overshoot→rest after trust/fracture settle (#198 path).
+wires a juicier cream overshoot→rest→micro rebound after trust/fracture
+settle (#198 / #227 deepen path). Distinct from Silly almost-confess tip
+cream hose (#232 — taller primary, no tip rebound) and Silly Overlord tip
+cream wash aftershock (#251 — wash flecks/halo).
 
 Run from repo root:
   python3 tests/test_punchline_tip_cream_hose_settle.py
@@ -65,13 +68,13 @@ def _read(rel: str) -> str:
 
 
 class PunchlineTipCreamHoseSettleTest(unittest.TestCase):
-    """Config + AST checks for Punchline tip cream hose settle."""
+    """Config + AST checks for deepened Punchline tip cream hose settle."""
 
     @classmethod
     def setUpClass(cls):
         cls.camp = _load_campaign_globals()
 
-    def test_settle_tunables(self):
+    def test_settle_tunables_deepened(self):
         camp = self.camp
         self.assertTrue(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED)
         over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
@@ -82,24 +85,64 @@ class PunchlineTipCreamHoseSettleTest(unittest.TestCase):
         self.assertGreater(float(ox), 1.0)
         self.assertGreater(float(oz), 1.0)
         self.assertAlmostEqual(float(oy), 1.0)
+        # Juicier than #227 baseline (1.06 / 1.10 / 0.06 / rest 0.09).
+        self.assertGreaterEqual(float(ox), 1.08)
+        self.assertGreaterEqual(float(oz), 1.12)
+        self.assertGreaterEqual(float(over_sec), 0.065)
         rest = float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC)
-        self.assertGreater(rest, 0.0)
+        self.assertGreaterEqual(rest, 0.10)
+        rebound = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND
+        self.assertEqual(len(rebound), 4)
+        rx, ry, rz, rebound_sec = rebound
+        self.assertGreater(float(rx), 1.0)
+        self.assertGreater(float(rz), 1.0)
+        self.assertAlmostEqual(float(ry), 1.0)
+        self.assertGreater(float(rebound_sec), 0.0)
+        # Rebound is a quieter second bounce under the primary overshoot.
+        self.assertLess(float(rx), float(ox))
+        self.assertLess(float(rz), float(oz))
+        rebound_rest = float(
+            camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC)
+        self.assertGreater(rebound_rest, 0.0)
         # Settle stays a short readable beat under tip hang / wash delay.
-        total = float(over_sec) + rest
-        self.assertLess(total, 0.30)
-        self.assertGreater(total, 0.08)
+        total = (
+            float(over_sec) + rest + float(rebound_sec) + rebound_rest)
+        self.assertLess(total, 0.40)
+        self.assertGreater(total, 0.15)
         wash_delay = float(camp.PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC)
         self.assertGreaterEqual(wash_delay, total)
+        # Distinct from Silly almost-confess tip cream hose (#232).
+        silly_over = camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
+        self.assertNotEqual(tuple(over), tuple(silly_over))
+        self.assertNotEqual(
+            rest, float(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC))
+        # Silly keeps taller primary Z / longer rest; Punchline owns rebound.
+        self.assertGreater(float(silly_over[2]), float(oz))
+        self.assertGreater(
+            float(camp.SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC), rest)
+        self.assertFalse(hasattr(
+            camp, 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
+        # Distinct from Silly Overlord tip cream wash aftershock (#251).
+        self.assertNotEqual(
+            float(oz),
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN[2]))
+        self.assertNotEqual(
+            int(camp.PUNCHLINE_ACT_TIP_CREAM_WASH_BIN),
+            int(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_BIN))
         # No KH product nouns in the settle block comments.
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('punchline_act_tip_cream_hose_settle_enabled')
         self.assertGreater(idx, 0)
-        snip = src[max(0, idx - 400):idx + 400]
+        snip = src[max(0, idx - 650):idx + 650]
         self.assertIn('no keyblades', snip)
+        self.assertIn('rebound', snip)
+        self.assertIn('juicier', snip)
+        self.assertIn('#232', snip)
+        self.assertIn('#251', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
             self.assertNotIn(banned, snip)
 
-    def test_playentry_wires_cream_hose_settle(self):
+    def test_playentry_wires_cream_hose_settle_rebound(self):
         play_src = _read('toontown/campaign/PlayEntry.py')
         tip_idx = play_src.find('def _tipHosePopInterval')
         self.assertGreater(tip_idx, 0)
@@ -110,22 +153,32 @@ class PunchlineTipCreamHoseSettleTest(unittest.TestCase):
         punch_snip = play_src[punch_idx:silly_idx]
         self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', punch_snip)
         self.assertIn('creamHoseSettle', punch_snip)
+        self.assertIn(
+            'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND', punch_snip)
+        self.assertIn(
+            'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND_REST_SEC',
+            punch_snip)
         # Cream hose settle append lives after trust/fracture bounce.
         full_tip = play_src[tip_idx:play_src.find(
             'def _armPunchlineTipCreamWash', tip_idx)]
         self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT', full_tip)
         self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC', full_tip)
-        # Silly tipHose must not arm Punchline cream hose settle.
+        self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND', full_tip)
+        self.assertIn('micro rebound', full_tip.lower())
+        # Silly tipHose must not arm Punchline cream hose settle / rebound.
         silly_end = play_src.find('\n        else:', silly_idx)
         if silly_end < 0:
-            silly_end = silly_idx + 1600
+            silly_end = silly_idx + 1800
         silly_snip = play_src[silly_idx:silly_end]
         self.assertNotIn(
             'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', silly_snip)
+        self.assertNotIn(
+            'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND', silly_snip)
 
-    def test_magicwords_mention_cream_hose_settle(self):
+    def test_magicwords_mention_deepened_cream_hose_settle(self):
         magic_src = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('cream hose settle', magic_src)
+        self.assertIn('deepened cream hose settle', magic_src)
+        self.assertIn('micro rebound', magic_src)
         self.assertIn('punchline', magic_src)
         self.assertIn('no keyblades', magic_src)
         self.assertNotIn('kingdom hearts', magic_src)
