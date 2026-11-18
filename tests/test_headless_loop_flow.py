@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """Headless behavioral deepen: explore → fight → reclaim → Oswald twist.
 
-Panda-free proof of the multi-hood loop already shipped on develop. Complements
-`test_headless_loop_smoke.py` (registration / juice AST) and the focused wave /
-act-param suites by chaining:
+Panda-free proof of the multi-hood loop already shipped on develop (through
+systems waves ending at PR #327). Complements `test_headless_loop_smoke.py`
+(registration / juice AST) and the focused wave / act-param / kit suites by
+chaining the spiritual-sequel loop:
 
-  hub tip / ACTS path → STREET_PACKS + archetypes → reclaim director hooks →
-  soft-lock / melee juice → campaign progression → Oswald twist FX modules.
+  explore — zone messengers, Oswald presence stub, Loopy unease tip
+  fight   — archetype kits, juggle hang stun, reclaim KO fail
+  reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge
+  twist   — betrayal chase + kit + chase-clear epilogue
 
 No Panda3D, no resources, no invented gameplay — only concrete symbols and
-pure helpers already on develop.
+pure helpers already on develop. Not a cream-FX deepen.
 
 Run from repo root:
   python3 tests/test_headless_loop_flow.py
@@ -292,6 +295,52 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         playground_src = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('ensureCorruptStreetBreadcrumbs', playground_src)
 
+    def test_explore_oswald_presence_and_loopy_unease(self):
+        """Trusted face + mid-act Loopy foreshadow before Punchline handoff."""
+        camp = self.camp
+        self.assertTrue(camp.OSWALD_PRESENCE_ENABLED)
+        self.assertEqual(camp.OSWALD_PRESENCE_LABEL, camp.PROTAGONIST)
+        self.assertIn('Oswald', camp.OSWALD_PRESENCE_HUB_GREET)
+        self.assertIn('Loopy', camp.OSWALD_PRESENCE_HUB_GREET)
+        self.assertIn('Oswald', camp.OSWALD_PRESENCE_STREET_GREET)
+        self.assertTrue(camp.OSWALD_PRESENCE_HIDE_ON_BETRAYAL)
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, camp.OSWALD_PRESENCE_HUB_GREET.lower())
+            self.assertNotIn(banned, camp.OSWALD_PRESENCE_STREET_GREET.lower())
+
+        presence_rel = 'toontown/campaign/OswaldPresence.py'
+        self.assertTrue((REPO_ROOT / presence_rel).is_file())
+        presence_names = _class_and_func_names(_module_ast(presence_rel))
+        for sym in (
+                'presenceEnabled', 'shouldShowPresence', 'greetTipForZone',
+                'OswaldPresenceClient', 'ensureOswaldPresenceClient',
+                'refreshOswaldPresenceHub', 'stopOswaldPresenceClient'):
+            self.assertIn(sym, presence_names)
+        presence_src = _read(presence_rel)
+        self.assertIn("accept('localAvatarZoneChange'", presence_src)
+        self.assertIn('oswaldRevealBanner', presence_src)
+        self.assertIn('oswaldBetrayalChase', presence_src)
+        # Stub placemarker — not a DistributedNPC companion.
+        self.assertIn('not a DistributedNPC', presence_src)
+        self.assertNotIn('from toontown.toon', presence_src)
+        self.assertNotIn('distributednpctoon', presence_src.lower())
+
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn('ensureOswaldPresenceClient', play_src)
+        playground_src = _read('toontown/safezone/TTPlayground.py')
+        self.assertIn('refreshOswaldPresenceHub', playground_src)
+        self.assertIn('stopOswaldPresenceClient', playground_src)
+
+        # Loopy mid-act unease (#319) — approach tip + armer, no entryTip.
+        loopy = self.act_by_id['loopy']
+        tip = loopy.get('approachTip') or ''
+        self.assertIn('Oswald', tip)
+        self.assertIn('half-beat', tip.lower())
+        self.assertFalse(bool(loopy.get('entryTip')))
+        self.assertIn('_armLoopyApproachTip', play_src)
+        self.assertIn('_showLoopyApproachTip', play_src)
+        self.assertGreater(camp.LOOPY_APPROACH_TIP_DELAY_SEC, 0.0)
+
     # --- fight leg: archetypes + soft-lock / melee juice ---
 
     def test_fight_leg_archetypes_and_overlord(self):
@@ -374,6 +423,63 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'toontown/hackslash/HitAssistCreamWashFx.py'):
             self.assertTrue(
                 (REPO_ROOT / rel).is_file(), msg='missing %s' % rel)
+
+    def test_fight_kits_juggle_stun_and_reclaim_ko(self):
+        """Archetype kits + hang stun + KO→contested fail stay on the fight leg."""
+        cg, cfg = self.cg, self.hs_cfg
+        # Distinct attack moves across street kits + betrayal Oswald.
+        self.assertEqual(cg.inkPickAttackMove(8.0), 'ink_dash')
+        self.assertEqual(cg.inkPickAttackMove(2.0), 'ink_splat')
+        self.assertTrue(cg.INK_SMUDGE_KIT_ENABLED)
+        self.assertTrue(cg.INK_SPLAT_SECONDARY_ENABLED)
+        self.assertTrue(cg.SNARE_LASH_YANK_ENABLED)
+        dx, dy = cg.snareLashYankDelta(0.0, 0.0, 10.0, 0.0, dist=2.0, stop=1.5)
+        self.assertLess(dx, 0.0)
+        self.assertAlmostEqual(dy, 0.0, places=5)
+        self.assertTrue(cg.ROLE_AI_ENABLED)
+        self.assertEqual(
+            cg.archetypeCombatRole(cg.ARCHETYPE_BRUTE), cg.ROLE_HOLD)
+        self.assertEqual(
+            cg.archetypeCombatRole(cg.ARCHETYPE_GAGSTER), cg.ROLE_KITE)
+        self.assertEqual(
+            cg.archetypeCombatRole(cg.ARCHETYPE_SNARE), cg.ROLE_FLANK)
+        self.assertEqual(cg.oswaldPickAttackMove(8.0), 'betrayal_lunge')
+        self.assertEqual(cg.oswaldPickAttackMove(2.0), 'stain_burst')
+        self.assertTrue(cg.OSWALD_BETRAYAL_KIT_ENABLED)
+        self.assertTrue(cg.OSWALD_BETRAYAL_SHOVE_ENABLED)
+
+        # Server stun covers the juggle cancel window (#310).
+        self.assertTrue(cfg.JUGGLE_HANG_STUN_ENABLED)
+        mid_idx = cfg.LAUNCH_HIT_INDEX
+        mid = cfg.juggleHangStunSec(mid_idx)
+        self.assertGreater(mid, 0.0)
+        corrupt_ai = _read('toontown/corruption/DistributedCorruptToonAI.py')
+        for needle in (
+                '__applyJuggleHangStun', 'isJuggleHangStunned',
+                'juggleHangStunSec', 'JUGGLE_HANG_STUN_ENABLED'):
+            self.assertIn(needle, corrupt_ai, msg='AI missing %s' % needle)
+
+        # Player KO during reclaim is an authored fail (#323/#324).
+        rg = self.rg
+        self.assertIn('fail', str(rg.BANNER_FAILED).lower())
+        self.assertIn('knocked out', str(rg.BANNER_FAILED_SUB).lower())
+        self.assertIn('Oswald', rg.BANNER_FAILED_SUB)
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, str(rg.BANNER_FAILED).lower())
+            self.assertNotIn(banned, str(rg.BANNER_FAILED_SUB).lower())
+        ai_src = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')
+        self.assertIn('failStreetOnKnockout', ai_src)
+        self.assertIn('announceReclaimFailed', ai_src)
+        client_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
+        self.assertIn('announceReclaimFailed', client_src)
+        self.assertIn('BANNER_FAILED', client_src)
+        # All corrupt damage paths (incl. stain_burst / ink_splat) share KO helper.
+        for needle in (
+                '__damageToonAndCheckReclaimKo',
+                "context='stain_burst'",
+                "context='ink_splat'",
+                'failStreetOnKnockout'):
+            self.assertIn(needle, corrupt_ai, msg='KO path missing %s' % needle)
 
     # --- reclaim leg: wave scripts + director hooks ---
 
@@ -486,6 +592,77 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('STATE_ACTIVE', reclaim_director_src)
         self.assertIn('unlockedThrough', reclaim_director_src)
 
+    def test_reclaim_soft_gate_hydrate_silly_hp_and_ink_surge(self):
+        """Soft-gate + R hydrate + Silly HP→P2 + Overlord ink_surge stay chained."""
+        rg, cg = self.rg, self.cg
+        # Soft-gate (#317): Loopy open; Punchline/Silly unlock with story.
+        self.assertEqual(rg.streetPackRequiredActIndex(LOOPY), 0)
+        self.assertEqual(rg.streetPackRequiredActIndex(PUNCHLINE), 1)
+        self.assertEqual(rg.streetPackRequiredActIndex(SILLY), 2)
+        self.assertTrue(rg.streetPackUnlocked(LOOPY, 0))
+        self.assertFalse(rg.streetPackUnlocked(PUNCHLINE, 0))
+        self.assertTrue(rg.streetPackUnlocked(PUNCHLINE, 1))
+        self.assertFalse(rg.streetPackUnlocked(SILLY, 1))
+        self.assertTrue(rg.streetPackUnlocked(SILLY, 2))
+        gate = rg.streetPackGateMessage(PUNCHLINE, 0, face='Oswald')
+        self.assertIn('Punchline Place', gate)
+        self.assertIn('Loopy Lane', gate)
+        self.assertIn('Oswald', gate)
+        self.assertNotIn('~startreclaim', gate)
+        self.assertNotIn('keyblade', gate.lower())
+
+        # R start hydrates campaign progress before unlock read (#320).
+        reclaim_ai = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')
+        start_idx = reclaim_ai.find('def startStreetPackForToon')
+        self.assertGreater(start_idx, 0)
+        start_snip = reclaim_ai[start_idx:start_idx + 2200]
+        self.assertIn('_hydrateFromToon', start_snip)
+        hydrate_pos = start_snip.find('_hydrateFromToon')
+        unlock_pos = start_snip.find('unlockedThrough', hydrate_pos)
+        self.assertGreater(hydrate_pos, 0)
+        self.assertGreater(unlock_pos, hydrate_pos)
+        camp_ai = _read('toontown/campaign/CampaignDirectorAI.py')
+        self.assertIn('def _hydrateFromToon', camp_ai)
+
+        # Silly street Overlord HP-threshold P2 (#312) — campaign twist still gated.
+        silly = rg.streetPack(SILLY)
+        self.assertEqual(silly.get('finalePhase'), 1)
+        self.assertEqual(
+            silly.get('overlordP2HpFrac'), rg.OVERLORD_STREET_P2_HP_FRAC)
+        self.assertTrue(rg.overlordHpAtP2Threshold(45, 90, 0.5))
+        self.assertFalse(rg.overlordHpAtP2Threshold(46, 90, 0.5))
+        self.assertNotIn('overlordP2HpFrac', rg.streetPackParams(LOOPY))
+        for sym in (
+                '_maybePromoteStreetOverlordP2',
+                '_promoteStreetOverlordP2',
+                'overlordHpAtP2Threshold'):
+            self.assertIn(sym, reclaim_ai, msg='Silly HP P2 missing %s' % sym)
+        client_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
+        complete_idx = client_src.find('def announceReclaimComplete')
+        self.assertGreater(complete_idx, 0)
+        complete_snip = client_src[complete_idx:complete_idx + 2200]
+        self.assertIn('startedUnleashed', complete_snip)
+        self.assertIn('bannerPhase >= 2', complete_snip)
+
+        # Overlord P2 three-note kit: slam / ink_surge / rain (#327).
+        self.assertTrue(cg.OVERLORD_INK_SURGE_ENABLED)
+        p2 = cg.overlordPhaseCombat(2)
+        self.assertEqual(p2.get('moveMode'), 'enrage')
+        for key in (
+                'surgeMaxRange', 'surgeDash', 'surgeStop', 'surgeHitRange',
+                'surgeDamage', 'surgeCooldown'):
+            self.assertIn(key, p2, msg='P2 missing %s' % key)
+        slam = cg.overlordSlamMeleeRange(p2)
+        surge = cg.overlordSurgeMaxRange(p2)
+        self.assertEqual(cg.overlordPickEnrageMove(0.0, p2), 'slam')
+        self.assertEqual(
+            cg.overlordPickEnrageMove(slam + 0.05, p2), 'ink_surge')
+        self.assertEqual(
+            cg.overlordPickEnrageMove(surge + 0.05, p2), 'rain')
+        corrupt_ai = _read('toontown/corruption/DistributedCorruptToonAI.py')
+        self.assertIn('ink_surge', corrupt_ai)
+        self.assertIn('overlordPickEnrageMove', corrupt_ai)
+
     def test_oswald_twist_hooks_and_fx_modules(self):
         camp = self.camp
         finale = self.act_by_id['finale']
@@ -569,6 +746,64 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertGreater(camp.SILLY_APPROACH_TIP_DELAY_SEC, 0.0)
         self.assertGreater(camp.LOOPY_APPROACH_TIP_DELAY_SEC, 0.0)
         self.assertGreater(camp.FINALE_REVEAL_DELAY_SEC, 0.0)
+
+    def test_twist_chase_betrayal_kit_and_epilogue(self):
+        """Chase spawn + betrayal kit + chase-clear epilogue close the loop."""
+        camp, cg = self.camp, self.cg
+        self.assertTrue(camp.OSWALD_BETRAYAL_CHASE_ENABLED)
+        self.assertIn('Corrupted Oswald', camp.OSWALD_BETRAYAL_CHASE_NAME)
+        self.assertEqual(
+            cg.archetypeDefaultName(cg.ARCHETYPE_CORRUPT_OSWALD),
+            'Corrupted Oswald')
+        oswald = cg.ARCHETYPE_STATS[cg.ARCHETYPE_CORRUPT_OSWALD]
+        self.assertEqual(oswald.get('attackMove'), 'betrayal_lunge')
+        self.assertGreater(float(oswald.get('lungeDashDist', 0)), 2.0)
+        self.assertGreater(float(oswald.get('burstMeleeRange', 0)), 2.0)
+
+        chase_rel = 'toontown/campaign/OswaldBetrayalChase.py'
+        self.assertTrue((REPO_ROOT / chase_rel).is_file())
+        chase_names = _class_and_func_names(_module_ast(chase_rel))
+        for sym in (
+                'spawnCorruptOswald', 'OswaldBetrayalChaseClient',
+                'ensureOswaldBetrayalChaseClient', 'chaseAttackMove',
+                'epilogueEnabled', 'epilogueTitle', 'epilogueCue'):
+            self.assertIn(sym, chase_names)
+        chase_src = _read(chase_rel)
+        self.assertIn('ARCHETYPE_CORRUPT_OSWALD', chase_src)
+        self.assertIn('oswaldBetrayalChaseCleared', chase_src)
+        self.assertIn('campaignEpilogue', chase_src)
+        self.assertIn('_fireEpilogue', chase_src)
+        self.assertIn("corrupt._stats['attackMove']", chase_src)
+
+        # Director schedules chase after finale; PlayEntry/Handoff accept clear.
+        director_src = _read('toontown/campaign/CampaignDirectorAI.py')
+        self.assertIn('OswaldBetrayalChase', director_src)
+        self.assertIn('campaignEpilogue', director_src)
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn('ensureOswaldBetrayalChaseClient', play_src)
+        self.assertIn("accept('oswaldBetrayalChaseCleared'", play_src)
+        self.assertIn("accept('campaignEpilogue'", play_src)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('campaignEpilogue', handoff_src)
+        self.assertIn('_onChaseCleared', handoff_src)
+
+        # Epilogue soft-end (#326): victory hub tip + authored copy.
+        self.assertTrue(camp.CAMPAIGN_EPILOGUE_ENABLED)
+        self.assertIn('Oswald', camp.CAMPAIGN_EPILOGUE_SUB)
+        self.assertIn('Replay', camp.CAMPAIGN_EPILOGUE_CUE)
+        self.assertIn('Loopy', camp.CAMPAIGN_EPILOGUE_CUE)
+        victory = camp.hubPlayEntryTip(victory=True)
+        self.assertEqual(victory, camp.hubVictoryReplayTip())
+        self.assertIn('Campaign complete', victory)
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            blob = ' '.join([
+                camp.OSWALD_BETRAYAL_CHASE_NAME,
+                camp.CAMPAIGN_EPILOGUE_TITLE,
+                camp.CAMPAIGN_EPILOGUE_SUB,
+                camp.CAMPAIGN_EPILOGUE_CUE,
+                victory,
+            ]).lower()
+            self.assertNotIn(banned, blob)
 
 
 def main() -> int:
