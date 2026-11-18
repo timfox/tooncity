@@ -46,8 +46,9 @@ magenta ink; telegraph / silhouette / death cream-wash grammar). Defeat plays Co
 CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
 not ink), CorruptDeathCreamSparkleFx (sunny cream / pastel sparkle flecks
 rising from the death cream fleck burst — telegraph / silhouette cream
-sparkle grammar), and CorruptDeathCreamWashFx (soft cream wash pulse after
-the fleck burst — reclaim purity-wash grammar). Clearing them lowers
+sparkle grammar), and CorruptDeathCreamWashFx (soft cream wash pulse +
+delayed cream aftershock after the fleck / sparkle path — entry /
+purity-complete aftershock grammar). Clearing them lowers
 per-zone pollution via PollutionManager;
 hitting 0.0 unlocks purity restore (reclaim / campaign).
 

@@ -6,10 +6,10 @@ radius with CorruptDeathCreamFleckFx.deathCreamFleckLook (#94) and borrows
 rising / twinkle size/timing from
 CorruptSilhouetteCreamSparkleFx.silhouetteCreamSparkleLook (#131) /
 CorruptTelegraphCreamSparkleFx.telegraphCreamSparkleLook (#135) so death
-rising sparkles sit beside outward flecks + soft cream wash (#119) without
-reading as another radial fleck spray. Wired from DeathPopSplat.play beside
-DeathCreamFleckBurst + DeathCreamWashPulse. Client only. Toontown spiritual
-sequel — no keyblades / no KH branding.
+rising sparkles sit beside outward flecks + soft cream wash (#119) + delayed
+cream aftershock without reading as another radial fleck spray. Wired from
+DeathPopSplat.play beside DeathCreamFleckBurst + DeathCreamWashPulse. Client
+only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin

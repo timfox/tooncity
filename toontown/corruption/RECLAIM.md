@@ -127,7 +127,7 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray + CorruptDeathCreamFleckFx sunny
 # cream / pastel flecks + CorruptDeathCreamSparkleFx rising cream sparkles
-# + CorruptDeathCreamWashFx soft cream wash after);
+# + CorruptDeathCreamWashFx soft cream wash + delayed cream aftershock);
 # purity pop + pollution drop.
 ```
 
@@ -238,7 +238,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~hackslash 0
 # Land F / LMB until defeat — cream fleck burst with sunny cream / pastel
 # sparkle flecks rising from the burst (CorruptDeathCreamSparkleFx —
-# telegraph / silhouette cream sparkle grammar), then soft cream wash.
+# telegraph / silhouette cream sparkle grammar), then soft cream wash +
+# delayed cream aftershock.
 # DEATH_CREAM_SPARKLE_ENABLED = False drops rising sparkles only.
 ```
 
@@ -248,8 +249,10 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~spawncorrupt 1
 ~hackslash 0
 # Land F / LMB until defeat — cream fleck burst, then soft cream wash
-# pulse (CorruptDeathCreamWashFx; reclaim purity-wash grammar).
-# DEATH_CREAM_WASH_ENABLED = False drops wash only.
+# pulse + delayed cream aftershock (flecks + soft halo)
+# (CorruptDeathCreamWashFx; entry / purity-complete aftershock grammar).
+# DEATH_CREAM_WASH_ENABLED = False drops wash + aftershock.
+# DEATH_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
 ```
 
 ## Ink Smudge telegraph / splash demo
