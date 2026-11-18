@@ -4,15 +4,16 @@ Soft cream border strips + tip flecks that frame:
   * PlayEntry act-enter flash banners (#70 hose pop) — #110
   * Early/mid Oswald trust handoff banners (#76 hose settle) — #117
   * Hood handoff cream-sparkle carnival banners (#99) — #124
-  * Victory cream confetti / sparkle banners (#82/#105) — TC-132
+  * Victory cream confetti / sparkle banners (#82/#105) — #129
+  * Finale reveal cream aftershock banners (#86) — TC-136
 
-Handoff cream-sparkle and victory cream-sparkle paths also rise cream
+Handoff / victory / finale-reveal cream-sparkle paths also rise cream
 sparkle flecks along the cream frame (wave-edge #113 twin). Mirrors
 reclaim wave-announce cream edge (#87) — sunny Toontown cream only,
 opposite of the polluted ink edge vignette. Campaign-owned; no keyblades
 / KH branding. Oswald stays trusted mid-campaign (no twist spoilers on
 early handoff cream edges). Victory cream edge clears before the Oswald
-twist / FinalePhaseFx reveal.
+twist; finale-reveal cream edge frames residual cream aftershock only.
 """
 
 from math import cos, pi, sin
@@ -36,25 +37,29 @@ _CFG_ACT = 'PLAY_ENTRY_BANNER_CREAM_EDGE'
 _CFG_TRUST = 'OSWALD_TRUST_BANNER_CREAM_EDGE'
 _CFG_HANDOFF = 'HANDOFF_CREAM_EDGE'
 _CFG_VICTORY = 'VICTORY_CREAM_EDGE'
+_CFG_FINALE_REVEAL = 'FINALE_REVEAL_CREAM_EDGE'
 _DEFAULT_ORIGIN_ACT = (0.0, 0.0, 0.72)
 _DEFAULT_ORIGIN_TRUST = (0.0, 0.0, 0.42)
 _DEFAULT_ORIGIN_HANDOFF = (0.0, 0.0, 0.40)
 _DEFAULT_ORIGIN_VICTORY = (0.0, 0.0, 0.36)
+_DEFAULT_ORIGIN_FINALE_REVEAL = (0.0, 0.0, 0.10)
 
 _TAG_BY_CFG = {
     _CFG_ACT: 'act-banner',
     _CFG_TRUST: 'oswald-trust',
     _CFG_HANDOFF: 'handoff',
     _CFG_VICTORY: 'victory',
+    _CFG_FINALE_REVEAL: 'finale-reveal',
 }
 _IVAL_BY_CFG = {
     _CFG_ACT: 'actBanner',
     _CFG_TRUST: 'oswaldTrust',
     _CFG_HANDOFF: 'handoff',
     _CFG_VICTORY: 'victory',
+    _CFG_FINALE_REVEAL: 'finaleReveal',
 }
 # Paths that also rise cream-sparkle flecks along the cream frame.
-_SPARKLE_CFGS = (_CFG_HANDOFF, _CFG_VICTORY)
+_SPARKLE_CFGS = (_CFG_HANDOFF, _CFG_VICTORY, _CFG_FINALE_REVEAL)
 
 
 class ActBannerCreamEdgeFx(object):
@@ -75,6 +80,8 @@ class ActBannerCreamEdgeFx(object):
         return _TAG_BY_CFG.get(self._cfgPrefix, 'act-banner')
 
     def _defaultOrigin(self):
+        if self._cfgPrefix == _CFG_FINALE_REVEAL:
+            return _DEFAULT_ORIGIN_FINALE_REVEAL
         if self._cfgPrefix == _CFG_VICTORY:
             return _DEFAULT_ORIGIN_VICTORY
         if self._cfgPrefix == _CFG_HANDOFF:
@@ -137,7 +144,8 @@ class ActBannerCreamEdgeFx(object):
         try:
             # Thickness lives on the bare prefix (no _THICKNESS suffix) to
             # match PLAY_ENTRY_BANNER_CREAM_EDGE / OSWALD_TRUST_… /
-            # HANDOFF_CREAM_EDGE / VICTORY_CREAM_EDGE.
+            # HANDOFF_CREAM_EDGE / VICTORY_CREAM_EDGE /
+            # FINALE_REVEAL_CREAM_EDGE.
             edge = float(getattr(
                 CampaignGlobals, self._cfgPrefix, 0.28))
             binSort = int(self._cfg('BIN', 50))
@@ -250,8 +258,9 @@ class ActBannerCreamEdgeFx(object):
         """Cream-sparkle flecks rising along a cream-sparkle cream edge frame.
 
         Wave-edge #113 twin — handoff uses carnival cream-sparkle warmth
-        (#99); victory uses victory cream-sparkle warmth (#105). Chip/cross
-        glitter along the top strip while confetti / swell pops.
+        (#99); victory uses victory cream-sparkle warmth (#105); finale
+        reveal uses quieter residual aftershock glitter (#86). Chip/cross
+        glitter along the top strip while confetti / swell / aftershock pops.
         """
         if not self._cfg('SPARKLE_ENABLED', True):
             return []
@@ -267,7 +276,11 @@ class ActBannerCreamEdgeFx(object):
             'SPARKLE_COLOR', (1.0, 0.97, 0.78, 0.90))
         er, eg, eb, ea = self._cfg(
             'SPARKLE_END_COLOR', (1.0, 0.94, 0.58, 0.0))
-        if self._cfgPrefix == _CFG_VICTORY:
+        if self._cfgPrefix == _CFG_FINALE_REVEAL:
+            defaultOrigin = getattr(
+                CampaignGlobals, 'FINALE_REVEAL_CREAM_AFTERSHOCK_ORIGIN',
+                _DEFAULT_ORIGIN_FINALE_REVEAL)
+        elif self._cfgPrefix == _CFG_VICTORY:
             defaultOrigin = getattr(
                 CampaignGlobals, 'VICTORY_CREAM_SWELL_ORIGIN',
                 _DEFAULT_ORIGIN_VICTORY)
@@ -376,6 +389,7 @@ _actFx = None
 _trustFx = None
 _handoffFx = None
 _victoryFx = None
+_finaleRevealFx = None
 
 
 def _sharedAct():
@@ -404,6 +418,13 @@ def _sharedVictory():
     if _victoryFx is None:
         _victoryFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_VICTORY)
     return _victoryFx
+
+
+def _sharedFinaleReveal():
+    global _finaleRevealFx
+    if _finaleRevealFx is None:
+        _finaleRevealFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_FINALE_REVEAL)
+    return _finaleRevealFx
 
 
 def playActBannerCreamEdge():
@@ -448,3 +469,14 @@ def clearVictoryCreamEdge():
     """Tear down any in-flight victory cream edge pulse."""
     if _victoryFx is not None:
         _victoryFx.clear()
+
+
+def playFinaleRevealCreamEdge():
+    """Fire cream edge on finale reveal cream aftershock banners."""
+    _sharedFinaleReveal().play()
+
+
+def clearFinaleRevealCreamEdge():
+    """Tear down any in-flight finale-reveal cream edge pulse."""
+    if _finaleRevealFx is not None:
+        _finaleRevealFx.clear()

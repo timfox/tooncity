@@ -512,6 +512,44 @@ FINALE_REVEAL_CREAM_AFTERSHOCK_FLECK_COLORS = (
     (0.96, 0.88, 0.64, 0.84),
 )
 
+# Cream edge pulse framing finale reveal cream aftershock banners (#86).
+# Composes victory cream edge (#129) with residual cream aftershock —
+# soft sunny frame around the Oswald-twist sting only (not mid-campaign).
+# Quieter / shorter than victory cheer edge so the truth sting stays
+# bittersweet; rides with aftershock fleck hang (~0.85s). No keyblades /
+# KH branding.
+FINALE_REVEAL_CREAM_EDGE_ENABLED = True
+FINALE_REVEAL_CREAM_EDGE_COLOR = (1.0, 0.97, 0.84, 1.0)
+FINALE_REVEAL_CREAM_EDGE = 0.26  # strip thickness in aspect2d units
+FINALE_REVEAL_CREAM_EDGE_PEAK = 0.32
+FINALE_REVEAL_CREAM_EDGE_PULSE = 0.20  # mid-beat alpha after peak
+FINALE_REVEAL_CREAM_EDGE_IN_SEC = 0.08
+FINALE_REVEAL_CREAM_EDGE_HOLD_SEC = 0.10
+FINALE_REVEAL_CREAM_EDGE_PULSE_SEC = 0.12
+FINALE_REVEAL_CREAM_EDGE_OUT_SEC = 0.55  # covers aftershock fleck hang
+# Under aftershock flash/ring (58+); above ink vignette (48); below reveal
+# banners/shadow (101+).
+FINALE_REVEAL_CREAM_EDGE_BIN = 56
+FINALE_REVEAL_CREAM_EDGE_FLECK_COUNT = 6
+FINALE_REVEAL_CREAM_EDGE_FLECK_SIZE = 0.020
+FINALE_REVEAL_CREAM_EDGE_FLECK_DRIFT = 0.18
+FINALE_REVEAL_CREAM_EDGE_FLECK_SEC = 0.30
+FINALE_REVEAL_CREAM_EDGE_FLECK_COLOR = (1.0, 0.96, 0.68, 0.85)
+FINALE_REVEAL_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.48, 0.0)
+# Tip flecks near aftershock origin (~z 0.08), under held twist copy.
+FINALE_REVEAL_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.10)
+# Soft cream-sparkle flecks along the cream edge (victory #129 twin,
+# quieter residual glitter). Disable drops sparkles only.
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_ENABLED = True
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_COUNT = 7
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_SIZE = 0.014
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_RISE = 0.18
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_SPREAD = 0.95
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_SEC = 0.38
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.80, 0.82)
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.60, 0.0)
+FINALE_REVEAL_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.10)
+
 STATE_IDLE = 0
 STATE_ACTIVE = 1
 STATE_VICTORY = 2

@@ -6,9 +6,10 @@ purity-restore patterns so the phase flip reads as a boss moment.
 On Silly finale victory / twist, plays a short readable AV reveal sting
 (banner + FOV/flash + rubber-hose Oswald silhouette shadow flash +
 optional SFX) that Oswald caused the corruption, then a soft cream
-aftershock that supports the beat without undoing it. Composes with
-#82 victory cream swell (cheer only — cleared before reveal). Toontown
-spiritual sequel — no keyblades / no KH branding.
+aftershock framed by a quieter cream edge pulse that supports the beat
+without undoing it. Composes with #82 victory cream swell (cheer only —
+cleared before reveal) and #129 victory cream edge. Toontown spiritual
+sequel — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec3, Vec4
@@ -25,6 +26,10 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
+from toontown.campaign.ActBannerCreamEdgeFx import (
+    clearFinaleRevealCreamEdge,
+    playFinaleRevealCreamEdge,
+)
 from toontown.campaign.FinaleCreamAftershockFx import (
     clearFinaleCreamAftershock,
     playFinaleCreamAftershock,
@@ -232,9 +237,17 @@ class FinalePhaseFxClient(DirectObject):
         self._ival.start()
 
     def _playCreamAftershock(self):
-        """Soft cream residual after the reveal sting lands."""
+        """Soft cream residual after the reveal sting lands.
+
+        Cream aftershock (#86) + quieter cream edge frame (#129 twin) —
+        Oswald-twist path only; mid-campaign stays edge-free of spoilers.
+        """
         try:
             playFinaleCreamAftershock()
+        except Exception:
+            pass
+        try:
+            playFinaleRevealCreamEdge()
         except Exception:
             pass
 
@@ -547,6 +560,10 @@ class FinalePhaseFxClient(DirectObject):
         self._clearBanners()
         try:
             clearFinaleCreamAftershock()
+        except Exception:
+            pass
+        try:
+            clearFinaleRevealCreamEdge()
         except Exception:
             pass
         try:
