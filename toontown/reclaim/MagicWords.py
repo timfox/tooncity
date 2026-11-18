@@ -22,8 +22,9 @@ class StartReclaim(MagicWord):
     desc = 'Start the neighborhood reclaim loop in the invoker zone.'
     advancedDesc = (
         'Seeds partial pollution, spawns CorruptToon packs via ReclaimDirector, '
-        'and drives purity restore when pollution hits 0. Pair with '
-        '~hackslash 0 for melee without demo dummies.')
+        'and drives purity restore when pollution hits 0 (cheer pitch swell + '
+        'cream sparkle flecks). Pair with ~hackslash 0 for melee without demo '
+        'dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]

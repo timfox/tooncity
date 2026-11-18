@@ -500,6 +500,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         Camera FOV punch + rays/sparks live in PurityBurstFx (messenger).
         StreetSparkleFx adds horizon cream glitter on purityRestoreFx
         (composes with StreetColorWash soft-clear + wave cream burst).
+        ReclaimCheer + CheerCreamSparkleFx layer pitch swell cream flecks.
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -513,6 +514,12 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             from toontown.reclaim.StreetSparkleFx import (
                 ensureStreetSparkleFxClient)
             ensureStreetSparkleFxClient()
+        except Exception:
+            pass
+        # Pitch swell + cream flecks (ensure also arms CheerCreamSparkleFx).
+        try:
+            from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
+            ensureReclaimCheerClient()
         except Exception:
             pass
         messenger.send('purityRestoreFx', [self.reclaimZoneId])
