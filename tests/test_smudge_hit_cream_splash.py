@@ -92,11 +92,18 @@ class SmudgeHitCreamSplashTest(unittest.TestCase):
     def test_hit_cream_splash_tunables(self):
         self.assertTrue(self.cg.SMUDGE_HIT_CREAM_SPLASH_ENABLED)
         self.assertTrue(self.cg.SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED)
+        self.assertTrue(self.cg.SMUDGE_HIT_CREAM_SPLASH_SMEAR_ENABLED)
         self.assertGreaterEqual(
             self.cg.SMUDGE_HIT_CREAM_SPLASH_DELAY_SEC, 0.0)
         look = self.cg.SMUDGE_HIT_CREAM_SPLASH_LOOK
         self.assertEqual(look.get('id'), 'smudge-hit-cream-splash')
-        self.assertGreater(int(look.get('fleckCount', 0)), 0)
+        # Deepened mid-body splash vs #231 baseline (4 flecks / 4 aftershock).
+        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 6)
+        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.65)
+        self.assertGreaterEqual(float(look.get('fleckLift', 0)), 0.45)
+        self.assertTrue(look.get('smearEnabled'))
+        self.assertGreaterEqual(int(look.get('smearCount', 0)), 3)
+        self.assertGreater(float(look.get('smearSpread', 0)), 0.0)
         look_id = str(look.get('id', '')).lower()
         self.assertNotIn('keyblade', look_id)
         self.assertNotIn('kingdom hearts', look_id)
@@ -105,15 +112,36 @@ class SmudgeHitCreamSplashTest(unittest.TestCase):
         self.assertGreaterEqual(float(color[0]), 0.9)
         self.assertGreaterEqual(float(color[1]), 0.9)
         self.assertGreaterEqual(float(color[2]), 0.55)
+        smear = self.cg.SMUDGE_HIT_CREAM_SPLASH_SMEAR_COLOR
+        self.assertGreaterEqual(float(smear[0]), 0.9)
+        self.assertGreaterEqual(float(smear[1]), 0.9)
+        self.assertGreaterEqual(float(smear[2]), 0.55)
         self.assertGreater(
             self.cg.SMUDGE_HIT_CREAM_AFTERSHOCK_DELAY_SEC, 0.0)
-        # Deepened pack residual — at least Brute/Snare count (3).
+        # Deepened pack residual — juicier than #231; distinct from Snare whip.
         self.assertGreaterEqual(
-            self.cg.SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT, 3)
+            self.cg.SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT, 5)
+        self.assertGreaterEqual(
+            self.cg.SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COUNT, 2)
+        self.assertGreaterEqual(
+            self.cg.SMUDGE_HIT_CREAM_AFTERSHOCK_DRIFT, 0.7)
+        self.assertGreaterEqual(
+            self.cg.SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_HALF, 0.5)
         self.assertGreaterEqual(float(look.get('delayScale', 0)), 0.2)
         # Compose from purple hit splash timing.
         purple = self.cg.SMUDGE_INK_SPLASH_LOOK['hit']
         self.assertGreater(float(purple.get('splatSec', 0)), 0.0)
+        # Distinct from Snare / Brute / Gunk cream splash ids.
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK',
+                    {}).get('id'))
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'BRUTE_SPIT_CREAM_SPLASH_LOOK', {}).get('id'))
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_LOOK', {}).get('id'))
 
     def test_cream_splash_fx_module_and_wiring(self):
         rel = 'toontown/corruption/SmudgeHitCreamSplashFx.py'
@@ -124,15 +152,23 @@ class SmudgeHitCreamSplashTest(unittest.TestCase):
         methods = _class_method_names(
             _module_ast(rel), 'SmudgeHitCreamSplash')
         for name in (
-                'play', 'clear', '_spawnSplat', '_spawnFleck',
-                '_buildAftershock'):
+                'play', 'clear', '_spawnSplat', '_spawnHoseSmear',
+                '_spawnFleck', '_buildAftershock'):
             self.assertIn(
                 name, methods,
                 msg='SmudgeHitCreamSplash missing %s' % name)
         src = _read(rel)
         self.assertIn('SMUDGE_HIT_CREAM_SPLASH_LOOK', src)
         self.assertIn('_buildAftershock', src)
+        self.assertIn('_spawnHoseSmear', src)
         self.assertIn('smudgeInkSplashLook', src)
+        self.assertIn('Snare', src)  # docstring distinctness vs #245
+        self.assertIn('Brute', src)  # docstring distinctness vs #249
+        self.assertIn('Gunk', src)  # docstring distinctness vs #238
+        # CardMaker / interval names stay Toontown cream — no KH brand ids.
+        self.assertNotIn("'keyblade", src.lower())
+        self.assertNotIn('"keyblade', src.lower())
+        self.assertNotIn('kingdom_hearts', src.lower())
         wire = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('SmudgeHitCreamSplash', wire)
         self.assertIn('__playSmudgeHitCreamSplash', wire)
@@ -154,8 +190,10 @@ class SmudgeHitCreamSplashTest(unittest.TestCase):
         self.assertIn('__isInkOverlord', helper_snip)
         init_src = _read('toontown/corruption/__init__.py')
         self.assertIn('SmudgeHitCreamSplashFx', init_src)
+        self.assertIn('cream hose smears', init_src)
         reclaim = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('SmudgeHitCreamSplashFx', reclaim)
+        self.assertIn('radial cream hose', reclaim)
         # No KH / keyblade branding in look id (ban disclaimer may mention them).
         splash_id = str(
             self.cg.SMUDGE_HIT_CREAM_SPLASH_LOOK.get('id', '')).lower()
