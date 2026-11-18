@@ -109,7 +109,9 @@ class CampaignDirectorAI(DirectObject):
         self._applySecuredZonesToPollution()
         # Hub stain is process-local pollution — re-apply after relog when
         # victory still has an uncleared chase (quiet: no re-whisper).
-        # Runs after securedZones so betrayal fog can clear a TTC lock.
+        # Live applyBetrayalHubStain already mirrors secured=False into
+        # campaign securedZones; sync still runs after apply so fog clears
+        # any stale TTC lock older blobs may still list.
         self._syncHubStain(tell=False)
         return True
 

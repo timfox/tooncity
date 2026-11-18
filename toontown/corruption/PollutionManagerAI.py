@@ -357,7 +357,9 @@ class PollutionManagerAI(DistributedObjectAI):
 
         Clears purity lock so a previously sunny HQ can take the stain.
         Status stays SECURED (not CONTESTED) — hub stain is campaign-
-        authored, not incomplete-reclaim re-ink.
+        authored, not incomplete-reclaim re-ink. Mirrors secured=False into
+        campaign securedZones (same honesty as contested) so hydrate cannot
+        reseal TTC from a stale blob before _syncHubStain re-applies fog.
         """
         zoneId = int(zoneId)
         self._purityLocked.discard(zoneId)
@@ -366,6 +368,9 @@ class PollutionManagerAI(DistributedObjectAI):
         self._refreshRecreepTask()
         # Persist lock drop so AI restart does not reseal over hub stain.
         self._persistSecuredLocks()
+        # Campaign blob must drop too — contested already mirrors False;
+        # hub stain is the other purity-lock clear that must stay honest.
+        self._mirrorSecuredZoneToCampaign(zoneId, secured=False)
         applied = self.setPollution(zoneId, level)
         self.notify.debug(
             'betrayal hub stain zone %s -> %.3f' % (zoneId, applied))
