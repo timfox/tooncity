@@ -305,6 +305,19 @@ WAVE_ANNOUNCE_CREAM_EDGE_WASH_HOLD_SEC = 0.06
 WAVE_ANNOUNCE_CREAM_EDGE_WASH_OUT_SEC = 0.34
 WAVE_ANNOUNCE_CREAM_EDGE_WASH_BIN = 48  # soft veil under edge (50) / flecks (51) / sparkles (52)
 
+# Wave-start purity meter hose pop — brief rubber-hose squash→stretch→settle on
+# the whole meter when a pack wave begins so wave begin reads clearly.
+# Distinct from mid-wave rim-only danger flash (#213) and secured-lock green
+# hold + soft uniform scale (#209). Sunny cream rim accent only; no KH branding.
+# Toggle WAVE_START_METER_POP_ENABLED = False drops meter pop only (announce
+# plate / cream edge still fire).
+WAVE_START_METER_POP_ENABLED = True
+WAVE_START_METER_POP_SQUASH = (0.88, 1.0, 0.62, 0.05)  # sx, sy, sz, sec
+WAVE_START_METER_POP_STRETCH = (1.10, 1.0, 1.28, 0.07)
+WAVE_START_METER_POP_SETTLE_SEC = 0.10
+WAVE_START_METER_RIM_COLOR = (1.0, 0.94, 0.55, 0.78)  # sunny cream, not warn/lock
+WAVE_START_METER_RIM_SEC = 0.22
+
 # Persistent reclaim purity meter (aspect2d bar: pollution → purity fill).
 # Empty bar = street still inky; fills warm as packs clear pollution.
 PURITY_METER_POS = (0.0, 0.0, 0.50)

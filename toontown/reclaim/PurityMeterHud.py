@@ -10,6 +10,10 @@ shimmer flecks along the filled bar, then a delayed cream aftershock
 cheer cream aftershock — then a soft cream wash pulse (CheerCreamWashPulse /
 WaveClearCreamWashPulse vocabulary).
 
+Wave start (pack spawn): brief sunny cream rim + whole-meter squash→stretch
+hose-pop so wave begin reads clearly — distinct from mid-wave rim flash
+(#213) and secured-lock green hold (#209).
+
 Mid-wave purity pressure (director tip): warm double-pulse contested rim
 flash when purity stalls or ink pressure rises — rubber-hose urgency after
 re-creep #194 so danger reads clearly (distinct from secured-lock #209).
@@ -203,11 +207,84 @@ class PurityMeterHud(object):
                 and purity > prev + ReclaimGlobals.PURITY_METER_POP_THRESHOLD):
             self._popTick()
 
+    def popWaveStart(self):
+        """Brief sunny cream rim + whole-meter hose pop when a wave starts.
+
+        Squash→stretch→settle on the meter root so pack-wave begin reads
+        clearly — not mid-wave rim-only danger flash (#213) and not
+        secured-lock green hold + soft uniform scale (#209).
+        """
+        if not getattr(ReclaimGlobals, 'WAVE_START_METER_POP_ENABLED', True):
+            return
+        if self._root is None or self._root.isEmpty():
+            return
+        self._clearPressureWarn()
+        rimColor = getattr(
+            ReclaimGlobals, 'WAVE_START_METER_RIM_COLOR',
+            (1.0, 0.94, 0.55, 0.78))
+        rimSec = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_RIM_SEC', 0.22))
+        if self._rimNP is not None and not self._rimNP.isEmpty():
+            try:
+                self._rimNP.setColor(*rimColor)
+            except Exception:
+                pass
+
+        sqx, sqy, sqz, squashSec = getattr(
+            ReclaimGlobals, 'WAVE_START_METER_POP_SQUASH',
+            (0.88, 1.0, 0.62, 0.05))
+        stx, sty, stz, stretchSec = getattr(
+            ReclaimGlobals, 'WAVE_START_METER_POP_STRETCH',
+            (1.10, 1.0, 1.28, 0.07))
+        settleSec = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_POP_SETTLE_SEC', 0.10))
+        try:
+            baseScale = self._root.getScale()
+            try:
+                bx = float(baseScale[0])
+                by = float(baseScale[1])
+                bz = float(baseScale[2])
+            except Exception:
+                bx = by = bz = 1.0
+        except Exception:
+            bx = by = bz = 1.0
+        settle = Point3(bx, by, bz)
+        squash = Point3(
+            bx * float(sqx), by * float(sqy), bz * float(sqz))
+        stretch = Point3(
+            bx * float(stx), by * float(sty), bz * float(stz))
+        try:
+            hose = Sequence(
+                LerpScaleInterval(
+                    self._root, max(0.01, float(squashSec)), squash,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    self._root, max(0.01, float(stretchSec)), stretch,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    self._root, max(0.01, settleSec), settle,
+                    blendType='easeIn'),
+            )
+        except Exception:
+            return
+        hoseDur = (
+            max(0.01, float(squashSec))
+            + max(0.01, float(stretchSec))
+            + max(0.01, settleSec))
+        holdAfter = max(0.01, rimSec - hoseDur)
+        self._warnIval = Sequence(
+            hose,
+            Wait(holdAfter),
+            Func(self._onPressureWarnDone),
+            name='reclaimPurityMeterWaveStartHose',
+        )
+        self._warnIval.start()
+
     def warnPressure(self):
         """Warm double-pulse contested rim flash for mid-wave purity pressure.
 
         Danger blink on the meter rim only — not the secured-lock green hold
-        or whole-meter hose-pop (#209).
+        or whole-meter hose-pop (#209), and not wave-start sunny hose (#224).
         """
         if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_ENABLED', True):
             return
@@ -286,8 +363,19 @@ class PurityMeterHud(object):
         except Exception:
             pass
 
+    def _resetRootScale(self):
+        if self._root is None or self._root.isEmpty():
+            return
+        try:
+            self._root.setScale(1.0, 1.0, 1.0)
+        except Exception:
+            pass
+
     def confirmSecured(self):
-        """Brief cream/green rim + meter hose-pop when purity locks."""
+        """Brief cream/green rim + soft uniform meter pop when purity locks.
+
+        Soft ease scale (not squash→stretch wave-start hose) + green rim hold.
+        """
         if not getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_ENABLED', True):
             return
         if self._rimNP is None or self._rimNP.isEmpty():
@@ -359,6 +447,7 @@ class PurityMeterHud(object):
     def _onPressureWarnDone(self):
         self._warnIval = None
         self._resetRimScale()
+        self._resetRootScale()
         self._applyRimColor()
 
     def _clearPressureWarn(self):
@@ -369,6 +458,7 @@ class PurityMeterHud(object):
                 pass
             self._warnIval = None
         self._resetRimScale()
+        self._resetRootScale()
         self._applyRimColor()
 
     def _isPopPlaying(self):
