@@ -5,7 +5,9 @@ tunnels that lead to Loopy Lane, Punchline Place, and Silly Street.
 Players notice ink-stained streets from the hub without magic words.
 
 After the appear hose-pop, placemarkers briefly pulse / cream-highlight
-so explore → fight reclaim tunnels read clearer on the sunny TTC hub.
+(#211). Separately, a short ink crumb trail at the tunnel mouth pulses
+on a faster stagger so polluted streets read clearer from the playground
+side without relying on the overhead placemarker alone.
 
 Reads PollutionManager + reclaim/campaign street tables (import only);
 does not rewrite those packages. Rubber-hose Toontown voice — no KH.
@@ -46,6 +48,22 @@ _PULSE_BEATS = 2
 _PULSE_GAP_SEC = 4.8
 _PULSE_HIGHLIGHT = Vec4(1.0, 0.88, 0.58, 1.0)
 _PULSE_REST = Vec4(1.0, 1.0, 1.0, 1.0)
+
+# Tunnel-mouth ink crumb trail — distinct from overhead placemarker pulse.
+_CRUMB_GLYPH = '•'
+_CRUMB_COUNT = 3
+_CRUMB_Z = 1.05
+_CRUMB_Y0 = -2.4
+_CRUMB_Y_STEP = 1.05
+_CRUMB_SCALE = 0.55
+_CRUMB_PULSE_PEAK = 1.38
+_CRUMB_PULSE_HALF_SEC = 0.11
+_CRUMB_PULSE_GAP_SEC = 3.1
+_CRUMB_STAGGER_SEC = 0.13
+_CRUMB_FG = Vec4(0.22, 0.10, 0.28, 0.95)
+_CRUMB_SHADOW = Vec4(1.0, 0.92, 0.72, 0.75)
+_CRUMB_HIGHLIGHT = Vec4(1.0, 0.84, 0.48, 1.0)
+_CRUMB_REST = Vec4(1.0, 1.0, 1.0, 1.0)
 
 # Short rubber-hose signpost copy (world placemarker — keep punchy).
 _STREET_COPY = {
@@ -135,6 +153,23 @@ def placemarkerPulseParams():
     }
 
 
+def streetBreadcrumbPulseParams():
+    """Pure timing / scale for tunnel-mouth ink crumb trail pulse.
+
+    Distinct from placemarkerPulseParams (#211): faster gap, single-beat
+    stagger along the crumb trail so polluted streets read from the
+    playground approach. Headless-safe — no Panda geom.
+    """
+    return {
+        'peak': float(_CRUMB_PULSE_PEAK),
+        'halfSec': float(_CRUMB_PULSE_HALF_SEC),
+        'gapSec': float(_CRUMB_PULSE_GAP_SEC),
+        'staggerSec': float(_CRUMB_STAGGER_SEC),
+        'count': int(_CRUMB_COUNT),
+        'baseScale': float(_CRUMB_SCALE),
+    }
+
+
 def _pollutionPure():
     try:
         from toontown.corruption import CorruptionGlobals
@@ -152,8 +187,10 @@ class CorruptStreetBreadcrumb(DirectObject):
         DirectObject.__init__(self)
         self._playground = playground
         self._markers = {}  # zoneId -> NodePath
+        self._crumbTrails = {}  # zoneId -> [NodePath, ...]
         self._popIvals = {}
         self._pulseIvals = {}
+        self._crumbPulseIvals = {}
         self._active = False
 
     def start(self):
@@ -293,12 +330,56 @@ class CorruptStreetBreadcrumb(DirectObject):
         np.setDepthWrite(0)
         np.setBin('fixed', 40)
         self._markers[int(zoneId)] = np
-        self._playPop(zoneId, np)
+        crumbs = self._attachCrumbTrail(link, zoneId)
+        self._playPop(zoneId, np, crumbs)
         self.notify.debug(
             'placemarker on tunnel → %s (%s)' % (streetName, zoneId))
 
-    def _playPop(self, zoneId, np):
+    def _attachCrumbTrail(self, link, zoneId):
+        """Ink crumb dots at the tunnel mouth — playground-side breadcrumb."""
+        zoneId = int(zoneId)
+        self._stopCrumbPulse(zoneId)
+        oldTrail = self._crumbTrails.pop(zoneId, None)
+        if oldTrail:
+            for crumb in oldTrail:
+                try:
+                    crumb.removeNode()
+                except Exception:
+                    pass
+        # Drop leftover DNA crumbs if a prior session left them.
+        leftover = link.find('**/corruptStreetCrumbTrail')
+        if not leftover.isEmpty():
+            leftover.removeNode()
+        root = link.attachNewNode('corruptStreetCrumbTrail')
+        crumbs = []
+        for i in range(max(1, int(_CRUMB_COUNT))):
+            tn = TextNode('corruptStreetCrumbText-%s' % i)
+            try:
+                tn.setFont(ToontownGlobals.getSignFont())
+            except Exception:
+                pass
+            tn.setText(_CRUMB_GLYPH)
+            tn.setAlign(TextNode.ACenter)
+            tn.setTextColor(_CRUMB_FG)
+            try:
+                tn.setShadow(0.03, 0.03)
+                tn.setShadowColor(_CRUMB_SHADOW)
+            except Exception:
+                pass
+            crumb = root.attachNewNode(tn)
+            crumb.setName('corruptStreetCrumb')
+            crumb.setPos(0, _CRUMB_Y0 + (i * _CRUMB_Y_STEP), _CRUMB_Z)
+            crumb.setScale(_CRUMB_SCALE)
+            crumb.setBillboardPointEye()
+            crumb.setDepthWrite(0)
+            crumb.setBin('fixed', 39)
+            crumbs.append(crumb)
+        self._crumbTrails[zoneId] = crumbs
+        return crumbs
+
+    def _playPop(self, zoneId, np, crumbs=None):
         self._stopPulse(zoneId)
+        self._stopCrumbPulse(zoneId)
         old = self._popIvals.pop(zoneId, None)
         if old is not None:
             try:
@@ -319,8 +400,9 @@ class CorruptStreetBreadcrumb(DirectObject):
                 np, _POP_SETTLE_SEC * 0.30,
                 baseScale,
                 startScale=baseScale * _POP_STRETCH),
-            # Brief cream/scale pulse so reclaim tunnels catch the eye.
+            # Placemarker pulse (#211) + distinct crumb-trail pulse.
             Func(self._startPulseLoop, zoneId, np),
+            Func(self._startCrumbPulseLoop, zoneId, crumbs or ()),
         )
         self._popIvals[zoneId] = ival
         try:
@@ -328,6 +410,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         except Exception:
             np.setScale(baseScale)
             self._startPulseLoop(zoneId, np)
+            self._startCrumbPulseLoop(zoneId, crumbs or ())
 
     def _buildNoticePulseIval(self, np):
         """One brief rubber-hose scale + cream highlight pulse."""
@@ -404,15 +487,118 @@ class CorruptStreetBreadcrumb(DirectObject):
                 except Exception:
                     pass
 
+    def _buildCrumbPulseIval(self, crumb):
+        """One brief scale + cream beat on a single trail crumb."""
+        baseScale = _CRUMB_SCALE
+        half = max(0.01, float(_CRUMB_PULSE_HALF_SEC))
+        peak = baseScale * float(_CRUMB_PULSE_PEAK)
+        return Parallel(
+            Sequence(
+                LerpScaleInterval(
+                    crumb, half, peak, startScale=baseScale,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    crumb, half, baseScale, startScale=peak,
+                    blendType='easeIn'),
+            ),
+            Sequence(
+                LerpColorScaleInterval(
+                    crumb, half, _CRUMB_HIGHLIGHT,
+                    startColorScale=_CRUMB_REST, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    crumb, half, _CRUMB_REST,
+                    startColorScale=_CRUMB_HIGHLIGHT, blendType='easeIn'),
+            ),
+        )
+
+    def _startCrumbPulseLoop(self, zoneId, crumbs=None):
+        """Staggered crumb-trail pulse — faster / distinct from placemarker."""
+        zoneId = int(zoneId)
+        # Always pulse the live trail for this zone (Func may pass a snapshot).
+        crumbs = self._crumbTrails.get(zoneId) or []
+        if not self._active or not crumbs:
+            return
+        alive = []
+        for crumb in crumbs:
+            try:
+                if crumb is not None and not crumb.isEmpty():
+                    alive.append(crumb)
+            except Exception:
+                continue
+        if not alive:
+            return
+        self._stopCrumbPulse(zoneId)
+        for crumb in alive:
+            try:
+                crumb.setColorScale(_CRUMB_REST)
+                crumb.setScale(_CRUMB_SCALE)
+            except Exception:
+                pass
+        stagger = max(0.0, float(_CRUMB_STAGGER_SEC))
+        gap = max(0.4, float(_CRUMB_PULSE_GAP_SEC))
+        # Overlapping chase into the tunnel — not the overhead placemarker loop.
+        parts = []
+        for i, crumb in enumerate(alive):
+            parts.append(Sequence(
+                Wait(stagger * i),
+                self._buildCrumbPulseIval(crumb),
+            ))
+        loop = Sequence(Parallel(*parts), Wait(gap))
+        self._crumbPulseIvals[zoneId] = loop
+        try:
+            loop.loop()
+        except Exception:
+            self._crumbPulseIvals.pop(zoneId, None)
+            for crumb in alive:
+                try:
+                    crumb.setScale(_CRUMB_SCALE)
+                    crumb.setColorScale(_CRUMB_REST)
+                except Exception:
+                    pass
+
+    def _stopCrumbPulse(self, zoneId):
+        zoneId = int(zoneId)
+        ival = self._crumbPulseIvals.pop(zoneId, None)
+        if ival is not None:
+            try:
+                ival.finish()
+            except Exception:
+                try:
+                    ival.pause()
+                except Exception:
+                    pass
+
     def _removeMarker(self, zoneId):
         zoneId = int(zoneId)
         self._stopPulse(zoneId)
+        self._stopCrumbPulse(zoneId)
         ival = self._popIvals.pop(zoneId, None)
         if ival is not None:
             try:
                 ival.finish()
             except Exception:
                 pass
+        trail = self._crumbTrails.pop(zoneId, None)
+        if trail:
+            # Remove trail root (parent of crumbs) when present.
+            root = None
+            try:
+                root = trail[0].getParent()
+            except Exception:
+                root = None
+            if root is not None:
+                try:
+                    if not root.isEmpty() and root.getName() == 'corruptStreetCrumbTrail':
+                        root.removeNode()
+                        trail = None
+                except Exception:
+                    pass
+            if trail:
+                for crumb in trail:
+                    try:
+                        crumb.removeNode()
+                    except Exception:
+                        pass
         np = self._markers.pop(zoneId, None)
         if np is not None:
             try:

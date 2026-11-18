@@ -2882,6 +2882,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'reclaimStreetEntries',
                 'streetNeedsBreadcrumb',
                 'placemarkerPulseParams',
+                'streetBreadcrumbPulseParams',
                 'CorruptStreetBreadcrumb',
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
@@ -2894,6 +2895,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         # Brief pulse / cream highlight so reclaim tunnels catch the eye.
         self.assertIn('_startPulseLoop', crumb_src)
         self.assertIn('_PULSE_HIGHLIGHT', crumb_src)
+        # Distinct tunnel-mouth crumb trail pulse (playground-side cue).
+        self.assertIn('_startCrumbPulseLoop', crumb_src)
+        self.assertIn('_CRUMB_PULSE_GAP_SEC', crumb_src)
         playground_src = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('ensureCorruptStreetBreadcrumbs', playground_src)
         self.assertIn('stopCorruptStreetBreadcrumbs', playground_src)
