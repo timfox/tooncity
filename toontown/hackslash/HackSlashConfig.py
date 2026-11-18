@@ -64,9 +64,11 @@ HIT_FLASH_OUT_SEC = 0.10
 # Parked lower-left so reclaim banners / soft-lock hints stay readable up top.
 COMBO_COUNTER_POS = (-0.95, 0.0, -0.42)
 COMBO_COUNTER_BASE_SCALE = 0.11
-COMBO_COUNTER_POP_SCALE = 0.16
-COMBO_COUNTER_POP_SEC = 0.08
-COMBO_COUNTER_SETTLE_SEC = 0.12
+# Rubber-hose HUD pop on each increment: flat squash → tall stretch → settle.
+# Multipliers apply to settle scale (sx = width, sz = height on aspect2d TextNode).
+COMBO_COUNTER_SQUASH = (1.65, 1.0, 0.52, 0.05)
+COMBO_COUNTER_STRETCH = (0.72, 1.0, 1.48, 0.07)
+COMBO_COUNTER_SETTLE_SEC = 0.10
 COMBO_BREAK_SEC = 1.15
 COMBO_FADE_SEC = 0.45
 COMBO_COUNTER_LABEL = 'PUNCH'
@@ -77,6 +79,13 @@ COMBO_COUNTER_COLORS = (
     (1.0, 0.7, 0.25, 1.0),
     (1.0, 0.55, 0.2, 1.0),
 )
+# Tiny ink flecks that flick off the counter on increment (cartoon ink, not KH).
+COMBO_COUNTER_FLECK_COUNT = 3
+COMBO_COUNTER_FLECK_SIZE = 0.016
+COMBO_COUNTER_FLECK_DRIFT = 0.11
+COMBO_COUNTER_FLECK_SEC = 0.2
+COMBO_COUNTER_FLECK_COLOR = (0.18, 0.06, 0.22, 0.9)
+COMBO_COUNTER_FLECK_END_COLOR = (0.35, 0.12, 0.4, 0.0)
 
 # Mid/finisher launcher juice (upward juggle feel on the target).
 LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more

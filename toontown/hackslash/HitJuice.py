@@ -5,6 +5,8 @@ cartoon scale curve: brief flat squash → tall recover stretch → settle.
 Combo finishers use playFinisherSlam for a heavier rubber-hose slam beat.
 Launcher hang uses buildLaunchHangInterval + spawnHangSparks for a readable
 airborne float before fall.
+Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks for a brief
+rubber-hose number pop (and tiny ink flecks) on each connect.
 No keyblades / no KH framing — Toontown rubber-hose only.
 """
 
@@ -254,6 +256,119 @@ def spawnHangSparks(origin, parent=None, name='hackslashHangSparks'):
 
 def clearHangSparks(nodes):
     """Remove spark CardMaker nodes spawned for a launch hang."""
+    for np in list(nodes or []):
+        try:
+            if np is not None and not np.isEmpty():
+                np.removeNode()
+        except Exception:
+            pass
+
+
+def playComboCounterPop(node, settleScale, name='hackslashComboHosePop'):
+    """aspect2d combo HUD: flat squash → tall stretch → settle. Starts + returns.
+
+    settleScale is the uniform TextNode scale to land on. Squash/stretch
+    multipliers come from HackSlashConfig.COMBO_COUNTER_*.
+    """
+    if node is None:
+        return None
+    try:
+        if hasattr(node, 'isEmpty') and node.isEmpty():
+            return None
+    except Exception:
+        return None
+
+    settle = max(0.001, float(settleScale))
+    sx, sy, sz, squashSec = HackSlashConfig.COMBO_COUNTER_SQUASH
+    tx, ty, tz, stretchSec = HackSlashConfig.COMBO_COUNTER_STRETCH
+    settleSec = float(HackSlashConfig.COMBO_COUNTER_SETTLE_SEC)
+    settlePt = Point3(settle, settle, settle)
+    squashPt = Point3(settle * sx, settle * sy, settle * sz)
+    stretchPt = Point3(settle * tx, settle * ty, settle * tz)
+
+    try:
+        node.setScale(settlePt)
+    except Exception:
+        return None
+
+    ival = Sequence(
+        LerpScaleInterval(node, float(squashSec), squashPt, blendType='easeOut'),
+        LerpScaleInterval(
+            node, float(stretchSec), stretchPt, blendType='easeOut'),
+        LerpScaleInterval(node, settleSec, settlePt, blendType='easeIn'),
+        name=name,
+    )
+    ival.start()
+    return ival
+
+
+def spawnComboInkFlecks(origin, parent=None, name='hackslashComboInkFlecks'):
+    """Tiny aspect2d ink flecks near the combo counter. Returns (Parallel|None, nodes).
+
+    Caller owns cleanup (pause Parallel then clearComboInkFlecks).
+    """
+    count = int(HackSlashConfig.COMBO_COUNTER_FLECK_COUNT)
+    if count <= 0 or origin is None:
+        return None, []
+
+    parentNP = parent
+    if parentNP is None:
+        try:
+            parentNP = aspect2d  # noqa: F821
+        except Exception:
+            return None, []
+
+    size = float(HackSlashConfig.COMBO_COUNTER_FLECK_SIZE)
+    drift = float(HackSlashConfig.COMBO_COUNTER_FLECK_DRIFT)
+    sec = float(HackSlashConfig.COMBO_COUNTER_FLECK_SEC)
+    r, g, b, a = HackSlashConfig.COMBO_COUNTER_FLECK_COLOR
+    er, eg, eb, ea = HackSlashConfig.COMBO_COUNTER_FLECK_END_COLOR
+    ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+
+    nodes = []
+    parts = []
+    for i in range(count):
+        try:
+            cm = CardMaker('%s-%s' % (name, i))
+            cm.setFrame(-size, size, -size, size)
+            fleck = parentNP.attachNewNode(cm.generate())
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, a)
+            angle = (2.0 * pi * i) / float(count) + 0.55
+            # Spread sideways/up from the HUD number — tiny ink flecks, not sparks.
+            start = Point3(
+                ox + cos(angle) * 0.03,
+                oy,
+                oz + sin(angle) * 0.02 + 0.02)
+            fleck.setPos(start)
+            fleck.setScale(0.55 + 0.12 * (i % 3))
+            fleck.setBin('fixed', 56)
+            fleck.setDepthWrite(False)
+        except Exception:
+            continue
+
+        end = Point3(
+            start[0] + cos(angle) * drift,
+            oy,
+            start[2] + abs(sin(angle)) * drift + 0.04)
+        parts.append(Parallel(
+            LerpPosInterval(fleck, sec, end, blendType='easeOut'),
+            LerpScaleInterval(fleck, sec, 0.05, blendType='easeIn'),
+            LerpColorScaleInterval(
+                fleck, sec, Vec4(er, eg, eb, ea), blendType='easeIn'),
+        ))
+        nodes.append(fleck)
+
+    if not parts:
+        return None, []
+    ival = Parallel(*parts, name=name)
+    ival.start()
+    return ival, nodes
+
+
+def clearComboInkFlecks(nodes):
+    """Remove ink-fleck CardMaker nodes spawned for a combo counter pop."""
     for np in list(nodes or []):
         try:
             if np is not None and not np.isEmpty():
