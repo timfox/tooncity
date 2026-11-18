@@ -64,6 +64,11 @@ class MeleeCombatController(DirectObject):
         self._dodgeCancelOpenAt = 0.0
         self._dodgeCancelUntil = 0.0
         self._dodgeAttackBuffered = False
+        # Perfect-dodge counter → melee (armed when i-frames eat a telegraph).
+        self._perfectCounterArmed = False
+        self._perfectCounterUntil = 0.0
+        self._perfectCounterBuffered = False
+        self._perfectCounterPending = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
         self._hitStop = HitStopFx(avatar)
@@ -109,6 +114,7 @@ class MeleeCombatController(DirectObject):
         self._cycleReadyAt = 0.0
         self._dodging = False
         self._clearDodgeCancelWindow()
+        self._clearPerfectDodgeCounterWindow()
         self._comboHits = 0
         self.avatar.hackSlashDemoHostiles = getattr(
             self.avatar, 'hackSlashDemoHostiles', []) or []
@@ -157,6 +163,7 @@ class MeleeCombatController(DirectObject):
         self._clearLaunch()
         self._clearDodge()
         self._clearDodgeCancelWindow()
+        self._clearPerfectDodgeCounterWindow()
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
@@ -223,7 +230,8 @@ class MeleeCombatController(DirectObject):
     def _tick(self, task):
         if not self.enabled:
             return Task.done
-        # Flush buffered F/LMB once the dodge → melee cancel window opens.
+        # Flush buffered F/LMB once dodge-cancel / perfect-dodge counter opens.
+        self._flushPerfectDodgeCounterBuffer()
         self._flushDodgeCancelBuffer()
         target = self.targetFinder.acquire()
         snapped = self.targetFinder.didSnap()
@@ -410,11 +418,20 @@ class MeleeCombatController(DirectObject):
         if getattr(self.avatar, 'tossPieStart', None) is not None:
             return
 
-        # Dodge → melee cancel: early roll is locked (optional buffer); once the
-        # cancel window opens, F/LMB aborts remaining dodge recovery into a
-        # fresh stretch-punch so Shift→F combo flow reads clean.
+        # Perfect-dodge counter → melee takes priority over plain dodge cancel:
+        # rewarded opener (damage + snappy rate) after i-frames eat a telegraph.
+        fromPerfectCounter = False
         fromDodgeCancel = False
-        if getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True):
+        if self.isPerfectDodgeCounterOpen():
+            if self._dodging or self.isDodgeCancelOpen():
+                self._cancelDodgeIntoMelee()
+            self._consumePerfectDodgeCounter()
+            fromPerfectCounter = True
+            fromDodgeCancel = True
+        elif getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True):
+            # Dodge → melee cancel: early roll is locked (optional buffer); once
+            # the cancel window opens, F/LMB aborts remaining dodge recovery
+            # into a fresh stretch-punch so Shift→F combo flow reads clean.
             if self._isInDodgeCancelLockout():
                 if getattr(HackSlashConfig, 'DODGE_CANCEL_BUFFER', True):
                     self._dodgeAttackBuffered = True
@@ -431,10 +448,11 @@ class MeleeCombatController(DirectObject):
                 self.comboIndex < HackSlashConfig.COMBO_LENGTH):
             hitIndex = self.comboIndex
         else:
-            # Dodge cancel always starts a fresh string (clearer combo flow).
+            # Dodge cancel / perfect counter always starts a fresh string.
             hitIndex = 0
             self.comboIndex = 0
 
+        self._perfectCounterPending = fromPerfectCounter
         self._startSwing(hitIndex)
 
     def _startSwing(self, hitIndex):
@@ -442,6 +460,8 @@ class MeleeCombatController(DirectObject):
         self.busy = True
         self.comboWindowOpen = False
         self.comboIndex = hitIndex
+        fromPerfectCounter = bool(self._perfectCounterPending)
+        self._perfectCounterPending = False
 
         target = self.targetFinder.acquire()
         if target is not None:
@@ -453,6 +473,10 @@ class MeleeCombatController(DirectObject):
             min(hitIndex, len(HackSlashConfig.COMBO_PLAY_RATES) - 1)]
         damage = HackSlashConfig.COMBO_DAMAGE[
             min(hitIndex, len(HackSlashConfig.COMBO_DAMAGE) - 1)]
+        if fromPerfectCounter:
+            # Rewarded perfect-dodge counter opener — bump damage + snap rate.
+            damage = HackSlashConfig.perfectDodgeCounterOpenerDamage(damage)
+            rate = HackSlashConfig.perfectDodgeCounterOpenerRate(rate)
 
         Emote.globalEmote.disableBody(self.avatar, 'hackslashMelee')
 
@@ -834,6 +858,8 @@ class MeleeCombatController(DirectObject):
         if not self.isDodgeInvulnerable():
             return
         self._playPerfectDodge()
+        # Arm rewarded counter→melee so the punish beat reads after the dodge.
+        self._armPerfectDodgeCounterWindow()
 
     def _reportIFrameToAI(self, durationSec):
         """So CorruptToonAI can skip takeDamage during the window."""
@@ -990,6 +1016,12 @@ class MeleeCombatController(DirectObject):
         """Fire a buffered F/LMB once the dodge → melee cancel window opens."""
         if not self._dodgeAttackBuffered:
             return
+        # Perfect-dodge counter owns the punish beat when armed.
+        if self.isPerfectDodgeCounterOpen():
+            self._dodgeAttackBuffered = False
+            self._perfectCounterBuffered = True
+            self._flushPerfectDodgeCounterBuffer()
+            return
         if self.isDodgeCancelOpen():
             self._dodgeAttackBuffered = False
             self._onAttackPressed()
@@ -1001,6 +1033,64 @@ class MeleeCombatController(DirectObject):
                 self._clearDodgeCancelWindow()
         else:
             self._dodgeAttackBuffered = False
+
+    def _armPerfectDodgeCounterWindow(self, now=None):
+        """Arm the rewarded perfect-dodge counter→melee window."""
+        if not getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_ENABLED', True):
+            self._clearPerfectDodgeCounterWindow()
+            return
+        if now is None:
+            now = globalClock.getFrameTime()  # noqa: F821
+        window = float(
+            getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_WINDOW_SEC', 0.50))
+        self._perfectCounterArmed = True
+        self._perfectCounterUntil = now + max(0.0, window)
+        # Promote any early-dodge attack buffer into the counter punish path.
+        if self._dodgeAttackBuffered and getattr(
+                HackSlashConfig, 'PERFECT_DODGE_COUNTER_BUFFER', True):
+            self._dodgeAttackBuffered = False
+            self._perfectCounterBuffered = True
+        messenger.send(
+            'hackslash-perfect-dodge-counter',
+            [self.avatar, max(0.0, window)])  # noqa: F821
+
+    def _clearPerfectDodgeCounterWindow(self):
+        self._perfectCounterArmed = False
+        self._perfectCounterUntil = 0.0
+        self._perfectCounterBuffered = False
+        self._perfectCounterPending = False
+
+    def _consumePerfectDodgeCounter(self):
+        """Spend the counter window (opener reward applies on the next swing)."""
+        self._perfectCounterArmed = False
+        self._perfectCounterUntil = 0.0
+        self._perfectCounterBuffered = False
+
+    def isPerfectDodgeCounterOpen(self):
+        """True while F/LMB may cancel into a rewarded perfect-dodge opener."""
+        if not getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_ENABLED', True):
+            return False
+        now = globalClock.getFrameTime()  # noqa: F821
+        open_ = HackSlashConfig.isPerfectDodgeCounterWindowOpen(
+            self._perfectCounterArmed, self._perfectCounterUntil, now)
+        if self._perfectCounterArmed and not open_:
+            self._clearPerfectDodgeCounterWindow()
+        return open_
+
+    def _flushPerfectDodgeCounterBuffer(self):
+        """Fire a buffered F/LMB once the perfect-dodge counter window is live."""
+        if not self._perfectCounterBuffered:
+            # Expire a stale armed window with no buffer.
+            if self._perfectCounterArmed:
+                now = globalClock.getFrameTime()  # noqa: F821
+                if now >= self._perfectCounterUntil:
+                    self._clearPerfectDodgeCounterWindow()
+            return
+        if self.isPerfectDodgeCounterOpen():
+            self._perfectCounterBuffered = False
+            self._onAttackPressed()
+            return
+        self._perfectCounterBuffered = False
 
     def _finishDodge(self):
         self._dodging = False
@@ -1020,6 +1110,11 @@ class MeleeCombatController(DirectObject):
             now = globalClock.getFrameTime()  # noqa: F821
             if now >= self._dodgeCancelUntil:
                 self._clearDodgeCancelWindow()
+        # Perfect-dodge counter can outlive the dash into the punish beat.
+        if self._perfectCounterArmed:
+            now = globalClock.getFrameTime()  # noqa: F821
+            if now >= self._perfectCounterUntil:
+                self._clearPerfectDodgeCounterWindow()
 
     def _clearDodge(self):
         if self._dodgeIval:
