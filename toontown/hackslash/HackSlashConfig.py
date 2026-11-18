@@ -70,6 +70,16 @@ LOCK_COMBO_ORBIT_LIFT = 0.28
 # After LocalAvatar.updateSmartCamera (priority 47) so the bias sticks a frame.
 LOCK_CAM_TASK_PRIORITY = 50
 
+# Soft-lock hit assist — one-shot yaw/aim nudge on melee connect against the
+# sticky soft-lock target so combo strings stay glued without hard lock.
+# Stronger than per-tick LOCK_FACE_LERP but hard-capped; deadzone skips tiny
+# error. LOCK_HIT_ASSIST_ENABLED = False drops assist only (tick nudge stays).
+LOCK_HIT_ASSIST_ENABLED = True
+LOCK_HIT_ASSIST_YAW_FRAC = 0.55
+LOCK_HIT_ASSIST_YAW_MAX_DEG = 22.0
+LOCK_HIT_ASSIST_CAM_FRAC = 0.28
+LOCK_HIT_ASSIST_DEADZONE_DEG = 2.0
+
 # Soft-lock reticle hose pop — when acquire/snap lands on a corrupt/hostile.
 # Warm cream brackets + ink flecks; rubber-hose squash → stretch → settle.
 # Toontown spiritual-sequel tone only — no keyblades / no KH branding.
@@ -873,5 +883,6 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 # On-screen hint while demo mode is active
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  Shift/X dodge→F  |  perfect dodge→F counter  |  '
-    'juggle→F slam  |  hurt→F/Shift cancel  |  Tab/` soft-lock cycle  |  ~melee'
+    'juggle→F slam  |  hurt→F/Shift cancel  |  Tab/` soft-lock cycle  |  '
+    'hit soft-lock aim  |  ~melee'
 )

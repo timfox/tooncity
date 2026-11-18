@@ -17,8 +17,11 @@ from .HackSlashConfig import (
 from .SoftTarget import (
     SoftTargetFinder,
     HackSlashTarget,
+    assistAimYawNudge,
     nextCycleIndex,
     pickCycleChoice,
+    shouldAssistAimOnHit,
+    signedYawDeltaDeg,
 )
 from .DemoHostile import DemoHostile
 from . import HitJuice
@@ -51,8 +54,11 @@ __all__ = [
     'perfectDodgeCounterOpenerRate',
     'SoftTargetFinder',
     'HackSlashTarget',
+    'assistAimYawNudge',
     'nextCycleIndex',
     'pickCycleChoice',
+    'shouldAssistAimOnHit',
+    'signedYawDeltaDeg',
     'DemoHostile',
     'HitJuice',
     'ComboCounterCreamWashPulse',

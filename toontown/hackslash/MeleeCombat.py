@@ -33,7 +33,12 @@ from .HitSparkFx import HitSparkFx
 from .HitStopFx import HitStopFx
 from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
-from .SoftTarget import SoftTargetFinder
+from .SoftTarget import (
+    SoftTargetFinder,
+    assistAimYawNudge,
+    shouldAssistAimOnHit,
+    signedYawDeltaDeg,
+)
 
 
 class MeleeCombatController(DirectObject):
@@ -611,6 +616,8 @@ class MeleeCombatController(DirectObject):
         except Exception:
             landed = False
         if landed:
+            # One-shot soft-lock yaw/aim nudge so combo strings stay glued.
+            self._assistAimOnHit(target)
             messenger.send('hackslash-hit', [self.avatar, target, damage, hitIndex])  # noqa: F821
             # Squash first so hitstop freezes on the impact silhouette.
             self._playConnectImpactJuice(hitIndex, target)
@@ -625,6 +632,72 @@ class MeleeCombatController(DirectObject):
             # Whiff inside a live string soft-breaks the on-screen counter.
             if self._comboHits > 0:
                 self._armComboBreak(delay=0.35)
+
+    def _assistAimOnHit(self, target):
+        """One-shot yaw/aim nudge toward sticky soft-lock on melee connect.
+
+        Fires only when the hit target matches the current soft-lock key.
+        Caps keep it a rubber-hose assist — never a hard snap. Page-up/down
+        still owns camera angles.
+        """
+        if not getattr(HackSlashConfig, 'LOCK_HIT_ASSIST_ENABLED', True):
+            return
+        try:
+            hitKey = self.targetFinder._key(target)
+            lockedKey = self.targetFinder.getLockedKey()
+        except Exception:
+            return
+        if not shouldAssistAimOnHit(hitKey, lockedKey):
+            return
+        try:
+            pos = target.getHackSlashPos()
+        except Exception:
+            return
+
+        # Soft heads-up: close a capped fraction of remaining yaw error.
+        try:
+            av = self.avatar
+            curH = av.getH(render)  # noqa: F821
+            av.headsUp(pos)
+            wantH = av.getH(render)  # noqa: F821
+            av.setH(render, curH)  # noqa: F821
+            delta = signedYawDeltaDeg(curH, wantH)
+            nudge = assistAimYawNudge(delta)
+            if abs(nudge) > 1e-6:
+                av.setH(render, curH + nudge)  # noqa: F821
+        except Exception:
+            pass
+
+        # Yield to explicit page-up / page-down camera angles.
+        if getattr(self.avatar, 'isPageUp', 0) or getattr(self.avatar, 'isPageDown', 0):
+            return
+
+        # Milder camera look-at share of the same assist beat.
+        try:
+            camFrac = float(getattr(
+                HackSlashConfig, 'LOCK_HIT_ASSIST_CAM_FRAC', 0.0))
+            if camFrac <= 0.0:
+                return
+            look = Point3(pos)
+            look.setZ(look.getZ() + HackSlashConfig.LOCK_CAM_LOOK_HEIGHT)
+            cam = base.camera  # noqa: F821
+            curHpr = cam.getHpr()
+            cam.lookAt(look)
+            wantHpr = cam.getHpr()
+            cam.setHpr(curHpr)
+            yawNudge = assistAimYawNudge(
+                signedYawDeltaDeg(curHpr[0], wantHpr[0]),
+                frac=camFrac,
+                maxDeg=HackSlashConfig.LOCK_HIT_ASSIST_YAW_MAX_DEG * camFrac,
+                deadzoneDeg=HackSlashConfig.LOCK_HIT_ASSIST_DEADZONE_DEG)
+            pitchDelta = (wantHpr[1] - curHpr[1]) * camFrac
+            cam.setHpr(
+                curHpr[0] + yawNudge,
+                curHpr[1] + pitchDelta,
+                curHpr[2],
+            )
+        except Exception:
+            pass
 
     def _launchTiming(self, table, hitIndex):
         """Pick per-hit timing/height; scalars still work for older configs."""
