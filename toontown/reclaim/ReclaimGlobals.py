@@ -70,6 +70,35 @@ WAVE_SUB_BANNER_COLOR = (1.0, 0.96, 0.82, 1.0)
 WAVE_BANNER_COLOR_PUNCHLINE = (0.72, 0.92, 0.55, 1.0)
 WAVE_SUB_BANNER_COLOR_PUNCHLINE = (0.88, 0.98, 0.78, 1.0)
 
+# Persistent reclaim purity meter (aspect2d bar: pollution → purity fill).
+# Empty bar = street still inky; fills warm as packs clear pollution.
+PURITY_METER_POS = (0.0, 0.0, 0.50)
+PURITY_METER_WIDTH = 0.72
+PURITY_METER_HEIGHT = 0.038
+PURITY_METER_RIM_PAD = 0.012
+PURITY_METER_BIN = 45
+PURITY_METER_LABEL = 'PURITY'
+PURITY_METER_LABEL_SCALE = 0.038
+PURITY_METER_LABEL_Z = 0.055
+PURITY_METER_PCT_FMT = '%.0f%%'
+PURITY_METER_PCT_SCALE = 0.034
+PURITY_METER_PCT_Z = -0.002
+PURITY_METER_TRACK_COLOR = (0.12, 0.08, 0.16, 0.82)
+PURITY_METER_RIM_COLOR = (0.95, 0.88, 0.55, 0.55)
+PURITY_METER_RIM_FINALE_P1 = (1.0, 0.55, 0.95, 0.65)
+PURITY_METER_RIM_FINALE_P2 = (1.0, 0.35, 0.28, 0.7)
+# Fill lerps ink-purple → sunny Toontown cream as purity rises.
+PURITY_METER_FILL_POLLUTED = (0.42, 0.18, 0.55, 0.95)
+PURITY_METER_FILL_PURE = (1.0, 0.95, 0.55, 0.98)
+PURITY_METER_LABEL_COLOR = (1.0, 0.96, 0.78, 1.0)
+PURITY_METER_PCT_COLOR = (1.0, 1.0, 0.9, 1.0)
+PURITY_METER_PCT_POLLUTED = (0.85, 0.55, 0.95, 1.0)
+PURITY_METER_PCT_PURE = (0.55, 0.95, 0.65, 1.0)
+# Rubber-hose pop when a pack reclaim bumps purity.
+PURITY_METER_POP_THRESHOLD = 0.04
+PURITY_METER_POP_SEC = 0.09
+PURITY_METER_POP_SCALE_Z = 1.55
+
 # Reclaim-complete purity burst (HUD overlay + sting).
 # Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.
 PURITY_BURST_PEAK_ALPHA = 0.78

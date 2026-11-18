@@ -8,6 +8,7 @@ from direct.interval.IntervalGlobal import (
 from toontown.campaign import CampaignGlobals
 from toontown.corruption import CorruptionGlobals
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.PurityMeterHud import PurityMeterHud
 
 
 class DistributedReclaimDirector(DistributedObject.DistributedObject):
@@ -30,6 +31,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._hintNP = None
         self._statusNP = None
         self._demoHintNP = None
+        self._purityMeter = PurityMeterHud()
         self._restoreIval = None
         self._burstFlashNP = None
         self._burstRingNP = None
@@ -55,6 +57,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             self._restoreIval = None
         self.__clearPurityBurstOverlay()
         self._puritySfx = None
+        if self._purityMeter is not None:
+            self._purityMeter.destroy()
         if getattr(base.cr, 'reclaimDirector', None) is self:
             del base.cr.reclaimDirector
         DistributedObject.DistributedObject.disable(self)
@@ -326,7 +330,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._telegraphCueNP = None
 
     def __showStatusHud(self):
-        """Persistent player-facing reclaim status (wave / corruption / pack)."""
+        """Persistent player-facing reclaim status (wave / pack + purity meter)."""
         wave = max(self.waveIndex, 1 if self.state == ReclaimGlobals.STATE_ACTIVE else 0)
         text = ReclaimGlobals.STATUS_FMT % (
             wave,
@@ -354,36 +358,25 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             np.setPos(0, 0, 0.62)
             self._statusNP = np
 
-        # Keep a compact corruption readout as a secondary cue.
-        hint = ReclaimGlobals.POLLUTION_HINT_FMT % (self.pollutionHint * 100.0)
-        hintColor = (
-            (0.95, 0.45, 0.4, 1.0) if self.finalePhase >= 2
-            else (0.85, 0.5, 0.95, 1.0) if self.finalePhase == 1
-            else (0.75, 0.55, 0.95, 1.0))
+        # Visual pollution→purity bar (replaces the old text-only corruption hint).
+        self.__hidePollutionHint()
+        if self._purityMeter is not None:
+            self._purityMeter.update(
+                self.pollutionHint, finalePhase=self.finalePhase)
+
+    def __hidePollutionHint(self):
         if self._hintNP is not None and not self._hintNP.isEmpty():
-            hnode = self._hintNP.node()
-            hnode.setText(hint)
-            hnode.setTextColor(*hintColor)
-        else:
-            htn = TextNode('reclaim-pollution-hint')
-            htn.setText(hint)
-            htn.setAlign(TextNode.ACenter)
-            htn.setTextColor(*hintColor)
-            htn.setShadow(0.04, 0.04)
-            htn.setShadowColor(0, 0, 0, 0.7)
-            hnp = aspect2d.attachNewNode(htn)  # noqa: F821
-            hnp.setScale(0.036)
-            hnp.setPos(0, 0, 0.56)
-            self._hintNP = hnp
+            self._hintNP.removeNode()
+        self._hintNP = None
 
     def __hideStatusHud(self):
         self.__hideTelegraphCue()
         if self._statusNP is not None and not self._statusNP.isEmpty():
             self._statusNP.removeNode()
         self._statusNP = None
-        if self._hintNP is not None and not self._hintNP.isEmpty():
-            self._hintNP.removeNode()
-        self._hintNP = None
+        self.__hidePollutionHint()
+        if self._purityMeter is not None:
+            self._purityMeter.hide()
 
     def __showDemoHint(self):
         if self._demoHintNP is not None and not self._demoHintNP.isEmpty():
