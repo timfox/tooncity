@@ -5,6 +5,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 
 from toontown.campaign import CampaignGlobals
+from toontown.campaign import CampaignProgressSave
 from toontown.campaign.OswaldBetrayalChase import (
     chaseClearMsg,
     chaseDelaySec,
@@ -17,7 +18,11 @@ from toontown.reclaim.DistributedReclaimDirectorAI import DistributedReclaimDire
 
 
 class CampaignDirectorAI(DirectObject):
-    """Tracks act unlocks and starts reclaim directors per act zone."""
+    """Tracks act unlocks and starts reclaim directors per act zone.
+
+    Act unlock (`unlockedThrough`) is hydrated / flushed per avatar via
+    CampaignProgressSave so explore→fight→reclaim survives logout.
+    """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('CampaignDirectorAI')
 
@@ -31,10 +36,69 @@ class CampaignDirectorAI(DirectObject):
         self._activeZoneId = None
         self._finalePhase = 0
         self._lastToonId = None
+        self._hydratedToonId = None
         self._oswaldChaseDoId = None
         self._oswaldChaseTask = None
         self._oswaldChaseWatch = None
         self.accept('neighborhoodReclaimed', self.__onNeighborhoodReclaimed)
+
+    def _progressEnabled(self):
+        return bool(getattr(
+            CampaignGlobals, 'CAMPAIGN_PROGRESS_ENABLED', True))
+
+    def _progressPath(self):
+        folder = getattr(self.air, 'dataFolder', '') or ''
+        shard = getattr(self.air, 'districtId', None)
+        if shard is None:
+            shard = getattr(self.air, 'shard', None)
+        return CampaignProgressSave.progressPath(folder, shard)
+
+    def _hydrateFromToon(self, toon):
+        """Load this toon's saved unlocks into the live director (relog)."""
+        if not self._progressEnabled() or toon is None:
+            return False
+        avId = getattr(toon, 'doId', None)
+        if avId is None:
+            return False
+        # Same toon already hydrated this process — keep live session state.
+        if self._hydratedToonId == avId:
+            return False
+        # Switching avatars: flush prior live progress before loading next.
+        if self._hydratedToonId is not None and self._hydratedToonId != avId:
+            self._persistForAvatarId(self._hydratedToonId)
+        progress = CampaignProgressSave.readAvatar(self._progressPath(), avId)
+        self._hydratedToonId = avId
+        if progress is None:
+            # New toon / no blob — start from defaults (do not keep prior
+            # avatar's live unlockedThrough on this shared director).
+            progress = CampaignProgressSave.defaultProgress()
+        CampaignProgressSave.applyProgressToDirector(self, progress)
+        self.notify.debug(
+            'hydrated campaign progress av=%s unlockedThrough=%s act=%s'
+            % (avId, self.unlockedThrough, self.actIndex))
+        return True
+
+    def _persistForToon(self, toon=None):
+        avId = None
+        if toon is not None:
+            avId = getattr(toon, 'doId', None)
+        if avId is None:
+            avId = self._lastToonId
+        return self._persistForAvatarId(avId)
+
+    def _persistForAvatarId(self, avId):
+        """Flush unlockedThrough / act cursor for one avatar to dataFolder."""
+        if not self._progressEnabled() or avId is None:
+            return False
+        blob = CampaignProgressSave.snapshotFromDirector(self)
+        ok = CampaignProgressSave.writeAvatar(
+            self._progressPath(), avId, blob)
+        if ok:
+            self._hydratedToonId = avId
+            self.notify.debug(
+                'persisted campaign progress av=%s unlockedThrough=%s'
+                % (avId, blob.get('unlockedThrough')))
+        return ok
 
     def statusText(self):
         if self.state == CampaignGlobals.STATE_VICTORY:
@@ -71,12 +135,15 @@ class CampaignDirectorAI(DirectObject):
     def startCampaign(self, toon):
         """Begin or resume the current unlocked act in the invoker's zone."""
         self._lastToonId = getattr(toon, 'doId', None)
+        self._hydrateFromToon(toon)
         if self.state == CampaignGlobals.STATE_VICTORY:
             self.actIndex = 0
             self.unlockedThrough = 0
             self.reclaimCount = 0
             self._finalePhase = 0
             self._cancelOswaldBetrayalChase()
+            # Replay wipe must stick across the next relog.
+            self._persistForToon(toon)
 
         self.state = CampaignGlobals.STATE_ACTIVE
         act = CampaignGlobals.ACTS[self.actIndex]
@@ -85,14 +152,20 @@ class CampaignDirectorAI(DirectObject):
             face = getattr(
                 CampaignGlobals, 'RECLAIM_FACE',
                 getattr(CampaignGlobals, 'PROTAGONIST', 'Oswald'))
+            # Persist ACTIVE + current unlocks so a wrong-zone tip after
+            # relog still resumes the same act cursor.
+            self._persistForToon(toon)
             return (
                 '%s needs you on %s — head there and the reclaim packs '
                 'will field.' % (face, act['name']))
-        return self._startActReclaim(toon, act)
+        result = self._startActReclaim(toon, act)
+        self._persistForToon(toon)
+        return result
 
     def advanceCampaign(self, toon, force=False):
         """Unlock / jump to the next act (moderator force for demos)."""
         self._lastToonId = getattr(toon, 'doId', None)
+        self._hydrateFromToon(toon)
         if self.state == CampaignGlobals.STATE_VICTORY:
             return (
                 'Campaign already complete. Head to %s / press C on Loopy '
@@ -101,6 +174,7 @@ class CampaignDirectorAI(DirectObject):
         nextIndex = self.actIndex + 1
         if nextIndex >= len(CampaignGlobals.ACTS):
             self.state = CampaignGlobals.STATE_VICTORY
+            self._persistForToon(toon)
             return 'No further acts — campaign victory! ' + self.statusText()
 
         if not force and nextIndex > self.unlockedThrough:
@@ -114,6 +188,7 @@ class CampaignDirectorAI(DirectObject):
         self.unlockedThrough = max(self.unlockedThrough, nextIndex)
         self._finalePhase = 0
         self.state = CampaignGlobals.STATE_ACTIVE
+        self._persistForToon(toon)
         act = CampaignGlobals.ACTS[self.actIndex]
         hint = CampaignGlobals.handoffTravelHint(act)
         self._tellToon(toon, 'NEXT HOOD: %s. %s' % (act['name'], act['banner']))
@@ -361,6 +436,7 @@ class CampaignDirectorAI(DirectObject):
         if act.get('finale') and self._finalePhase < 1:
             self._finalePhase = 1
             self._activeZoneId = None
+            self._persistForToon(toon)
             phase2 = act.get('phase2') or {}
             msg = phase2.get('banner') or 'Finale Phase 2!'
             self._tellToon(toon, msg)
@@ -373,6 +449,7 @@ class CampaignDirectorAI(DirectObject):
             self.state = CampaignGlobals.STATE_VICTORY
             self._activeZoneId = None
             self._finalePhase = 0
+            self._persistForToon(toon)
             self._tellToon(toon, handoff)
             messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
             # Gameplay payload: short corrupted-Oswald chase after betrayal.
@@ -385,6 +462,7 @@ class CampaignDirectorAI(DirectObject):
             self.actIndex = nextIndex
             self._finalePhase = 0
             self._activeZoneId = None
+            self._persistForToon(toon)
             nxt = CampaignGlobals.ACTS[nextIndex]
             # Discoverable handoff — street name only, no zone ids / magic words.
             hint = CampaignGlobals.handoffTravelHint(nxt)
@@ -394,6 +472,7 @@ class CampaignDirectorAI(DirectObject):
         else:
             self.state = CampaignGlobals.STATE_VICTORY
             self._activeZoneId = None
+            self._persistForToon(toon)
             self._tellToon(toon, handoff)
             messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
 

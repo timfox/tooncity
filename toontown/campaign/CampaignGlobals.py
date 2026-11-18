@@ -1124,3 +1124,9 @@ STATE_NAMES = {
     STATE_ACTIVE: 'active',
     STATE_VICTORY: 'victory',
 }
+
+# Per-avatar act unlock persistence (CampaignProgressSave / AI dataFolder).
+# Survives logout + district restart without a DistributedToon DC field.
+# CAMPAIGN_PROGRESS_ENABLED = False keeps session-only director memory.
+CAMPAIGN_PROGRESS_ENABLED = True
+CAMPAIGN_PROGRESS_FILENAME = 'campaign_progress.json'
