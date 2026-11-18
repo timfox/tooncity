@@ -48,6 +48,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._bruteHitSfx = None
         self._snareTelegraphSfx = None
         self._snareHitSfx = None
+        # Finale Overlord phase SFX caches keyed by phase index.
+        self._finaleTelegraphSfx = {}
+        self._finaleHitSfx = {}
         self._spitBlobIval = None
         self._spitBlobNP = None
         self._stringLashIval = None
@@ -413,7 +416,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._pulseIval is not None:
             self._pulseIval.pause()
         target = self.visualRoot if self.visualRoot is not None else self
-        look, _phase = self.__finalePhaseLook()
+        look, phase = self.__finalePhaseLook()
         isBrute = self.__isBruteSpit()
         isSnare = self.__isBalloonSnare()
         if look:
@@ -421,8 +424,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             hold = Vec4(*look['telegraphHold'])
             squash = Point3(*look['squash'])
             stretch = Point3(*look['stretch'])
-            mid = Point3(
-                squash[0] * 0.88, squash[1] * 0.88, max(0.4, squash[2] * 1.2))
+            if look.get('mid'):
+                mid = Point3(*look['mid'])
+            else:
+                mid = Point3(
+                    squash[0] * 0.88, squash[1] * 0.88,
+                    max(0.4, squash[2] * 1.2))
         elif isBrute:
             # Distinct green spit wind-up — wider squash, taller stretch.
             charge = Vec4(*CorruptionGlobals.BRUTE_TELEGRAPH_CHARGE_COLOR)
@@ -446,6 +453,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             stretch = Point3(0.62, 0.62, 1.7)
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
+        if look and phase >= 1:
+            # Phase HUD cue so P1 magenta vs P2 crimson reads mid-wind-up.
+            messenger.send(  # noqa: F821
+                'finaleTelegraphCue',
+                [phase, look.get('hudCue', 'OVERLORD P%s' % phase),
+                 look.get('hudColor', (1.0, 0.55, 1.0, 1.0))])
         # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
         # wind-up reads clearly before announceAttackHit's slam lands.
         self._telegraphIval = Sequence(
@@ -490,7 +503,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if look:
             impactScale = Point3(*look['impactScale'])
             impactColor = Vec4(*look['impactColor'])
-            rebound = Vec4(1.1, 0.55, 1.35, 1.0)
+            rebound = Vec4(*look.get(
+                'rebound', (1.1, 0.55, 1.35, 1.0)))
         elif isBrute:
             impactScale = Point3(1.7, 1.7, 0.48)
             impactColor = Vec4(0.55, 2.35, 0.4, 1.0)
@@ -574,9 +588,26 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 self._snareHitSfx = False
 
+    def __loadFinalePhaseSfx(self, cache, phase, path):
+        """Lazy-load a finale-phase SFX into the given cache dict."""
+        if phase in cache:
+            return cache[phase]
+        try:
+            cache[phase] = base.loader.loadSfx(path)  # noqa: F821
+        except Exception:
+            cache[phase] = False
+        return cache[phase]
+
     def __playTelegraphSfx(self):
         self.__ensureSfx()
-        if self.__isBruteSpit() and self._bruteTelegraphSfx:
+        look, phase = self.__finalePhaseLook()
+        if look and look.get('telegraphSfx'):
+            sfx = self.__loadFinalePhaseSfx(
+                self._finaleTelegraphSfx, phase, look['telegraphSfx'])
+            volume = float(look.get(
+                'telegraphSfxVolume',
+                CorruptionGlobals.TELEGRAPH_SFX_VOLUME))
+        elif self.__isBruteSpit() and self._bruteTelegraphSfx:
             sfx = self._bruteTelegraphSfx
             volume = CorruptionGlobals.BRUTE_TELEGRAPH_SFX_VOLUME
         elif self.__isBalloonSnare() and self._snareTelegraphSfx:
@@ -598,7 +629,14 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
     def __playAttackHitSfx(self):
         self.__ensureSfx()
-        if self.__isBruteSpit() and self._bruteHitSfx:
+        look, phase = self.__finalePhaseLook()
+        if look and look.get('hitSfx'):
+            sfx = self.__loadFinalePhaseSfx(
+                self._finaleHitSfx, phase, look['hitSfx'])
+            volume = float(look.get(
+                'hitSfxVolume',
+                CorruptionGlobals.ATTACK_HIT_SFX_VOLUME))
+        elif self.__isBruteSpit() and self._bruteHitSfx:
             sfx = self._bruteHitSfx
             volume = CorruptionGlobals.BRUTE_ATTACK_HIT_SFX_VOLUME
         elif self.__isBalloonSnare() and self._snareHitSfx:
