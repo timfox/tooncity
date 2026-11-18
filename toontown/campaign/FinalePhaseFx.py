@@ -5,8 +5,10 @@ purity-restore patterns so the phase flip reads as a boss moment.
 
 On Silly finale victory / twist, plays a short readable AV reveal sting
 (banner + FOV/flash + rubber-hose Oswald silhouette shadow flash +
-optional SFX) that Oswald caused the corruption. Toontown spiritual
-sequel — no keyblades / no KH branding.
+optional SFX) that Oswald caused the corruption, then a soft cream
+aftershock that supports the beat without undoing it. Composes with
+#82 victory cream swell (cheer only — cleared before reveal). Toontown
+spiritual sequel — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec3, Vec4
@@ -23,6 +25,10 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
+from toontown.campaign.FinaleCreamAftershockFx import (
+    clearFinaleCreamAftershock,
+    playFinaleCreamAftershock,
+)
 from toontown.corruption import CorruptionGlobals
 
 
@@ -204,8 +210,19 @@ class FinalePhaseFxClient(DirectObject):
             CampaignGlobals.FINALE_TWIST_TEASE)
         messenger.send('oswaldRevealBanner', [title])  # noqa: F821
 
+        # Cream aftershock after ink/shadow sting — residual cream that
+        # supports the twist (does not replay #82 victory swell).
+        aftershockDelay = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_CREAM_AFTERSHOCK_DELAY_SEC', 0.72))
+        stingParts = Parallel(*parts) if parts else Wait(0.01)
         self._ival = Sequence(
-            Parallel(*parts) if parts else Wait(0.01),
+            Parallel(
+                stingParts,
+                Sequence(
+                    Wait(max(0.0, aftershockDelay)),
+                    Func(self._playCreamAftershock),
+                ),
+            ),
             Wait(max(0.0, holdSec - 1.2)),
             Func(self._fadeRevealBanners),
             Wait(0.45),
@@ -213,6 +230,13 @@ class FinalePhaseFxClient(DirectObject):
             name='oswaldRevealSting',
         )
         self._ival.start()
+
+    def _playCreamAftershock(self):
+        """Soft cream residual after the reveal sting lands."""
+        try:
+            playFinaleCreamAftershock()
+        except Exception:
+            pass
 
     def _buildOswaldShadow(self):
         """Rubber-hose Oswald silhouette — tall ears, round head, drip feet.
@@ -521,6 +545,10 @@ class FinalePhaseFxClient(DirectObject):
         self._clearFlash()
         self._clearShadow()
         self._clearBanners()
+        try:
+            clearFinaleCreamAftershock()
+        except Exception:
+            pass
         try:
             render.clearColorScale()  # noqa: F821
         except Exception:
