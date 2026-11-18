@@ -39,7 +39,11 @@ playground feeling clean reads juicily beside PollutionStreetAudio
 pure-street birds (#55) — see BirdsReturnCreamWashFx.
 
 Reads PollutionManager + reclaim/campaign street tables (import only);
-does not rewrite those packages. Rubber-hose Toontown voice — no KH.
+does not rewrite those packages. Soft-gate (#317+#320): locked campaign
+acts do not get a full reclaim crumb — dim placemarkers keep explore
+visible while the progression ladder reads from the hub. Client latch
+tracks unlockedThrough via campaignActUnlocked (PlayEntry / purity
+mirror). Rubber-hose Toontown voice — no KH.
 """
 
 from __future__ import annotations
@@ -63,9 +67,17 @@ notify = directNotify.newCategory('CorruptStreetBreadcrumb')
 # Hub playground only — TTC is the explore → fight → reclaim launchpad.
 _HUB_ZONE = ToontownGlobals.ToontownCentral
 
+# Session latch for campaign act unlock (soft-gate parity with R).
+# Relog sync is a separate package; default 0 = Loopy-only until unlock.
+_clientUnlockedThrough = 0
+# Live hub breadcrumb instance (set by ensureCorruptStreetBreadcrumbs).
+_activeBreadcrumb = None
+
 # Placemarker float above tunnel mouth (world units).
 _MARKER_Z = 4.5
 _MARKER_SCALE = 1.35
+# Quiet scale for locked-act dim placemarkers (no reclaim pulse juice).
+_MARKER_SCALE_DIM = 1.05
 # Soft rubber-hose pop when a polluted tunnel sign appears.
 _POP_SQUASH = 0.72
 _POP_STRETCH = 1.18
@@ -190,6 +202,74 @@ _STREET_COPY = {
 # Ink-on-cream placemarker colors (readable against sunny TTC tunnels).
 _TEXT_FG = Vec4(0.18, 0.12, 0.22, 1.0)
 _TEXT_SHADOW = Vec4(1.0, 0.94, 0.78, 0.92)
+# Locked-act dim placemarker — muted ink, no sunny reclaim pulse.
+_TEXT_FG_DIM = Vec4(0.28, 0.24, 0.30, 0.48)
+_TEXT_SHADOW_DIM = Vec4(0.92, 0.90, 0.86, 0.35)
+
+
+def getClientUnlockedThrough():
+    """Session campaign unlock cursor used by hub breadcrumb soft-gate."""
+    return int(_clientUnlockedThrough)
+
+
+def setClientUnlockedThrough(unlockedThrough):
+    """Raise (never lower) the session unlock latch. Returns new value."""
+    global _clientUnlockedThrough
+    try:
+        unlocked = max(0, int(unlockedThrough))
+    except (TypeError, ValueError):
+        unlocked = 0
+    if unlocked > _clientUnlockedThrough:
+        _clientUnlockedThrough = unlocked
+    return int(_clientUnlockedThrough)
+
+
+def noteCampaignActUnlocked(nextIndex, zoneId=None):
+    """Latch unlock + refresh live hub crumbs (campaignActUnlocked consumer).
+
+    zoneId is accepted for messenger parity with CampaignDirectorAI send
+    args; refresh uses the latch, not the zone alone.
+    """
+    setClientUnlockedThrough(nextIndex)
+    crumb = _activeBreadcrumb
+    if crumb is not None and getattr(crumb, '_active', False):
+        try:
+            crumb.refresh()
+        except Exception:
+            notify.debug('breadcrumb refresh after act unlock failed')
+    return getClientUnlockedThrough()
+
+
+def resetClientUnlockedThrough():
+    """Test / teardown helper — clears the session unlock latch."""
+    global _clientUnlockedThrough
+    _clientUnlockedThrough = 0
+
+
+def _streetActUnlocked(zoneId, unlockedThrough):
+    """True when soft-gate allows a full reclaim breadcrumb for zoneId."""
+    try:
+        from toontown.reclaim import ReclaimGlobals
+        return bool(ReclaimGlobals.streetPackUnlocked(
+            int(zoneId), unlockedThrough))
+    except Exception:
+        # Fail-open so hub discoverability survives missing reclaim tables.
+        return True
+
+
+def _streetLooksPolluted(zoneId, pollutionByZone, seedPollution, pure=0.0):
+    """Pollution/seed sample — shared by full vs dim breadcrumb helpers."""
+    zoneId = int(zoneId)
+    pure = float(pure)
+    if zoneId in pollutionByZone:
+        try:
+            return float(pollutionByZone[zoneId]) > pure
+        except (TypeError, ValueError):
+            return False
+    try:
+        return float(seedPollution) > pure
+    except (TypeError, ValueError):
+        return False
 
 
 def reclaimStreetEntries():
@@ -234,23 +314,37 @@ def reclaimStreetEntries():
     return entries
 
 
-def streetNeedsBreadcrumb(zoneId, pollutionByZone, seedPollution, pure=0.0):
-    """True when a reclaim street still looks polluted from the hub.
+def streetNeedsBreadcrumb(zoneId, pollutionByZone, seedPollution, pure=0.0,
+                           unlockedThrough=None):
+    """True when a reclaim street needs a full hub reclaim breadcrumb.
 
     Known PollutionManager samples win; unknown zones fall back to seed
     pollution so Loopy / Punchline / Silly stay discoverable before visit.
+
+    When unlockedThrough is provided, locked campaign acts (soft-gate
+    parity with street-pack R) do not get a full reclaim invite — use
+    streetBreadcrumbDimmed for the muted locked cue. When omitted, only
+    pollution/seed is checked (headless helper backward compatible).
     """
-    zoneId = int(zoneId)
-    pure = float(pure)
-    if zoneId in pollutionByZone:
-        try:
-            return float(pollutionByZone[zoneId]) > pure
-        except (TypeError, ValueError):
-            return False
-    try:
-        return float(seedPollution) > pure
-    except (TypeError, ValueError):
+    if not _streetLooksPolluted(
+            zoneId, pollutionByZone, seedPollution, pure=pure):
         return False
+    if unlockedThrough is None:
+        return True
+    return _streetActUnlocked(zoneId, unlockedThrough)
+
+
+def streetBreadcrumbDimmed(zoneId, pollutionByZone, seedPollution, pure=0.0,
+                           unlockedThrough=0):
+    """True when polluted but act-locked — muted hub cue, not reclaim invite.
+
+    Keeps explore discoverability for Punchline / Silly tunnels while the
+    progression ladder dims locked reclaim invitations from TTC.
+    """
+    if not _streetLooksPolluted(
+            zoneId, pollutionByZone, seedPollution, pure=pure):
+        return False
+    return not _streetActUnlocked(zoneId, unlockedThrough)
 
 
 def placemarkerPulseParams():
@@ -436,6 +530,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         DirectObject.__init__(self)
         self._playground = playground
         self._markers = {}  # zoneId -> NodePath
+        self._markerMode = {}  # zoneId -> 'full' | 'dim'
         self._pulseHalos = {}  # zoneId -> NodePath (cream deepen halo)
         self._crumbTrails = {}  # zoneId -> [NodePath, ...]
         self._crumbCreamPips = {}  # zoneId -> [NodePath, ...] (crumb cream pips)
@@ -454,6 +549,8 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._active = True
         self.accept('pollutionChanged', self._onPollutionChanged)
         self.accept('purityRestoreFx', self._onPurityRestore)
+        # AI / PlayEntry purity mirror — refresh crumbs when acts unlock.
+        self.accept('campaignActUnlocked', self._onCampaignActUnlocked)
         self.accept('exitPlayground', self.stop)
         self._requestStreetPollution()
         self.refresh()
@@ -464,6 +561,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._active = False
         self.ignore('pollutionChanged')
         self.ignore('purityRestoreFx')
+        self.ignore('campaignActUnlocked')
         self.ignore('exitPlayground')
         self._clearMarkers()
         self._clearBirdsReturnCreamWash()
@@ -552,6 +650,14 @@ class CorruptStreetBreadcrumb(DirectObject):
         if hadAny or args:
             self._cueBirdsReturnCreamWash()
 
+    def _onCampaignActUnlocked(self, nextIndex=0, zoneId=0):
+        """Promote dim → full crumbs when the campaign soft-gate advances."""
+        if not self._active:
+            # Still latch so the next hub enter sees the unlock.
+            setClientUnlockedThrough(nextIndex)
+            return
+        noteCampaignActUnlocked(nextIndex, zoneId)
+
     def refresh(self):
         if not self._active:
             return
@@ -565,18 +671,29 @@ class CorruptStreetBreadcrumb(DirectObject):
             return
         pollution = self._pollutionMap()
         pure = _pollutionPure()
-        wanted = {}
+        unlocked = getClientUnlockedThrough()
+        wanted = {}  # zoneId -> (name, text, mode)
         for zoneId, name, text, seed in reclaimStreetEntries():
-            if streetNeedsBreadcrumb(zoneId, pollution, seed, pure=pure):
-                wanted[int(zoneId)] = (name, text)
-        # Drop cleared streets (caller may cue birds-return cream wash).
+            zid = int(zoneId)
+            if streetNeedsBreadcrumb(
+                    zid, pollution, seed, pure=pure,
+                    unlockedThrough=unlocked):
+                wanted[zid] = (name, text, 'full')
+            elif streetBreadcrumbDimmed(
+                    zid, pollution, seed, pure=pure,
+                    unlockedThrough=unlocked):
+                wanted[zid] = (name, text, 'dim')
+        # Drop cleared / no-longer-wanted streets (caller may cue birds wash).
         for zoneId in list(self._markers.keys()):
             if zoneId not in wanted:
                 self._removeMarker(zoneId)
-        # Ensure placemarkers for still-polluted reclaim tunnels.
-        for zoneId, (name, text) in wanted.items():
-            if zoneId not in self._markers:
-                self._attachMarker(zoneId, name, text)
+        # Ensure placemarkers; rebuild when soft-gate mode flips dim ↔ full.
+        for zoneId, (name, text, mode) in wanted.items():
+            if (zoneId not in self._markers
+                    or self._markerMode.get(zoneId) != mode):
+                if zoneId in self._markers:
+                    self._removeMarker(zoneId)
+                self._attachMarker(zoneId, name, text, mode=mode)
 
     def _findLinkTunnel(self, zoneId):
         playground = self._playground
@@ -604,12 +721,13 @@ class CorruptStreetBreadcrumb(DirectObject):
                     continue
         return None
 
-    def _attachMarker(self, zoneId, streetName, text):
+    def _attachMarker(self, zoneId, streetName, text, mode='full'):
         link = self._findLinkTunnel(zoneId)
         if link is None or link.isEmpty():
             self.notify.debug(
                 'no linktunnel for polluted street %s (%s)' % (zoneId, streetName))
             return
+        mode = 'dim' if mode == 'dim' else 'full'
         # Avoid stacking if DNA already has a leftover marker name.
         existing = link.find('**/corruptStreetBreadcrumb')
         if not existing.isEmpty():
@@ -621,20 +739,42 @@ class CorruptStreetBreadcrumb(DirectObject):
             pass
         tn.setText(text)
         tn.setAlign(TextNode.ACenter)
-        tn.setTextColor(_TEXT_FG)
-        try:
-            tn.setShadow(0.04, 0.04)
-            tn.setShadowColor(_TEXT_SHADOW)
-        except Exception:
-            pass
+        if mode == 'dim':
+            tn.setTextColor(_TEXT_FG_DIM)
+            try:
+                tn.setShadow(0.03, 0.03)
+                tn.setShadowColor(_TEXT_SHADOW_DIM)
+            except Exception:
+                pass
+        else:
+            tn.setTextColor(_TEXT_FG)
+            try:
+                tn.setShadow(0.04, 0.04)
+                tn.setShadowColor(_TEXT_SHADOW)
+            except Exception:
+                pass
         np = link.attachNewNode(tn)
         np.setName('corruptStreetBreadcrumb')
         np.setPos(0, 0, _MARKER_Z)
-        np.setScale(_MARKER_SCALE)
+        if mode == 'dim':
+            np.setScale(_MARKER_SCALE_DIM)
+            try:
+                np.setTransparency(TransparencyAttrib.MAlpha)
+                np.setColorScale(1, 1, 1, 0.55)
+            except Exception:
+                pass
+        else:
+            np.setScale(_MARKER_SCALE)
         np.setBillboardPointEye()
         np.setDepthWrite(0)
         np.setBin('fixed', 40)
         self._markers[int(zoneId)] = np
+        self._markerMode[int(zoneId)] = mode
+        if mode == 'dim':
+            # Locked act: muted placemarker only — no reclaim pulse juice.
+            self.notify.debug(
+                'dim placemarker on tunnel → %s (%s)' % (streetName, zoneId))
+            return
         halo = self._attachPulseCreamHalo(link, zoneId)
         crumbs = self._attachCrumbTrail(link, zoneId)
         fog = self._attachFogEdge(link, zoneId)
@@ -1365,6 +1505,7 @@ class CorruptStreetBreadcrumb(DirectObject):
 
     def _removeMarker(self, zoneId):
         zoneId = int(zoneId)
+        self._markerMode.pop(zoneId, None)
         self._stopPulse(zoneId)
         self._stopCrumbPulse(zoneId)
         self._stopFogPulse(zoneId)
@@ -1438,9 +1579,6 @@ class CorruptStreetBreadcrumb(DirectObject):
     def _clearMarkers(self):
         for zoneId in list(self._markers.keys()):
             self._removeMarker(zoneId)
-
-
-_activeBreadcrumb = None
 
 
 def ensureCorruptStreetBreadcrumbs(playground):

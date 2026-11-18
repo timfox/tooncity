@@ -106,6 +106,9 @@ class PlayEntryClient(DirectObject):
         self.accept('campaignVictory', self._onCampaignVictory)
         self.accept('oswaldBetrayalChaseCleared', self._onCampaignEpilogue)
         self.accept('campaignEpilogue', self._onCampaignEpilogue)
+        # Soft-gate unlock → hub crumbs (dim → full). AI also sends; purity
+        # mirror below covers real client processes where AI messenger is local.
+        self.accept('campaignActUnlocked', self._onCampaignActUnlocked)
         try:
             from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
             ensureReclaimCheerClient()
@@ -473,6 +476,35 @@ class PlayEntryClient(DirectObject):
             nextZone=CampaignGlobals.ACTS[0]['zoneId'],
             nextStreet=CampaignGlobals.ACTS[0]['name'])
 
+    def _onCampaignActUnlocked(self, nextIndex=0, zoneId=0):
+        """Latch unlock + refresh hub crumbs (dim locked acts → full reclaim)."""
+        try:
+            from toontown.safezone.CorruptStreetBreadcrumb import (
+                noteCampaignActUnlocked)
+            noteCampaignActUnlocked(nextIndex, zoneId)
+        except Exception:
+            pass
+
+    def _mirrorCampaignActUnlocked(self, clearedZoneId, nxt):
+        """Client-side campaignActUnlocked when AI messenger is process-local."""
+        if nxt is None or clearedZoneId is None:
+            return
+        nextIndex = None
+        for i, act in enumerate(CampaignGlobals.ACTS):
+            if int(act['zoneId']) == int(clearedZoneId):
+                nextIndex = i + 1
+                break
+        if nextIndex is None or nextIndex >= len(CampaignGlobals.ACTS):
+            return
+        nextZone = int(nxt.get('zoneId', 0) or 0)
+        # Prefer messenger so CorruptStreetBreadcrumb.accept also fires;
+        # fall back to direct latch if messenger is unavailable.
+        try:
+            messenger.send(  # noqa: F821
+                'campaignActUnlocked', [nextIndex, nextZone])
+        except Exception:
+            self._onCampaignActUnlocked(nextIndex, nextZone)
+
     def _onReclaimStart(self, *args):
         self._reclaimLive = True
         self._cancelAutoReclaim()
@@ -511,6 +543,8 @@ class PlayEntryClient(DirectObject):
                 nextZone=CampaignGlobals.ACTS[0]['zoneId'],
                 nextStreet=CampaignGlobals.ACTS[0]['name'])
             return
+        # Mid-act clear unlocks the next ACTS index — mirror AI send for crumbs.
+        self._mirrorCampaignActUnlocked(zoneId, nxt)
         if act and act.get('nextCue'):
             tip = act['nextCue']
         elif nxt is not None:
