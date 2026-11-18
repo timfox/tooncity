@@ -1,4 +1,4 @@
-"""Shared constants for pollution and corrupt toon stubs."""
+"""Shared constants for pollution and corrupt toon enemies."""
 
 # Pollution scalar: 0.0 = pure neighborhood, 1.0 = fully polluted.
 POLLUTION_PURE = 0.0
@@ -8,7 +8,7 @@ POLLUTION_DEFAULT = POLLUTION_PURE
 # Fixed-point helper matching DC uint16/1000(0-1).
 POLLUTION_SCALE = 1000
 
-# Default spawn / combat stub values.
+# Default spawn / combat values.
 CORRUPT_TOON_DEFAULT_HP = 30
 CORRUPT_TOON_DEFAULT_NAME = 'Corrupt Toon'
 
@@ -19,8 +19,21 @@ POLLUTION_PER_DEFEAT = 0.15
 # Magic-word pollute/purify default step when no amount is given.
 POLLUTION_STEP_DEFAULT = 0.25
 
-# Visual stub tint (inky / sickly, not classic cog gray).
-CORRUPT_TINT = (0.25, 0.08, 0.35, 1.0)
+# Chase / aggro / telegraphed melee (Depth D2).
+AI_TICK_DT = 0.25
+AGGRO_RANGE = 35.0
+MELEE_RANGE = 4.5
+ATTACK_HIT_RANGE = 5.5
+CHASE_SPEED = 9.0
+ATTACK_TELEGRAPH_DELAY = 0.55
+ATTACK_DAMAGE = 2
+ATTACK_COOLDOWN = 1.75
+DEFEAT_DELETE_DELAY = 0.85
+
+# Visual ink / sickly palette (not classic cog gray).
+CORRUPT_TINT = (0.22, 0.05, 0.32, 0.92)
+CORRUPT_TINT_HOT = (0.55, 0.12, 0.75, 1.0)
+CORRUPT_ARM_TINT = (0.12, 0.02, 0.18, 0.78)
 CORRUPT_FOG_COLOR = (0.18, 0.12, 0.22)
 CORRUPT_FOG_EXP_MAX = 0.012
 
