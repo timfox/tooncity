@@ -144,13 +144,13 @@ class BirdsReturnCreamWashTest(unittest.TestCase):
         self.assertLessEqual(params['aftershockCount'], 8)
         self.assertGreater(params['aftershockRise'], 0.0)
         self.assertGreater(params['aftershockSpread'], 0.0)
-        # Skyward halo peak distinct from crumb pip 1.48 / fog rim 1.16.
+        # Skyward halo peak distinct from crumb pip 1.48 / fog rim 1.22.
         self.assertGreaterEqual(params['aftershockHaloPeak'], 1.0)
         self.assertLess(params['aftershockHaloPeak'], 1.40)
         self.assertNotAlmostEqual(
             params['aftershockHaloPeak'], 1.48, places=2)
         self.assertNotAlmostEqual(
-            params['aftershockHaloPeak'], 1.16, places=2)
+            params['aftershockHaloPeak'], 1.22, places=2)
         self.assertGreater(params['aftershockHaloPeakAlpha'], 0.0)
         self.assertLess(params['aftershockHaloPeakAlpha'], 0.22)
         # Rising chirp residual — not combat settle fall grammar.
