@@ -25,6 +25,8 @@ from toontown.reclaim import ReclaimGlobals
 
 # Brief delay so zone + PollutionManager are ready before auto-fielding packs.
 AUTO_RECLAIM_DELAY_SEC = 1.35
+# Loopy Act 1 tutorial: short explore beat before Ink Smudge packs field.
+LOOPY_AUTO_RECLAIM_DELAY_SEC = 1.55
 # Punchline sludge street: slightly longer explore beat before packs field.
 PUNCHLINE_AUTO_RECLAIM_DELAY_SEC = 1.85
 # Silly Overlord finale: longer explore beat before Overlord packs field.
@@ -115,7 +117,7 @@ class PlayEntryClient(DirectObject):
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
         face = _face()
-        # STREET_PACK tip (Punchline / Silly explore → fight → reclaim);
+        # STREET_PACK tip (Loopy / Punchline / Silly explore → fight → reclaim);
         # finale without a pack keeps the Overlord vs line.
         pack = ReclaimGlobals.streetPack(zoneId)
         if pack and pack.get('playEntryTip'):
@@ -137,11 +139,13 @@ class PlayEntryClient(DirectObject):
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
-        # Punchline / Silly get a short explore beat before packs inbound.
+        # Street packs get a short explore beat before packs inbound.
         self._autoReclaimZone = zoneId
         delay = AUTO_RECLAIM_DELAY_SEC
         packId = ReclaimGlobals.streetPackId(zoneId)
-        if packId == 'punchline-sludge':
+        if packId == 'loopy-smudge':
+            delay = LOOPY_AUTO_RECLAIM_DELAY_SEC
+        elif packId == 'punchline-sludge':
             delay = PUNCHLINE_AUTO_RECLAIM_DELAY_SEC
         elif packId == 'silly-overlord':
             delay = SILLY_AUTO_RECLAIM_DELAY_SEC
