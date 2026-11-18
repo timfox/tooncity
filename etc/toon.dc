@@ -3323,6 +3323,8 @@ dclass DistributedReclaimDirector : DistributedObject {
   announceReclaimStart() broadcast;
   announcePackSpawn(uint8, uint8) broadcast;
   announceWaveCleared(uint8) broadcast;
+  // Between-wave ambush beat (count, afterWave) — fills WAVE_SPAWN_DELAY gap.
+  announceAmbushSpawn(uint8, uint8) broadcast;
   announceReclaimComplete() broadcast;
   // Player KO mid-reclaim — fail banner before contested bail-out.
   announceReclaimFailed() broadcast;

@@ -43,6 +43,13 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._gagsterFraction = None
         self._gagsterWaveStart = None
         self._waveScripts = None
+        self._waveModifiers = None
+        self._ambushBeats = None
+        self._ambushDelayName = None
+        # Cleared-wave ids that already fired their between-wave ambush.
+        self._ambushDone = set()
+        self._pendingAmbushWave = 0
+        self._pendingAmbushScript = None
         self.finalePhase = 0
         self._transitionSting = False
         self._addCount = None
@@ -186,7 +193,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
               bruteFraction=None, bruteWaveStart=None, bruteName=None,
               snareFraction=None, snareWaveStart=None, snareName=None,
               gagsterFraction=None, gagsterWaveStart=None, gagsterName=None,
-              waveScripts=None,
+              waveScripts=None, waveModifiers=None, ambushBeats=None,
               finalePhase=0, transitionSting=False,
               addCount=None, addWaveStart=None, addHp=None, addName=None,
               overlordP2HpFrac=None):
@@ -194,7 +201,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
         Optional overrides support multi-act campaign difficulty,
         Sludge Brute / Balloon Snare / Gunk Gagster mix ratios, per-wave
-        scripts, and Ink Overlord finale (phase combat + optional P2 adds).
+        scripts, elite HP/damage modifiers, between-wave ambush beats, and
+        Ink Overlord finale (phase combat + optional P2 adds).
         overlordP2HpFrac arms Silly-street mid-fight Rising→Unleashed
         without a campaign restart (slam kit + Smudge adds).
         """
@@ -227,6 +235,9 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._gagsterWaveStart = (
             None if gagsterWaveStart is None else int(gagsterWaveStart))
         self._waveScripts = waveScripts
+        self._waveModifiers = waveModifiers
+        self._ambushBeats = ambushBeats
+        self._ambushDone = set()
         self._transitionSting = bool(transitionSting)
         self._addCount = None if addCount is None else int(addCount)
         self._addWaveStart = (
@@ -241,6 +252,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._clearPack(delete=True)
         self._packsSpawned = 0
         self._cancelWaveDelay()
+        self._cancelAmbushDelay()
 
         pollutionMgr = getattr(self.air, 'pollutionManager', None)
         if pollutionMgr is not None:
@@ -326,6 +338,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         contestedZoneId = self.reclaimZoneId
         self.ignore('pollutionReclaimed')
         self._cancelWaveDelay()
+        self._cancelAmbushDelay()
         if self._tickName is not None:
             taskMgr.remove(self._tickName)
             self._tickName = None
@@ -341,6 +354,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self.b_setFinalePhase(0)
         self._transitionSting = False
         self._waveScripts = None
+        self._waveModifiers = None
+        self._ambushBeats = None
+        self._ambushDone = set()
+        self._pendingAmbushWave = 0
+        self._pendingAmbushScript = None
         self._addCount = None
         self._addWaveStart = None
         self._addHp = None
@@ -382,10 +400,16 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
         if (not self._pack
                 and self._packsSpawned < self._maxPacks
-                and self._waveDelayName is None):
+                and self._waveDelayName is None
+                and self._ambushDelayName is None):
             clearedWave = self._packsSpawned
-            if clearedWave > 0:
+            # Real wave clear: announce + optional ambush. Ambush clear:
+            # skip re-announce (clearedWave already in _ambushDone) and
+            # advance to the next scripted pack.
+            if clearedWave > 0 and clearedWave not in self._ambushDone:
                 self.sendUpdate('announceWaveCleared', [int(clearedWave)])
+                if self._scheduleAmbushIfNeeded(clearedWave):
+                    return Task.again
             self._scheduleNextWave()
 
         return Task.again
@@ -450,10 +474,53 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             taskMgr.remove(self._waveDelayName)
             self._waveDelayName = None
 
+    def _cancelAmbushDelay(self):
+        if self._ambushDelayName is not None:
+            taskMgr.remove(self._ambushDelayName)
+            self._ambushDelayName = None
+
+    def _scheduleAmbushIfNeeded(self, clearedWave):
+        """Schedule a between-wave ambush after clearedWave, or return False."""
+        wave = int(clearedWave)
+        if wave <= 0 or wave in self._ambushDone:
+            return False
+        script = ReclaimGlobals.resolveAmbushBeat(self._ambushBeats, wave)
+        if not script:
+            return False
+        self._cancelAmbushDelay()
+        self._ambushDelayName = self.uniqueName('reclaim-ambush-delay')
+        # Capture script on the task via closure attrs.
+        self._pendingAmbushWave = wave
+        self._pendingAmbushScript = script
+        taskMgr.doMethodLater(
+            ReclaimGlobals.AMBUSH_DELAY,
+            self.__spawnDelayedAmbush,
+            self._ambushDelayName)
+        return True
+
+    def __spawnDelayedAmbush(self, task):
+        self._ambushDelayName = None
+        if self.state != ReclaimGlobals.STATE_ACTIVE:
+            return Task.done
+        self._prunePack()
+        if self._pack:
+            return Task.done
+        clearedWave = int(getattr(self, '_pendingAmbushWave', 0) or 0)
+        script = getattr(self, '_pendingAmbushScript', None)
+        self._pendingAmbushWave = 0
+        self._pendingAmbushScript = None
+        if clearedWave <= 0 or not script:
+            return Task.done
+        self._spawnAmbush(clearedWave, script)
+        return Task.done
+
     def _scheduleNextWave(self):
         """Beat between waves so escalation reads as a moment, not a respawn."""
         self._cancelWaveDelay()
         delay = ReclaimGlobals.WAVE_SPAWN_DELAY
+        # After an ambush, keep a short pause so elite wave still reads.
+        if self._ambushDone:
+            delay = max(0.35, float(ReclaimGlobals.WAVE_SPAWN_DELAY) * 0.55)
         self._waveDelayName = self.uniqueName('reclaim-wave-delay')
         taskMgr.doMethodLater(delay, self.__spawnDelayedWave, self._waveDelayName)
 
@@ -469,9 +536,72 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._spawnPack()
         return Task.done
 
+    def _applyEliteModifiers(self, corrupt, mods):
+        """Apply elite HP (already baked into maxHp) + damage buff to stats."""
+        if not ReclaimGlobals.waveIsElite(mods):
+            return
+        stats = getattr(corrupt, '_stats', None)
+        if not isinstance(stats, dict):
+            return
+        corrupt._stats = ReclaimGlobals.applyWaveDamageMultToStats(stats, mods)
+
+    def _spawnAmbush(self, clearedWave, waveScript):
+        """Spawn a between-wave ambush pack (does not advance wave index)."""
+        wave = max(1, int(clearedWave))
+        self._ambushDone.add(wave)
+        count = max(1, len(waveScript))
+        baseX, baseY, baseZ = self._anchorPos
+        heading = self._anchorH
+        rad = math.radians(heading)
+        spawned = []
+        for i in range(count):
+            archetype = ReclaimGlobals.pickPackArchetype(
+                wave, i, count, waveScript=waveScript)
+            hp = ReclaimGlobals.packSlotHp(archetype, self._corruptHp, wave)
+            name = ReclaimGlobals.packSlotName(
+                archetype,
+                smudgeName=self._corruptName,
+                bruteName=self._bruteName,
+                snareName=self._snareName,
+                gagsterName=self._gagsterName,
+                slotIndex=i,
+                packCount=count)
+            prefix = ReclaimGlobals.AMBUSH_NAME_PREFIX
+            if not str(name).startswith(prefix):
+                name = '%s%s' % (prefix, name)
+            corrupt = DistributedCorruptToonAI(
+                self.air, name=name, maxHp=hp, archetype=archetype,
+                finalePhase=0)
+            spawnBias = 0.0
+            if archetype == CorruptionGlobals.ARCHETYPE_BRUTE:
+                spawnBias = 2.2
+            elif archetype == CorruptionGlobals.ARCHETYPE_SNARE:
+                spawnBias = -1.4
+            elif archetype == CorruptionGlobals.ARCHETYPE_GAGSTER:
+                spawnBias = 0.6
+            offset = (
+                ReclaimGlobals.AMBUSH_FORWARD
+                + (i * 0.15)
+                + spawnBias)
+            lateral = (i - (count - 1) / 2.0) * ReclaimGlobals.SPAWN_SPACING
+            x = baseX - math.sin(rad) * offset - math.cos(rad) * lateral
+            y = baseY + math.cos(rad) * offset - math.sin(rad) * lateral
+            corrupt.setPos(x, y, baseZ)
+            corrupt.setH(heading + 180.0)
+            corrupt.generateWithRequired(self.reclaimZoneId)
+            spawned.append(corrupt)
+        self._pack.extend(spawned)
+        self.b_setPackAlive(len(self._pack))
+        self.sendUpdate('announceAmbushSpawn', [len(spawned), wave])
+        self.notify.debug(
+            'reclaim zone %s ambush after wave %s pack=%s' % (
+                self.reclaimZoneId, wave, len(spawned)))
+
     def _spawnPack(self):
         wave = self._packsSpawned + 1
         waveScript = ReclaimGlobals.resolveWaveScript(self._waveScripts, wave)
+        waveMods = ReclaimGlobals.resolveWaveModifiers(
+            self._waveModifiers, wave)
         count = ReclaimGlobals.wavePackSize(
             self._packSize, wave, waveScript=waveScript)
         self._packsSpawned = wave
@@ -502,6 +632,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             elif archetype == CorruptionGlobals.ARCHETYPE_GAGSTER:
                 gagsterCount += 1
             hp = ReclaimGlobals.packSlotHp(archetype, self._corruptHp, wave)
+            hp = ReclaimGlobals.applyElitePackHp(hp, waveMods)
             # Finale / explicit zero-mix packs keep Overlord (or act) naming.
             mixOff = (
                 (self._bruteFraction is not None
@@ -523,9 +654,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
                     gagsterName=self._gagsterName,
                     slotIndex=i,
                     packCount=count)
+            name = ReclaimGlobals.applyElitePackName(name, waveMods)
             corrupt = DistributedCorruptToonAI(
                 self.air, name=name, maxHp=hp, archetype=archetype,
                 finalePhase=self.finalePhase if mixOff else 0)
+            self._applyEliteModifiers(corrupt, waveMods)
             # Fan packs slightly farther each wave so the street fills forward.
             # Brutes sit a bit back so spit telegraph reads at mid-range;
             # Snares press forward so zip-lash reads in front of the pack;
@@ -558,9 +691,10 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self.sendUpdate('announcePackSpawn', [len(spawned), wave])
         self.notify.debug(
             'reclaim zone %s wave #%s/%s pack=%s brutes=%s snares=%s '
-            'gagsters=%s adds=%s finalePhase=%s' % (
+            'gagsters=%s adds=%s elite=%s finalePhase=%s' % (
                 self.reclaimZoneId, wave, self._maxPacks, len(spawned),
                 bruteCount, snareCount, gagsterCount, len(addSpawned),
+                bool(ReclaimGlobals.waveIsElite(waveMods)),
                 self.finalePhase))
 
     def _maybePromoteStreetOverlordP2(self):

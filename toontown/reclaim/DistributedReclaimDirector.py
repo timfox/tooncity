@@ -270,6 +270,28 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             except Exception:
                 pass
 
+    def announceAmbushSpawn(self, count, afterWave):
+        """Between-wave ambush plate — flank beat before the next pack."""
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
+        hold = float(getattr(
+            ReclaimGlobals, 'AMBUSH_BANNER_HOLD_SEC', 1.85))
+        color = getattr(
+            ReclaimGlobals, 'AMBUSH_BANNER_COLOR', (1.0, 0.55, 0.32, 1.0))
+        subColor = getattr(
+            ReclaimGlobals, 'AMBUSH_SUB_BANNER_COLOR',
+            (1.0, 0.82, 0.62, 1.0))
+        title = getattr(ReclaimGlobals, 'AMBUSH_BANNER', 'AMBUSH!')
+        tip = ReclaimGlobals.ambushOswaldTip(afterWave, zoneId=zoneId)
+        if int(count) > 0:
+            tip = '%s  ·  pack of %s' % (tip, int(count))
+        self.__showBanner(title, color, hold=hold, pop=True)
+        self.__showSubBanner(tip, subColor, hold=hold)
+        messenger.send(
+            'reclaimAmbushSpawn',
+            [self.reclaimZoneId, int(afterWave), int(count)])
+        self.__armPurityPressure(resetStall=True)
+        self.__showStatusHud()
+
     def announceWaveCleared(self, waveIndex):
         # Light banner pop + cheer pitch swell + cream burst between packs.
         hold = float(getattr(ReclaimGlobals, 'WAVE_CLEAR_BANNER_HOLD_SEC', 1.4))
