@@ -61,7 +61,7 @@ def _load_panda_free_reclaim():
 
     for pkg in (
             'toontown', 'toontown.toonbase', 'toontown.corruption',
-            'toontown.reclaim'):
+            'toontown.reclaim', 'toontown.campaign'):
         _ensure_pkg(pkg)
 
     tg = types.ModuleType('toontown.toonbase.ToontownGlobals')
@@ -89,13 +89,22 @@ def _load_panda_free_reclaim():
     sys.modules['toontown.reclaim.ReclaimGlobals'] = rg
     rg_spec.loader.exec_module(rg)
     sys.modules['toontown.reclaim'].ReclaimGlobals = rg
-    return rg, cg
+
+    camp_path = REPO_ROOT / 'toontown' / 'campaign' / 'CampaignGlobals.py'
+    camp_spec = importlib.util.spec_from_file_location(
+        'toontown.campaign.CampaignGlobals', camp_path)
+    camp = importlib.util.module_from_spec(camp_spec)
+    assert camp_spec.loader is not None
+    sys.modules['toontown.campaign.CampaignGlobals'] = camp
+    camp_spec.loader.exec_module(camp)
+    sys.modules['toontown.campaign'].CampaignGlobals = camp
+    return rg, cg, camp
 
 
 class EliteWaveModifiersAmbushTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.rg, cls.cg = _load_panda_free_reclaim()
+        cls.rg, cls.cg, cls.camp = _load_panda_free_reclaim()
 
     def test_elite_constants_are_real_buffs(self):
         rg = self.rg
@@ -278,6 +287,44 @@ class EliteWaveModifiersAmbushTests(unittest.TestCase):
         self.assertIn('elite', silly_tip.lower())
         self.assertNotIn('keyblade', silly_tip.lower())
 
+    def test_campaign_acts_mirror_street_packs_elite_and_ambush(self):
+        """Story C path owns the same elite/ambush tables as discoverable R."""
+        rg, cg, camp = self.rg, self.cg, self.camp
+        acts = {a['id']: a for a in camp.ACTS}
+        loopy = acts['loopy']
+        punch = acts['punchline']
+        finale = acts['finale']
+
+        self.assertEqual(loopy['maxPacks'], 4)
+        self.assertEqual(len(loopy['waveScripts']), 4)
+        self.assertEqual(
+            loopy['waveScripts'], rg.STREET_PACKS[LOOPY]['waveScripts'])
+        self.assertEqual(
+            loopy['waveModifiers'], rg.STREET_PACKS[LOOPY]['waveModifiers'])
+        self.assertEqual(
+            loopy['ambushBeats'], rg.STREET_PACKS[LOOPY]['ambushBeats'])
+        self.assertTrue(
+            rg.waveIsElite(
+                rg.resolveWaveModifiers(loopy['waveModifiers'], 4)))
+        self.assertEqual(
+            rg.resolveAmbushBeat(loopy['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK])
+
+        self.assertEqual(
+            punch['waveModifiers'],
+            rg.STREET_PACKS[PUNCHLINE]['waveModifiers'])
+        self.assertEqual(
+            punch['ambushBeats'],
+            rg.STREET_PACKS[PUNCHLINE]['ambushBeats'])
+
+        self.assertEqual(
+            finale['waveModifiers'],
+            rg.STREET_PACKS[SILLY]['waveModifiers'])
+        self.assertEqual(
+            finale['ambushBeats'],
+            rg.STREET_PACKS[SILLY]['ambushBeats'])
+        self.assertNotIn('overlordP2HpFrac', finale)
+
     def test_director_ai_wires_elite_and_ambush(self):
         src = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')
         tree = _module_ast('toontown/reclaim/DistributedReclaimDirectorAI.py')
@@ -291,9 +338,16 @@ class EliteWaveModifiersAmbushTests(unittest.TestCase):
         self.assertIn('applyElitePackHp', src)
         self.assertIn('applyWaveDamageMultToStats', src)
         self.assertIn('resolveAmbushBeat', src)
+        # Campaign C start also forwards elite/ambush kwargs.
+        camp_src = _read('toontown/campaign/CampaignDirectorAI.py')
+        self.assertIn('waveModifiers=params.get(', camp_src)
+        self.assertIn('ambushBeats=params.get(', camp_src)
+        self.assertNotIn('overlordP2HpFrac=params.get', camp_src)
         # No KH / keyblade branding in director.
         self.assertNotIn('keyblade', src.lower())
         self.assertNotIn('kingdom hearts', src.lower())
+        self.assertNotIn('keyblade', camp_src.lower())
+        self.assertNotIn('kingdom hearts', camp_src.lower())
 
     def test_client_and_dc_announce_ambush(self):
         client = _read('toontown/reclaim/DistributedReclaimDirector.py')

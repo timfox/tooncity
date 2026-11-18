@@ -352,6 +352,9 @@ class CampaignDirectorAI(DirectObject):
             'gagsterWaveStart': act.get('gagsterWaveStart'),
             'gagsterName': act.get('gagsterName'),
             'waveScripts': act.get('waveScripts'),
+            # Elite HP/damage + between-wave ambush (mirrors STREET_PACKS R).
+            'waveModifiers': act.get('waveModifiers'),
+            'ambushBeats': act.get('ambushBeats'),
             'banner': act.get('banner'),
             'finalePhase': 0,
             'transitionSting': False,
@@ -411,6 +414,8 @@ class CampaignDirectorAI(DirectObject):
             gagsterWaveStart=params.get('gagsterWaveStart'),
             gagsterName=params.get('gagsterName'),
             waveScripts=params.get('waveScripts'),
+            waveModifiers=params.get('waveModifiers'),
+            ambushBeats=params.get('ambushBeats'),
             finalePhase=params.get('finalePhase', 0),
             transitionSting=params.get('transitionSting', False),
             addCount=params.get('addCount'),

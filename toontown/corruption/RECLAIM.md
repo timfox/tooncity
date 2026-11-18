@@ -107,8 +107,9 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
   between-wave ambush beats after waves 1–3 (Smudge → Snare tease → Snare)
   fill the blank pauses before the next scripted pack. PlayEntry tip reads
   explore → fight → reclaim; warm ink-yellow start banner.
-- Loopy campaign **C** mirrors that ramp across 3 waves (`ACTS` `waveScripts`);
-  fraction fields stay `0` as fallback only.
+- Loopy campaign **C** mirrors that ramp across 4 waves + elite / ambush
+  (`ACTS` `waveScripts` / `waveModifiers` / `ambushBeats`); fraction fields
+  stay `0` as fallback only.
 - **Punchline street pack** (`punchline-sludge`, zone `2300`):
   scripted Snare-front + Gunk Gagster lob → Gagster swarm → Brute pair → elite
   (seed 0.70, maxPacks 4). Wave 4 elite HP/damage modifiers + between-wave
@@ -118,14 +119,17 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
   spawn (Snare flanks, Gagster kites the lob ring, Brute holds/plants for spit)
   instead of every unit nearest-chasing into one scrum. PlayEntry tip reads
   explore → fight → reclaim; start banner is gag-green.
-- Punchline campaign ACTS `waveScripts` stay the source of truth for **C**;
-  STREET_PACKS mirrors so discoverable auto-reclaim matches the second-hood beat.
+- Punchline campaign ACTS `waveScripts` / `waveModifiers` / `ambushBeats` stay
+  the source of truth for **C**; STREET_PACKS mirrors so discoverable
+  auto-reclaim matches the second-hood beat.
 - **Silly street pack** (`silly-overlord`, zone `2100`): Overlord-only scripts
   (solo → twin swell). Starts Rising (`finalePhase` 1); mid-fight HP-threshold
   (`overlordP2HpFrac`) promotes to Unleashed (slam + Smudge adds) without a
   campaign restart. Between-swell pressure: Smudge ambush after wave 1 + elite
-  HP/damage on the twin swell (wave 2). Oswald twist reveal stays campaign P2
-  only. Campaign finale P2 scripts still swell to twin / triple Overlords on **C**.
+  HP/damage on the twin swell (wave 2). Campaign finale **C** P1 mirrors those
+  elite / ambush tables; mid-fight `overlordP2HpFrac` stays R-only (C owns
+  story P2 restart + twist). Oswald twist reveal stays campaign P2 only.
+  Campaign finale P2 scripts still swell to twin / triple Overlords on **C**.
 
 ```
 ~spawncorrupt 2 0 0   # Ink Smudge

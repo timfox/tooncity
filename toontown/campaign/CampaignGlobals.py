@@ -84,17 +84,28 @@ ACTS = (
         'zoneId': ToontownGlobals.LoopyLane,
         'seedPollution': 0.55,
         'packSize': 3,
-        'maxPacks': 3,
+        'maxPacks': 4,
         'corruptHp': 30,
         'corruptName': 'Ink Smudge',
-        # Fraction fallback; waveScripts own Act 1 beats (Smudge → Brute → Snare).
+        # Fraction fallback; waveScripts own Act 1 beats (Smudge → Brute →
+        # Snare → mixed elite) — aligned with STREET_PACKS loopy depth.
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
         'waveScripts': (
             ('ink', 'ink', 'ink'),
             ('ink', 'ink', 'brute'),
-            ('snare', 'ink', 'brute'),
+            ('snare', 'ink', 'brute', 'ink'),
+            ('snare', 'ink', 'brute', 'snare', 'ink'),
         ),
+        # Wave 4 elite HP/damage + between-wave ambush (mirrors STREET_PACKS).
+        'waveModifiers': {
+            4: {'elite': True},
+        },
+        'ambushBeats': {
+            1: ('ink',),
+            2: ('snare',),
+            3: ('snare',),
+        },
         'banner': 'Act 1 — Oswald calls for help! Corruption stains Loopy Lane!',
         # Mid-act Loopy approach tip (PlayEntry, after trusted street entry):
         # Oswald still the helper — smile sticks a rubbery half-beat —
@@ -144,6 +155,15 @@ ACTS = (
             ('snare', 'gagster', 'brute', 'brute', 'ink'),
             ('snare', 'gagster', 'gagster', 'brute', 'snare', 'ink'),
         ),
+        # Wave 4 elite + between-wave ambush (mirrors STREET_PACKS punchline).
+        'waveModifiers': {
+            4: {'elite': True},
+        },
+        'ambushBeats': {
+            1: ('gagster',),
+            2: ('snare',),
+            3: ('gagster', 'snare'),
+        },
         'banner': (
             'Act 2 — Oswald leads the reclaim — '
             'Punchline Place is drowning in sludge!'),
@@ -186,6 +206,15 @@ ACTS = (
             ('ink',),
             ('ink', 'ink'),
         ),
+        # Between-swell Smudge ambush + elite twin swell (mirrors STREET_PACKS).
+        # Do NOT set overlordP2HpFrac here — C owns story P2 restart + twist;
+        # mid-fight HP promote stays discoverable R-only.
+        'waveModifiers': {
+            2: {'elite': True},
+        },
+        'ambushBeats': {
+            1: ('ink', 'ink'),
+        },
         'banner': (
             'Finale Phase 1 — Oswald stands with you against '
             'the Ink Overlord on Silly Street!'),

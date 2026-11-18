@@ -31,6 +31,8 @@ _ACT_PARAM_KEYS = (
     'snareFraction', 'snareWaveStart', 'snareName',
     'gagsterFraction', 'gagsterWaveStart', 'gagsterName',
     'waveScripts',
+    'waveModifiers',
+    'ambushBeats',
     'banner',
 )
 
@@ -110,6 +112,8 @@ def resolve_act_params(act, finale_phase=0):
         'gagsterWaveStart': act.get('gagsterWaveStart'),
         'gagsterName': act.get('gagsterName'),
         'waveScripts': act.get('waveScripts'),
+        'waveModifiers': act.get('waveModifiers'),
+        'ambushBeats': act.get('ambushBeats'),
         'banner': act.get('banner'),
         'finalePhase': 0,
         'transitionSting': False,
@@ -146,14 +150,14 @@ class CampaignActParamsTest(unittest.TestCase):
     def test_loopy_act_params_pure_smudge_tutorial(self):
         params = resolve_act_params(self.acts_by_id['loopy'])
         self.assertEqual(params['packSize'], 3)
-        self.assertEqual(params['maxPacks'], 3)
+        self.assertEqual(params['maxPacks'], 4)
         self.assertEqual(params['corruptHp'], 30)
         self.assertEqual(params['corruptName'], 'Ink Smudge')
         # Fraction fallback stays Smudge-only; waveScripts own the ramp.
         self.assertEqual(params['bruteFraction'], 0.0)
         self.assertEqual(params['snareFraction'], 0.0)
         self.assertTrue(params.get('waveScripts'))
-        self.assertEqual(len(params['waveScripts']), 3)
+        self.assertEqual(len(params['waveScripts']), 4)
         self.assertEqual(params['finalePhase'], 0)
         self.assertFalse(params['transitionSting'])
 
@@ -233,10 +237,12 @@ class CampaignActParamsTest(unittest.TestCase):
         )
         # Loopy campaign Act 1 is Smudge-only (brute/snare 0); STREET_PACKS
         # Loopy still introduces Brutes from wave 2 for auto-reclaim demos.
-        # Align on HP / pollution / pack size / naming instead.
+        # Align on HP / pollution / pack size / naming / wave depth + elite.
         loopy_act = self.acts_by_id['loopy']
         loopy_pack = rg.STREET_PACKS[LOOPY]
-        for key in ('seedPollution', 'packSize', 'corruptHp', 'corruptName'):
+        for key in (
+                'seedPollution', 'packSize', 'maxPacks', 'corruptHp',
+                'corruptName', 'waveScripts', 'waveModifiers', 'ambushBeats'):
             self.assertEqual(
                 loopy_act[key], loopy_pack[key],
                 msg='loopy %s act vs STREET_PACKS' % key)
@@ -245,21 +251,25 @@ class CampaignActParamsTest(unittest.TestCase):
         punch_pack = rg.STREET_PACKS[PUNCHLINE]
         for key in shared + (
                 'bruteWaveStart', 'snareWaveStart', 'gagsterWaveStart',
-                'waveScripts'):
+                'waveScripts', 'waveModifiers', 'ambushBeats'):
             self.assertEqual(
                 punch_act[key], punch_pack[key],
                 msg='punchline %s act vs STREET_PACKS' % key)
 
-        # Finale P1 matches Silly STREET_PACKS Overlord-only spawn.
+        # Finale P1 matches Silly STREET_PACKS Overlord-only spawn + elite/ambush.
+        # overlordP2HpFrac stays R-only (intentional C asymmetry).
         finale_p1 = resolve_act_params(self.acts_by_id['finale'], 0)
         silly_pack = rg.STREET_PACKS[SILLY]
         for key in (
                 'seedPollution', 'packSize', 'maxPacks', 'corruptHp',
                 'corruptName', 'bruteFraction', 'snareFraction',
-                'gagsterFraction', 'waveScripts'):
+                'gagsterFraction', 'waveScripts', 'waveModifiers',
+                'ambushBeats'):
             self.assertEqual(
                 finale_p1[key], silly_pack[key],
                 msg='finale P1 %s vs silly STREET_PACKS' % key)
+        self.assertNotIn('overlordP2HpFrac', self.acts_by_id['finale'])
+        self.assertNotIn('overlordP2HpFrac', finale_p1)
 
     def test_act_wave_scripts_resolve_through_p2(self):
         """Campaign ACTS scripts (#185) resolve to distinct hood beats + P2 swell."""
@@ -276,7 +286,12 @@ class CampaignActParamsTest(unittest.TestCase):
             [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE])
         self.assertEqual(
             rg.resolveWaveScript(loopy['waveScripts'], 3),
-            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE])
+            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE,
+             cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveWaveScript(loopy['waveScripts'], 4),
+            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE,
+             cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK])
 
         punch_w1 = rg.resolveWaveScript(punch['waveScripts'], 1)
         self.assertEqual(punch_w1[0], cg.ARCHETYPE_SNARE)
@@ -309,6 +324,52 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(p2.get('addWaveStart'), 2)
         self.assertEqual(p2.get('addCount'), 2)
         self.assertEqual(p2.get('addName'), 'Ink Smudge')
+
+    def test_acts_elite_and_ambush_mirror_street_packs(self):
+        """Campaign C path carries elite/ambush tables (gap #1+#6)."""
+        rg, cg = self.rg, self.cg
+        loopy = resolve_act_params(self.acts_by_id['loopy'])
+        punch = resolve_act_params(self.acts_by_id['punchline'])
+        finale = resolve_act_params(self.acts_by_id['finale'], 0)
+
+        self.assertEqual(loopy['maxPacks'], 4)
+        loopy_mods = rg.resolveWaveModifiers(loopy['waveModifiers'], 4)
+        self.assertTrue(rg.waveIsElite(loopy_mods))
+        self.assertEqual(
+            rg.resolveAmbushBeat(loopy['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveAmbushBeat(loopy['ambushBeats'], 3),
+            [cg.ARCHETYPE_SNARE])
+
+        punch_mods = rg.resolveWaveModifiers(punch['waveModifiers'], 4)
+        self.assertTrue(rg.waveIsElite(punch_mods))
+        self.assertEqual(
+            rg.resolveAmbushBeat(punch['ambushBeats'], 3),
+            [cg.ARCHETYPE_GAGSTER, cg.ARCHETYPE_SNARE])
+
+        silly_mods = rg.resolveWaveModifiers(finale['waveModifiers'], 2)
+        self.assertTrue(rg.waveIsElite(silly_mods))
+        self.assertEqual(
+            rg.resolveAmbushBeat(finale['ambushBeats'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        # C Silly P2 asymmetry: no mid-fight HP promote on ACTS.
+        self.assertIsNone(finale.get('overlordP2HpFrac'))
+
+    def test_campaign_director_passes_elite_and_ambush(self):
+        """CampaignDirectorAI._actParams / start wire elite + ambush kwargs."""
+        src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'CampaignDirectorAI.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn("'waveModifiers': act.get('waveModifiers')", src)
+        self.assertIn("'ambushBeats': act.get('ambushBeats')", src)
+        self.assertIn('waveModifiers=params.get(\'waveModifiers\')', src)
+        self.assertIn('ambushBeats=params.get(\'ambushBeats\')', src)
+        # Do not promote R-only overlordP2HpFrac onto C start.
+        self.assertNotIn('overlordP2HpFrac=params.get', src)
+        self.assertNotIn('keyblade', src.lower())
+        self.assertNotIn('kingdom hearts', src.lower())
 
     def test_hub_tip_discoverability_copy(self):
         """Hub tip (#184) points at Loopy + C campaign without magic words."""
