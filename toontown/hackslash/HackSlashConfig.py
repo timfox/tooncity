@@ -340,6 +340,21 @@ DODGE_TRAIL_PULSE_CREAM_END = (1.0, 0.9, 0.45, 0.0)
 DODGE_TRAIL_PULSE_INK_COLOR = (0.2, 0.06, 0.26, 0.9)
 DODGE_TRAIL_PULSE_INK_END = (0.38, 0.1, 0.42, 0.0)
 
+# I-frame pulse cream wash — soft aspect2d veil after first dodge i-frame
+# cream/ink pulse (#66). SoftLock FOV / reticle cream wash grammar (#160 /
+# #155). Quieter under trail wash (#139); cream/pastel only. Toggle
+# DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = False drops wash only.
+DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = True
+DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC = 0.22  # after first pulse; past pulse (~0.18)
+DODGE_TRAIL_PULSE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+DODGE_TRAIL_PULSE_CREAM_WASH_PEAK = 0.07
+DODGE_TRAIL_PULSE_CREAM_WASH_MID = 0.04
+DODGE_TRAIL_PULSE_CREAM_WASH_IN_SEC = 0.05
+DODGE_TRAIL_PULSE_CREAM_WASH_PULSE_SEC = 0.07
+DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC = 0.04
+DODGE_TRAIL_PULSE_CREAM_WASH_OUT_SEC = 0.26
+DODGE_TRAIL_PULSE_CREAM_WASH_BIN = 27  # under trail wash (28) / soft-lock pulse
+
 # Cream sparkle flecks along the dodge roll trail (while smear drips).
 # Pastel cream glitter chips that compose with smear ghosts + i-frame cream/ink
 # pulse — cream/pastel only (no ink). Toontown spiritual-sequel tone; no
