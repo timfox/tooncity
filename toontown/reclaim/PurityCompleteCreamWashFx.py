@@ -2,9 +2,10 @@
 
 Fullscreen soft cream veil that pops on purityRestoreFx — StreetColorWash
 overlay grammar as a discrete payoff beat, layered under StreetSparkleFx
-horizon glitter. Does not restage progressive wash geom tint, purity FOV /
-rays, cheer flecks, or wave-clear cream. Toontown spiritual-sequel tone only
-— no keyblades / no KH branding.
+horizon glitter. Sibling of EntryCreamWashPulseFx (softer entry beat with
+EntryCreamShimmerFx). Does not restage progressive wash geom tint, purity
+FOV / rays, cheer flecks, or wave-clear cream. Toontown spiritual-sequel
+tone only — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4
