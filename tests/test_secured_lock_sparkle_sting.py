@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for secured-street purity sparkle sting.
+"""Behavioral headless tests for deepened secured-street purity sparkle sting.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-SECURED_LOCK_SPARKLE / STING tunables, rubber-hose (non-KH) copy, and AST
-hooks on SecuredLockSparkleFx + reclaim director / meter confirm.
+deepened SECURED_LOCK_SPARKLE / AFTERSHOCK / STING tunables, rubber-hose
+(non-KH) copy, and AST hooks on SecuredLockSparkleFx + reclaim director /
+meter confirm. Distinct from wave-hose cream deepen (#239), wave-clear
+sparkle (#229), and rim-flash cream (#234).
 
 Run from repo root:
   python3 tests/test_secured_lock_sparkle_sting.py
@@ -84,20 +86,29 @@ def _top_level_func_names(tree: ast.AST) -> set[str]:
 
 
 class SecuredLockSparkleStingTest(unittest.TestCase):
-    """Pure-Python secured-lock sparkle / sting wiring."""
+    """Pure-Python deepened secured-lock sparkle / sting wiring."""
 
     @classmethod
     def setUpClass(cls):
         cls.rg = _load_reclaim_globals()
 
-    def test_sparkle_sting_tunables_enabled(self):
+    def test_sparkle_sting_tunables_deepened_and_enabled(self):
         rg = self.rg
         self.assertIs(rg.SECURED_LOCK_SPARKLE_ENABLED, True)
         self.assertIs(rg.SECURED_LOCK_STING_ENABLED, True)
-        self.assertGreater(rg.SECURED_LOCK_SPARKLE_COUNT, 0)
-        self.assertGreater(rg.SECURED_LOCK_SPARKLE_SEC, 0.0)
+        self.assertIs(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED, True)
+        # Juicier than the original quiet lock glitter (#209 baseline 7 / 0.22).
+        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_COUNT, 9)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_RISE), 0.30)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_SEC), 0.34)
+        self.assertGreater(float(rg.SECURED_LOCK_SPARKLE_POP), 1.10)
+        self.assertGreater(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT, 0)
+        self.assertGreater(
+            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC), 0.0)
+        self.assertTrue(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_ENABLED)
         self.assertGreater(rg.SECURED_LOCK_STING_VOLUME, 0.0)
         self.assertLess(rg.SECURED_LOCK_STING_VOLUME, rg.PURITY_STING_VOLUME)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_METER_POP_SCALE), 1.15)
         # Green-cream lock glitter — greener than sunny wave-clear cream.
         sparkle = rg.SECURED_LOCK_SPARKLE_COLOR
         wave = rg.WAVE_CLEAR_CREAM_SPARKLE_COLOR
@@ -109,6 +120,9 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         self.assertNotEqual(
             tuple(rg.SECURED_LOCK_SPARKLE_ORIGIN),
             tuple(rg.WAVE_CLEAR_CREAM_SPARKLE_ORIGIN))
+        # Still quieter than full-purity StreetSparkle horizon payoff.
+        self.assertLess(
+            rg.SECURED_LOCK_SPARKLE_COUNT, rg.STREET_SPARKLE_COUNT)
 
     def test_sting_sfx_is_cheer_cousin_not_purity_whistle(self):
         rg = self.rg
@@ -123,6 +137,9 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         for name in (
                 'playLockSting',
                 '_spawnFlecks',
+                '_buildSparkleAftershock',
+                '_spawnSparkleAftershockFleck',
+                '_spawnSparkleAftershockHalo',
                 '_playStingSfx',
                 'clear',
                 '_onStreetSecured'):
@@ -134,10 +151,15 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         src = _read('toontown/reclaim/SecuredLockSparkleFx.py')
         self.assertIn('reclaimStreetSecured', src)
         self.assertIn('SECURED_LOCK_SPARKLE', src)
+        self.assertIn('SECURED_LOCK_SPARKLE_POP', src)
+        self.assertIn('SECURED_LOCK_SPARKLE_AFTERSHOCK', src)
         self.assertIn('reclaimSecuredLockSparkle', src)
+        self.assertIn('reclaimSecuredLockSparkleAftershock', src)
         self.assertIn('reclaimSecuredLockSting', src)
+        lower = src.lower()
+        self.assertIn('no kh', lower)
         for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
-            self.assertNotIn(banned, src.lower())
+            self.assertNotIn(banned, lower)
 
     def test_director_arms_sparkle_from_confirm_secured(self):
         tree = _module_ast('toontown/reclaim/DistributedReclaimDirector.py')
@@ -172,14 +194,25 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         snip = meter_src[confirm_idx:next_def]
         self.assertIn('LerpScaleInterval', snip)
         self.assertIn('SECURED_LOCK_RIM_COLOR', snip)
+        # Lock soft scale stays distinct from wave-start / rim-flash / settle.
+        self.assertNotIn('WAVE_START_METER_POP', snip)
+        self.assertNotIn('PURITY_PRESSURE_RIM_FLASH', snip)
+        self.assertNotIn('PURITY_COMPLETE_METER_SETTLE', snip)
 
-    def test_distinct_from_pressure_and_wave_clear(self):
-        """Secured sting must not reuse pressure tip or wave-clear sparkle APIs."""
+    def test_distinct_from_pressure_wave_clear_and_wave_hose(self):
+        """Secured sting must not reuse pressure / wave-clear / wave-hose APIs."""
         fx_src = _read('toontown/reclaim/SecuredLockSparkleFx.py')
         self.assertNotIn('PURITY_PRESSURE', fx_src)
         self.assertNotIn('WAVE_CLEAR_CREAM_SPARKLE', fx_src)
+        self.assertNotIn('WAVE_START_METER', fx_src)
         self.assertNotIn('warnPressure', fx_src)
+        self.assertNotIn('popWaveStart', fx_src)
         self.assertIn('green-cream', fx_src.lower())
+        # Aftershock halo stays tip-near green — not sunny wave-clear cream.
+        after = self.rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_COLOR
+        wave = self.rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_COLOR
+        self.assertGreater(after[1], after[0])  # greener
+        self.assertNotEqual(tuple(after), tuple(wave))
 
 
 def main() -> int:
