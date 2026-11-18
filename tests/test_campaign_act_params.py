@@ -278,12 +278,17 @@ class CampaignActParamsTest(unittest.TestCase):
             rg.resolveWaveScript(loopy['waveScripts'], 3),
             [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE])
 
+        punch_w1 = rg.resolveWaveScript(punch['waveScripts'], 1)
+        self.assertEqual(punch_w1[0], cg.ARCHETYPE_SNARE)
+        self.assertEqual(punch_w1[1], cg.ARCHETYPE_GAGSTER)
+        self.assertEqual(punch_w1[-1], cg.ARCHETYPE_BRUTE)
+        self.assertIn(cg.ARCHETYPE_GAGSTER, punch_w1)
+        # Full Punchline campaign scripts keep gagster mid through wave 4.
+        punch_w2 = rg.resolveWaveScript(punch['waveScripts'], 2)
         self.assertEqual(
-            rg.resolveWaveScript(punch['waveScripts'], 1)[0],
-            cg.ARCHETYPE_SNARE)
-        self.assertEqual(
-            rg.resolveWaveScript(punch['waveScripts'], 1)[-1],
-            cg.ARCHETYPE_BRUTE)
+            punch_w2,
+            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_GAGSTER, cg.ARCHETYPE_GAGSTER,
+             cg.ARCHETYPE_BRUTE, cg.ARCHETYPE_INK])
 
         p1 = resolve_act_params(finale, finale_phase=0)
         self.assertEqual(
@@ -320,6 +325,40 @@ class CampaignActParamsTest(unittest.TestCase):
         hint = camp.handoffTravelHint({'name': 'Silly Street'})
         self.assertIn('Silly Street', hint)
         self.assertNotIn('~startcampaign', hint)
+
+    def test_loopy_mid_act_trust_fracture(self):
+        """Loopy clear (#190) foreshadows twist — Punchline/Silly stay sunny."""
+        camp = self.camp
+        loopy = self.acts_by_id['loopy']
+        punch = self.acts_by_id['punchline']
+        finale = self.acts_by_id['finale']
+
+        self.assertIs(loopy.get('trustFracture'), True)
+        self.assertNotIn('trustFracture', punch)
+        self.assertFalse(bool(punch.get('trustFracture')))
+        self.assertFalse(bool(finale.get('trustFracture')))
+
+        handoff = loopy.get('handoff') or ''
+        next_cue = loopy.get('nextCue') or ''
+        self.assertIn('rubbery beat', handoff.lower())
+        self.assertIn('Punchline Place', handoff)
+        self.assertIn('stretchy', next_cue.lower())
+        # Foreshadow only — no Silly twist spoilers on mid-act beat.
+        for banned in ('keyblade', 'kingdom hearts', 'betrayed', 'villain'):
+            self.assertNotIn(banned, handoff.lower())
+            self.assertNotIn(banned, next_cue.lower())
+
+        # Cool cream → shadow fleck edge tunables present + enabled.
+        self.assertTrue(camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED)
+        self.assertGreater(camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC, 0.0)
+        self.assertGreater(camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_COUNT, 0)
+        self.assertGreater(camp.OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC, 0.0)
+        # Fracture edge is cooler/longer-hold than sunny handoff edge.
+        sunny_hold = float(getattr(
+            camp, 'HANDOFF_CREAM_EDGE_HOLD_SEC', 0.0) or 0.0)
+        if sunny_hold > 0.0:
+            self.assertGreaterEqual(
+                camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC, sunny_hold)
 
     def test_act_param_keys_present_for_director(self):
         for act_id, act in self.acts_by_id.items():
