@@ -858,6 +858,30 @@ FINALE_REVEAL_HOLD_SEC = 3.6
 FINALE_BETRAYAL_HANDOFF_CUE = (
     "The trusted ally's smile was the stain all along")
 FINALE_BETRAYAL_HANDOFF_HOLD_SEC = 3.8
+
+# Short corrupted-Oswald chase / arena after finale betrayal (gameplay
+# payload — not cream FX). CampaignDirectorAI schedules a thin
+# ARCHETYPE_CORRUPT_OSWALD spawn after the reveal delay; client tip arms
+# the chase beat. Toontown spiritual sequel — no keyblades / KH branding.
+# OSWALD_BETRAYAL_CHASE_ENABLED = False drops spawn + tip only (betrayal
+# plate / reveal sting remain).
+OSWALD_BETRAYAL_CHASE_ENABLED = True
+OSWALD_BETRAYAL_CHASE_NAME = 'Corrupted Oswald'
+# Seconds after campaignVictory before spawn (covers reveal delay + plate).
+OSWALD_BETRAYAL_CHASE_DELAY_SEC = 3.15
+# Optional override HP base (archetype defaultHp used when <= 0).
+OSWALD_BETRAYAL_CHASE_HP = 0
+OSWALD_BETRAYAL_CHASE_SPAWN_FORWARD = 7.5
+OSWALD_BETRAYAL_CHASE_TIP = (
+    'Oswald turns on you — Corrupted Oswald inbound!  |  '
+    'F fight  |  Shift dodge')
+OSWALD_BETRAYAL_CHASE_BANNER = 'CORRUPTED OSWALD CHASE!'
+OSWALD_BETRAYAL_CHASE_MSG = (
+    'Oswald sheds the smile — chase him down and wash the stain!')
+OSWALD_BETRAYAL_CHASE_CLEAR_MSG = (
+    "Oswald's stain is washed — purity holds for real this time!")
+# Tip lands slightly after spawn so the enemy is already fielded.
+OSWALD_BETRAYAL_CHASE_TIP_DELAY_SEC = 0.35
 FINALE_BETRAYAL_SETTLE_OVERSHOOT = (0.86, 1.0, 1.22, 0.10)
 FINALE_BETRAYAL_SETTLE_REST_SEC = 0.16
 FINALE_BETRAYAL_SUB_COLOR = (1.0, 0.78, 0.62, 1.0)

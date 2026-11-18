@@ -353,8 +353,10 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 Silly Street campaign (`~advancecampaign force` to skip ahead, then
 `~startcampaign` on zone `2100`). Toontown spiritual-sequel framing —
 rubber-hose Oswald stretch-punch combat only, **no keyblades**. Victory
-leaves room for an Oswald twist tease (he caused the corruption); full
-dialogue is out of scope here.
+lands the Oswald twist tease (he caused the corruption) **plus** a short
+fightable **Corrupted Oswald** chase/arena spawn (`ARCHETYPE_CORRUPT_OSWALD`
+via `CampaignDirectorAI` / `OswaldBetrayalChase`) as the betrayal gameplay
+consequence — not cream-only. Full dialogue is out of scope here.
 
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
    SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), ink rain /
@@ -378,10 +380,13 @@ dialogue is out of scope here.
    the player is already in the ink, plus **Smudge adds** on wave 2+
    (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
 4. Clear again → campaign victory + soft twist tease
-   (`CampaignGlobals.FINALE_TWIST_TEASE`).
+   (`CampaignGlobals.FINALE_TWIST_TEASE`) → delayed **Corrupted Oswald**
+   chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client).
 
 Debug Overlord AI without the full campaign: `~spawnoverlord` (P1) /
 `~spawnoverlord 1 160 2` (P2) / `~spawncorrupt 1 90 0 1`.
+Debug the betrayal chase enemy: `~spawncorruptedoswald` /
+`~spawncorrupt 1 0 4`.
 
 ## Ink Overlord magenta ink splash demo
 

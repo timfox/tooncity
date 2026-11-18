@@ -98,6 +98,12 @@ WAVE_SCRIPT_TOKENS = {
     'gunk': 3,
     'gunk_gagster': 3,
     'gunk-gagster': 3,
+    # Finale betrayal chase archetype (campaign spawn; optional scripts).
+    'oswald': 4,
+    'corrupt_oswald': 4,
+    'corrupted_oswald': 4,
+    'corrupt-oswald': 4,
+    'corrupted-oswald': 4,
     'gag': 3,
 }
 STREET_PACKS = {

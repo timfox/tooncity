@@ -136,9 +136,9 @@ class SpawnCorrupt(MagicWord):
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
         'Optional count (1-8), hp (0=archetype default base), '
-        'archetype (0=Ink, 1=Brute, 2=Snare, 3=Gagster), finalePhase '
-        '(0=street, 1=Overlord P1 rain AoE, 2=Unleashed rain+slam). '
-        'Use ~spawngagster / ~spawnoverlord for shortcuts. '
+        'archetype (0=Ink, 1=Brute, 2=Snare, 3=Gagster, 4=Corrupted Oswald), '
+        'finalePhase (0=street, 1=Overlord P1 rain AoE, 2=Unleashed rain+slam). '
+        'Use ~spawngagster / ~spawnoverlord / ~spawncorruptedoswald for shortcuts. '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
@@ -213,6 +213,34 @@ class SpawnOverlord(MagicWord):
             finalePhase=finalePhase)
 
 
+class SpawnCorruptOswald(MagicWord):
+    aliases = [
+        'spawncorruptedoswald', 'spawnoswald', 'corruptedoswald',
+        'oswaldchase',
+    ]
+    desc = 'Spawn Corrupted Oswald (finale betrayal chase archetype).'
+    advancedDesc = (
+        'Shortcut for ARCHETYPE_CORRUPT_OSWALD. Optional count, hp '
+        '(0=archetype default). Fast crimson-shadow chase smack used as '
+        'the short post-finale betrayal consequence fight. '
+        'Campaign auto-fields one after Silly P2 betrayal. '
+        'No keyblades / KH branding. Pair with ~hackslash 0.')
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    accessLevel = 'MODERATOR'
+    affectRange = [MagicWordConfig.AFFECT_SELF]
+    arguments = [
+        ('count', int, False, 1),
+        ('hp', int, False, 0),
+    ]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        count = int(args[0]) if args else 1
+        hpArg = int(args[1]) if len(args) > 1 else 0
+        return _spawnCorruptPack(
+            self.air, toon, count=count, hpArg=hpArg,
+            archetype=CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD)
+
+
 def registerCorruptionMagicWords():
     """Instantiate word classes so they register into magicWordIndex."""
     Pollute()
@@ -220,3 +248,4 @@ def registerCorruptionMagicWords():
     SpawnCorrupt()
     SpawnGagster()
     SpawnOverlord()
+    SpawnCorruptOswald()
