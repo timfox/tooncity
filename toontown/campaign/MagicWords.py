@@ -18,7 +18,8 @@ class StartCampaign(MagicWord):
         'swell / sparkle / edge + soft cream wash pulse; victory reveal '
         'sting: Oswald caused the corruption — banner + rubber-hose '
         'silhouette shadow flash + FOV/SFX + soft cream aftershock framed '
-        'by cream edge). Toontown spiritual-sequel fantasy — no keyblades. '
+        'by cream edge + soft cream wash pulse). Toontown spiritual-sequel '
+        'fantasy — no keyblades. '
         'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
