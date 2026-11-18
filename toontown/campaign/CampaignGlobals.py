@@ -129,6 +129,34 @@ FINALE_PHASE_HUD = {
     1: 'OVERLORD · P1 RISE',
     2: 'OVERLORD · P2 UNLEASHED',
 }
+# Campaign handoff confetti / streamer pop (CampaignHandoffConfetti).
+# Short rubber-hose carnival burst on Loopy→Punchline (and act) handoffs.
+# Toontown spiritual sequel — no keyblades / KH branding.
+HANDOFF_CONFETTI_COUNT = 10
+HANDOFF_STREAMER_COUNT = 5
+HANDOFF_CONFETTI_SIZE = 0.028
+HANDOFF_STREAMER_FRAME = (-0.012, 0.012, -0.09, 0.09)
+HANDOFF_CONFETTI_DRIFT = 0.55
+HANDOFF_STREAMER_DRIFT = 0.72
+HANDOFF_CONFETTI_SEC = 0.72
+HANDOFF_STREAMER_SEC = 0.85
+HANDOFF_CONFETTI_ORIGIN = (0.0, 0.0, 0.38)
+# Carnival reclaim palette — mint / cream / gold / coral / sky.
+HANDOFF_CONFETTI_COLORS = (
+    (0.55, 1.0, 0.78, 0.95),
+    (1.0, 0.95, 0.55, 0.95),
+    (1.0, 0.55, 0.45, 0.95),
+    (0.55, 0.85, 1.0, 0.95),
+    (1.0, 0.78, 0.95, 0.95),
+    (0.95, 1.0, 0.88, 0.95),
+)
+HANDOFF_STREAMER_COLORS = (
+    (1.0, 0.92, 0.42, 0.95),
+    (0.45, 0.95, 0.72, 0.95),
+    (1.0, 0.62, 0.48, 0.95),
+    (0.65, 0.82, 1.0, 0.95),
+)
+
 # Explicit Oswald twist after P2 clear (shown after purity victory flash).
 FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
 FINALE_TWIST_TEASE_COLOR = (1.0, 0.55, 0.35, 1.0)
