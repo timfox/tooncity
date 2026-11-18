@@ -37,7 +37,8 @@ class StartReclaim(MagicWord):
         'flecks. Wave announce '
         'plates get a cream edge pulse with cream sparkle flecks + soft '
         'cream wash pulse. Mid-wave purity stall / ink-rise whispers a short '
-        'contested tip under the purity meter. Pair with '
+        'contested tip under the purity meter. Full clear purity-locks the '
+        'street so re-creep cannot undo it (HUD secured tip). Pair with '
         '~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
@@ -82,7 +83,7 @@ class StopReclaim(MagicWord):
     advancedDesc = (
         'Deletes spawned reclaim CorruptToons and clears director state. '
         'Bailing mid-reclaim marks the street contested so residual ink '
-        'slowly re-creeps (pure / finished streets stay secured).')
+        'slowly re-creeps (pure / finished streets stay purity-locked).')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]

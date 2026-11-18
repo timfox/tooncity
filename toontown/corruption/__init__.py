@@ -73,6 +73,6 @@ music crossfades to a darker encounter bed while polluted and back to the
 hood bed on purity restore (PollutionStreetAudio; pairs with reclaim
 cheer/sting), plus a short rubber-hose birds ambient bed fade-in. Bail out of
 an unfinished reclaim and PollutionManagerAI marks the street contested —
-residual ink slowly re-creeps (POLLUTION_RECREEP_*); secured / pure streets
-stay clean.
+residual ink slowly re-creeps (POLLUTION_RECREEP_*); finished reclaim
+purity-locks the street so secured / pure streets stay clean.
 """

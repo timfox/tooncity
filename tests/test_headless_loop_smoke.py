@@ -797,6 +797,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'markStreetSecured',
                 'markStreetReclaiming',
                 'markStreetContested',
+                'isPurityLocked',
                 '_ensureRecreepTask',
                 '__recreepTick',
                 '_announceRecreep'):
@@ -807,6 +808,17 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             'toontown/corruption/PollutionManagerAI.py')
         self.assertIn('pollutionRecreeping', pollution_ai_src)
         self.assertIn('POLLUTION_RECREEP_MSG', pollution_ai_src)
+        self.assertIn('_purityLocked', pollution_ai_src)
+        self.assertIn('streetPurityLockBlocksRise', pollution_ai_src)
+        self.assertTrue(
+            hasattr(cg, 'STREET_PURITY_LOCK_ENABLED'),
+            msg='CorruptionGlobals missing STREET_PURITY_LOCK_ENABLED')
+        self.assertTrue(
+            hasattr(cg, 'streetPurityLockBlocksRise'),
+            msg='CorruptionGlobals missing streetPurityLockBlocksRise')
+        self.assertIs(cg.STREET_PURITY_LOCK_ENABLED, True)
+        self.assertTrue(cg.streetPurityLockBlocksRise(True, 0.5, 0.0))
+        self.assertFalse(cg.streetPurityLockBlocksRise(False, 0.5, 0.0))
         director_ai_src = _read(
             'toontown/reclaim/DistributedReclaimDirectorAI.py')
         self.assertIn('markStreetContested', director_ai_src)
@@ -823,6 +835,42 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         complete_snip = director_ai_src[complete_idx:complete_idx + 900]
         self.assertIn('markStreetSecured', complete_snip)
         self.assertNotIn('markStreetContested', complete_snip)
+        # Unlock purity lock before seeding so finished streets can restart.
+        start_idx = director_ai_src.find('def start(')
+        self.assertGreater(start_idx, 0)
+        start_snip = director_ai_src[start_idx:stop_idx]
+        self.assertLess(
+            start_snip.find('markStreetReclaiming'),
+            start_snip.find('setPollution'))
+        # Client secured-lock tip + meter rim confirm on full reclaim.
+        director_client_src = _read(
+            'toontown/reclaim/DistributedReclaimDirector.py')
+        self.assertIn('__confirmSecuredLock', director_client_src)
+        self.assertIn('securedLockTipText', director_client_src)
+        self.assertIn('confirmSecured', director_client_src)
+        for secured_key in (
+                'SECURED_LOCK_TIP_ENABLED',
+                'SECURED_LOCK_TIP',
+                'SECURED_LOCK_RIM_COLOR',
+                'SECURED_LOCK_HUD_HOLD_SEC'):
+            self.assertIn(
+                secured_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % secured_key)
+        secured_helpers = _class_and_func_names(self.reclaim_tree)
+        self.assertIn(
+            'securedLockTipText', secured_helpers,
+            msg='ReclaimGlobals missing securedLockTipText')
+        secured_assigns = _assign_map(self.reclaim_tree)
+        self.assertIs(secured_assigns.get('SECURED_LOCK_TIP_ENABLED'), True)
+        secured_tip = str(secured_assigns.get('SECURED_LOCK_TIP', '')).lower()
+        self.assertIn('secured', secured_tip)
+        self.assertIn('ink', secured_tip)
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
+            self.assertNotIn(banned, secured_tip)
+        meter_methods = _class_method_names(
+            _module_ast('toontown/reclaim/PurityMeterHud.py'),
+            'PurityMeterHud')
+        self.assertIn('confirmSecured', meter_methods)
         # Client presentation follows setZonePollution (no extra AI thrash).
         client_pollution_src = _read(
             'toontown/corruption/PollutionManager.py')

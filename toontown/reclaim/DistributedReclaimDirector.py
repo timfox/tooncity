@@ -17,7 +17,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     Mid-wave purity pressure: short rubber-hose tip whisper + meter rim warn
     when purity stalls or ink rises while packs are still alive (contested
-    feel after incomplete re-creep #194).
+    feel after incomplete re-creep #194). Full clear confirms the secured
+    purity lock with a short tip + meter rim so re-creep cannot undo it.
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedReclaimDirector')
@@ -38,6 +39,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._statusNP = None
         self._demoHintNP = None
         self._pressureTipNP = None
+        self._securedTipNP = None
         self._purityMeter = PurityMeterHud()
         self._streetWash = StreetColorWash()
         self._restoreIval = None
@@ -80,6 +82,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
     def disable(self):
         self.ignoreAll()
         self.__stopPressureWatch()
+        self.__cancelSecuredHudHold()
         self.__clearHud()
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -99,6 +102,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         if self.state == ReclaimGlobals.STATE_IDLE:
             self.__stopPressureWatch()
+            self.__cancelSecuredHudHold()
             if self._streetWash is not None:
                 self._streetWash.setActive(False, zoneId=zoneId)
             self.__clearHud()
@@ -286,6 +290,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     def announceReclaimComplete(self):
         self.__hideTelegraphCue()
+        self.__stopPressureWatch()
         zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         completeTitle = ReclaimGlobals.streetBannerComplete(
             zoneId, finalePhase=self.finalePhase)
@@ -315,10 +320,10 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                     zoneId, finalePhase=self.finalePhase),
                 (0.85, 1.0, 0.9, 1.0),
                 hold=3.4)
+        # Secured purity-lock tip + meter rim before tearing down the HUD.
+        self.__confirmSecuredLock(zoneId)
         self.__playRestoreFx()
-        self.__hideStatusHud()
         self.__hideDemoHint()
-        self.__stopPressureWatch()
 
     def __onPollutionChanged(self, zoneId, level):
         if self.state != ReclaimGlobals.STATE_ACTIVE:
@@ -496,6 +501,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
     def __hideStatusHud(self):
         self.__hideTelegraphCue()
         self.__hidePressureTip()
+        self.__hideSecuredLockTip()
         if self._statusNP is not None and not self._statusNP.isEmpty():
             self._statusNP.removeNode()
         self._statusNP = None
@@ -839,10 +845,95 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 pass
         self._pressureTipNP = None
 
+    def __confirmSecuredLock(self, zoneId):
+        """HUD/tip confirmation that finished reclaim purity is locked."""
+        if not getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_ENABLED', True):
+            self.__hideStatusHud()
+            return
+        tip = ReclaimGlobals.securedLockTipText(zoneId)
+        self.__showSecuredLockTip(tip)
+        if self._purityMeter is not None:
+            try:
+                self._purityMeter.confirmSecured()
+            except Exception:
+                pass
+        hold = float(getattr(ReclaimGlobals, 'SECURED_LOCK_HUD_HOLD_SEC', 1.15))
+        self.__cancelSecuredHudHold()
+        try:
+            taskMgr.doMethodLater(  # noqa: F821
+                max(0.2, hold),
+                self.__securedHudTimeout,
+                self.uniqueName('reclaim-secured-hud'))
+        except Exception:
+            self.__hideStatusHud()
+
+    def __securedHudTimeout(self, task):
+        self.__hideStatusHud()
+        return task.done
+
+    def __cancelSecuredHudHold(self):
+        try:
+            taskMgr.remove(self.uniqueName('reclaim-secured-hud'))  # noqa: F821
+        except Exception:
+            pass
+
+    def __showSecuredLockTip(self, text, hold=None):
+        """Brief rubber-hose tip confirming the secured purity lock."""
+        self.__hideSecuredLockTip()
+        if hold is None:
+            hold = getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_HOLD_SEC', 2.8)
+        color = getattr(
+            ReclaimGlobals, 'SECURED_LOCK_TIP_COLOR',
+            (0.72, 1.0, 0.82, 1.0))
+        scale = float(getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_SCALE', 0.038))
+        pos = getattr(
+            ReclaimGlobals, 'SECURED_LOCK_TIP_POS', (0.0, 0.0, 0.40))
+        popScale = float(getattr(
+            ReclaimGlobals, 'SECURED_LOCK_TIP_POP_SCALE', 0.052))
+        popSec = float(getattr(
+            ReclaimGlobals, 'SECURED_LOCK_TIP_POP_SEC', 0.10))
+        tn = TextNode('reclaim-secured-lock-tip')
+        tn.setText(str(text))
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(*color)
+        tn.setShadow(0.04, 0.04)
+        tn.setShadowColor(0, 0, 0, 0.7)
+        np = aspect2d.attachNewNode(tn)  # noqa: F821
+        np.setScale(scale)
+        np.setPos(*pos)
+        self._securedTipNP = np
+        try:
+            Sequence(
+                LerpScaleInterval(np, popSec, popScale),
+                LerpScaleInterval(np, 0.16, scale),
+                name='reclaimSecuredLockTipHose',
+            ).start()
+        except Exception:
+            pass
+        taskMgr.doMethodLater(  # noqa: F821
+            max(0.4, float(hold)),
+            self.__securedLockTipTimeout,
+            self.uniqueName('reclaim-secured-lock-tip'))
+
+    def __securedLockTipTimeout(self, task):
+        self.__hideSecuredLockTip()
+        return task.done
+
+    def __hideSecuredLockTip(self):
+        taskMgr.remove(self.uniqueName('reclaim-secured-lock-tip'))  # noqa: F821
+        if self._securedTipNP is not None and not self._securedTipNP.isEmpty():
+            try:
+                self._securedTipNP.removeNode()
+            except Exception:
+                pass
+        self._securedTipNP = None
+
     def __clearHud(self):
         self.__hideBanner()
         self.__hideSubBanner()
         self.__hidePressureTip()
+        self.__cancelSecuredHudHold()
+        self.__hideSecuredLockTip()
         self.__hideStatusHud()
         self.__hideDemoHint()
         self.__clearPurityBurstOverlay()

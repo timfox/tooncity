@@ -21,8 +21,9 @@ class PollutionManager(DistributedObject.DistributedObject):
     PollutionHoodTintCreamFadeFx while the density clear ramp still runs.
 
     Incomplete reclaim re-creep is AI-authored (PollutionManagerAI contested
-    streets); this client only presents the rising setZonePollution via the
-    same density ramp / prop tint / street-audio hooks — pure stays clear.
+    streets); finished reclaim purity-locks refuse re-stain on the AI. This
+    client only presents setZonePollution via the same density ramp / prop
+    tint / street-audio hooks — pure stays clear.
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManager')

@@ -41,13 +41,15 @@ Sections below remain **debug / magic-word** fallbacks.
    `PurityBurstFx` + fog cream dissolve + `ReclaimCheer` local Happy/wave +
    rubber-hose cheer pitch swell + nearby nudge). Mid-reclaim wave clears fire a
    quieter pitch swell + light bounce via `reclaimWaveCleared`.
-   Complete marks the street `STREET_SECURED` — pure stays pure (no auto re-ink).
+   Complete marks the street `STREET_SECURED` and **purity-locks** it — pure
+   stays pure (no auto re-ink, no pollution rises until a new reclaim starts).
+   Client HUD shows a short secured-lock tip + meter rim confirm.
 6. Bail mid-reclaim (`~stopreclaim` / director stop while `STATE_ACTIVE`) marks the
    street `STREET_CONTESTED`. Residual ink slowly re-creeps via
    `PollutionManagerAI` (`POLLUTION_RECREEP_*`) toward `POLLUTION_RECREEP_CAP`;
    fog / tint / street audio follow the rising `setZonePollution`. A one-shot
-   rubber-hose whisper warns toons still on the street. Pure / secured streets
-   never auto-stain.
+   rubber-hose whisper warns toons still on the street. Pure / secured /
+   purity-locked streets never auto-stain.
 
 ## Discoverable play (preferred)
 

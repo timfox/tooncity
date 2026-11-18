@@ -429,6 +429,25 @@ PURITY_PRESSURE_TIP_RISE = (
 PURITY_PRESSURE_RIM_WARN_COLOR = (1.0, 0.55, 0.35, 0.78)
 PURITY_PRESSURE_RIM_WARN_SEC = 0.55
 
+# Secured purity lock tip — after full reclaim, confirm ink cannot re-creep
+# (#194 complement). Client HUD tip + meter rim confirm; AI lock lives on
+# PollutionManagerAI._purityLocked. Toggle SECURED_LOCK_TIP_ENABLED = False
+# drops tip + rim confirm only (AI lock still holds). No KH branding.
+SECURED_LOCK_TIP_ENABLED = True
+SECURED_LOCK_TIP = (
+    "Street's secured! That ink can't creep back — purity's locked in!"
+)
+SECURED_LOCK_TIP_HOLD_SEC = 2.8
+SECURED_LOCK_TIP_SCALE = 0.038
+SECURED_LOCK_TIP_POS = (0.0, 0.0, 0.40)  # under purity meter (z 0.50)
+SECURED_LOCK_TIP_COLOR = (0.72, 1.0, 0.82, 1.0)
+SECURED_LOCK_TIP_POP_SCALE = 0.052
+SECURED_LOCK_TIP_POP_SEC = 0.10
+SECURED_LOCK_RIM_COLOR = (0.55, 1.0, 0.72, 0.88)
+SECURED_LOCK_RIM_SEC = 0.85
+# Keep purity meter visible briefly so the secured rim confirm reads.
+SECURED_LOCK_HUD_HOLD_SEC = 1.15
+
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.
 # Composes with EntryCreamWashPulseFx (bin 32), PlayEntry ink edge vignette
@@ -1178,6 +1197,11 @@ def purityPressureTipText(reason):
     if reason == PURITY_PRESSURE_REASON_STALL:
         return PURITY_PRESSURE_TIP_STALL
     return PURITY_PRESSURE_TIP_STALL
+
+
+def securedLockTipText(zoneId=None):
+    """Rubber-hose tip confirming a finished reclaim purity lock."""
+    return SECURED_LOCK_TIP
 
 
 def wavePackSize(baseSize, waveIndex, waveScript=None):
