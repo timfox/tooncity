@@ -16,6 +16,7 @@ from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.IdleInkDripFx import IdleInkDrip
+from toontown.corruption.OverlordMagentaInkSplashFx import OverlordMagentaInkSplash
 from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
 from toontown.corruption.SmudgeInkSplashFx import SmudgeInkSplash
@@ -72,6 +73,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._idleInkDrip = None
         self._overlordCrown = None
         self._overlordInkRain = None
+        self._overlordMagentaInkSplash = None
         self._snareTelegraphString = None
         self._snareStringSnapSplash = None
         self._bruteTelegraphSpit = None
@@ -142,6 +144,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordMagentaInkSplash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
         self.__clearBruteTelegraphSpit()
@@ -443,6 +446,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         return (
             int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
             == CorruptionGlobals.ARCHETYPE_SNARE)
+
+    def __isInkOverlord(self):
+        """True when finale phase look is active (Ink Overlord boss)."""
+        look, phase = self.__finalePhaseLook()
+        return bool(look) and int(phase) >= 1
 
     def announceAttackTelegraph(self):
         """Strong wind-up: charged squash, ink/spit/lash flare — dodgeable."""
@@ -953,6 +961,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordMagentaInkSplash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
         self.__clearBruteTelegraphSpit()
@@ -970,8 +979,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             splatPos = Point3(0, 0, 0)
         self._deathPopSplat = DeathPopSplat()
         self._deathPopSplat.play(splatPos, archetype=self.getArchetype())
+        # Ink Overlord: magenta/crimson splash so boss pop reads vs street Smudge.
+        if self.__isInkOverlord():
+            self.__playOverlordMagentaInkSplash(splatPos, kind='death')
         # Ink Smudge: extra cheap purple splash so swarm deaths stay scannable.
-        if self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
             self.__playSmudgeInkSplash(splatPos, kind='death')
         # Sludge Brute: green sludge splash so tank pops stay scannable.
         elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_BRUTE:
@@ -1106,6 +1118,30 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._overlordInkRain = None
+
+    def __playOverlordMagentaInkSplash(self, pos=None, kind='hit'):
+        """Magenta/crimson ink splash — Ink Overlord hit / death only."""
+        look, phase = self.__finalePhaseLook()
+        if not look or int(phase) < 1:
+            return
+        self.__clearOverlordMagentaInkSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = OverlordMagentaInkSplash()
+        self._overlordMagentaInkSplash = splash
+        splash.play(pos, kind=kind, finaleLook=look, phase=phase)
+
+    def __clearOverlordMagentaInkSplash(self):
+        splash = getattr(self, '_overlordMagentaInkSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._overlordMagentaInkSplash = None
 
     def __playSnareTelegraphString(self):
         """Amber string-lash telegraph pop — Balloon Snare wind-ups only."""
@@ -1289,8 +1325,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             LerpColorScaleInterval(target, 0.14, Vec4(1, 1, 1, 1)),
         )
         self._hitIval.start()
+        # Ink Overlord: magenta/crimson splash so boss hits read vs street Smudge.
+        if self.__isInkOverlord():
+            self.__pauseIdleInkDrip()
+            self.__playOverlordMagentaInkSplash(kind='hit')
+            Sequence(Wait(0.32), Func(self.__resumeIdleInkDrip)).start()
         # Ink Smudge: cheap purple splash so tagged Smudges read in a swarm.
-        if self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
             self.__pauseIdleInkDrip()
             self.__playSmudgeInkSplash(kind='hit')
             # Brief resume so idle drips return after the splash owns the frame.
