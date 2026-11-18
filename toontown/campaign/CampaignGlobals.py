@@ -832,43 +832,70 @@ FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED = True
 FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT = (1.12, 1.0, 1.18, 0.08)  # sx, sy, sz, sec
 FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC = 0.13
 
-# Victory/confetti sting on Oswald twist (VictoryTwistConfettiSting).
-# Fires with the betrayal handoff plate (#212) after sunny #82 cream swell
-# has cleared — quieter, bittersweet cream + warm coral chips that land
-# the truth (Oswald caused the corruption). Not a second triumphant
-# carnival; not the victory cream swell. Distinct from FinaleCreamAftershock
-# flash/ring (#86). No keyblades / KH branding.
+# Victory/confetti sting on Oswald twist (VictoryTwistConfettiSting /
+# #217 deepen). Fires with the betrayal handoff plate (#212) after sunny
+# #82 cream swell has cleared — deepened bittersweet cream + warm coral
+# chips + soft cream aftershock so the finale twist payoff reads juicier.
+# Not a second triumphant carnival; not the victory cream swell. Distinct
+# from FinaleCreamAftershock flash/ring (#86), act handoff cream edge
+# settle deepen (#240), and betrayal banner cream hose deepen (#235) —
+# those settle frames/titles; this deepens the confetti sting cream under
+# the plate. No keyblades / KH branding.
 VICTORY_TWIST_CONFETTI_ENABLED = True
-VICTORY_TWIST_CONFETTI_DELAY_SEC = 0.18  # after plate hose-pop starts
+VICTORY_TWIST_CONFETTI_DELAY_SEC = 0.16  # after plate hose-pop starts
 VICTORY_TWIST_CONFETTI_ORIGIN = (0.0, 0.0, 0.34)  # under betrayal plate
-# Above cream edge (56) / aftershock (58); under title bin (62+) read.
+# Above cream edge (56) / reveal aftershock (58); under title bin (62+) read.
 VICTORY_TWIST_CONFETTI_BIN = 61
-VICTORY_TWIST_CONFETTI_FLASH_COLOR = (1.0, 0.88, 0.72, 1.0)  # warm cream
-VICTORY_TWIST_CONFETTI_FLASH_PEAK = 0.16
+VICTORY_TWIST_CONFETTI_FLASH_COLOR = (1.0, 0.90, 0.74, 1.0)  # warmer cream
+VICTORY_TWIST_CONFETTI_FLASH_PEAK = 0.20
 VICTORY_TWIST_CONFETTI_FLASH_IN_SEC = 0.05
-VICTORY_TWIST_CONFETTI_FLASH_HOLD_SEC = 0.05
-VICTORY_TWIST_CONFETTI_FLASH_OUT_SEC = 0.36
-VICTORY_TWIST_CONFETTI_COUNT = 9
-VICTORY_TWIST_CONFETTI_SIZE = 0.024
-VICTORY_TWIST_CONFETTI_DRIFT = 0.48
-VICTORY_TWIST_CONFETTI_FALL = 0.18  # hollow settle, not carnival lift
-VICTORY_TWIST_CONFETTI_SEC = 0.72
+VICTORY_TWIST_CONFETTI_FLASH_HOLD_SEC = 0.06
+VICTORY_TWIST_CONFETTI_FLASH_OUT_SEC = 0.42
+VICTORY_TWIST_CONFETTI_COUNT = 12
+VICTORY_TWIST_CONFETTI_SIZE = 0.027
+VICTORY_TWIST_CONFETTI_DRIFT = 0.56
+VICTORY_TWIST_CONFETTI_FALL = 0.22  # hollow settle, not carnival lift
+VICTORY_TWIST_CONFETTI_SEC = 0.82
+VICTORY_TWIST_CONFETTI_POP = 1.58  # squash peak — juicier cream snap
 VICTORY_TWIST_CONFETTI_COLORS = (
-    (1.0, 0.94, 0.78, 0.90),   # soft cream
-    (1.0, 0.82, 0.58, 0.88),   # warm coral
-    (1.0, 0.72, 0.48, 0.86),   # twist peach
-    (0.98, 0.90, 0.62, 0.88),  # pastel gold
-    (1.0, 0.68, 0.52, 0.84),   # hollow cheer blush
+    (1.0, 0.95, 0.80, 0.94),   # soft cream
+    (1.0, 0.84, 0.60, 0.92),   # warm coral
+    (1.0, 0.74, 0.50, 0.90),   # twist peach
+    (0.99, 0.92, 0.64, 0.92),  # pastel gold
+    (1.0, 0.70, 0.54, 0.88),   # hollow cheer blush
 )
-VICTORY_TWIST_CONFETTI_STREAK_COUNT = 3
-VICTORY_TWIST_CONFETTI_STREAK_SIZE = 0.012
-VICTORY_TWIST_CONFETTI_STREAK_DRIFT = 0.38
-VICTORY_TWIST_CONFETTI_STREAK_SEC = 0.58
+VICTORY_TWIST_CONFETTI_STREAK_COUNT = 4
+VICTORY_TWIST_CONFETTI_STREAK_SIZE = 0.014
+VICTORY_TWIST_CONFETTI_STREAK_DRIFT = 0.44
+VICTORY_TWIST_CONFETTI_STREAK_SEC = 0.66
 VICTORY_TWIST_CONFETTI_STREAK_COLORS = (
-    (1.0, 0.96, 0.82, 0.82),
-    (1.0, 0.78, 0.55, 0.80),
-    (1.0, 0.88, 0.66, 0.78),
+    (1.0, 0.97, 0.84, 0.88),
+    (1.0, 0.80, 0.58, 0.86),
+    (1.0, 0.90, 0.68, 0.84),
+    (1.0, 0.86, 0.62, 0.82),
 )
+# Soft cream aftershock after deepened twist confetti — quieter settle
+# flecks + optional halo so the hollow cheer hangs readable without
+# restaging #82 swell or FinaleCreamAftershock (#86). Toggle
+# VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED = False drops residual only.
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED = True
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_DELAY_SEC = 0.22  # after sting body starts
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT = 5
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_SIZE = 0.016
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_DRIFT = 0.30
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_FALL = 0.24
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_SEC = 0.34
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_COLOR = (1.0, 0.96, 0.78, 0.80)
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_END_COLOR = (1.0, 0.90, 0.55, 0.0)
+# Under confetti chips (61+); above reveal cream edge (56).
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_BIN = 60
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_ENABLED = True
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_HALF = 0.40
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_START = 0.26
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK = 1.16
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_SEC = 0.28
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK_ALPHA = 0.13
+VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_COLOR = (1.0, 0.94, 0.78, 1.0)
 
 # Oswald shadow flash — rubber-hose silhouette on the reveal sting.
 # Trusted lead shape → ink shadow that sells the twist. Campaign-owned

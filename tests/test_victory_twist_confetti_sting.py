@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Thin AST/unit tests for victory confetti Oswald twist sting.
+"""Thin AST/unit tests for deepened victory confetti Oswald twist sting cream.
 
 Loads CampaignGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-VICTORY_TWIST_CONFETTI_* tunables, rubber-hose (non-KH) wiring on the
-betrayal handoff plate, and VictoryTwistConfettiSting module presence.
+VICTORY_TWIST_CONFETTI_* deepen tunables, soft cream aftershock, rubber-hose
+(non-KH) wiring on the betrayal handoff plate, and VictoryTwistConfettiSting
+module presence. Distinct from act handoff cream edge settle deepen (#240)
+and betrayal banner cream hose deepen (#235).
 
 Run from repo root:
   python3 tests/test_victory_twist_confetti_sting.py
@@ -51,10 +53,8 @@ def _load_campaign_globals():
     sys.modules['toontown.toonbase.ToontownGlobals'] = tg
     sys.modules['toontown.toonbase'].ToontownGlobals = tg
 
-    # CampaignGlobals imports CorruptionGlobals / ReclaimGlobals transitively
-    # via some paths; stub the minimal packages CampaignGlobals needs.
-    cg_path = REPO_ROOT / 'toontown' / 'campaign' / 'CampaignGlobals.py'
     # CampaignGlobals only needs ToontownGlobals for zone ids.
+    cg_path = REPO_ROOT / 'toontown' / 'campaign' / 'CampaignGlobals.py'
     camp_spec = importlib.util.spec_from_file_location(
         'toontown.campaign.CampaignGlobals', cg_path)
     camp = importlib.util.module_from_spec(camp_spec)
@@ -93,7 +93,7 @@ def _top_level_func_names(tree: ast.AST) -> set[str]:
 
 
 class VictoryTwistConfettiStingTest(unittest.TestCase):
-    """Pure-Python twist confetti sting wiring."""
+    """Pure-Python deepened twist confetti cream sting wiring."""
 
     @classmethod
     def setUpClass(cls):
@@ -108,15 +108,24 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertIsNotNone(self.finale)
         self.assertTrue(self.finale.get('betrayalHandoff'))
 
-    def test_twist_confetti_tunables_enabled(self):
+    def test_twist_confetti_tunables_deepened(self):
         camp = self.camp
         self.assertIs(camp.VICTORY_TWIST_CONFETTI_ENABLED, True)
-        self.assertGreater(camp.VICTORY_TWIST_CONFETTI_COUNT, 0)
-        self.assertGreater(camp.VICTORY_TWIST_CONFETTI_SEC, 0.0)
-        self.assertGreater(camp.VICTORY_TWIST_CONFETTI_FALL, 0.0)
+        self.assertIs(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED, True)
+        # Juicier than #217 baseline (9 / 0.16 / 0.72 / no POP).
+        self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_COUNT, 12)
+        self.assertGreaterEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_FLASH_PEAK), 0.20)
+        self.assertGreaterEqual(float(camp.VICTORY_TWIST_CONFETTI_SEC), 0.80)
+        self.assertGreater(float(camp.VICTORY_TWIST_CONFETTI_POP), 1.45)
+        self.assertGreater(float(camp.VICTORY_TWIST_CONFETTI_FALL), 0.0)
         self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_DELAY_SEC, 0.0)
         self.assertGreater(len(camp.VICTORY_TWIST_CONFETTI_COLORS), 0)
-        self.assertGreater(camp.VICTORY_TWIST_CONFETTI_STREAK_COUNT, 0)
+        self.assertGreaterEqual(camp.VICTORY_TWIST_CONFETTI_STREAK_COUNT, 4)
+        self.assertGreater(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT, 0)
+        self.assertGreater(
+            float(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_SEC), 0.0)
+        self.assertTrue(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_ENABLED)
         # Quieter / shorter than sunny victory cream swell.
         self.assertLess(
             camp.VICTORY_TWIST_CONFETTI_COUNT,
@@ -127,6 +136,17 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertLess(
             camp.VICTORY_TWIST_CONFETTI_FLASH_PEAK,
             camp.VICTORY_CREAM_FLASH_PEAK)
+        # Distinct from act handoff edge settle (#240) and betrayal hose (#235).
+        self.assertNotEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_POP),
+            float(camp.HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT[0]))
+        self.assertNotEqual(
+            float(camp.VICTORY_TWIST_CONFETTI_POP),
+            float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT[0]))
+        # Soft cream aftershock stays under confetti bin.
+        self.assertLess(
+            int(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_BIN),
+            int(camp.VICTORY_TWIST_CONFETTI_BIN))
 
     def test_no_kh_branding_in_module_docs(self):
         sting_src = _read(
@@ -142,6 +162,8 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertNotIn('keyblade ', sting_src.replace('no keyblades', ''))
         self.assertIn('oswald', sting_src)
         self.assertIn('corruption', sting_src)
+        self.assertIn('deepened', sting_src)
+        self.assertIn('aftershock', sting_src)
 
     def test_sting_module_api(self):
         sting_rel = 'toontown/campaign/VictoryTwistConfettiSting.py'
@@ -151,13 +173,22 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertIn('clearVictoryTwistConfettiSting', funcs)
         self.assertIn('ensureVictoryTwistConfettiSting', funcs)
         methods = _class_method_names(tree, 'VictoryTwistConfettiSting')
-        self.assertIn('play', methods)
-        self.assertIn('clear', methods)
-        self.assertIn('_spawnConfetti', methods)
-        self.assertIn('_spawnFlash', methods)
+        for name in (
+                'play',
+                'clear',
+                '_spawnConfetti',
+                '_spawnFlash',
+                '_spawnStreak',
+                '_buildAftershock',
+                '_spawnAftershockHalo',
+                '_spawnAftershockFleck'):
+            self.assertIn(name, methods, msg='missing %s' % name)
         sting_src = _read(sting_rel)
         self.assertIn('VICTORY_TWIST_CONFETTI_ENABLED', sting_src)
+        self.assertIn('VICTORY_TWIST_CONFETTI_POP', sting_src)
+        self.assertIn('VICTORY_TWIST_CONFETTI_AFTERSHOCK', sting_src)
         self.assertIn('campaignVictoryTwistConfettiSting', sting_src)
+        self.assertIn('_buildAftershock', sting_src)
 
     def test_handoff_wires_sting_on_betrayal(self):
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
@@ -165,6 +196,8 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         self.assertIn('clearVictoryTwistConfettiSting', handoff_src)
         self.assertIn('VictoryTwistConfettiSting', handoff_src)
         self.assertIn('VICTORY_TWIST_CONFETTI_ORIGIN', handoff_src)
+        self.assertIn('deepened', handoff_src.lower())
+        self.assertIn('cream aftershock', handoff_src.lower())
         # Sting lives on betrayalHandoff branch, not sunny creamSwell.
         betrayal_idx = handoff_src.find('if betrayalHandoff:')
         self.assertGreater(betrayal_idx, 0)
@@ -173,11 +206,28 @@ class VictoryTwistConfettiStingTest(unittest.TestCase):
         betrayal_snip = handoff_src[betrayal_idx:cream_idx]
         self.assertIn('playVictoryTwistConfettiSting', betrayal_snip)
         self.assertNotIn('playVictoryCreamSwell', betrayal_snip)
+        # Does not own handoff edge settle / betrayal hose settle keys.
+        self.assertNotIn('HANDOFF_CREAM_EDGE_SETTLE', betrayal_snip)
+        self.assertNotIn('FINALE_BETRAYAL_CREAM_HOSE_SETTLE', betrayal_snip)
 
-    def test_magic_words_mention_twist_confetti(self):
+    def test_magic_words_mention_deepened_twist_cream(self):
         magic_l = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('confetti twist sting', magic_l)
+        self.assertIn('deepened victory/confetti twist cream sting', magic_l)
+        self.assertIn('soft cream aftershock', magic_l)
         self.assertIn('betrayal handoff', magic_l)
+
+    def test_globals_comment_kh_free_and_distinct(self):
+        src = _read('toontown/campaign/CampaignGlobals.py').lower()
+        idx = src.find('victory_twist_confetti_enabled')
+        self.assertGreater(idx, 0)
+        snip = src[max(0, idx - 550):idx + 650]
+        self.assertIn('no keyblades', snip)
+        self.assertIn('deepen', snip)
+        self.assertIn('aftershock', snip)
+        self.assertIn('#240', snip)
+        self.assertIn('#235', snip)
+        for banned in ('kingdom hearts', 'sora', 'key blade'):
+            self.assertNotIn(banned, snip)
 
 
 if __name__ == '__main__':
