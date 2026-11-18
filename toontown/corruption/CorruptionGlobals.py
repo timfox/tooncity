@@ -43,9 +43,38 @@ ARCHETYPE_STATS = {
 }
 
 
+def normalizeArchetype(archetype):
+    """Clamp unknown ids to Ink Smudge."""
+    try:
+        value = int(archetype)
+    except (TypeError, ValueError):
+        return ARCHETYPE_INK
+    if value in ARCHETYPE_STATS:
+        return value
+    return ARCHETYPE_INK
+
+
 def archetypeStats(archetypeId):
-    return ARCHETYPE_STATS.get(
-        int(archetypeId), ARCHETYPE_STATS[ARCHETYPE_INK])
+    return ARCHETYPE_STATS[normalizeArchetype(archetypeId)]
+
+
+def archetypeDefaultHp(archetype):
+    """Base HP before DistributedCorruptToonAI applies hpScale."""
+    stats = archetypeStats(archetype)
+    # Prefer explicit default when present; else use global base.
+    if 'defaultHp' in stats:
+        return int(stats['defaultHp'])
+    return CORRUPT_TOON_DEFAULT_HP
+
+
+def archetypeDefaultName(archetype):
+    return str(archetypeStats(archetype).get('name', CORRUPT_TOON_DEFAULT_NAME))
+
+
+ARCHETYPE_NAMES = {
+    ARCHETYPE_INK: 'Ink Smudge',
+    ARCHETYPE_BRUTE: 'Sludge Brute',
+}
 
 # Defeating one corrupt toon reduces local pollution by this amount.
 # Slice 3 reclaim loop will tune pack sizes against this contribution.

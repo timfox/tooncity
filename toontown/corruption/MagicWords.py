@@ -80,29 +80,31 @@ class SpawnCorrupt(MagicWord):
         'Client prefers DNA/Actor ink silhouette, else card limbs. '
         'Ink Smudge: purple melee telegraph + impact flash/thud. '
         'Sludge Brute (archetype=1): green spit telegraph/SFX + ink blob. '
-        'Optional count (1-8), hp, archetype (0=Ink, 1=Brute). '
+        'Optional count (1-8), hp (0=archetype default base), '
+        'archetype (0=Ink, 1=Brute). '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]
     arguments = [
         ('count', int, False, 1),
-        ('hp', int, False, CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP),
+        ('hp', int, False, 0),
         ('archetype', int, False, CorruptionGlobals.ARCHETYPE_INK),
     ]
 
     def handleWord(self, invoker, avId, toon, *args):
         count = int(args[0]) if args else 1
-        hp = int(args[1]) if len(args) > 1 else CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
+        hpArg = int(args[1]) if len(args) > 1 else 0
         archetype = (
             int(args[2]) if len(args) > 2
             else CorruptionGlobals.ARCHETYPE_INK)
+        archetype = CorruptionGlobals.normalizeArchetype(archetype)
         count = max(1, min(8, count))
-        hp = max(1, min(500, hp))
-        if archetype not in (
-                CorruptionGlobals.ARCHETYPE_INK,
-                CorruptionGlobals.ARCHETYPE_BRUTE):
-            archetype = CorruptionGlobals.ARCHETYPE_INK
+        # Pass base HP; DistributedCorruptToonAI applies archetype hpScale.
+        if hpArg <= 0:
+            hp = CorruptionGlobals.archetypeDefaultHp(archetype)
+        else:
+            hp = max(1, min(500, hpArg))
         stats = CorruptionGlobals.archetypeStats(archetype)
 
         zoneId = toon.zoneId

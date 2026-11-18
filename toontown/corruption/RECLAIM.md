@@ -45,6 +45,18 @@ Compare ambient corruption on Punchline (`2300`) and Silly (`2100`) with `~pollu
 
 Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 
+## Sludge Brute spawn mix
+
+- Loopy campaign / reclaim wave 1: Ink Smudge only (`bruteFraction: 0` / `BRUTE_WAVE_START=2`)
+- Default reclaim waves 2+: ~⅓ Sludge Brutes
+- Punchline campaign: 50% Brutes from wave 1
+- Silly finale: Overlord only (no Brute mix)
+
+```
+~spawncorrupt 2 0 0   # Ink Smudge
+~spawncorrupt 1 0 1   # Sludge Brute
+```
+
 ## Depth D2 enemy demo
 
 ```

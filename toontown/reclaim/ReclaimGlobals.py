@@ -20,6 +20,13 @@ WAVE_HP_SCALE = 0.18
 WAVE_SPAWN_DELAY = 1.4
 WAVE_MAX_EXTRA = 3
 
+# Sludge Brute mix for default reclaim (Ink Smudge stays majority).
+# Wave 1 = pure Smudge; later waves introduce ~⅓ tanks.
+BRUTE_WAVE_START = 2
+BRUTE_FRACTION = 0.34
+BRUTE_NAME = 'Sludge Brute'
+SMUDGE_NAME = 'Ink Smudge'
+
 # Director FSM states (mirrored on client for banner / HUD).
 STATE_IDLE = 0
 STATE_ACTIVE = 1
@@ -101,3 +108,49 @@ def waveCorruptHp(baseHp, waveIndex):
     wave = max(1, int(waveIndex))
     scale = 1.0 + ((wave - 1) * WAVE_HP_SCALE)
     return max(1, int(round(float(baseHp) * scale)))
+
+
+def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
+                      bruteWaveStart=None):
+    """Choose Ink Smudge (0) or Sludge Brute (1) for one pack slot.
+
+    Keeps wave-1 / zero-fraction packs as pure Ink Smudge so Loopy demos
+    and early reclaim stay familiar.
+    """
+    from toontown.corruption import CorruptionGlobals
+    wave = max(1, int(waveIndex))
+    start = BRUTE_WAVE_START if bruteWaveStart is None else int(bruteWaveStart)
+    fraction = BRUTE_FRACTION if bruteFraction is None else float(bruteFraction)
+    if wave < start or fraction <= 0.0 or packCount <= 0:
+        return CorruptionGlobals.ARCHETYPE_INK
+    # Spread brutes across the pack instead of clumping at the end.
+    bruteSlots = max(1, int(round(packCount * fraction)))
+    bruteSlots = min(bruteSlots, packCount)
+    # Prefer rear slots so front-liners still read as Smudge melee.
+    startSlot = max(0, packCount - bruteSlots)
+    if int(slotIndex) >= startSlot:
+        return CorruptionGlobals.ARCHETYPE_BRUTE
+    return CorruptionGlobals.ARCHETYPE_INK
+
+
+def packSlotName(archetype, smudgeName=None, bruteName=None, slotIndex=0,
+                 packCount=1):
+    """Display name for a pack slot (numbered when pack has multiples)."""
+    from toontown.corruption import CorruptionGlobals
+    arch = CorruptionGlobals.normalizeArchetype(archetype)
+    if arch == CorruptionGlobals.ARCHETYPE_BRUTE:
+        base = bruteName or BRUTE_NAME
+    else:
+        base = smudgeName or SMUDGE_NAME
+    if packCount > 1 and int(slotIndex) > 0:
+        return '%s %s' % (base, int(slotIndex) + 1)
+    return base
+
+
+def packSlotHp(archetype, baseHp, waveIndex):
+    """Wave-scaled base HP for a pack slot.
+
+    Brute tankiness comes from DistributedCorruptToonAI hpScale — do not
+    pre-multiply here or HP double-scales.
+    """
+    return waveCorruptHp(baseHp, waveIndex)
