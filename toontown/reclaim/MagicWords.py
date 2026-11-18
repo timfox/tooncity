@@ -23,7 +23,8 @@ class StartReclaim(MagicWord):
     advancedDesc = (
         'Seeds partial pollution, spawns CorruptToon packs via ReclaimDirector, '
         'and drives purity restore when pollution hits 0 (cream wash pulse + '
-        'delayed cream aftershock + street sparkle, cheer pitch swell + cream '
+        'delayed cream aftershock + street sparkle, FOV punch + soft FOV cream '
+        'wash pulse, cheer pitch swell + cream '
         'flecks + delayed cream aftershock + soft cream wash pulse). Progressive '
         'street cream wash gets a delayed cream aftershock on purity advances. '
         'Polluted street entry cream wash gets a delayed cream aftershock. '

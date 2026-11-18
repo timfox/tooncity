@@ -505,13 +505,13 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
         Overlay flash/ring stay on aspect2d so hood geom prop tint / fog
         grade (PollutionPropTint / PollutionManager) are never stomped.
-        Camera FOV punch + rays/sparks live in PurityBurstFx (messenger).
-        StreetSparkleFx adds horizon cream glitter on purityRestoreFx
-        (composes with StreetColorWash soft-clear + wave cream burst).
-        PurityCompleteCreamWashFx pulses a StreetColorWash-style cream veil
-        under that sparkle and owns a delayed cream aftershock (flecks + halo).
-        ReclaimCheer + CheerCreamSparkleFx layer pitch swell cream flecks +
-        delayed cream aftershock + soft cream wash pulse.
+        Camera FOV punch + rays/sparks + soft FOV cream wash pulse live in
+        PurityBurstFx (messenger). StreetSparkleFx adds horizon cream glitter
+        on purityRestoreFx (composes with StreetColorWash soft-clear + wave
+        cream burst). PurityCompleteCreamWashFx pulses a StreetColorWash-style
+        cream veil under that sparkle and owns a delayed cream aftershock
+        (flecks + halo). ReclaimCheer + CheerCreamSparkleFx layer pitch swell
+        cream flecks + delayed cream aftershock + soft cream wash pulse.
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()

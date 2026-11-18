@@ -1,8 +1,11 @@
 """Client spectacle when a street hits purity restore.
 
-FOV camera punch + layered aspect2d juice on top of the director's flash/ring.
-Mirrors FinalePhaseFx / MeleeCombat finisher patterns, but warmer and cleaner
-so reclaim reads as a Toontown payoff — never stomps hood geom tint/fog.
+FOV camera punch + layered aspect2d juice on top of the director's flash/ring,
+plus a soft delayed cream wash pulse after the FOV kick. Mirrors FinalePhaseFx
+/ MeleeCombat finisher patterns, but warmer and cleaner so reclaim reads as a
+Toontown payoff — never stomps hood geom tint/fog. Soft FOV cream wash is
+CheerCreamWashPulse / PurityCompleteCreamWashFx vocabulary — cream/pastel
+only; no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -22,6 +25,7 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.PurityFovCreamWashFx import PurityFovCreamWashPulse
 
 
 class PurityBurstFxClient(DirectObject):
@@ -37,6 +41,7 @@ class PurityBurstFxClient(DirectObject):
         self._rayNPs = []
         self._sparkNPs = []
         self._outerRingNP = None
+        self._fovCreamWash = None
         # Director fires purityRestoreFx then purityRestoreSting; bind sting only
         # so we do not double-punch the camera / overlay layers.
         self.accept('purityRestoreSting', self._onRestore)
@@ -52,6 +57,7 @@ class PurityBurstFxClient(DirectObject):
 
     def _onPulse(self, zoneId=None, beat=1):
         # Second bloom beat gets a lighter FOV tick so the two-wash reads.
+        # Do not re-arm FOV cream wash — main playBurst owns that settle beat.
         if int(beat) == 2:
             self._playFovPunch(
                 punch=ReclaimGlobals.PURITY_FOV_PUNCH * 0.45,
@@ -63,6 +69,7 @@ class PurityBurstFxClient(DirectObject):
         self._restoreFov()
         self._restoreCamera()
         self._clearLayers()
+        self._clearFovCreamWash()
 
     def playBurst(self):
         """Main reclaim payoff: FOV punch + rays/sparks + soft camera bob."""
@@ -74,6 +81,10 @@ class PurityBurstFxClient(DirectObject):
         )
         self._playCameraBob()
         self._spawnJuiceLayers()
+        # Soft FOV cream wash after lens kick — cheer / purity-complete
+        # aspect2d grammar. Armed only when FOV punch actually started.
+        if self._fovIval is not None:
+            self._armFovCreamWash()
 
     def _playFovPunch(self, punch, inSec, outSec):
         self._restoreFov()
@@ -326,10 +337,32 @@ class PurityBurstFxClient(DirectObject):
         self._rayNPs = []
         self._sparkNPs = []
 
+    def _armFovCreamWash(self):
+        """Arm one delayed aspect2d cream wash per main purity FOV punch."""
+        try:
+            wash = PurityFovCreamWashPulse()
+            if wash.play() is not None:
+                self._fovCreamWash = wash
+            else:
+                self._fovCreamWash = None
+        except Exception:
+            self._fovCreamWash = None
+
+    def _clearFovCreamWash(self):
+        wash = self._fovCreamWash
+        self._fovCreamWash = None
+        if wash is None:
+            return
+        try:
+            wash.clear()
+        except Exception:
+            pass
+
     def _clear(self):
         self._restoreFov()
         self._restoreCamera()
         self._clearLayers()
+        self._clearFovCreamWash()
 
 
 _client = None
