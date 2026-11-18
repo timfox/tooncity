@@ -671,6 +671,8 @@ SNARE_TELEGRAPH_STRING_LOOK = {
 
 # Defeat pop juice — rubber-hose ink splat / balloon pop on announceDefeat.
 # Per-archetype palette so Smudge (purple), Brute (green), Snare (amber) read.
+# Cream fleck burst (DEATH_CREAM_FLECK_*) layers sunny purity chips on top via
+# CorruptDeathCreamFleckFx — not ink. Toggle DEATH_CREAM_FLECK_ENABLED.
 DEATH_POP_SFX_VOLUME = 0.78
 DEATH_POP_LOOK = {
     ARCHETYPE_INK: {
@@ -748,6 +750,37 @@ DEATH_POP_LOOK = {
         'sfx': 'phase_3/audio/sfx/GUI_balloon_popup.ogg',
         'sfxVolume': 0.85,
     },
+}
+
+# Defeat cream / pastel fleck burst — sunny purity chips layered on
+# CorruptDeathPopFx ink splat (client only). Not ink; matches reclaim /
+# hit-spark cream family. DEATH_CREAM_FLECK_ENABLED = False drops flecks only.
+DEATH_CREAM_FLECK_ENABLED = True
+DEATH_CREAM_FLECK_BIN = 47
+DEATH_CREAM_FLECK_COLORS = (
+    (1.0, 0.97, 0.82, 0.95),  # sunny cream
+    (1.0, 0.96, 0.62, 0.92),  # butter
+    (1.0, 0.9, 0.78, 0.9),    # soft peach pastel
+    (0.98, 0.94, 0.88, 0.88),  # warm parchment
+)
+DEATH_CREAM_FLECK_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+DEATH_CREAM_FLECK_LOOK = {
+    'id': 'death-cream-fleck',
+    # lift composed with deathPopLook when played; this is the fallback.
+    'lift': 1.35,
+    'fleckCount': 7,
+    'fleckHalf': 0.18,
+    'fleckDist': 2.05,
+    'fleckLift': 1.35,
+    'fleckSec': 0.32,
+    'fleckColors': DEATH_CREAM_FLECK_COLORS,
+    'fleckEndColors': DEATH_CREAM_FLECK_END_COLORS,
+    'binSort': DEATH_CREAM_FLECK_BIN,
 }
 
 # Overlord telegraph ink crown / silhouette flash — short rubber-hose juice
