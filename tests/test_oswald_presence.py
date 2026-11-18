@@ -140,6 +140,8 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('Loopy', camp.OSWALD_PRESENCE_HUB_GREET)
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_STREET_GREET)
         self.assertIn('fight', camp.OSWALD_PRESENCE_STREET_GREET.lower())
+        self.assertIn('Oswald', camp.OSWALD_PRESENCE_FIRST_MEET_TIP)
+        self.assertIn('met', camp.OSWALD_PRESENCE_FIRST_MEET_TIP.lower())
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_CHEER_TIP)
         self.assertIn('clean', camp.OSWALD_PRESENCE_CHEER_TIP.lower())
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_INTERACT_PROMPT)
@@ -154,9 +156,12 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertEqual(len(hub_pos), 4)
         self.assertTrue(all(isinstance(v, (int, float)) for v in hub_pos))
         self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')
+        self.assertEqual(camp.OSWALD_PRESENCE_MET_MSG, 'oswaldPresenceMet')
+        self.assertEqual(camp.OSWALD_PRESENCE_MET_SYNC_MSG, 'oswaldMetSync')
         blob = ' '.join([
             camp.OSWALD_PRESENCE_HUB_GREET,
             camp.OSWALD_PRESENCE_STREET_GREET,
+            camp.OSWALD_PRESENCE_FIRST_MEET_TIP,
             camp.OSWALD_PRESENCE_CHEER_TIP,
             camp.OSWALD_PRESENCE_INTERACT_PROMPT,
             camp.OSWALD_PRESENCE_LABEL,
@@ -192,6 +197,7 @@ class OswaldPresenceTests(unittest.TestCase):
                 'presenceLabel',
                 'hubGreetTip',
                 'streetGreetTip',
+                'firstMeetTip',
                 'cheerTip',
                 'interactPromptTip',
                 'greetTipForZone',
@@ -199,6 +205,8 @@ class OswaldPresenceTests(unittest.TestCase):
                 'presenceZoneIds',
                 'hubPlazaPos',
                 'cheerOnReclaim',
+                'metMsgName',
+                'metSyncMsgName',
                 'OswaldPresenceClient',
                 'ensureOswaldPresenceClient',
                 'getOswaldPresenceClient',
@@ -216,6 +224,9 @@ class OswaldPresenceTests(unittest.TestCase):
                 '_armInteract',
                 '_onInteractKey',
                 '_meetOswald',
+                '_onOswaldPresenceMet',
+                '_onOswaldMetSync',
+                '_requestPersistMet',
                 '_playGreetWave',
                 '_playCheerBounce',
                 '_onReclaimCheer',
@@ -227,7 +238,11 @@ class OswaldPresenceTests(unittest.TestCase):
         src = _read(rel)
         src_l = src.lower()
         self.assertIn('oswaldpresencemet', src_l)
+        self.assertIn('oswaldmetsync', src_l)
         self.assertIn('oswaldpresencecheered', src_l)
+        self.assertIn('_oswaldmet', src_l)
+        self.assertIn('firstmeettip', src_l)
+        self.assertIn('d_requestoswaldmet', src_l)
         self.assertIn('localavatarzonechange', src_l)
         self.assertIn('oswaldrevealbanner', src_l)
         self.assertIn('oswaldbetrayalchase', src_l)

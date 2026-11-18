@@ -262,12 +262,25 @@ class PollutionManagerAI(DistributedObjectAI):
             return
         self.pushCampaignProgressToAvatar(toon, hydrate=True)
 
+    def requestOswaldMet(self):
+        """Client first E-talk meet: latch + persist oswaldMet, mirror back."""
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        if toon is None:
+            return
+        try:
+            from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+            getCampaignDirector(self.air).markOswaldMet(toon)
+        except Exception:
+            self.notify.warning('requestOswaldMet failed')
+
     def pushCampaignProgressToAvatar(self, toon, hydrate=False):
         """Thin per-avatar status push for PlayEntry / OswaldPresence / power.
 
         Hydrate reads CampaignProgressSave so relog clients see AI-persisted
         STATE_VICTORY / unlockedThrough / chaseCleared / reclaimCount without
         pressing C/R. reclaimCount rehydrates CampaignPower melee bump.
+        Also mirrors oswaldMet via sibling setOswaldMet (keeps 4-arg progress).
         """
         if toon is None:
             return False
@@ -278,6 +291,7 @@ class PollutionManagerAI(DistributedObjectAI):
         state = 0
         chaseCleared = 0
         reclaimCount = 0
+        oswaldMet = 0
         try:
             from toontown.campaign import CampaignProgressSave
             from toontown.campaign.CampaignDirectorAI import getCampaignDirector
@@ -292,6 +306,7 @@ class PollutionManagerAI(DistributedObjectAI):
             chaseCleared = int(blob.get('chaseCleared', 0) or 0)
             # uint8 DC field — clamp; power bump already caps at POWER_BUMP_MAX.
             reclaimCount = max(0, min(255, int(blob.get('reclaimCount', 0) or 0)))
+            oswaldMet = 1 if int(blob.get('oswaldMet', 0) or 0) else 0
         except Exception:
             self.notify.warning('pushCampaignProgressToAvatar failed')
             return False
@@ -302,6 +317,27 @@ class PollutionManagerAI(DistributedObjectAI):
                 [unlocked, state, chaseCleared, reclaimCount])
         except Exception:
             self.notify.debug('setCampaignProgress send failed av=%s' % avId)
+            return False
+        # Sibling thin push — first-meet tip latch without widening progress DC.
+        try:
+            self.sendUpdateToAvatarId(
+                int(avId), 'setOswaldMet', [oswaldMet])
+        except Exception:
+            self.notify.debug('setOswaldMet send failed av=%s' % avId)
+        return True
+
+    def pushOswaldMetToAvatar(self, toon, met=0):
+        """Thin per-avatar setOswaldMet push (meet / hydrate / persist)."""
+        if toon is None:
+            return False
+        avId = getattr(toon, 'doId', None)
+        if avId is None:
+            return False
+        flag = 1 if int(met) else 0
+        try:
+            self.sendUpdateToAvatarId(int(avId), 'setOswaldMet', [flag])
+        except Exception:
+            self.notify.debug('setOswaldMet send failed av=%s' % avId)
             return False
         return True
 

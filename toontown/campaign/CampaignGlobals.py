@@ -1010,11 +1010,18 @@ OSWALD_PRESENCE_HUB_GREET = (
 OSWALD_PRESENCE_STREET_GREET = (
     'Oswald tips his ears — "I\'ll field the packs — stretch-punch ready!"  |  '
     'F fight  |  Shift dodge  |  C campaign')
+# Once-ever trust beat after the first E-talk meet (survives relog via
+# CampaignProgressSave.oswaldMet). Later zone visits keep hub/street greets.
+OSWALD_PRESENCE_FIRST_MEET_TIP = (
+    'You met Oswald — trust the plaza lead! He\'ll point the reclaim.  |  '
+    'Hop a tunnel  |  C campaign')
 OSWALD_PRESENCE_CHEER_TIP = (
     'Oswald cheers — "Street\'s clean! On to the next!"  |  '
     'Hop the tunnel  |  C campaign')
 OSWALD_PRESENCE_INTERACT_PROMPT = 'E — Talk to Oswald'
 OSWALD_PRESENCE_INTERACT_EVENT = 'oswaldPresenceInteract'
+OSWALD_PRESENCE_MET_MSG = 'oswaldPresenceMet'
+OSWALD_PRESENCE_MET_SYNC_MSG = 'oswaldMetSync'
 OSWALD_PRESENCE_CHEER_MSG = 'oswaldPresenceCheer'
 # Authored TTC plaza lead stand (x, y, z, h) — near HQ plaza approach,
 # not spawn-relative to the local toon. Streets keep near-avatar offset.

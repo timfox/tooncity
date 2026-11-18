@@ -50,6 +50,9 @@ def defaultProgress():
         # Remaining Corrupted Oswald HP mid-chase (0 = full / unset).
         # Resume / relog must not full-heal a damaged wash fight.
         'chaseHp': 0,
+        # 1 after first E-talk meet with trusted Oswald (first-meet tip).
+        # Durable trust beat — survives relog; not wiped on campaign replay.
+        'oswaldMet': 0,
     }
 
 
@@ -86,6 +89,7 @@ def sanitizeProgress(raw, numActs=None):
     # Mid-chase HP only matters while victory + uncleared chase.
     if chaseCleared or state != int(CampaignGlobals.STATE_VICTORY):
         chaseHp = 0
+    oswaldMet = _int('oswaldMet', 0, 0, 1)
     return {
         'unlockedThrough': unlocked,
         'actIndex': actIndex,
@@ -94,6 +98,7 @@ def sanitizeProgress(raw, numActs=None):
         'finalePhase': finalePhase,
         'chaseCleared': chaseCleared,
         'chaseHp': chaseHp,
+        'oswaldMet': oswaldMet,
     }
 
 
@@ -105,6 +110,9 @@ def snapshotFromDirector(director):
     chaseHp = getattr(director, 'chaseHp', None)
     if chaseHp is None:
         chaseHp = getattr(director, '_chaseHp', 0)
+    oswaldMet = getattr(director, 'oswaldMet', None)
+    if oswaldMet is None:
+        oswaldMet = getattr(director, '_oswaldMet', 0)
     return sanitizeProgress({
         'unlockedThrough': getattr(director, 'unlockedThrough', 0),
         'actIndex': getattr(director, 'actIndex', 0),
@@ -113,6 +121,7 @@ def snapshotFromDirector(director):
         'finalePhase': getattr(director, '_finalePhase', 0),
         'chaseCleared': chaseCleared,
         'chaseHp': chaseHp,
+        'oswaldMet': oswaldMet,
     })
 
 
@@ -126,6 +135,7 @@ def applyProgressToDirector(director, progress):
     director._finalePhase = blob['finalePhase']
     director.chaseCleared = int(blob.get('chaseCleared', 0) or 0)
     director.chaseHp = int(blob.get('chaseHp', 0) or 0)
+    director.oswaldMet = int(blob.get('oswaldMet', 0) or 0)
     return blob
 
 
@@ -242,6 +252,7 @@ def clientMirrorFromProgress(progress):
     unlockedThrough = int(blob.get('unlockedThrough', 0) or 0)
     actIndex = int(blob.get('actIndex', 0) or 0)
     reclaimCount = int(blob.get('reclaimCount', 0) or 0)
+    oswaldMet = int(blob.get('oswaldMet', 0) or 0)
     victory = state == int(CampaignGlobals.STATE_VICTORY)
     # Twist already landed once STATE_VICTORY — hide trusted Oswald whether
     # the betrayal chase is still pending or already washed.
@@ -252,6 +263,7 @@ def clientMirrorFromProgress(progress):
         'state': state,
         'chaseCleared': chaseCleared,
         'reclaimCount': reclaimCount,
+        'oswaldMet': oswaldMet,
         'victoryEpilogue': victory,
         'betrayed': betrayed,
         'softNextStreet': softNextStreetFromProgress(blob),

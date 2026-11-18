@@ -160,12 +160,14 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
             'state': camp.STATE_ACTIVE,
             'chaseCleared': 0,
             'reclaimCount': 2,
+            'oswaldMet': 1,
         })
         self.assertFalse(mirror['victoryEpilogue'])
         self.assertFalse(mirror['betrayed'])
         self.assertEqual(mirror['softNextStreet'], camp.ACTS[1]['name'])
         self.assertIn('Punchline', mirror['softNextStreet'])
         self.assertEqual(mirror['reclaimCount'], 2)
+        self.assertEqual(mirror['oswaldMet'], 1)
 
     def test_client_mirror_victory_chase_pending(self):
         save = self.save
@@ -284,6 +286,8 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertIn("accept('campaignActUnlocked'", src)
         self.assertIn('_onCampaignActUnlocked', src)
         self.assertIn('CorruptStreetBreadcrumb', src)
+        # #357 — login sync also rehydrates crumb unlock latch.
+        self.assertIn('noteCampaignActUnlocked', src)
         # Sync must raise crumb unlock latch (not tip/soft-next only).
         sync_idx = src.find('def _onCampaignProgressSync')
         self.assertGreater(sync_idx, 0)

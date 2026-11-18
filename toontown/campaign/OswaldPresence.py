@@ -75,6 +75,26 @@ def cheerTip():
         'Hop the tunnel  |  C campaign'))
 
 
+def firstMeetTip():
+    """Once-ever trust tip after the first E-talk meet (survives relog)."""
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_FIRST_MEET_TIP',
+        'You met Oswald — trust the plaza lead! He\'ll point the reclaim.  |  '
+        'Hop a tunnel  |  C campaign'))
+
+
+def metMsgName():
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_MET_MSG',
+        'oswaldPresenceMet'))
+
+
+def metSyncMsgName():
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_MET_SYNC_MSG',
+        'oswaldMetSync'))
+
+
 def interactPromptTip():
     return str(getattr(
         CampaignGlobals, 'OSWALD_PRESENCE_INTERACT_PROMPT',
@@ -177,8 +197,9 @@ class OswaldPresenceClient(DirectObject):
 
     AI-free stub: place a rubber-hose silhouette at the authored TTC plaza
     stand (streets: near local toon), arm E-talk when approached, greet once
-    per zone visit, cheer on street-clear purity messengers, clear after
-    betrayal messengers / persisted victory sync.
+    per zone visit (first-ever meet uses the once-ever first-meet tip and
+    persists ``oswaldMet``), cheer on street-clear purity messengers, clear
+    after betrayal messengers / persisted victory sync.
     """
 
     def __init__(self):
@@ -195,6 +216,8 @@ class OswaldPresenceClient(DirectObject):
         self._idleIval = None
         self._zoneId = None
         self._greetedZone = None
+        # Durable first-meet latch (also hydrated from AI oswaldMet sync).
+        self._oswaldMet = False
         self._betrayed = False
         self._markerPos = None
         self._inRange = False
@@ -210,6 +233,9 @@ class OswaldPresenceClient(DirectObject):
         self.accept('npcCheerStub', self._onReclaimCheer)
         self.accept('purityRestoreFx', self._onReclaimCheer)
         self.accept(cheerMsgName(), self._onReclaimCheer)
+        # First-meet tip + persist — orphan send wired here (not PlayEntry).
+        self.accept(metMsgName(), self._onOswaldPresenceMet)
+        self.accept(metSyncMsgName(), self._onOswaldMetSync)
         # Login mirror — AI-persisted STATE_VICTORY must hide trusted Oswald
         # after relog (session-only `_betrayed` is not enough).
         syncMsg = getattr(
@@ -232,6 +258,7 @@ class OswaldPresenceClient(DirectObject):
         self._clearBody()
         self._zoneId = None
         self._greetedZone = None
+        self._oswaldMet = False
         self._betrayed = False
 
     def _bootZone(self, task):
@@ -606,7 +633,12 @@ class OswaldPresenceClient(DirectObject):
         self._meetOswald(zoneId)
 
     def _meetOswald(self, zoneId):
-        """Short greet interact — body wave + tip (once per zone visit)."""
+        """Short greet interact — body wave + tip (once per zone visit).
+
+        First-ever meet shows the once-ever first-meet tip and fires
+        ``oswaldPresenceMet`` so the accept path can persist ``oswaldMet``.
+        Later zone visits keep hub/street greet copy.
+        """
         if self._greetedZone is not None and int(self._greetedZone) == int(
                 zoneId):
             return
@@ -614,13 +646,38 @@ class OswaldPresenceClient(DirectObject):
         self._disarmInteract()
         self._clearPrompt()
         self._playGreetWave()
-        tip = greetTipForZone(zoneId)
+        firstMeet = not bool(self._oswaldMet)
+        tip = firstMeetTip() if firstMeet else greetTipForZone(zoneId)
         self._showGreetTip(tip)
         try:
             messenger.send(  # noqa: F821
-                'oswaldPresenceMet', [int(zoneId), presenceLabel()])
+                metMsgName(), [int(zoneId), presenceLabel()])
         except Exception:
             pass
+
+    def _onOswaldPresenceMet(self, zoneId=0, label=''):
+        """Accept first-meet messenger — latch + AI-persist oswaldMet once."""
+        if self._oswaldMet:
+            return
+        self._oswaldMet = True
+        self._requestPersistMet()
+
+    def _onOswaldMetSync(self, met=0):
+        """Hydrate durable first-meet latch from AI setOswaldMet (relog)."""
+        if int(met):
+            self._oswaldMet = True
+
+    def _requestPersistMet(self):
+        """Ask AI to persist oswaldMet so first-meet tip stays once-ever."""
+        try:
+            pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
+        except Exception:
+            pm = None
+        if pm is not None and hasattr(pm, 'd_requestOswaldMet'):
+            try:
+                pm.d_requestOswaldMet()
+            except Exception:
+                pass
 
     def _cheerDebounce(self, minGap=0.4):
         try:
@@ -832,6 +889,9 @@ class OswaldPresenceClient(DirectObject):
         if tip == cheerTip():
             hold = max(1.0, float(getattr(
                 CampaignGlobals, 'OSWALD_PRESENCE_CHEER_HOLD_SEC', 2.4)))
+        elif tip == firstMeetTip():
+            # First-meet trust beat holds a touch longer than zone greets.
+            hold = max(hold, 3.6)
         pop = Parallel(
             Sequence(
                 LerpScaleInterval(tipNP, 0.08, 0.052),
