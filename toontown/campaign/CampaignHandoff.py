@@ -72,7 +72,11 @@ from toontown.campaign.CampaignHandoffConfetti import (
     playHandoffConfetti,
     playVictoryCreamSwell,
 )
-from toontown.campaign.CampaignPower import applyPowerBump
+from toontown.campaign.CampaignPower import (
+    applyPowerBump,
+    streetClearRewardEnabled,
+    streetClearRewardPayload,
+)
 from toontown.campaign.HandoffCreamWashFx import (
     clearHandoffCreamWash,
     playHandoffCreamWash,
@@ -95,6 +99,7 @@ from toontown.campaign.VictoryTwistConfettiSting import (
 _SUB_SCALE = 0.048
 _CUE_SCALE = 0.052
 _POWER_SCALE = 0.036
+_REWARD_SCALE = 0.034
 _HOLD_SEC = 4.6
 _CARD_COLOR = (0.12, 0.28, 0.22, 0.55)
 _BETRAYAL_CARD_COLOR = (0.18, 0.08, 0.10, 0.62)
@@ -102,6 +107,7 @@ _TITLE_COLOR = Vec4(0.55, 1.0, 0.78, 1)
 _SUB_COLOR = Vec4(0.95, 1.0, 0.88, 1)
 _CUE_COLOR = Vec4(1.0, 0.92, 0.42, 1)
 _POWER_COLOR = Vec4(0.75, 0.95, 1.0, 1)
+_REWARD_COLOR = Vec4(1.0, 0.88, 0.42, 1)
 _VICTORY_COLOR = Vec4(1.0, 0.95, 0.45, 1)
 _TWIST_COLOR = Vec4(1.0, 0.55, 0.35, 1)
 _PHASE_COLOR = Vec4(1.0, 0.55, 0.35, 1)
@@ -162,6 +168,9 @@ class CampaignHandoffClient(DirectObject):
     def _onPurityRestore(self, zoneId):
         self._localReclaimCount += 1
         mult = applyPowerBump(self._localReclaimCount)
+        # Street-trophy jellybean / laff line — client mirror of AI award
+        # (CampaignPower.awardStreetClearReward). Beyond COMBO_DAMAGE bump.
+        rewardLine = self._streetClearRewardLine(zoneId)
         face = _face()
         act, nxt = self._actsForZone(zoneId)
         if act and act.get('finale'):
@@ -174,6 +183,7 @@ class CampaignHandoffClient(DirectObject):
                     nextCue='Stay on Silly Street — Phase 2 packs inbound',
                     color=_FINALE_P2_COLOR,
                     powerMult=mult,
+                    rewardLine=rewardLine,
                     nextStreet=None)
             else:
                 # Purity cheer only — betrayal handoff plate lands the twist
@@ -185,6 +195,7 @@ class CampaignHandoffClient(DirectObject):
                     nextCue='Purity holds…',
                     color=_VICTORY_COLOR,
                     powerMult=mult,
+                    rewardLine=rewardLine,
                     nextStreet=None,
                     holdSec=2.4,
                     creamSwell=True)
@@ -196,6 +207,7 @@ class CampaignHandoffClient(DirectObject):
                 nextCue='Scout the next polluted street',
                 color=_TITLE_COLOR,
                 powerMult=mult,
+                rewardLine=rewardLine,
                 nextStreet=None,
                 confetti=True,
                 trustSettle=True)
@@ -221,10 +233,23 @@ class CampaignHandoffClient(DirectObject):
             nextCue=nextCue,
             color=_TITLE_COLOR,
             powerMult=mult,
+            rewardLine=rewardLine,
             nextStreet=nextStreet,
             confetti=True,
             trustSettle=True,
             trustFracture=bool(act.get('trustFracture')))
+
+    def _streetClearRewardLine(self, zoneId):
+        """Handoff plate line for jellybean / laff street trophy (or None)."""
+        if not streetClearRewardEnabled():
+            return None
+        try:
+            payload = streetClearRewardPayload(
+                reclaimCount=self._localReclaimCount, zoneId=zoneId)
+        except Exception:
+            return None
+        line = payload.get('handoff') if payload else None
+        return line or None
 
     def _actsForZone(self, zoneId):
         zoneId = int(zoneId)
@@ -396,7 +421,8 @@ class CampaignHandoffClient(DirectObject):
             nextStreet=None)
 
     def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
-                   powerMult=None, nextStreet=None, holdSec=None, onDone=None,
+                   powerMult=None, rewardLine=None, nextStreet=None,
+                   holdSec=None, onDone=None,
                    confetti=False, trustSettle=False, creamSwell=False,
                    trustFracture=False, betrayalHandoff=False):
         """Staged rubber-hose celebration: card → title pop → cue → hold."""
@@ -495,7 +521,9 @@ class CampaignHandoffClient(DirectObject):
 
         try:
             cm = CardMaker('campaign-handoff-card')
-            cm.setFrame(-1.15, 1.15, -0.28, 0.22)
+            # Extra lower band when street-trophy reward sits under power bump.
+            cardBottom = -0.34 if (rewardLine or powerMult is not None) else -0.28
+            cm.setFrame(-1.15, 1.15, cardBottom, 0.22)
             card = root.attachNewNode(cm.generate())
             card.setTransparency(TransparencyAttrib.MAlpha)
             card.setColor(*(
@@ -555,12 +583,25 @@ class CampaignHandoffClient(DirectObject):
             cueNP.setColorScale(1, 1, 1, 0)
             cueNP.setScale(_CUE_SCALE * 0.55)
         powerNP = None
+        rewardNP = None
+        # Power bump + street-trophy reward share the lower plate band.
+        powerZ = -0.20
+        rewardZ = -0.20
+        if powerMult is not None and rewardLine:
+            powerZ = -0.18
+            rewardZ = -0.26
         if powerMult is not None:
             powerNP = self._makeLine(
                 root, 'campaign-handoff-power',
                 'Melee power  x%.2f' % float(powerMult),
-                _POWER_COLOR, _POWER_SCALE, -0.20)
+                _POWER_COLOR, _POWER_SCALE, powerZ)
             powerNP.setColorScale(1, 1, 1, 0)
+        if rewardLine:
+            rewardNP = self._makeLine(
+                root, 'campaign-handoff-reward',
+                str(rewardLine),
+                _REWARD_COLOR, _REWARD_SCALE, rewardZ)
+            rewardNP.setColorScale(1, 1, 1, 0)
 
         parts = [
             LerpColorScaleInterval(root, 0.18, Vec4(1, 1, 1, 1)),
@@ -599,6 +640,11 @@ class CampaignHandoffClient(DirectObject):
             parts.append(Sequence(
                 Wait(0.55),
                 LerpColorScaleInterval(powerNP, 0.2, Vec4(1, 1, 1, 1)),
+            ))
+        if rewardNP is not None:
+            parts.append(Sequence(
+                Wait(0.62),
+                LerpColorScaleInterval(rewardNP, 0.2, Vec4(1, 1, 1, 1)),
             ))
 
         try:

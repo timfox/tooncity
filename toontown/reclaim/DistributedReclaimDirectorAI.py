@@ -437,8 +437,49 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
                 pollutionMgr, 'markStreetSecured'):
             pollutionMgr.markStreetSecured(self.reclaimZoneId)
         self.sendUpdate('announceReclaimComplete', [])
-        # Minimal progression stub for slice 4 campaign hooks.
+        # Campaign act unlock / reclaimCount / victory (slice 4 hooks).
         messenger.send('neighborhoodReclaimed', [self.reclaimZoneId])
+        # Slice reward beyond CampaignPower COMBO_DAMAGE bump: jellybeans
+        # + laff toon-up + street-trophy whisper (R and C paths).
+        self._awardStreetClearRewards()
+
+    def _awardStreetClearRewards(self):
+        """Grant Open Toontown street-clear beans/laff to toons on this street.
+
+        Runs after neighborhoodReclaimed so active campaign reclaimCount
+        already includes this clear. Discoverable R (idle campaign) still
+        awards the base jellybean / laff slice.
+        """
+        try:
+            from toontown.campaign.CampaignPower import awardStreetClearReward
+            from toontown.toon.DistributedToonAI import DistributedToonAI
+        except Exception:
+            self.notify.debug('street-clear reward import failed')
+            return
+        reclaimCount = 1
+        try:
+            from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+            campaign = getCampaignDirector(self.air)
+            reclaimCount = max(
+                1, int(getattr(campaign, 'reclaimCount', 0) or 0))
+        except Exception:
+            pass
+        zoneId = int(self.reclaimZoneId or 0)
+        for obj in list(self.air.doId2do.values()):
+            if not isinstance(obj, DistributedToonAI):
+                continue
+            if int(getattr(obj, 'zoneId', 0) or 0) != zoneId:
+                continue
+            # Skip sad toons — KO fail already contested the street.
+            if int(getattr(obj, 'hp', 1) or 0) <= 0:
+                continue
+            try:
+                awardStreetClearReward(
+                    obj, reclaimCount=reclaimCount, zoneId=zoneId)
+            except Exception:
+                self.notify.debug(
+                    'street-clear reward failed for av %s'
+                    % getattr(obj, 'doId', '?'))
 
     def _syncPollutionHint(self):
         pollutionMgr = getattr(self.air, 'pollutionManager', None)

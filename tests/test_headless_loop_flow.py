@@ -1159,6 +1159,14 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('reclaimCount', power_src)
         self.assertGreater(self.camp.POWER_BUMP_PER_RECLAIM, 0.0)
         self.assertGreater(self.camp.POWER_BUMP_MAX, self.camp.POWER_BUMP_PER_RECLAIM)
+        # Street-clear slice reward beyond COMBO_DAMAGE (jellybean / laff trophy).
+        self.assertIn('awardStreetClearReward', power_src)
+        self.assertIn('streetClearJellybeans', power_src)
+        self.assertIs(self.camp.STREET_CLEAR_REWARD_ENABLED, True)
+        self.assertGreater(self.camp.STREET_CLEAR_JELLYBEANS, 0)
+        self.assertGreater(self.camp.STREET_CLEAR_LAFF, 0)
+        self.assertIn('_awardStreetClearRewards', ai_src)
+        self.assertIn('awardStreetClearReward', ai_src)
         # Login rehydrate (#349): Handoff silent-applies AI reclaimCount.
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('applyPowerBump', handoff_src)
@@ -1171,9 +1179,11 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertNotIn('_celebrate', sync_win)
         purity_idx = handoff_src.find('def _onPurityRestore')
         self.assertGreater(purity_idx, 0)
-        purity_win = handoff_src[purity_idx:purity_idx + 400]
+        purity_win = handoff_src[purity_idx:purity_idx + 500]
         self.assertIn('_localReclaimCount += 1', purity_win)
         self.assertIn('applyPowerBump(self._localReclaimCount)', purity_win)
+        self.assertIn('rewardLine', purity_win)
+        self.assertIn('_streetClearRewardLine', purity_win)
 
     # --- campaign progression + Oswald twist ---
 

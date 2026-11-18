@@ -54,6 +54,27 @@ RECLAIM_FACE = PROTAGONIST
 POWER_BUMP_PER_RECLAIM = 0.08
 POWER_BUMP_MAX = 0.40
 
+# Street-clear slice reward beyond the COMBO_DAMAGE bump — classic Open
+# Toontown jellybeans + a small laff toon-up, framed as a street trophy
+# line on the handoff plate. Awarded from DistributedReclaimDirectorAI
+# on purity complete (R and C paths). STREET_CLEAR_REWARD_ENABLED = False
+# drops beans / laff / trophy whisper only (power bump + act unlock stay).
+# No cream FX / no keyblades / KH branding.
+STREET_CLEAR_REWARD_ENABLED = True
+STREET_CLEAR_JELLYBEANS = 20
+# Extra beans per prior street clear (reclaimCount after this clear).
+STREET_CLEAR_JELLYBEANS_BONUS_PER_RECLAIM = 5
+STREET_CLEAR_JELLYBEANS_MAX = 50
+STREET_CLEAR_LAFF = 5
+# Trophy-style whisper / handoff copy (street name filled at award time).
+STREET_CLEAR_TROPHY_FMT = 'Street Trophy: %s reclaimed!'
+STREET_CLEAR_REWARD_MSG_FMT = (
+    '%s  +%s jellybeans  +%s laff')
+STREET_CLEAR_REWARD_HANDOFF_FMT = (
+    'Street Trophy  +%s beans  +%s laff')
+# Client messenger (optional UI listeners); AI also d_setSystemMessage.
+STREET_CLEAR_REWARD_MSG = 'streetClearReward'
+
 # Escalating reclaim acts: explore → fight → reclaim → next hood.
 # Finale: two-phase Ink Overlord under Oswald's lead, then twist.
 ACTS = (
