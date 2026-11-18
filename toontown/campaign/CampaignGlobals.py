@@ -303,71 +303,74 @@ SILLY_ACT_TIP_POP_SETTLE_SEC = 0.10
 SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.07)
 SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 # Deepened cream hose settle after Silly tip fracture bounce (#207 /
-# #232 deepen). Juicier outward overshoot → rest so the almost-confess /
-# trust-fracture tip lands rubber-hose and readable past #232 — Punchline
-# tip cream hose settle twin on the tip bar, taller/longer primary
-# overshoot for Act 3 unease (no tip rebound — Punchline deepen owns that
-# micro bounce). Armed on tipHose='silly' only (entry foreshadow + mid-act
-# approachTip). Distinct from Punchline tip cream hose deepen tunables and
-# finale betrayal banner (#212 / #235). SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED
-# = False drops this cream settle only (hose pop + trust/fracture settle +
-# cream wash remain). No keyblades / KH branding.
+# #232 / #279 deepen). Juicier outward overshoot → rest so the almost-
+# confess / trust-fracture tip lands rubber-hose and readable past #279 —
+# Punchline tip cream hose settle twin on the tip bar, taller/longer
+# primary overshoot for Act 3 unease (no tip rebound — Punchline deepen
+# owns that micro bounce; betrayal banner owns climax rebound). Armed on
+# tipHose='silly' only (entry foreshadow + mid-act approachTip). Distinct
+# from Punchline tip cream hose deepen (#256 / #284), finale betrayal
+# banner (#235 / #260 / #288), and victory twist sting (#244).
+# SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = False drops this cream settle
+# only (hose pop + trust/fracture settle + cream wash remain).
+# No keyblades / KH branding.
 SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = True
-SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.11, 1.0, 1.17, 0.08)  # juicier than #232 (1.09/1.14/0.07)
-SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.12  # was 0.11 @ #232
+SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.13, 1.0, 1.20, 0.09)  # juicier than #279 (1.11/1.17/0.08)
+SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.13  # was 0.12 @ #279
 # Delay after Silly Street enter before the mid-act almost-confess tip
 # replaces the entry tip (PlayEntry). Longer than SILLY_AUTO_RECLAIM so
 # the explore / entry foreshadow beat lands first.
 SILLY_APPROACH_TIP_DELAY_SEC = 3.85
 
 # Soft cream wash pulse + delayed cream aftershock after Silly Act 3 tip
-# hose pop (#95) / Overlord foreshadow / almost-confess tip (#200 / #251
-# deepen). Act-banner / Punchline tip wash grammar deepened past #251 —
-# juicier two-beat aspect2d veil on PlayEntry tipHose='silly' path only,
-# then richer flecks + halo settle under the tip bar so the almost-confess
-# / foreshadow tip reads juicier before the boss. Cream / pastel only.
-# Still quieter / shorter than handoff wash (#141) and victory glitter
-# hang — tip foreshadow residual, not twist payoff. Distinct from victory
-# twist sting cream deepen (#244) and betrayal banner cream hose settle
-# (#235); tip bar cream hose settle deepen (#232 / this PR) stays on the
-# scale path. Loopy / Punchline / default tip hose stay wash-free.
-# Act-enter / trust / handoff / victory / finale washes live in their own
-# modules. SILLY_ACT_TIP_CREAM_WASH_ENABLED = False drops wash + aftershock
-# only (hose pop + trust settle + cream hose settle remain). No keyblades /
-# KH branding.
+# hose pop (#95) / Overlord foreshadow / almost-confess tip (#200 / #251 /
+# #279 deepen). Act-banner / Punchline tip wash grammar deepened past
+# #279 — juicier two-beat aspect2d veil on PlayEntry tipHose='silly' path
+# only, then richer flecks + halo settle under the tip bar so the
+# almost-confess / foreshadow tip reads juicier before the boss. Cream /
+# pastel only. Still quieter / shorter than handoff wash (#141) and
+# victory glitter hang — tip foreshadow residual, not twist payoff.
+# Distinct from victory twist sting cream deepen (#244) and betrayal
+# banner cream hose settle (#235 / #288); tip bar cream hose settle
+# deepen (#232 / #279 / this PR) stays on the scale path. Loopy /
+# Punchline / default tip hose stay wash-free. Act-enter / trust /
+# handoff / victory / finale washes live in their own modules.
+# SILLY_ACT_TIP_CREAM_WASH_ENABLED = False drops wash + aftershock only
+# (hose pop + trust settle + cream hose settle remain).
+# No keyblades / KH branding.
 SILLY_ACT_TIP_CREAM_WASH_ENABLED = True
-SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.62  # after play; after deepened cream hose settle
+SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.68  # after play; after deepened cream hose settle past #279
 SILLY_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-SILLY_ACT_TIP_CREAM_WASH_PEAK = 0.15  # juicier than #251 (0.14); under victory (0.16)
-SILLY_ACT_TIP_CREAM_WASH_MID = 0.09  # was 0.08 @ #251
+SILLY_ACT_TIP_CREAM_WASH_PEAK = 0.15  # past #279; under victory (0.16)
+SILLY_ACT_TIP_CREAM_WASH_MID = 0.10  # was 0.09 @ #279
 SILLY_ACT_TIP_CREAM_WASH_IN_SEC = 0.07
-SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC = 0.13  # was 0.12 @ #251
-SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.14  # was 0.12 @ #251
-SILLY_ACT_TIP_CREAM_WASH_OUT_SEC = 0.44  # soft settle rides tip residual
+SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC = 0.14  # was 0.13 @ #279
+SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.16  # was 0.14 @ #279
+SILLY_ACT_TIP_CREAM_WASH_OUT_SEC = 0.48  # soft settle rides tip residual
 # Above ink entry vignette (48); soft veil settle under tip bar.
 SILLY_ACT_TIP_CREAM_WASH_BIN = 49
 # Soft cream fleck / halo residual after Silly tip wash. Tip-bar origin
 # (near PLAY_ENTRY_TIP_POS), quieter than victory twist aftershock (#244)
-# and not a betrayal title hose settle (#235). Deepened past #251.
+# and not a betrayal title hose settle (#235 / #288). Deepened past #279.
 # SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED = False drops residual only.
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED = True
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.18  # after wash starts
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.72)  # under tip bar
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT = 5  # was 4 @ #251
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SIZE = 0.016  # was 0.014 @ #251
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_DRIFT = 0.28  # was 0.24 @ #251
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_FALL = 0.21  # was 0.18 @ #251
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC = 0.36  # was 0.32 @ #251
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.76)
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT = 5  # under victory wash (6); was 5 @ #279
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SIZE = 0.017  # was 0.016 @ #279
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_DRIFT = 0.30  # was 0.28 @ #279
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_FALL = 0.23  # was 0.21 @ #279
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC = 0.40  # was 0.36 @ #279
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.78)
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
 # Above wash bin (49); soft residual under tip bar.
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_BIN = 51
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.40  # was 0.36 @ #251
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.42  # was 0.40 @ #279
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_START = 0.26
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.18  # was 1.10 @ #251
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.30  # was 0.26 @ #251
-SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.13  # was 0.11 @ #251
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.22  # was 1.18 @ #279
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.33  # was 0.30 @ #279
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.14  # was 0.13 @ #279
 SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # PlayEntry act-enter flash banner (ACTS['banner'] / reclaim cues).

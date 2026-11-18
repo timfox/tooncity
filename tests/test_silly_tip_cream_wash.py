@@ -103,29 +103,29 @@ class SillyTipCreamWashDeepenTest(unittest.TestCase):
         camp = self.camp
         self.assertIs(camp.SILLY_ACT_TIP_CREAM_WASH_ENABLED, True)
         self.assertIs(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED, True)
-        # Deepened past #251 (0.14 / 0.08 / 0.12 / 0.40 / aftershock 4).
+        # Deepened past #279 (0.15 / 0.09 / 0.14 / 0.44 / aftershock 5).
         self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK), 0.15)
-        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_MID), 0.09)
+        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_MID), 0.10)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC), 0.14)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC), 0.16)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_OUT_SEC), 0.44)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_OUT_SEC), 0.48)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC), 0.13)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC), 0.14)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC), 0.62)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC), 0.68)
         self.assertGreaterEqual(
             int(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT), 5)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC), 0.36)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC), 0.40)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SIZE), 0.016)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SIZE), 0.017)
         self.assertTrue(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK), 1.18)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK), 1.22)
         self.assertGreaterEqual(
             float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA),
-            0.13)
+            0.14)
         origin = camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN
         self.assertEqual(len(origin), 3)
         # Tip-bar residual (bottom), not betrayal / victory plate.
@@ -146,13 +146,15 @@ class SillyTipCreamWashDeepenTest(unittest.TestCase):
         self.assertNotEqual(
             float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_FALL),
             float(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_FALL))
-        # Distinct from betrayal cream hose settle (#235) — different mechanism.
+        # Distinct from betrayal cream hose settle (#235 / #288).
         self.assertNotEqual(
             float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK),
             float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT[0]))
         self.assertNotEqual(
             float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC),
             float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC))
+        self.assertFalse(hasattr(
+            camp, 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REBOUND'))
         # Quieter tip residual than sunny victory cream wash aftershock.
         self.assertLess(
             camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT,
@@ -215,9 +217,9 @@ class SillyTipCreamWashDeepenTest(unittest.TestCase):
 
     def test_magic_words_mention_deepened_silly_tip_wash(self):
         magic_l = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('deepened soft cream wash pulse', magic_l)
-        self.assertIn('cream aftershock', magic_l)
-        self.assertIn('deepened cream hose settle', magic_l)
+        self.assertIn('deepened soft cream wash pulse past #279', magic_l)
+        self.assertIn('cream aftershock past #279', magic_l)
+        self.assertIn('cream hose settle past #279', magic_l)
         self.assertIn('silly act 3 tip', magic_l)
         self.assertIn('overlord foreshadow', magic_l)
         self.assertIn('almost confess', magic_l)
@@ -232,9 +234,9 @@ class SillyTipCreamWashDeepenTest(unittest.TestCase):
         self.assertIn('aftershock', snip)
         self.assertIn('foreshadow', snip)
         self.assertIn('almost-confess', snip)
-        self.assertIn('#251', snip)
+        self.assertIn('#279', snip)
         self.assertIn('#244', snip)
-        self.assertIn('#235', snip)
+        self.assertIn('#288', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
             self.assertNotIn(banned, snip)
 
