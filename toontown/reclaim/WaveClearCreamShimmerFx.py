@@ -2,9 +2,12 @@
 
 Soft aspect2d cream veil + rising flecks that fire *after* WaveCreamBurstFx
 settles — residual sunny hang so the clear beat lingers without restaging the
-flash/ring. Matches EntryCreamShimmer / StreetSparkle chip style. Layers with
-cheer pitch swell and street wash; never stomps full-purity FOV / StreetSparkle
-payoff. Toontown spiritual-sequel tone only — no keyblades / no KH branding.
+flash/ring. Matches EntryCreamShimmer / StreetSparkle chip style. A delayed
+cream aftershock (softer flecks settling downward + soft halo) follows the
+hang — same residual grammar as purity-fill cream aftershock (#123) and cheer
+cream aftershock (#118). Layers with cheer pitch swell and street wash; never
+stomps full-purity FOV / StreetSparkle payoff. Toontown spiritual-sequel tone
+only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -26,13 +29,15 @@ from toontown.reclaim import ReclaimGlobals
 
 
 class WaveClearCreamShimmerFxClient(DirectObject):
-    """Listens for wave clear and plays delayed cream shimmer hang."""
+    """Listens for wave clear; owns cream shimmer hang + delayed aftershock."""
 
     def __init__(self):
         DirectObject.__init__(self)
         self._ival = None
+        self._shimmerPlayIval = None
         self._shimmerNP = None
         self._fleckNPs = []
+        self._haloNP = None
         self.accept('reclaimWaveCleared', self._onWaveCleared)
 
     def destroy(self):
@@ -43,7 +48,7 @@ class WaveClearCreamShimmerFxClient(DirectObject):
         self.playHang()
 
     def playHang(self):
-        """Soft cream veil + flecks after the wave-clear burst peak."""
+        """Soft cream veil + flecks after the wave-clear burst peak + aftershock."""
         if not getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_SHIMMER_ENABLED', True):
             return
         self.clear()
@@ -78,12 +83,48 @@ class WaveClearCreamShimmerFxClient(DirectObject):
             return
 
         # Hang starts after WaveCreamBurstFx flash/flecks settle.
-        self._ival = Sequence(
-            Wait(max(0.0, delay)),
-            Parallel(*parts),
-            Func(self.clear),
-            name='reclaimWaveClearCreamShimmer',
-        )
+        shimmerIval = Parallel(*parts, name='reclaimWaveClearCreamShimmerHang')
+        self._shimmerPlayIval = shimmerIval
+
+        # Lifetime hold matches the longer of veil / fleck hang.
+        inSec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SHIMMER_IN_SEC', 0.08))
+        holdSec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SHIMMER_HOLD_SEC', 0.34))
+        outSec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SHIMMER_OUT_SEC', 0.52))
+        fleckSec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_SHIMMER_FLECK_SEC', 0.55))
+        hangSec = max(inSec + holdSec + outSec, fleckSec)
+
+        aftershock = self._buildAftershock(parent, ox, oy, oz)
+
+        def _kickHang():
+            try:
+                shimmerIval.start()
+            except Exception:
+                self.clear()
+
+        if aftershock is not None:
+            # Shimmer Parallel starts after hang delay; aftershock rides beside it.
+            self._ival = Sequence(
+                Wait(max(0.0, delay)),
+                Func(_kickHang),
+                Parallel(
+                    Wait(hangSec + 0.04),
+                    aftershock,
+                ),
+                Func(self.clear),
+                name='reclaimWaveClearCreamShimmer',
+            )
+        else:
+            self._ival = Sequence(
+                Wait(max(0.0, delay)),
+                Func(_kickHang),
+                Wait(hangSec + 0.04),
+                Func(self.clear),
+                name='reclaimWaveClearCreamShimmer',
+            )
         self._ival.start()
 
     def _spawnShimmer(self, parent, ox, oy, oz, r, g, b, binSort):
@@ -200,13 +241,163 @@ class WaveClearCreamShimmerFxClient(DirectObject):
             ))
         return parts
 
+    def _buildAftershock(self, parent, ox, oy, oz):
+        """Delayed soft cream flecks (+ optional halo) after wave-clear shimmer."""
+        if not getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_ENABLED', True):
+            return None
+        delay = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_DELAY_SEC', 0.24))
+        parts = []
+
+        if getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_ENABLED', True):
+            halo = self._spawnAftershockHalo(parent, ox, oy, oz)
+            if halo is not None:
+                parts.append(halo)
+
+        count = int(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_COUNT', 5))
+        sec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_SEC', 0.34))
+        for i in range(count):
+            part = self._spawnAftershockFleck(
+                parent, ox, oy, oz, i, count, sec)
+            if part is not None:
+                parts.append(part)
+
+        if not parts:
+            return None
+        return Sequence(
+            Wait(max(0.0, delay)),
+            Parallel(*parts),
+        )
+
+    def _spawnAftershockHalo(self, parent, ox, oy, oz):
+        half = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_HALF', 0.42))
+        startScale = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_START', 0.28))
+        peakScale = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_PEAK', 1.20))
+        sec = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_SEC', 0.28))
+        peakA = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.14))
+        r, g, b, _a = getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_COLOR',
+            (1.0, 0.97, 0.82, 1.0))
+        binSort = int(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_BIN', 52))
+        try:
+            cm = CardMaker('reclaim-wave-clear-cream-aftershock-halo')
+            # Soft oval halo under the hang band — quieter than cheer mid-screen.
+            cm.setFrame(-half, half, -half * 0.55, half * 0.55)
+            halo = parent.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, peakA)
+            halo.setPos(ox, oy, oz)
+            halo.setScale(startScale)
+            halo.setBin('fixed', binSort)
+            halo.setDepthTest(False)
+            halo.setDepthWrite(False)
+        except Exception:
+            return None
+        self._haloNP = halo
+        return Parallel(
+            LerpScaleInterval(
+                halo, max(0.01, sec), peakScale, blendType='easeOut'),
+            Sequence(
+                Wait(max(0.0, sec * 0.2)),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.8), Vec4(r, g, b, 0),
+                    blendType='easeIn'),
+            ),
+        )
+
+    def _spawnAftershockFleck(self, parent, ox, oy, oz, index, total, sec):
+        """Softer cream chip that settles downward — residual shimmer aftershock."""
+        count = max(1, int(total))
+        size = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_SIZE', 0.016))
+        drift = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_DRIFT', 0.32))
+        fall = float(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_FALL', 0.26))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_COLOR',
+            (1.0, 0.97, 0.78, 0.82))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_END_COLOR',
+            (1.0, 0.93, 0.58, 0.0))
+        binSort = int(getattr(
+            ReclaimGlobals, 'WAVE_CLEAR_CREAM_AFTERSHOCK_BIN', 52))
+        angle = (2.0 * pi * index) / float(count) + 0.35
+        try:
+            cm = CardMaker('reclaim-wave-clear-cream-aftershock-%s' % index)
+            # Alternate chip / cross — quieter residual of the shimmer glitter.
+            if (index % 3) == 0:
+                cm.setFrame(
+                    -size * 0.35, size * 0.35, -size * 1.20, size * 1.20)
+            elif (index % 3) == 1:
+                cm.setFrame(
+                    -size * 1.20, size * 1.20, -size * 0.35, size * 0.35)
+            else:
+                cm.setFrame(-size, size, -size * 0.85, size * 0.85)
+            fleck = parent.attachNewNode(cm.generate())
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, 0)
+            startX = ox + cos(angle) * 0.08
+            startZ = oz + 0.014 * (index % 3)
+            fleck.setPos(startX, oy, startZ)
+            fleck.setScale(0.28 + 0.08 * (index % 3))
+            fleck.setBin('fixed', binSort + 1 + (index % 2))
+            fleck.setDepthTest(False)
+            fleck.setDepthWrite(False)
+        except Exception:
+            return None
+
+        # Settle downward — residual cream, not the shimmer's outward rise.
+        end = Point3(
+            startX + cos(angle) * drift * 0.55,
+            oy,
+            startZ - fall - 0.05 * (index % 3))
+        peak = 1.05 + 0.08 * (index % 2)
+        self._fleckNPs.append(fleck)
+        stagger = 0.018 * (index % 3)
+        return Sequence(
+            Wait(stagger),
+            Parallel(
+                LerpColorScaleInterval(
+                    fleck, 0.05, Vec4(r, g, b, a), blendType='easeOut'),
+                LerpScaleInterval(
+                    fleck, max(0.01, sec * 0.28), peak, blendType='easeOut'),
+            ),
+            Parallel(
+                LerpPosInterval(
+                    fleck, max(0.01, sec * 0.72), end, blendType='easeIn'),
+                LerpScaleInterval(
+                    fleck, max(0.01, sec * 0.72), 0.05, blendType='easeIn'),
+                LerpColorScaleInterval(
+                    fleck, max(0.01, sec * 0.72), Vec4(er, eg, eb, ea),
+                    blendType='easeIn'),
+            ),
+        )
+
     def clear(self):
+        """Stop shimmer/aftershock and remove every cream hang node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        if self._shimmerPlayIval is not None:
+            try:
+                self._shimmerPlayIval.pause()
+            except Exception:
+                pass
+            self._shimmerPlayIval = None
         shimmer = self._shimmerNP
         self._shimmerNP = None
         if shimmer is not None and not shimmer.isEmpty():
@@ -214,6 +405,13 @@ class WaveClearCreamShimmerFxClient(DirectObject):
                 shimmer.removeNode()
             except Exception:
                 pass
+        if self._haloNP is not None:
+            try:
+                if not self._haloNP.isEmpty():
+                    self._haloNP.removeNode()
+            except Exception:
+                pass
+            self._haloNP = None
         for np in self._fleckNPs:
             if np is not None and not np.isEmpty():
                 try:
