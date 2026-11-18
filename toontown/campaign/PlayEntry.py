@@ -97,6 +97,8 @@ class PlayEntryClient(DirectObject):
         self._softNextZone = None
         self._softNextStreet = None
         # After STATE_VICTORY / chase-clear epilogue, hub tip uses replay copy.
+        # Also latched from AI CampaignProgressSave via campaignProgressSync
+        # so relog mirrors victory / unlock (not process-local only).
         self._victoryEpilogue = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
@@ -109,6 +111,11 @@ class PlayEntryClient(DirectObject):
         # Soft-gate unlock → hub crumbs (dim → full). AI also sends; purity
         # mirror below covers real client processes where AI messenger is local.
         self.accept('campaignActUnlocked', self._onCampaignActUnlocked)
+        # Login mirror — AI-persisted victory / unlock / chaseCleared.
+        syncMsg = getattr(
+            CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
+            'campaignProgressSync')
+        self.accept(syncMsg, self._onCampaignProgressSync)
         try:
             from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
             ensureReclaimCheerClient()
@@ -138,11 +145,19 @@ class PlayEntryClient(DirectObject):
         except Exception:
             pass
         taskMgr.doMethodLater(2.0, self._bootZone, 'playEntryBoot')  # noqa: F821
+        # Login mirror — ask AI for persisted victory / unlock / chaseCleared
+        # so hub tip matches story before the player presses C/R.
+        taskMgr.doMethodLater(  # noqa: F821
+            2.25, self._bootCampaignProgress, 'playEntryCampaignProgress')
 
     def destroy(self):
         self.ignoreAll()
         try:
             taskMgr.remove('playEntryBoot')  # noqa: F821
+        except Exception:
+            pass
+        try:
+            taskMgr.remove('playEntryCampaignProgress')  # noqa: F821
         except Exception:
             pass
         self._cancelAutoReclaim()
@@ -158,6 +173,56 @@ class PlayEntryClient(DirectObject):
         if hasattr(base, 'localAvatar'):  # noqa: F821
             self._onZoneChange(getattr(base.localAvatar, 'zoneId', None))
         return task.done
+
+    def _bootCampaignProgress(self, task):
+        """Request thin PollutionManager campaign progress push after login."""
+        pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
+        if pm is not None and hasattr(pm, 'd_requestCampaignProgress'):
+            try:
+                pm.d_requestCampaignProgress()
+            except Exception:
+                pass
+        return task.done
+
+    def _onCampaignProgressSync(
+            self, unlockedThrough=0, state=0, chaseCleared=0):
+        """Apply AI-persisted progress so hub tip survives relog."""
+        try:
+            from toontown.campaign import CampaignProgressSave
+            mirror = CampaignProgressSave.clientMirrorFromProgress({
+                'unlockedThrough': unlockedThrough,
+                'state': state,
+                'chaseCleared': chaseCleared,
+                # actIndex omitted — sanitize uses unlockedThrough as default.
+            })
+        except Exception:
+            return
+        self._victoryEpilogue = bool(mirror.get('victoryEpilogue'))
+        if self._victoryEpilogue:
+            # Victory / chase soft-end — drop mid-act soft cues.
+            self._softNextCue = None
+            self._softNextZone = None
+            self._softNextStreet = None
+        else:
+            softStreet = mirror.get('softNextStreet')
+            if softStreet:
+                self._softNextStreet = softStreet
+                self._softNextCue = None
+            elif int(mirror.get('unlockedThrough', 0) or 0) <= 0:
+                # Fresh campaign — clear stale soft cues from a prior local
+                # session if the AI says Act 1 only.
+                self._softNextStreet = None
+        # Refresh hub tip if the player is already on TTC.
+        hubZone = int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
+        av = getattr(base, 'localAvatar', None)  # noqa: F821
+        if av is not None and hubZone > 0:
+            try:
+                zoneId = int(ZoneUtil.getBranchZone(
+                    int(getattr(av, 'zoneId', 0) or 0)))
+            except Exception:
+                zoneId = int(getattr(av, 'zoneId', 0) or 0)
+            if zoneId == hubZone:
+                self._showHubTip()
 
     def _campaignZoneIds(self):
         return {int(a['zoneId']) for a in CampaignGlobals.ACTS}

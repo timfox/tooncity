@@ -3,10 +3,12 @@
 `CampaignDirectorAI.unlockedThrough` / actIndex used to live only in the
 air process, so explore→fight→reclaim progress reset on logout / district
 restart. This module stores a thin per-toon blob beside other AI JSON
-saves (buildings / track records) — no DC / avatar schema change.
+saves (buildings / track records) — no DistributedToon avatar schema.
 
-Pure helpers are panda-free so headless tests can exercise sanitize /
-round-trip without Direct / Astron.
+Client hub tip + OswaldPresence mirror the blob after relog via a thin
+PollutionManager status push (`setCampaignProgress`); see
+`clientMirrorFromProgress`. Pure helpers are panda-free so headless tests
+can exercise sanitize / round-trip / mirror flags without Direct / Astron.
 """
 
 from __future__ import annotations
@@ -186,4 +188,54 @@ def writeAvatar(path, avId, progress):
     data = loadAll(path)
     data[str(int(avId))] = sanitizeProgress(progress)
     return saveAll(path, data)
+
+
+def softNextStreetFromProgress(progress):
+    """Hub soft-next street name for mid-campaign resume, or None.
+
+    Fresh Act 1 (unlockedThrough 0) keeps the generic Loopy invite.
+    STATE_VICTORY yields None so the victory / epilogue tip wins.
+    Otherwise point at the act cursor street (resume target after relog).
+    """
+    blob = sanitizeProgress(progress)
+    if int(blob.get('state', 0)) == int(CampaignGlobals.STATE_VICTORY):
+        return None
+    unlocked = int(blob.get('unlockedThrough', 0) or 0)
+    actIndex = int(blob.get('actIndex', 0) or 0)
+    if unlocked <= 0 and actIndex <= 0:
+        return None
+    acts = getattr(CampaignGlobals, 'ACTS', ()) or ()
+    if not acts:
+        return None
+    idx = max(0, min(actIndex, len(acts) - 1))
+    name = acts[idx].get('name')
+    return str(name) if name else None
+
+
+def clientMirrorFromProgress(progress):
+    """Derive client presentation flags from a sanitized progress blob.
+
+    Used after login / hydrate so PlayEntry hub tip and OswaldPresence
+    match AI-persisted victory / unlock / chaseCleared (not session-only
+    `_victoryEpilogue` / `_betrayed`).
+    """
+    blob = sanitizeProgress(progress)
+    state = int(blob.get('state', CampaignGlobals.STATE_IDLE) or 0)
+    chaseCleared = int(blob.get('chaseCleared', 0) or 0)
+    unlockedThrough = int(blob.get('unlockedThrough', 0) or 0)
+    actIndex = int(blob.get('actIndex', 0) or 0)
+    victory = state == int(CampaignGlobals.STATE_VICTORY)
+    # Twist already landed once STATE_VICTORY — hide trusted Oswald whether
+    # the betrayal chase is still pending or already washed.
+    betrayed = victory
+    return {
+        'unlockedThrough': unlockedThrough,
+        'actIndex': actIndex,
+        'state': state,
+        'chaseCleared': chaseCleared,
+        'victoryEpilogue': victory,
+        'betrayed': betrayed,
+        'softNextStreet': softNextStreetFromProgress(blob),
+        'chasePending': bool(victory and not chaseCleared),
+    }
 

@@ -33,6 +33,11 @@ class PollutionManager(DistributedObject.DistributedObject):
     def __init__(self, cr):
         DistributedObject.DistributedObject.__init__(self, cr)
         self.zonePollution = {}
+        # Thin campaign progress mirror (login hydrate) — PlayEntry /
+        # OswaldPresence read via campaignProgressSync messenger.
+        self.campaignUnlockedThrough = 0
+        self.campaignState = 0
+        self.campaignChaseCleared = 0
         self._fog = None
         self._hazeNP = None
         self._activeZoneId = None
@@ -156,6 +161,31 @@ class PollutionManager(DistributedObject.DistributedObject):
     def d_requestStreetEvent(self, eventType):
         """0=start reclaim in this street, 1=start/resume campaign act."""
         self.sendUpdate('requestStreetEvent', [int(eventType)])
+
+    def d_requestCampaignProgress(self):
+        """Ask AI to push persisted victory / unlock / chaseCleared after login."""
+        self.sendUpdate('requestCampaignProgress', [])
+
+    def setCampaignProgress(self, unlockedThrough, state, chaseCleared):
+        """Mirror AI CampaignProgressSave so hub tip + OswaldPresence match relog."""
+        self.campaignUnlockedThrough = max(0, int(unlockedThrough))
+        self.campaignState = max(0, int(state))
+        self.campaignChaseCleared = 1 if int(chaseCleared) else 0
+        try:
+            from toontown.campaign import CampaignGlobals
+            msg = getattr(
+                CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
+                'campaignProgressSync')
+        except Exception:
+            msg = 'campaignProgressSync'
+        try:
+            messenger.send(  # noqa: F821
+                msg,
+                [self.campaignUnlockedThrough,
+                 self.campaignState,
+                 self.campaignChaseCleared])
+        except Exception:
+            self.notify.debug('campaignProgressSync messenger failed')
 
     def d_requestHackSlashIFrame(self, durationMs):
         """Tell AI the local toon is invulnerable for durationMs (capped server-side)."""

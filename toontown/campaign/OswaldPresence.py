@@ -140,6 +140,12 @@ class OswaldPresenceClient(DirectObject):
         self.accept('oswaldRevealSting', self._onBetrayal)
         self.accept('campaignVictory', self._onBetrayal)
         self.accept('oswaldBetrayalChase', self._onBetrayal)
+        # Login mirror — AI-persisted STATE_VICTORY must hide trusted Oswald
+        # after relog (session-only `_betrayed` is not enough).
+        syncMsg = getattr(
+            CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
+            'campaignProgressSync')
+        self.accept(syncMsg, self._onCampaignProgressSync)
         taskMgr.doMethodLater(  # noqa: F821
             2.15, self._bootZone, 'oswaldPresenceBoot')
 
@@ -170,6 +176,32 @@ class OswaldPresenceClient(DirectObject):
         self._clearMarker()
         self._zoneId = None
         self._greetedZone = None
+
+    def _onCampaignProgressSync(
+            self, unlockedThrough=0, state=0, chaseCleared=0):
+        """Apply AI-persisted victory so trusted presence survives relog."""
+        try:
+            from toontown.campaign import CampaignProgressSave
+            mirror = CampaignProgressSave.clientMirrorFromProgress({
+                'unlockedThrough': unlockedThrough,
+                'state': state,
+                'chaseCleared': chaseCleared,
+            })
+        except Exception:
+            return
+        betrayed = bool(mirror.get('betrayed'))
+        if betrayed:
+            if not self._betrayed:
+                self._onBetrayal()
+            else:
+                self._betrayed = True
+            return
+        # Fresh / mid-campaign — trusted face may return (replay wipe).
+        wasBetrayed = self._betrayed
+        self._betrayed = False
+        if wasBetrayed:
+            # Re-arm marker in the current zone after a replay wipe sync.
+            self._onZoneChange(self._zoneId)
 
     def _onZoneChange(self, zoneId=None):
         if zoneId is None and hasattr(base, 'localAvatar'):  # noqa: F821

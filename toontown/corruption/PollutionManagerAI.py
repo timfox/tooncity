@@ -225,6 +225,53 @@ class PollutionManagerAI(DistributedObjectAI):
         toon.hackSlashIFrameUntil = (
             globalClock.getFrameTime() + (durationMs / 1000.0))  # noqa: F821
 
+    def requestCampaignProgress(self):
+        """Client login ask: hydrate + push victory / unlock / chaseCleared."""
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        if toon is None:
+            return
+        self.pushCampaignProgressToAvatar(toon, hydrate=True)
+
+    def pushCampaignProgressToAvatar(self, toon, hydrate=False):
+        """Thin per-avatar status push for PlayEntry / OswaldPresence mirror.
+
+        Hydrate reads CampaignProgressSave so relog clients see AI-persisted
+        STATE_VICTORY / unlockedThrough / chaseCleared without pressing C/R.
+        """
+        if toon is None:
+            return False
+        avId = getattr(toon, 'doId', None)
+        if avId is None:
+            return False
+        unlocked = 0
+        state = 0
+        chaseCleared = 0
+        try:
+            from toontown.campaign import CampaignProgressSave
+            from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+            campaign = getCampaignDirector(self.air)
+            if hydrate and hasattr(campaign, '_hydrateFromToon'):
+                # Loads JSON on first ask / avatar switch; same-toon keep
+                # live session (persist already flushed key beats).
+                campaign._hydrateFromToon(toon)
+            blob = CampaignProgressSave.snapshotFromDirector(campaign)
+            unlocked = int(blob.get('unlockedThrough', 0) or 0)
+            state = int(blob.get('state', 0) or 0)
+            chaseCleared = int(blob.get('chaseCleared', 0) or 0)
+        except Exception:
+            self.notify.warning('pushCampaignProgressToAvatar failed')
+            return False
+        try:
+            self.sendUpdateToAvatarId(
+                int(avId),
+                'setCampaignProgress',
+                [unlocked, state, chaseCleared])
+        except Exception:
+            self.notify.debug('setCampaignProgress send failed av=%s' % avId)
+            return False
+        return True
+
     def requestStreetEvent(self, eventType):
         """Player-facing entry: start reclaim (0) or campaign act (1) in sender zone."""
         avId = self.air.getAvatarIdFromSender()

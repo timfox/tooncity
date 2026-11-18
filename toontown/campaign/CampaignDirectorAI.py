@@ -82,6 +82,9 @@ class CampaignDirectorAI(DirectObject):
         # Victory + uncleared chase must re-field after relog / hub return;
         # persist alone does not keep the betrayal spawn alive.
         self._resumePendingOswaldBetrayalChase(toon)
+        # Mirror unlock / victory / chaseCleared to the client so hub tip +
+        # OswaldPresence match story state after relog (not session-only).
+        self._pushProgressToClient(toon)
         return True
 
     def _persistForToon(self, toon=None):
@@ -104,7 +107,28 @@ class CampaignDirectorAI(DirectObject):
             self.notify.debug(
                 'persisted campaign progress av=%s unlockedThrough=%s'
                 % (avId, blob.get('unlockedThrough')))
+            # Keep an online client's hub tip / presence in sync after flush.
+            toon = self.air.doId2do.get(int(avId))
+            if toon is not None:
+                self._pushProgressToClient(toon)
         return ok
+
+    def _pushProgressToClient(self, toon):
+        """Thin PollutionManager status push (login / hydrate / persist)."""
+        if toon is None:
+            return False
+        pollutionMgr = getattr(self.air, 'pollutionManager', None)
+        if pollutionMgr is None:
+            return False
+        push = getattr(pollutionMgr, 'pushCampaignProgressToAvatar', None)
+        if not callable(push):
+            return False
+        try:
+            # hydrate=False — caller already loaded / owns live director state.
+            return bool(push(toon, hydrate=False))
+        except Exception:
+            self.notify.debug('campaign progress client push failed')
+            return False
 
     def statusText(self):
         if self.state == CampaignGlobals.STATE_VICTORY:
