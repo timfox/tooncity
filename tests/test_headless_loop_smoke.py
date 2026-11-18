@@ -2326,6 +2326,51 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         magic_src = _read('toontown/hackslash/MagicWords.py')
         self.assertIn('perfect-dodge counter', magic_src)
 
+        # Air-juggle → slam cancel window — mid-juggle hang cancel into
+        # finisher slam (aerial control; builds on dodge-cancel grammar).
+        for juggle_cancel_key in (
+                'JUGGLE_CANCEL_ENABLED',
+                'JUGGLE_CANCEL_START_SEC',
+                'JUGGLE_CANCEL_WINDOW_SEC',
+                'JUGGLE_CANCEL_BUFFER'):
+            self.assertIn(
+                juggle_cancel_key, config_names,
+                msg='HackSlashConfig missing juggle cancel %s' % (
+                    juggle_cancel_key,))
+        self.assertIs(config_assigns.get('JUGGLE_CANCEL_ENABLED'), True)
+        self.assertIs(config_assigns.get('JUGGLE_CANCEL_BUFFER'), True)
+        jc_start = config_assigns.get('JUGGLE_CANCEL_START_SEC')
+        jc_window = config_assigns.get('JUGGLE_CANCEL_WINDOW_SEC')
+        self.assertIsInstance(jc_start, float)
+        self.assertIsInstance(jc_window, float)
+        self.assertGreater(jc_start, 0.0)
+        self.assertGreater(jc_window, 0.0)
+        for jc_helper in (
+                'juggleCancelSlamHitIndex',
+                'isJuggleCancelWindowOpen'):
+            self.assertIn(
+                jc_helper, config_funcs,
+                msg='HackSlashConfig missing helper %s' % jc_helper)
+        for jc_method in (
+                '_armJuggleCancelWindow',
+                '_clearJuggleCancelWindow',
+                '_expireJuggleCancelIfNeeded',
+                '_isInJuggleCancelLockout',
+                'isJuggleCancelOpen',
+                '_cancelJuggleIntoSlam',
+                '_flushJuggleCancelBuffer'):
+            self.assertIn(
+                jc_method, melee_methods,
+                msg='MeleeCombatController missing %s' % jc_method)
+        self.assertIn('JUGGLE_CANCEL_ENABLED', melee_src)
+        self.assertIn('hackslash-juggle-cancel', melee_src)
+        self.assertIn('_cancelJuggleIntoSlam', melee_src)
+        self.assertIn('juggleCancelSlamHitIndex', melee_src)
+        self.assertIn('juggle→F slam', config_src)
+        self.assertIn('juggleCancelSlamHitIndex', hack_init_src)
+        self.assertIn('isJuggleCancelWindowOpen', hack_init_src)
+        self.assertIn('juggle cancel', magic_src)
+
         # Hub tip discoverability (#184) — Oswald + Loopy + C, no magic words.
         hub_tip_node = _toplevel_value(self.campaign_tree, 'HUB_TIP')
         hub_tip = _literal(hub_tip_node)

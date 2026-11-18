@@ -334,6 +334,34 @@ FINISHER_SELF_HOP = 1.15
 FINISHER_SELF_UP_SEC = 0.11
 FINISHER_SELF_DOWN_SEC = 0.2
 
+# Air-juggle → slam cancel window. Mid-combo launch hangs the target; after
+# rise settles into hang, F/LMB cancels into the stretch-punch finisher slam
+# so aerial combo control reads clean (KH-feel rubber-hose without keyblades /
+# KH branding). Early rise can buffer until the window opens.
+JUGGLE_CANCEL_ENABLED = True
+# Seconds after launch start before cancel-into-slam opens (after mid rise).
+JUGGLE_CANCEL_START_SEC = 0.12
+# How long cancel-into-slam stays open (covers hang + early fall).
+JUGGLE_CANCEL_WINDOW_SEC = 0.45
+# Buffer F/LMB pressed during early rise; fire when the cancel window opens.
+JUGGLE_CANCEL_BUFFER = True
+
+
+def juggleCancelSlamHitIndex(comboLength=None):
+    """Finisher/slam hit index for air-juggle cancel-into-slam."""
+    if comboLength is None:
+        comboLength = COMBO_LENGTH
+    return max(0, int(comboLength) - 1)
+
+
+def isJuggleCancelWindowOpen(armed, openAt, until, now):
+    """True while an air-juggle cancel→slam window is live."""
+    if not armed:
+        return False
+    now = float(now)
+    return float(openAt) <= now < float(until)
+
+
 # I-frame / dodge cue after CorruptToon smacks the local toon.
 IFRAME_SEC = 0.55
 IFRAME_FLASH_ALPHA = 0.55
@@ -814,5 +842,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 # On-screen hint while demo mode is active
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  Shift/X dodge→F  |  perfect dodge→F counter  |  '
-    'Tab/` soft-lock cycle  |  ~melee'
+    'juggle→F slam  |  Tab/` soft-lock cycle  |  ~melee'
 )
