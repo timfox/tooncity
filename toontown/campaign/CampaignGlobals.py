@@ -1,10 +1,13 @@
-"""Act table for the KH×Toontown multi-hood reclaim campaign."""
+"""Act table for the Toon City multi-hood reclaim campaign."""
 
 from toontown.toonbase import ToontownGlobals
 
 # Pure HQ — story hub, lightly threatened but not a reclaim act.
 HUB_ZONE = ToontownGlobals.ToontownCentral
 HUB_NAME = 'Toontown Central'
+
+# Trusted reclaim face in early/mid handoff copy (no end-game twist spoilers).
+RECLAIM_FACE = 'Oswald'
 
 # Per reclaim: multiplicative bump applied to HackSlashConfig.COMBO_DAMAGE.
 POWER_BUMP_PER_RECLAIM = 0.08
@@ -26,7 +29,11 @@ ACTS = (
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
         'banner': 'Act 1 — Corruption stains Loopy Lane!',
-        'handoff': 'Loopy Lane is pure again! Next: Punchline Place (zone 2300).',
+        # Client celebration copy (title / Oswald tip / next-street cue).
+        'handoffTitle': 'LOOPY LANE IS PURE!',
+        'handoff': 'Oswald beams — Loopy Lane shines again!',
+        'nextCue': 'Oswald points the tunnel → Punchline Place',
+        'nextStreet': 'Punchline Place',
     },
     {
         'id': 'punchline',
@@ -45,7 +52,10 @@ ACTS = (
         'snareWaveStart': 1,
         'snareName': 'Balloon Snare',
         'banner': 'Act 2 — Punchline Place is drowning in sludge!',
-        'handoff': 'Punchline Place laughs clean! Finale awaits on Silly Street (zone 2100).',
+        'handoffTitle': 'PUNCHLINE PLACE LAUGHS CLEAN!',
+        'handoff': 'Oswald tips his ears — the jokes are safe again!',
+        'nextCue': 'Oswald steers you on → Silly Street finale',
+        'nextStreet': 'Silly Street',
     },
     {
         'id': 'finale',
@@ -60,7 +70,10 @@ ACTS = (
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
         'banner': 'Finale Phase 1 — The Ink Overlord rises on Silly Street!',
-        'handoff': 'Toon City is saved! Purity restored across every neighborhood.',
+        'handoffTitle': 'TOON CITY IS SAVED!',
+        'handoff': 'Oswald cheers — purity holds across every neighborhood!',
+        'nextCue': 'Take a victory lap with Oswald',
+        'nextStreet': None,
         'finale': True,
         # Client-readable phase index (1-based) for reclaim director / telegraphs.
         'finalePhase': 1,

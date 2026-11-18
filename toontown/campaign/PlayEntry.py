@@ -1,7 +1,8 @@
-"""Discoverable KH×Toontown loop entry — no magic-word memorization required.
+"""Discoverable Toon City reclaim loop entry — no magic-word memorization.
 
 On campaign streets: auto-arm melee, auto-start reclaim packs (no ~spawncorrupt),
 show prompts, bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
+Oswald is the trusted reclaim face on tips / post-clear cues (no twist spoilers).
 """
 
 from panda3d.core import TextNode, Vec4
@@ -33,8 +34,9 @@ class PlayEntryClient(DirectObject):
         self._reclaimLive = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
-        # Reclaim director also shows banners; listen for DO messenger-less path:
+        # CampaignHandoff owns the celebration; tip bar latches the next cue.
         self.accept('purityRestoreFx', self._onPurity)
+        self.accept('campaignHandoffCue', self._onHandoffCue)
         try:
             from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
             ensureReclaimCheerClient()
@@ -43,6 +45,12 @@ class PlayEntryClient(DirectObject):
         try:
             from toontown.reclaim.PurityBurstFx import ensurePurityBurstFxClient
             ensurePurityBurstFxClient()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.CampaignHandoff import (
+                ensureCampaignHandoffClient)
+            ensureCampaignHandoffClient()
         except Exception:
             pass
         taskMgr.doMethodLater(2.0, self._bootZone, 'playEntryBoot')  # noqa: F821
@@ -85,9 +93,10 @@ class PlayEntryClient(DirectObject):
         self._armMelee(zoneId)
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
+        face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
         self._showTip(
-            'CORRUPTION on %s — packs incoming  |  F fight  |  Shift dodge  |  C campaign'
-            % name)
+            '%s needs %s pure — packs incoming  |  F fight  |  Shift dodge  |  C campaign'
+            % (face, name))
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
@@ -112,7 +121,8 @@ class PlayEntryClient(DirectObject):
         try:
             av.enableHackSlashMelee(spawnHostiles=False)
             self._armedZone = zoneId
-            self._flashBanner('MELEE ARMED — Press F / LMB')
+            face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
+            self._flashBanner('%s is with you — Press F / LMB' % face)
         except Exception:
             pass
 
@@ -139,7 +149,8 @@ class PlayEntryClient(DirectObject):
         if self._reclaimLive:
             return task.done
         self._requestReclaim()
-        self._flashBanner('CORRUPT PACKS INCOMING — Fight!')
+        face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
+        self._flashBanner('%s fields the packs — Fight!' % face)
         return task.done
 
     def _onReclaimStart(self, *args):
@@ -151,11 +162,42 @@ class PlayEntryClient(DirectObject):
                 av.enableHackSlashMelee(spawnHostiles=False)
             except Exception:
                 pass
-        self._flashBanner('RECLAIM LIVE — Clear Corrupt Toons with F!')
+        face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
+        self._flashBanner('RECLAIM LIVE — %s says clear them with F!' % face)
 
     def _onPurity(self, zoneId):
+        """Yield the celebration banner to CampaignHandoff; tip shows next street."""
         self._reclaimLive = False
-        self._flashBanner('STREET PURIFIED — Head to the next hood!')
+        act, nxt = self._actsAroundZone(zoneId)
+        face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
+        if act and act.get('nextCue'):
+            tip = act['nextCue']
+        elif nxt is not None:
+            tip = '%s points the tunnel → %s' % (
+                face, nxt.get('name', 'the next street'))
+        else:
+            tip = '%s cheers — purity holds!' % face
+        # Persist next-street cue on the tip bar (no competing toast).
+        self._showTip('%s  |  F fight  |  C campaign' % tip)
+
+    def _onHandoffCue(self, nextStreet=None, cueText=None):
+        """Latch CampaignHandoff's next-street beat onto the tip bar."""
+        text = cueText
+        if not text and nextStreet:
+            face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
+            text = '%s points the way → %s' % (face, nextStreet)
+        if text:
+            self._showTip('%s  |  F fight  |  C campaign' % text)
+
+    def _actsAroundZone(self, zoneId):
+        zoneId = int(zoneId)
+        for i, act in enumerate(CampaignGlobals.ACTS):
+            if int(act['zoneId']) == zoneId:
+                nxt = (
+                    CampaignGlobals.ACTS[i + 1]
+                    if i + 1 < len(CampaignGlobals.ACTS) else None)
+                return act, nxt
+        return None, None
 
     def _requestReclaim(self):
         if self._reclaimLive:
@@ -164,14 +206,16 @@ class PlayEntryClient(DirectObject):
         if pm is None:
             return
         pm.d_requestStreetEvent(0)
-        self._flashBanner('Calling street reclaim…')
+        face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
+        self._flashBanner('%s is calling street reclaim…' % face)
 
     def _requestCampaign(self):
         pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
         if pm is None:
             return
         pm.d_requestStreetEvent(1)
-        self._flashBanner('Calling campaign act…')
+        face = getattr(CampaignGlobals, 'RECLAIM_FACE', 'Oswald')
+        self._flashBanner('%s is calling the next act…' % face)
 
     def _showTip(self, text):
         self._clearTip()
