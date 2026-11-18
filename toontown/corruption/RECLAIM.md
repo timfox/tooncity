@@ -97,8 +97,9 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # presence, layered with soft cream / pastel contrast drips
 # (IdleCreamDripContrastFx) plus sunny cream / pastel sparkle flecks on
 # the cream drip path (IdleCreamDripSparkleFx) plus soft cream wash pulse
-# against ink idle drips (IdleCreamWashPulseFx — death / melee cream-wash
-# grammar) plus sunny cream / pastel rim flecks on the ink silhouette
+# + delayed cream aftershock against ink idle drips (IdleCreamWashPulseFx —
+# death cream wash aftershock #172 grammar) plus sunny cream / pastel rim
+# flecks on the ink silhouette
 # (CorruptSilhouetteCreamRimFx) plus rising cream / pastel sparkle flecks
 # on the silhouette cream rim (CorruptSilhouetteCreamSparkleFx) plus soft
 # cream wash pulse against the ink silhouette (CorruptSilhouetteCreamWashFx
@@ -157,10 +158,12 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ```
 ~spawncorrupt 2
 ~hackslash 0
-# Watch soft cream wash pulse against idle ink drips
-# (IdleCreamWashPulseFx — CorruptDeathCreamWashFx / HitSparkCreamWashFx
-# two-beat grammar, quieter ambient). Telegraph pauses wash with drips.
-# IDLE_CREAM_WASH_ENABLED = False drops wash only.
+# Watch soft cream wash pulse against idle ink drips, then delayed cream
+# aftershock (flecks + soft halo)
+# (IdleCreamWashPulseFx — death cream wash aftershock #172 grammar,
+# quieter ambient). Telegraph pauses wash + aftershock with drips.
+# IDLE_CREAM_WASH_ENABLED = False drops wash + aftershock.
+# IDLE_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
 ```
 
 ## Silhouette cream rim rising sparkle demo

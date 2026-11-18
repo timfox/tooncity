@@ -8,8 +8,9 @@ drips (archetype-tinted pollution presence) layered with
 IdleCreamDripContrastFx (soft cream / pastel drips — contrast to idle ink)
 plus IdleCreamDripSparkleFx (sunny cream / pastel sparkle flecks along the
 cream drip path — silhouette rim sparkle grammar) plus
-IdleCreamWashPulseFx (soft cream wash pulse — contrast against ink idle
-drips; death / melee cream-wash grammar) plus
+IdleCreamWashPulseFx (soft cream wash pulse + delayed cream aftershock —
+contrast against ink idle drips; death cream wash aftershock #172 grammar)
+plus
 CorruptSilhouetteCreamRimFx (sunny cream / pastel rim flecks along the
 ink silhouette edge) plus CorruptSilhouetteCreamSparkleFx (sunny cream /
 pastel sparkle flecks rising from the silhouette cream rim) plus

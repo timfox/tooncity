@@ -953,8 +953,11 @@ IDLE_CREAM_DRIP_SPARKLE_LOOK = {
 # Idle cream wash pulse — soft aspect2d veil between telegraphs (client only).
 # Matches CorruptDeathCreamWashFx (#119) / HitSparkCreamWashFx (#134) two-beat
 # grammar; quieter ambient contrast against IdleInkDripFx. Compose period via
-# IdleCreamWashPulseFx.idleCreamWashLook → idleCreamDripSparkleLook.
-# IDLE_CREAM_WASH_ENABLED = False drops wash only (drips / sparkles stay).
+# IdleCreamWashPulseFx.idleCreamWashLook → idleCreamDripSparkleLook; delayed
+# cream aftershock (IDLE_CREAM_WASH_AFTERSHOCK_*) settles after each wash
+# (#172 / #132 grammar). Toggle IDLE_CREAM_WASH_ENABLED /
+# IDLE_CREAM_WASH_AFTERSHOCK_ENABLED.
+# IDLE_CREAM_WASH_ENABLED = False drops wash (and therefore aftershock).
 IDLE_CREAM_WASH_ENABLED = True
 IDLE_CREAM_WASH_DELAY_SEC = 0.0  # loop settle handles spacing
 IDLE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -982,6 +985,31 @@ IDLE_CREAM_WASH_LOOK = {
     'outSec': IDLE_CREAM_WASH_OUT_SEC,
     'binSort': IDLE_CREAM_WASH_BIN,
 }
+
+# Delayed cream aftershock after each idle cream wash pulse — residual flecks
+# settling + soft halo (IdleCreamWashPulseFx). Same grammar as
+# DEATH_CREAM_WASH_AFTERSHOCK_* (#172) / ENTRY_CREAM_WASH_AFTERSHOCK_* (#132);
+# world-space settle matches TELEGRAPH_CREAM_WARN_AFTERSHOCK_*. Quieter than
+# death aftershock (ambient idle). IDLE_CREAM_WASH_AFTERSHOCK_ENABLED = False
+# drops aftershock only.
+IDLE_CREAM_WASH_AFTERSHOCK_ENABLED = True
+IDLE_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.32  # from pulse arm
+IDLE_CREAM_WASH_AFTERSHOCK_LIFT = 1.10  # fallback; prefers idleCreamDripLook lift * 0.55
+IDLE_CREAM_WASH_AFTERSHOCK_COUNT = 4
+IDLE_CREAM_WASH_AFTERSHOCK_SIZE = 0.09
+IDLE_CREAM_WASH_AFTERSHOCK_DRIFT = 0.48
+IDLE_CREAM_WASH_AFTERSHOCK_FALL = 0.42
+IDLE_CREAM_WASH_AFTERSHOCK_SEC = 0.30
+IDLE_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.62)
+IDLE_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+IDLE_CREAM_WASH_AFTERSHOCK_BIN = 37  # above wash (36); soft residual
+IDLE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+IDLE_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.42
+IDLE_CREAM_WASH_AFTERSHOCK_HALO_START = 0.24
+IDLE_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.25
+IDLE_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.26
+IDLE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.12
+IDLE_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Silhouette cream rim rising sparkle flecks — soft sunny chips rising from
 # the CorruptSilhouetteCreamRimFx rim edge between telegraphs (client only).

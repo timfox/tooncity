@@ -5,7 +5,8 @@ purity sparkle contrast, not another ink spray. Reuses silhouette cream rim
 (#114) sparkle grammar (orbit/drift chips + twinkle scale) while composing
 lift / period with IdleCreamDripContrastFx.idleCreamDripLook so sparkles sit
 on the cream drip layer without sync-locking drips or rim flecks. Idle cream
-wash pulses softly against ink drips beside this sparkle layer.
+wash pulses softly against ink drips beside this sparkle layer, with a delayed
+cream aftershock owned by IdleCreamWashPulseFx (#172 grammar).
 Wired from DistributedCorruptToon beside IdleInkDrip + IdleCreamDripContrast +
 IdleCreamWashPulse + SilhouetteCreamRimFlecks (start / pause / resume / clear
 together). Client only. Toontown spiritual sequel — no keyblades / no KH branding.
