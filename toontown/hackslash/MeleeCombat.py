@@ -163,6 +163,11 @@ class MeleeCombatController(DirectObject):
         # with perfect-dodge counter; corruption owns the arm cue).
         self.accept(
             'corruptSnareStringSnapCounter', self._onSnareStringSnapCounter)
+        # Brute spit / Gagster lob telegraph → same rewarded counter path.
+        self.accept(
+            'corruptBruteSpitCounter', self._onBruteSpitCounter)
+        self.accept(
+            'corruptGagsterLobCounter', self._onGagsterLobCounter)
         self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
         # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
@@ -184,6 +189,8 @@ class MeleeCombatController(DirectObject):
         self.ignore('corruptToonHitPlayer')
         self.ignore('corruptToonAttackDodged')
         self.ignore('corruptSnareStringSnapCounter')
+        self.ignore('corruptBruteSpitCounter')
+        self.ignore('corruptGagsterLobCounter')
         self.ignore('hackslash-hit')
         taskMgr.remove(self._taskName)  # noqa: F821
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
@@ -1209,13 +1216,40 @@ class MeleeCombatController(DirectObject):
         arm the same rewarded opener path as perfect-dodge counter so telegraph
         punish and dodge punish rhyme. Range-gated so distant Snares don't buff.
         """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='SNARE_STRING_COUNTER_RANGE', defaultRange=10.5)
+
+    def _onBruteSpitCounter(self, corrupt=None, windowSec=None):
+        """Sludge Brute spit telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook (Snare-like). Spit-only — slam stays
+        commit-through. Range-gated so distant Brutes don't buff.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='BRUTE_SPIT_COUNTER_RANGE', defaultRange=12.0)
+
+    def _onGagsterLobCounter(self, corrupt=None, windowSec=None):
+        """Gunk Gagster lob telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook (Snare-like). Range-gated so distant
+        Gagsters don't buff.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='GAGSTER_LOB_COUNTER_RANGE', defaultRange=11.0)
+
+    def _armTelegraphCounterWindow(self, corrupt=None, windowSec=None,
+                                   rangeAttr=None, defaultRange=10.5):
+        """Shared range-gated arm for Snare / Brute spit / Gagster lob counters."""
         if not self.enabled:
             return
-        if corrupt is not None:
+        if corrupt is not None and rangeAttr:
             try:
                 from toontown.corruption import CorruptionGlobals
                 maxDist = float(getattr(
-                    CorruptionGlobals, 'SNARE_STRING_COUNTER_RANGE', 10.5))
+                    CorruptionGlobals, rangeAttr, defaultRange))
                 cpos = corrupt.getPos(render)  # noqa: F821
                 apos = self.avatar.getPos(render)  # noqa: F821
                 dx = float(cpos.getX()) - float(apos.getX())
@@ -1543,7 +1577,7 @@ class MeleeCombatController(DirectObject):
             self._dodgeAttackBuffered = False
 
     def _armPerfectDodgeCounterWindow(self, now=None, windowSec=None):
-        """Arm the rewarded perfect-dodge / Snare string-snap counter→melee window."""
+        """Arm rewarded perfect-dodge / telegraph (Snare/Brute/Gagster) counter."""
         if not getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_ENABLED', True):
             self._clearPerfectDodgeCounterWindow()
             return

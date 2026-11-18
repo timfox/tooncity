@@ -3229,14 +3229,75 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('corruptSnareStringSnapCounter', melee_src)
         self.assertIn('windowSec', melee_src)
         self.assertIn('Snare string→F counter', config_src)
+        # Brute spit / Gagster lob dedicated counter windows (beyond interrupt).
+        for brute_counter_key in (
+                'BRUTE_SPIT_COUNTER_ENABLED',
+                'BRUTE_SPIT_COUNTER_ARM_DELAY_SEC',
+                'BRUTE_SPIT_COUNTER_WINDOW_SEC',
+                'BRUTE_SPIT_COUNTER_RANGE',
+                'BRUTE_SPIT_COUNTER_DAMAGE_MULT',
+                'BRUTE_SPIT_COUNTER_RATE_MULT',
+                'BRUTE_SPIT_COUNTER_EVENT'):
+            self.assertIn(
+                brute_counter_key, cg_names,
+                msg='CorruptionGlobals missing brute spit counter %s' % (
+                    brute_counter_key,))
+        for gag_counter_key in (
+                'GAGSTER_LOB_COUNTER_ENABLED',
+                'GAGSTER_LOB_COUNTER_ARM_DELAY_SEC',
+                'GAGSTER_LOB_COUNTER_WINDOW_SEC',
+                'GAGSTER_LOB_COUNTER_RANGE',
+                'GAGSTER_LOB_COUNTER_DAMAGE_MULT',
+                'GAGSTER_LOB_COUNTER_RATE_MULT',
+                'GAGSTER_LOB_COUNTER_EVENT'):
+            self.assertIn(
+                gag_counter_key, cg_names,
+                msg='CorruptionGlobals missing gagster lob counter %s' % (
+                    gag_counter_key,))
+        self.assertIs(self.corruption.BRUTE_SPIT_COUNTER_ENABLED, True)
+        self.assertIs(self.corruption.GAGSTER_LOB_COUNTER_ENABLED, True)
+        self.assertEqual(
+            self.corruption.BRUTE_SPIT_COUNTER_EVENT,
+            'corruptBruteSpitCounter')
+        self.assertEqual(
+            self.corruption.GAGSTER_LOB_COUNTER_EVENT,
+            'corruptGagsterLobCounter')
+        for counter_helper in (
+                'isDedicatedTelegraphCounterMove',
+                'bruteSpitCounterOpenerDamage',
+                'bruteSpitCounterOpenerRate',
+                'isBruteSpitCounterWindowOpen',
+                'bruteSpitCounterArmAt',
+                'bruteSpitCounterUntil',
+                'gagsterLobCounterOpenerDamage',
+                'gagsterLobCounterOpenerRate',
+                'isGagsterLobCounterWindowOpen',
+                'gagsterLobCounterArmAt',
+                'gagsterLobCounterUntil'):
+            self.assertTrue(
+                callable(getattr(self.corruption, counter_helper, None)),
+                msg='CorruptionGlobals missing helper %s' % counter_helper)
+        self.assertIn('__scheduleBruteSpitCounter', corrupt_src)
+        self.assertIn('__scheduleGagsterLobCounter', corrupt_src)
+        self.assertIn('_onBruteSpitCounter', melee_src)
+        self.assertIn('_onGagsterLobCounter', melee_src)
+        self.assertIn('_armTelegraphCounterWindow', melee_src)
+        self.assertIn('corruptBruteSpitCounter', melee_src)
+        self.assertIn('corruptGagsterLobCounter', melee_src)
+        self.assertIn('Brute spit→F counter', config_src)
+        self.assertIn('Gagster lob→F counter', config_src)
         self.assertIn('Balloon Snare', magic_src)
         reclaim_md = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('string-snap counter', reclaim_md)
         self.assertIn('SnareStringCounterCreamSplashFx', reclaim_md)
         self.assertIn('whip filament', reclaim_md.lower())
         self.assertIn('yank', reclaim_md.lower())
+        self.assertIn('dedicated spit counter', reclaim_md.lower())
+        self.assertIn('dedicated lob counter', reclaim_md.lower())
         corr_init = _read('toontown/corruption/__init__.py')
         self.assertIn('SnareStringCounterCreamSplashFx', corr_init)
+        self.assertIn('BRUTE_SPIT_COUNTER_', corr_init)
+        self.assertIn('GAGSTER_LOB_COUNTER_', corr_init)
 
         # Air-juggle → slam cancel window — mid-juggle hang cancel into
         # finisher slam (aerial control; builds on dodge-cancel grammar).

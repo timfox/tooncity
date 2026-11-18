@@ -2060,13 +2060,38 @@ SNARE_STRING_COUNTER_RATE_MULT = 1.2
 # Cancel Snare wind-up when melee lands mid-telegraph (AI interrupt).
 SNARE_STRING_COUNTER_INTERRUPT = True
 # Extend the same snare-style mid-telegraph melee cancel to Punchline kits:
-# Brute spit + Gagster lob wind-ups only (not Brute slam, Overlord rain/surge,
-# or dedicated counter damage windows — those stay separate / deferred).
+# Brute spit + Gagster lob wind-ups only (not Brute slam, Overlord rain/surge).
 # AI path in DistributedCorruptToonAI.__maybeInterruptMeleeTelegraph.
+# Dedicated counter→melee windows (below) are separate from interrupt cancel.
 BRUTE_SPIT_MELEE_INTERRUPT = True
 GAGSTER_LOB_MELEE_INTERRUPT = True
 # Messenger name — DistributedCorruptToon → MeleeCombat thin hook.
 SNARE_STRING_COUNTER_EVENT = 'corruptSnareStringSnapCounter'
+
+# Sludge Brute spit telegraph → dedicated counter window (Snare-like).
+# After the green spit-gob telegraph reads, arm a short punish→melee window.
+# Distinct from mid-spit interrupt cancel and from slam (commit-through).
+# No cream deepen in this window — gameplay timing only. No keyblades / KH.
+BRUTE_SPIT_COUNTER_ENABLED = True
+BRUTE_SPIT_COUNTER_ARM_DELAY_SEC = 0.22
+BRUTE_SPIT_COUNTER_WINDOW_SEC = 0.55
+# Planar range — spit engage + slack so a readable Brute can be punished.
+BRUTE_SPIT_COUNTER_RANGE = 12.0
+BRUTE_SPIT_COUNTER_DAMAGE_MULT = 1.5
+BRUTE_SPIT_COUNTER_RATE_MULT = 1.2
+BRUTE_SPIT_COUNTER_EVENT = 'corruptBruteSpitCounter'
+
+# Gunk Gagster gag-lob telegraph → dedicated counter window (Snare-like).
+# After the teal bounce-pie / puddle warn reads, arm a short punish→melee
+# window. Distinct from mid-lob interrupt cancel. No cream / no KH.
+GAGSTER_LOB_COUNTER_ENABLED = True
+GAGSTER_LOB_COUNTER_ARM_DELAY_SEC = 0.18
+GAGSTER_LOB_COUNTER_WINDOW_SEC = 0.52
+# Planar range — lob kite ring + slack for a readable Gagster punish.
+GAGSTER_LOB_COUNTER_RANGE = 11.0
+GAGSTER_LOB_COUNTER_DAMAGE_MULT = 1.5
+GAGSTER_LOB_COUNTER_RATE_MULT = 1.2
+GAGSTER_LOB_COUNTER_EVENT = 'corruptGagsterLobCounter'
 
 
 def isMeleeInterruptibleTelegraph(archetype, move):
@@ -2118,6 +2143,91 @@ def snareStringCounterUntil(armedAt, window=None):
     """Absolute expiry for a string-snap counter window armed at armedAt."""
     if window is None:
         window = SNARE_STRING_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def isDedicatedTelegraphCounterMove(archetype, move):
+    """True when this telegraph should arm a Snare-like dedicated counter window.
+
+    Snare: any string telegraph when SNARE_STRING_COUNTER_ENABLED.
+    Brute: spit only (slam stays commit-through, no counter).
+    Gagster: gag_lob only.
+    Interrupt cancel (isMeleeInterruptibleTelegraph) is separate.
+    """
+    aid = normalizeArchetype(archetype)
+    moveName = str(move or 'smack')
+    if aid == ARCHETYPE_SNARE:
+        return bool(SNARE_STRING_COUNTER_ENABLED)
+    if aid == ARCHETYPE_BRUTE and moveName == 'spit':
+        return bool(BRUTE_SPIT_COUNTER_ENABLED)
+    if aid == ARCHETYPE_GAGSTER and moveName == 'gag_lob':
+        return bool(GAGSTER_LOB_COUNTER_ENABLED)
+    return False
+
+
+def bruteSpitCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after a Brute spit counter."""
+    if mult is None:
+        mult = BRUTE_SPIT_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def bruteSpitCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after a Brute spit counter."""
+    if mult is None:
+        mult = BRUTE_SPIT_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isBruteSpitCounterWindowOpen(armed, until, now):
+    """True while a Sludge Brute spit counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def bruteSpitCounterArmAt(now, delay=None):
+    """Absolute time when the spit counter should arm after telegraph."""
+    if delay is None:
+        delay = BRUTE_SPIT_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def bruteSpitCounterUntil(armedAt, window=None):
+    """Absolute expiry for a spit counter window armed at armedAt."""
+    if window is None:
+        window = BRUTE_SPIT_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def gagsterLobCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after a Gagster lob counter."""
+    if mult is None:
+        mult = GAGSTER_LOB_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def gagsterLobCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after a Gagster lob counter."""
+    if mult is None:
+        mult = GAGSTER_LOB_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isGagsterLobCounterWindowOpen(armed, until, now):
+    """True while a Gunk Gagster lob counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def gagsterLobCounterArmAt(now, delay=None):
+    """Absolute time when the lob counter should arm after telegraph."""
+    if delay is None:
+        delay = GAGSTER_LOB_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def gagsterLobCounterUntil(armedAt, window=None):
+    """Absolute expiry for a lob counter window armed at armedAt."""
+    if window is None:
+        window = GAGSTER_LOB_COUNTER_WINDOW_SEC
     return float(armedAt) + max(0.0, float(window))
 
 

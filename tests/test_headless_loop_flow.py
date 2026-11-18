@@ -593,6 +593,21 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(cg.isMeleeInterruptibleTelegraph(
             cg.ARCHETYPE_GAGSTER, 'gag_lob'))
         self.assertIn('__maybeInterruptMeleeTelegraph', corrupt_ai)
+        # Dedicated counter windows (beyond interrupt) for spit / lob.
+        self.assertTrue(cg.BRUTE_SPIT_COUNTER_ENABLED)
+        self.assertTrue(cg.GAGSTER_LOB_COUNTER_ENABLED)
+        self.assertTrue(cg.isDedicatedTelegraphCounterMove(
+            cg.ARCHETYPE_BRUTE, 'spit'))
+        self.assertFalse(cg.isDedicatedTelegraphCounterMove(
+            cg.ARCHETYPE_BRUTE, 'slam'))
+        self.assertTrue(cg.isDedicatedTelegraphCounterMove(
+            cg.ARCHETYPE_GAGSTER, 'gag_lob'))
+        corrupt_client = _read('toontown/corruption/DistributedCorruptToon.py')
+        melee_src = _read('toontown/hackslash/MeleeCombat.py')
+        self.assertIn('__scheduleBruteSpitCounter', corrupt_client)
+        self.assertIn('__scheduleGagsterLobCounter', corrupt_client)
+        self.assertIn('_onBruteSpitCounter', melee_src)
+        self.assertIn('_onGagsterLobCounter', melee_src)
 
         # Player KO during reclaim is an authored fail (#323/#324) + retry clear.
         rg = self.rg

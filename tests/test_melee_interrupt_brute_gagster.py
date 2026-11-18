@@ -5,7 +5,8 @@ Loads CorruptionGlobals without Panda3D. Asserts interrupt tunables + pure
 isMeleeInterruptibleTelegraph helper, and AI wiring on
 DistributedCorruptToonAI (__maybeInterruptMeleeTelegraph from
 takeHackSlashDamage). Extends snare-style mid-telegraph cancel — not cream
-FX, not dedicated counter damage windows, not Overlord P1.
+FX, not Overlord P1. Dedicated counter windows live in
+test_brute_gagster_counter_windows.py.
 
 Run from repo root:
   python3 tests/test_melee_interrupt_brute_gagster.py

@@ -349,8 +349,12 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # at wind-up; trail chip + land splash) — dodge out during flight. Close
 # range swaps to a heavier slam secondary (tank, not tinted Smudge smack).
 # Melee mid-spit-telegraph cancels the wind-up (same snare-style AI interrupt;
-# slam stays commit-through). AV: green squash + spit-gob telegraph pop
-# (BruteSpitTelegraphFx) + ink drip + squirt SFX, then ink blob on spit land.
+# slam stays commit-through). After the spit-gob telegraph reads, a short
+# dedicated spit counter window arms — F / LMB for a bumped snappy punish
+# opener (same reward path as Snare string-snap / perfect-dodge counter;
+# BRUTE_SPIT_COUNTER_*; gameplay timing only on this window).
+# AV: green squash + spit-gob telegraph pop (BruteSpitTelegraphFx) + ink drip
+# + squirt SFX, then ink blob on spit land.
 # Spit land also fires BruteSpitCreamSplashFx (deepened cream splash beyond
 # #264 + thicker vertical cream drip filaments + heavier downward cream
 # aftershock) so the green tank spit reads juicier after the telegraph —
@@ -361,7 +365,9 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # ink-fist telegraph + drip — not stationary smack fodder).
 # Gunk Gagster lob (~spawncorrupt 1 0 3 / ~spawngagster): melee mid-lob
 # telegraph likewise cancels the wind-up (does not clear an already-landed
-# linger sludge).
+# linger sludge). After the teal lob telegraph reads, a short dedicated lob counter
+# window arms — F / LMB punish opener (GAGSTER_LOB_COUNTER_*; same reward path;
+# gameplay timing only on this window).
 ```
 
 ## Balloon Snare string-lash / splash demo
