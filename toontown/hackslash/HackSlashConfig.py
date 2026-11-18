@@ -827,44 +827,48 @@ DODGE_TRAIL_PULSE_INK_COLOR = (0.2, 0.06, 0.26, 0.9)
 DODGE_TRAIL_PULSE_INK_END = (0.38, 0.1, 0.42, 0.0)
 
 # I-frame pulse cream wash — soft aspect2d veil after first dodge i-frame
-# cream/ink pulse (#66). SoftLock FOV / reticle cream wash grammar (#160 /
-# #155). Deepened so invuln windows read clearly: brighter peak + longer mid
-# hold while dodge i-frames are live. Quieter under trail wash (#139);
-# cream/pastel only. Toggle DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = False
+# cream/ink pulse (#66 / #166 / #228). SoftLock FOV / reticle cream wash
+# grammar (#160 / #155). Deepened past #228 so invuln windows read juicier
+# still: brighter peak + longer mid hold while dodge i-frames are live, plus
+# a richer residual. Quieter under / at most equal to trail wash (#139);
+# cream/pastel only. Distinct from hurt-stagger cream wash deepen (#247 /
+# #263) — mid-roll invuln, not smack lockout — and from dodge-cancel cream
+# flash (#242 / #257). Toggle DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = False
 # drops wash (+ wash aftershock).
 DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED = True
 DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC = 0.16  # after first pulse; mid-iframe
 DODGE_TRAIL_PULSE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-DODGE_TRAIL_PULSE_CREAM_WASH_PEAK = 0.09
-DODGE_TRAIL_PULSE_CREAM_WASH_MID = 0.055
+DODGE_TRAIL_PULSE_CREAM_WASH_PEAK = 0.098
+DODGE_TRAIL_PULSE_CREAM_WASH_MID = 0.065
 DODGE_TRAIL_PULSE_CREAM_WASH_IN_SEC = 0.05
-DODGE_TRAIL_PULSE_CREAM_WASH_PULSE_SEC = 0.08
-DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC = 0.08
-DODGE_TRAIL_PULSE_CREAM_WASH_OUT_SEC = 0.30
+DODGE_TRAIL_PULSE_CREAM_WASH_PULSE_SEC = 0.10
+DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC = 0.10
+DODGE_TRAIL_PULSE_CREAM_WASH_OUT_SEC = 0.36
 DODGE_TRAIL_PULSE_CREAM_WASH_BIN = 27  # under trail wash (28) / soft-lock pulse
 
 # I-frame pulse cream wash aftershock — residual cream flecks + soft halo
 # after the wash pulse so the invuln settle still reads. Same grammar as
 # HURT_STAGGER_CREAM_WASH_AFTERSHOCK_* / PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_*;
-# quieter (rolls fire often). Cream/pastel only. Toggle
+# deepened past #228 (more flecks + stronger halo), still quieter (rolls fire
+# often). Cream/pastel only. Toggle
 # DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
 DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ENABLED = True
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.12  # after wash starts
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.10  # after wash starts
 DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.08)
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT = 3
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SIZE = 0.011
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DRIFT = 0.18
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_FALL = 0.15
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SEC = 0.24
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.62)
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT = 4
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SIZE = 0.013
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DRIFT = 0.22
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_FALL = 0.18
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SEC = 0.28
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.72)
 DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
 DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_BIN = 29  # over i-frame wash veil (27)
 DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.34
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_START = 0.18
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 0.92
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.18
-DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.07
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.38
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_START = 0.20
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.10
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.22
+DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.09
 DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
@@ -1253,7 +1257,7 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 # On-screen hint while demo mode is active
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  combo cream edge deepen  |  '
-    'Shift/X dodge i-frame cream wash  |  '
+    'Shift/X dodge i-frame cream wash deepen+  |  '
     'dodge→F cream flash deepen+  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash deepen+→F/Shift  |  '
     'Tab/` soft-lock cycle cream  |  hit soft-lock aim cream deepen  |  ~melee'
