@@ -7,6 +7,7 @@ Slice 1: stretch punches, short combo window, soft nearest-hostile targeting.
 from .MeleeCombat import MeleeCombatController
 from .HackSlashConfig import (
     finisherFovPunchKeys,
+    hurtStaggerCreamWashPeakAtSec,
     hurtStaggerTotalSec,
     isHurtRecoveryCancelWindowOpen,
     isJuggleCancelWindowOpen,
@@ -39,6 +40,7 @@ from .FinisherCreamWashFx import FinisherCreamWashPulse
 from .HitSparkFx import HitSparkFx
 from .HitSparkCreamWashFx import HitSparkCreamWashPulse
 from .HitStopFx import HitStopFx
+from .HurtStaggerCreamWashFx import HurtStaggerCreamWashPulse
 from .PerfectDodgeCreamWashFx import PerfectDodgeCreamWashPulse
 from .SlamDustFx import SlamDustFx
 from .SoftLockCreamWashFx import SoftLockCreamWashPulse
@@ -48,6 +50,7 @@ from .SoftLockReticleFx import SoftLockReticleFx
 __all__ = [
     'MeleeCombatController',
     'finisherFovPunchKeys',
+    'hurtStaggerCreamWashPeakAtSec',
     'hurtStaggerTotalSec',
     'isHurtRecoveryCancelWindowOpen',
     'isJuggleCancelWindowOpen',
@@ -77,6 +80,7 @@ __all__ = [
     'HitSparkFx',
     'HitSparkCreamWashPulse',
     'HitStopFx',
+    'HurtStaggerCreamWashPulse',
     'PerfectDodgeCreamWashPulse',
     'SlamDustFx',
     'SoftLockCreamWashPulse',
