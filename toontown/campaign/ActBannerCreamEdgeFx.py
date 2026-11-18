@@ -1,9 +1,13 @@
-"""Rubber-hose cream edge pulse for campaign act-enter banners.
+"""Rubber-hose cream edge pulse for campaign banners.
 
-Soft cream border strips + tip flecks that frame PlayEntry act flash
-banners (#70 hose pop). Mirrors reclaim wave-announce cream edge (#87) —
-sunny Toontown cream only, opposite of the polluted ink edge vignette.
-Campaign-owned; no keyblades / KH branding.
+Soft cream border strips + tip flecks that frame:
+  * PlayEntry act-enter flash banners (#70 hose pop) — #110
+  * Early/mid Oswald trust handoff banners (#76 hose settle) — TC-119
+
+Mirrors reclaim wave-announce cream edge (#87) — sunny Toontown cream
+only, opposite of the polluted ink edge vignette. Campaign-owned; no
+keyblades / KH branding. Oswald stays trusted mid-campaign (no twist
+spoilers on the trust cream edge path).
 """
 
 from math import cos, pi, sin
@@ -22,19 +26,29 @@ from direct.interval.IntervalGlobal import (
 
 from toontown.campaign import CampaignGlobals
 
+# CampaignGlobals prefix → defaults for fleck origin / node name.
+_CFG_ACT = 'PLAY_ENTRY_BANNER_CREAM_EDGE'
+_CFG_TRUST = 'OSWALD_TRUST_BANNER_CREAM_EDGE'
+_DEFAULT_ORIGIN_ACT = (0.0, 0.0, 0.72)
+_DEFAULT_ORIGIN_TRUST = (0.0, 0.0, 0.42)
+
 
 class ActBannerCreamEdgeFx(object):
-    """One-shot cream edge pulse framing the act-enter banner."""
+    """One-shot cream edge pulse framing a campaign banner."""
 
-    def __init__(self):
+    def __init__(self, cfgPrefix=_CFG_ACT):
+        self._cfgPrefix = cfgPrefix
         self._edgeIval = None
         self._edgeRootNP = None
         self._edgeFleckNPs = []
 
+    def _cfg(self, suffix, default):
+        return getattr(CampaignGlobals, '%s_%s' % (self._cfgPrefix, suffix),
+                       default)
+
     def play(self):
-        """Cream border strips + tip flecks framing the act banner."""
-        if not getattr(
-                CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_ENABLED', True):
+        """Cream border strips + tip flecks framing the banner."""
+        if not self._cfg('ENABLED', True):
             return
         self.clear()
         try:
@@ -46,18 +60,12 @@ class ActBannerCreamEdgeFx(object):
         if edgeRoot is None:
             return
 
-        peak = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_PEAK', 0.42))
-        mid = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_PULSE', 0.28))
-        inSec = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_IN_SEC', 0.08))
-        holdSec = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_HOLD_SEC', 0.10))
-        pulseSec = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_PULSE_SEC', 0.12))
-        outSec = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_OUT_SEC', 0.36))
+        peak = float(self._cfg('PEAK', 0.42))
+        mid = float(self._cfg('PULSE', 0.28))
+        inSec = float(self._cfg('IN_SEC', 0.08))
+        holdSec = float(self._cfg('HOLD_SEC', 0.10))
+        pulseSec = float(self._cfg('PULSE_SEC', 0.12))
+        outSec = float(self._cfg('OUT_SEC', 0.36))
 
         # Rubber-hose two-beat: bright pop → soft settle pulse → fade.
         edgePart = Sequence(
@@ -75,24 +83,28 @@ class ActBannerCreamEdgeFx(object):
         fleckParts = self._spawnEdgeFlecks(parent)
         parts = [edgePart]
         parts.extend(fleckParts)
+        tag = ('oswaldTrust' if self._cfgPrefix == _CFG_TRUST
+               else 'actBanner')
         self._edgeIval = Sequence(
             Parallel(*parts),
             Func(self.clear),
-            name='actBannerCreamEdgePulse',
+            name='%sCreamEdgePulse' % tag,
         )
         self._edgeIval.start()
 
     def _buildEdgeRoot(self, parent):
         """Four cream edge strips — sunny frame, open center for the banner."""
         try:
+            # Thickness lives on the bare prefix (no _THICKNESS suffix) to
+            # match PLAY_ENTRY_BANNER_CREAM_EDGE / OSWALD_TRUST_…_CREAM_EDGE.
             edge = float(getattr(
-                CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE', 0.28))
-            binSort = int(getattr(
-                CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_BIN', 50))
-            r, g, b, _a = getattr(
-                CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_COLOR',
-                (1.0, 0.97, 0.82, 1.0))
-            root = parent.attachNewNode('act-banner-cream-edge')
+                CampaignGlobals, self._cfgPrefix, 0.28))
+            binSort = int(self._cfg('BIN', 50))
+            r, g, b, _a = self._cfg(
+                'COLOR', (1.0, 0.97, 0.82, 1.0))
+            tag = ('oswald-trust' if self._cfgPrefix == _CFG_TRUST
+                   else 'act-banner')
+            root = parent.attachNewNode('%s-cream-edge' % tag)
             root.setTransparency(TransparencyAttrib.MAlpha)
             root.setColorScale(1, 1, 1, 0)
             root.setBin('fixed', binSort)
@@ -106,7 +118,7 @@ class ActBannerCreamEdgeFx(object):
                 (1.0 - edge, 2.0, -1.25, 1.25),
             )
             for i, frame in enumerate(frames):
-                cm = CardMaker('act-banner-cream-edge-%s' % i)
+                cm = CardMaker('%s-cream-edge-%s' % (tag, i))
                 cm.setFrame(*frame)
                 strip = root.attachNewNode(cm.generate())
                 strip.setTransparency(TransparencyAttrib.MAlpha)
@@ -121,41 +133,39 @@ class ActBannerCreamEdgeFx(object):
             return None
 
     def _spawnEdgeFlecks(self, parent):
-        """Sunny cream chips near the act banner during the edge pulse."""
-        count = int(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_COUNT', 6))
+        """Sunny cream chips near the banner during the edge pulse."""
+        count = int(self._cfg('FLECK_COUNT', 6))
         if count <= 0:
             return []
-        size = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_SIZE', 0.022))
-        drift = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_DRIFT', 0.18))
-        sec = float(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_SEC', 0.28))
-        binSort = int(getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_BIN', 50)) + 1
-        r, g, b, a = getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_COLOR',
-            (1.0, 0.96, 0.62, 0.9))
-        er, eg, eb, ea = getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_END_COLOR',
-            (1.0, 0.92, 0.45, 0.0))
-        origin = getattr(
-            CampaignGlobals, 'PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_ORIGIN',
-            getattr(CampaignGlobals, 'PLAY_ENTRY_BANNER_POS',
-                    (0.0, 0.0, 0.72)))
+        size = float(self._cfg('FLECK_SIZE', 0.022))
+        drift = float(self._cfg('FLECK_DRIFT', 0.18))
+        sec = float(self._cfg('FLECK_SEC', 0.28))
+        binSort = int(self._cfg('BIN', 50)) + 1
+        r, g, b, a = self._cfg(
+            'FLECK_COLOR', (1.0, 0.96, 0.62, 0.9))
+        er, eg, eb, ea = self._cfg(
+            'FLECK_END_COLOR', (1.0, 0.92, 0.45, 0.0))
+        defaultOrigin = (
+            _DEFAULT_ORIGIN_TRUST if self._cfgPrefix == _CFG_TRUST
+            else getattr(CampaignGlobals, 'PLAY_ENTRY_BANNER_POS',
+                         _DEFAULT_ORIGIN_ACT))
+        origin = self._cfg('FLECK_ORIGIN', defaultOrigin)
         try:
             ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
         except Exception:
-            ox, oy, oz = 0.0, 0.0, 0.72
+            ox, oy, oz = (
+                _DEFAULT_ORIGIN_TRUST if self._cfgPrefix == _CFG_TRUST
+                else _DEFAULT_ORIGIN_ACT)
 
+        tag = ('oswald-trust' if self._cfgPrefix == _CFG_TRUST
+               else 'act-banner')
         parts = []
         for i in range(count):
             try:
                 # Spread along the top banner band (not a full radial burst).
                 t = (float(i) / max(1, count - 1)) - 0.5
                 angle = (0.35 * pi) + (t * 0.9 * pi)
-                cm = CardMaker('act-banner-cream-edge-fleck-%s' % i)
+                cm = CardMaker('%s-cream-edge-fleck-%s' % (tag, i))
                 if (i % 2) == 0:
                     cm.setFrame(
                         -size * 1.15, size * 1.15, -size * 0.5, size * 0.5)
@@ -227,22 +237,41 @@ class ActBannerCreamEdgeFx(object):
         self._edgeFleckNPs = []
 
 
-_fx = None
+_actFx = None
+_trustFx = None
 
 
-def _shared():
-    global _fx
-    if _fx is None:
-        _fx = ActBannerCreamEdgeFx()
-    return _fx
+def _sharedAct():
+    global _actFx
+    if _actFx is None:
+        _actFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_ACT)
+    return _actFx
+
+
+def _sharedTrust():
+    global _trustFx
+    if _trustFx is None:
+        _trustFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_TRUST)
+    return _trustFx
 
 
 def playActBannerCreamEdge():
     """Fire the shared act-banner cream edge pulse."""
-    _shared().play()
+    _sharedAct().play()
 
 
 def clearActBannerCreamEdge():
-    """Tear down any in-flight cream edge pulse."""
-    if _fx is not None:
-        _fx.clear()
+    """Tear down any in-flight act-banner cream edge pulse."""
+    if _actFx is not None:
+        _actFx.clear()
+
+
+def playOswaldTrustBannerCreamEdge():
+    """Fire cream edge on early/mid Oswald trust handoff hose settle."""
+    _sharedTrust().play()
+
+
+def clearOswaldTrustBannerCreamEdge():
+    """Tear down any in-flight Oswald trust cream edge pulse."""
+    if _trustFx is not None:
+        _trustFx.clear()
