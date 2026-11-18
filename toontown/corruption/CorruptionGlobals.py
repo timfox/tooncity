@@ -506,9 +506,51 @@ _DEFAULT_HOOD_BIAS = HOOD_POLLUTION_BIAS[2200]
 
 # Telegraph / impact presentation (client AV punch; AI timings unchanged).
 # Ink Smudge = purple melee; Sludge Brute = green spit; Balloon Snare = amber
-# lash; Gunk Gagster = teal gag-lob puddle.
+# lash; Gunk Gagster = teal gag-lob puddle; Corrupted Oswald = betrayal crimson
+# lunge (not Smudge purple fallthrough).
 TELEGRAPH_CHARGE_COLOR = (2.15, 0.25, 2.4, 1.0)
 TELEGRAPH_HOLD_COLOR = (1.55, 0.2, 1.85, 1.0)
+
+# Corrupted Oswald telegraph body charge — hot betrayal crimson (not purple).
+# Client AV only; AI timings unchanged. Distinct from TELEGRAPH_CHARGE_COLOR.
+OSWALD_TELEGRAPH_CHARGE_COLOR = (2.25, 0.35, 0.55, 1.0)
+OSWALD_TELEGRAPH_HOLD_COLOR = (1.65, 0.22, 0.38, 1.0)
+# Wider crouch → tall thin lunge stretch (betrayal_lunge wind-up read).
+OSWALD_TELEGRAPH_SQUASH = (2.05, 1.55, 0.38)
+OSWALD_TELEGRAPH_MID = (1.75, 1.35, 0.48)
+OSWALD_TELEGRAPH_STRETCH = (0.55, 0.85, 1.95)
+
+# Corrupted Oswald telegraph stain-lunge pop — short rubber-hose crimson charge
+# on announceAttackTelegraph (client only). Distinct from Smudge purple fist,
+# Brute spit, Snare string, Gagster puddle. No cream deepen.
+OSWALD_TELEGRAPH_STAIN_LOOK = {
+    'id': 'betrayal-crimson-lunge',
+    'lift': 2.25,
+    'scale': 1.05,
+    'peakAlpha': 0.97,
+    'fadeInSec': 0.04,
+    'holdSec': 0.14,
+    'fadeOutSec': 0.2,
+    # Forward-lean lunge: flatter squash → taller forward stretch.
+    'squash': (1.95, 0.95, 0.32),
+    'stretch': (0.58, 1.05, 2.05),
+    'squashSec': 0.045,
+    'stretchSec': 0.12,
+    'settleSec': 0.12,
+    'wobbleDeg': 18.0,
+    'fistHalf': 0.34,
+    'rimScale': 1.36,
+    'hotHalf': 0.12,
+    'fistColor': (0.88, 0.16, 0.24, 1.0),
+    'rimColor': (1.35, 0.42, 0.48, 1.0),
+    'flashColor': (1.55, 0.38, 0.45, 1.0),
+    'smearCount': 5,
+    'smearHalf': 0.1,
+    'smearSec': 0.26,
+    'smearSpread': 1.05,
+    'smearColor': (0.95, 0.22, 0.32, 0.92),
+    'binSort': 43,
+}
 
 # Ink Smudge telegraph ink-fist pop — short rubber-hose purple melee charge on
 # announceAttackTelegraph (client only). Distinct from shared TELEGRAPH_INK_DRIP_*
@@ -598,6 +640,77 @@ SMUDGE_INK_SPLASH_LOOK = {
         'dripSec': 0.42,
         'dripStagger': 0.04,
         'binSort': 46,
+    },
+}
+
+# Corrupted Oswald hit/death betrayal splash — cheap rubber-hose crimson splash
+# so tagged/popped Oswald reads as twist fight, not street Smudge purple
+# (client only). Composes with OswaldBetrayalTelegraphFx / CorruptDeathPopFx
+# / IdleInkDripFx palettes via OswaldBetrayalSplashFx.oswaldBetrayalSplashLook.
+# No cream deepen — ink/stain AV only.
+OSWALD_BETRAYAL_SPLASH_LOOK = {
+    'hit': {
+        'id': 'oswald-hit-splash',
+        'lift': 2.15,
+        'peakAlpha': 0.95,
+        'splatHalf': 0.3,
+        'splatPeak': 1.7,
+        'splatSec': 0.2,
+        'rimScale': 1.3,
+        'smearCount': 4,
+        'smearHalf': 0.1,
+        'smearSec': 0.22,
+        'smearSpread': 0.9,
+        'fleckCount': 3,
+        'fleckHalf': 0.12,
+        'fleckDist': 1.2,
+        'fleckLift': 0.5,
+        'fleckSec': 0.24,
+        'dripCount': 2,
+        'dripHalf': 0.09,
+        'dripSpread': 0.28,
+        'dripFall': 0.85,
+        'dripSec': 0.34,
+        'dripStagger': 0.03,
+        'binSort': 45,
+        # Explicit crimson — do not inherit Smudge purple defaults.
+        'splatColor': (0.92, 0.22, 0.3, 1.0),
+        'rimColor': (1.35, 0.4, 0.48, 1.0),
+        'smearColor': (0.95, 0.25, 0.35, 0.92),
+        'fleckColor': (0.78, 0.14, 0.22, 0.95),
+        'dripColor': (0.72, 0.12, 0.18, 0.95),
+        'streakColor': (1.05, 0.35, 0.42, 0.9),
+    },
+    'death': {
+        'id': 'oswald-death-splash',
+        'lift': 1.6,
+        'peakAlpha': 0.98,
+        'splatHalf': 0.42,
+        'splatPeak': 2.2,
+        'splatSec': 0.28,
+        'rimScale': 1.38,
+        'smearCount': 5,
+        'smearHalf': 0.13,
+        'smearSec': 0.3,
+        'smearSpread': 1.25,
+        'fleckCount': 5,
+        'fleckHalf': 0.16,
+        'fleckDist': 1.9,
+        'fleckLift': 0.8,
+        'fleckSec': 0.32,
+        'dripCount': 3,
+        'dripHalf': 0.11,
+        'dripSpread': 0.4,
+        'dripFall': 1.15,
+        'dripSec': 0.44,
+        'dripStagger': 0.04,
+        'binSort': 46,
+        'splatColor': (0.95, 0.2, 0.28, 1.0),
+        'rimColor': (1.45, 0.38, 0.45, 1.0),
+        'smearColor': (1.0, 0.28, 0.36, 0.94),
+        'fleckColor': (0.72, 0.14, 0.2, 0.95),
+        'dripColor': (0.68, 0.1, 0.16, 0.95),
+        'streakColor': (1.1, 0.32, 0.4, 0.92),
     },
 }
 

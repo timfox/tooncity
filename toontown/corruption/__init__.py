@@ -36,7 +36,11 @@ cream/pastel juice against purple ink; distinct from Snare counter cream
 whip / Brute spit cream drip / Gunk puddle cream bloom; telegraph cream
 warn aftershock grammar) and pulse SmudgeHitCreamWashFx (soft cream wash
 — cream/pastel contrast against purple ink; overlord-hit / telegraph /
-silhouette / death cream-wash grammar). Sludge
+silhouette / death cream-wash grammar). Corrupted Oswald wind-ups flash
+OswaldBetrayalTelegraphFx (crimson rubber-hose stain-lunge pop — not Smudge
+purple fallthrough). Corrupted Oswald hits and deaths also flash
+OswaldBetrayalSplashFx (cheap crimson betrayal splash; composes with
+telegraph / death / idle looks — no cream deepen). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
 pop) and, on spit (not slam), arm a short dedicated counter window into
 melee (BRUTE_SPIT_COUNTER_*; synchs with hackslash perfect-dodge counter;

@@ -169,6 +169,9 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # cream wash pulse (SmudgeHitCreamWashFx — overlord-hit / telegraph /
 # silhouette / death cream-wash grammar);
 # Smudge death layers splash with CorruptDeathPopFx for swarm readability.
+# Corrupted Oswald flashes crimson stain-lunge telegraph
+# (OswaldBetrayalTelegraphFx) — not Smudge purple fallthrough. Oswald hits /
+# deaths flash OswaldBetrayalSplashFx (crimson betrayal splash; no cream deepen).
 # Melee hits on Brute flash BruteSludgeSplashFx (cheap green sludge splash);
 # Brute spit land also fires BruteSpitCreamSplashFx (deepened cream splash
 # beyond #264 + thicker vertical cream drip filaments + heavier downward
@@ -339,6 +342,17 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # SMUDGE_HIT_CREAM_WASH_ENABLED = False drops wash only.
 ```
 
+## Corrupted Oswald telegraph / splash demo
+
+```
+~spawncorruptedoswald 1
+~hackslash 0
+# Oswald: crimson squash + stain-lunge telegraph (OswaldBetrayalTelegraphFx)
+# — distinct from Smudge purple fist. Land F / LMB — crimson betrayal splash
+# (OswaldBetrayalSplashFx) on hit; defeat layers splash with CorruptDeathPopFx.
+# No cream deepen on Oswald AV.
+```
+
 ## Sludge Brute spit / splash demo
 
 ```
@@ -403,7 +417,9 @@ fightable **Corrupted Oswald** chase/arena spawn (`ARCHETYPE_CORRUPT_OSWALD`
 via `CampaignDirectorAI` / `OswaldBetrayalChase`) as the betrayal gameplay
 consequence — not cream-only. Oswald uses a distinct betrayal attack kit
 (`betrayal_lunge` dash-then-hit, close `stain_burst` AoE, planar shove —
-not a crimson Ink Smudge smack reskin). Full dialogue is out of scope here.
+not a crimson Ink Smudge smack reskin) plus client AV
+(`OswaldBetrayalTelegraphFx` / `OswaldBetrayalSplashFx` — crimson, not
+Smudge purple fallthrough). Full dialogue is out of scope here.
 
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
    SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), and
