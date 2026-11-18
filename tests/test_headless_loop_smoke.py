@@ -3502,6 +3502,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_CRUMB_CREAM_MID', crumb_src)
         self.assertIn('_makeCrumbCreamPip', crumb_src)
         self.assertIn('corruptStreetCrumbCreamPip', crumb_src)
+        # Crumb pip cream deepen (hold + rebound; ≠ halo #252 / fog #250).
+        self.assertIn('_CRUMB_PIP_HOLD_SEC', crumb_src)
+        self.assertIn('_CRUMB_PIP_REBOUND_SCALE', crumb_src)
+        self.assertIn('pipRimRebound', crumb_src)
         # Playground pollution fog edge breath (distinct from #211 / #216).
         self.assertIn('_startFogPulseLoop', crumb_src)
         self.assertIn('_FOG_PULSE_GAP_SEC', crumb_src)

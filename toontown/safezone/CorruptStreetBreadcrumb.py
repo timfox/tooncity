@@ -12,9 +12,11 @@ without KH branding — distinct from fog edge cream rim deepen (#250),
 tunnel cream deepen (#230 peak→mid→rest), and birds-return wash (#226).
 Separately, a short ink crumb trail at the tunnel mouth pulses on a
 faster stagger (#216), deepened with a juicier cream mid-settle + soft
-cream pip blot under each crumb so polluted streets read juicier from
-the playground side — distinct from placemarker cream deepen (#230),
-fog edge cream deepen (#236), and birds-return fullscreen wash (#226).
+cream pip blot (#241), then deepened again on that cream pip (juicier
+peak/mid + soft mid hold + micro rebound) so polluted streets read
+juicier from the playground side — distinct from placemarker cream
+rim deepen (#252), fog edge cream rim deepen (#250), tunnel cream
+deepen (#230), and birds-return fullscreen wash (#226).
 A soft pollution fog edge veil also breathes at the playground-side
 tunnel lip (#221 / #236), deepened again on the cream rim (juicier
 peak/mid + soft mid hold + micro rebound) so polluted borders read
@@ -77,7 +79,7 @@ _PULSE_HALO_NAME = 'corruptStreetPlacemarkerCreamHalo'
 _PULSE_HALO_HALF_W = 2.70  # slightly wider cream rim peeks past text
 _PULSE_HALO_HALF_H = 0.68
 _PULSE_HALO_Z_OFF = -0.08
-_PULSE_HALO_SCALE_PEAK = 1.38  # juicier than #230 1.32; < crumb pip 1.48
+_PULSE_HALO_SCALE_PEAK = 1.38  # juicier than #230 1.32; < crumb pip 1.56
 _PULSE_HALO_PEAK = Vec4(1.0, 0.97, 0.82, 0.44)  # brighter sunny cream rim
 _PULSE_HALO_MID = Vec4(1.0, 0.95, 0.74, 0.22)
 _PULSE_HALO_REST = Vec4(1.0, 0.97, 0.82, 0.0)
@@ -87,33 +89,40 @@ _PULSE_HALO_REBOUND_SEC = 0.06  # snappier than fog rim 0.08
 _PULSE_HALO_REBOUND_PEAK = Vec4(1.0, 0.97, 0.80, 0.14)  # warm cream flash
 
 # Tunnel-mouth ink crumb trail — distinct from overhead placemarker pulse.
-# Cream deepen: warmer peak → soft mid settle + local cream pip blot under
-# each crumb (not placemarker halo #230; not fog rim #236; not wash #226).
+# Cream deepen (#241): warmer peak → soft mid settle + local cream pip blot.
+# Cream pip deepen (post-#241): juicier pip peak/mid + mid hold + micro
+# rebound — not placemarker halo rim #252; not fog rim #250; not #241 alone.
 _CRUMB_GLYPH = '•'
 _CRUMB_COUNT = 3
 _CRUMB_Z = 1.05
 _CRUMB_Y0 = -2.4
 _CRUMB_Y_STEP = 1.05
 _CRUMB_SCALE = 0.55
-_CRUMB_PULSE_PEAK = 1.42  # slightly juicier snap on cream deepen
+_CRUMB_PULSE_PEAK = 1.46  # slightly juicier snap on pip cream deepen
 _CRUMB_PULSE_HALF_SEC = 0.11
 _CRUMB_PULSE_GAP_SEC = 3.1
 _CRUMB_STAGGER_SEC = 0.13
 _CRUMB_FG = Vec4(0.22, 0.10, 0.28, 0.95)
 _CRUMB_SHADOW = Vec4(1.0, 0.92, 0.72, 0.75)
-_CRUMB_HIGHLIGHT = Vec4(1.0, 0.88, 0.42, 1.0)  # juicier warm cream peak
-_CRUMB_CREAM_MID = Vec4(1.0, 0.92, 0.60, 1.0)  # soft settle before rest
-_CRUMB_CREAM_MID_SEC = 0.07  # snappier than placemarker 0.09 / fog 0.14
+_CRUMB_HIGHLIGHT = Vec4(1.0, 0.90, 0.38, 1.0)  # juicier warm cream peak
+_CRUMB_CREAM_MID = Vec4(1.0, 0.94, 0.64, 1.0)  # soft settle before rest
+_CRUMB_CREAM_MID_SEC = 0.08  # snappier than placemarker 0.10 / fog 0.14
 _CRUMB_REST = Vec4(1.0, 1.0, 1.0, 1.0)
 # Soft cream pip blot under each crumb during the trail pulse.
+# Pip deepen (post-#241): juicier peak/mid + mid hold + micro rebound
+# settle — not placemarker halo #252; not fog rim #250; not #241 alone.
 _CRUMB_PIP_NAME = 'corruptStreetCrumbCreamPip'
-_CRUMB_PIP_HALF_W = 0.38  # tiny trail blot — not placemarker halo / fog rim
-_CRUMB_PIP_HALF_H = 0.26
+_CRUMB_PIP_HALF_W = 0.42  # tiny trail blot — not placemarker halo / fog rim
+_CRUMB_PIP_HALF_H = 0.28
 _CRUMB_PIP_Z_OFF = -0.06
-_CRUMB_PIP_SCALE_PEAK = 1.48  # punchier than fog rim 1.22; not halo 1.38
-_CRUMB_PIP_PEAK = Vec4(1.0, 0.95, 0.70, 0.42)
-_CRUMB_PIP_MID = Vec4(1.0, 0.92, 0.62, 0.18)
+_CRUMB_PIP_SCALE_PEAK = 1.56  # punchier than #241 1.48 / halo 1.38 / fog 1.22
+_CRUMB_PIP_PEAK = Vec4(1.0, 0.96, 0.72, 0.48)  # brighter sunny cream pip
+_CRUMB_PIP_MID = Vec4(1.0, 0.93, 0.64, 0.22)
 _CRUMB_PIP_REST = Vec4(1.0, 0.96, 0.78, 0.0)
+_CRUMB_PIP_HOLD_SEC = 0.05  # snappier mid linger than halo 0.07 / fog 0.10
+_CRUMB_PIP_REBOUND_SCALE = 1.14  # punchier micro rebound than halo 1.10 / fog 1.06
+_CRUMB_PIP_REBOUND_SEC = 0.05  # snappier than halo 0.06 / fog 0.08
+_CRUMB_PIP_REBOUND_PEAK = Vec4(1.0, 0.95, 0.70, 0.12)  # soft cream flash
 
 # Playground-edge pollution fog breath — opacity/billow (not placemarker
 # scale snap). Slower / softer than #211 / #216 so corruption presence
@@ -294,15 +303,17 @@ def streetBreadcrumbPulseCreamParams():
     """Pure cream-deepen params for tunnel-mouth ink crumb trail pulse.
 
     Juicier cream mid-settle + soft cream pip blot under each crumb
-    (#216 deepen). Distinct from placemarkerPulseCreamParams (#230 local
-    text halo), playgroundFogEdgeCreamParams (#236 fog rim), and
-    BirdsReturnCreamWashFx fullscreen wash (#226). Headless-safe —
-    no Panda geom.
+    (#241 deepen), then juicier pip peak/mid + mid hold + micro rebound
+    (pip deepen aftershock). Distinct from placemarkerPulseCreamParams
+    (#252 halo rim hold/rebound), playgroundFogEdgeCreamParams (#250 fog
+    rim), #241 peak→mid→rest alone, and BirdsReturnCreamWashFx
+    fullscreen wash (#226). Headless-safe — no Panda geom.
     """
     hi = _CRUMB_HIGHLIGHT
     mid = _CRUMB_CREAM_MID
     pipPeak = _CRUMB_PIP_PEAK
     pipMid = _CRUMB_PIP_MID
+    rebound = _CRUMB_PIP_REBOUND_PEAK
     return {
         'highlight': (float(hi[0]), float(hi[1]), float(hi[2]), float(hi[3])),
         'creamMid': (float(mid[0]), float(mid[1]), float(mid[2]), float(mid[3])),
@@ -312,8 +323,13 @@ def streetBreadcrumbPulseCreamParams():
         'pipScalePeak': float(_CRUMB_PIP_SCALE_PEAK),
         'pipHalfW': float(_CRUMB_PIP_HALF_W),
         'pipHalfH': float(_CRUMB_PIP_HALF_H),
+        'pipHoldSec': float(_CRUMB_PIP_HOLD_SEC),
+        'pipReboundScale': float(_CRUMB_PIP_REBOUND_SCALE),
+        'pipReboundSec': float(_CRUMB_PIP_REBOUND_SEC),
+        'pipReboundAlpha': float(rebound[3]),
         # Trail-local cream pip blot — not placemarker halo / fog rim / wash.
         'localPip': True,
+        'pipRimRebound': True,
         'fullscreenWash': False,
         'placemarkerHalo': False,
         'fogRim': False,
@@ -1018,26 +1034,54 @@ class CorruptStreetBreadcrumb(DirectObject):
         return Parallel(*parts)
 
     def _buildCrumbCreamPipIval(self, pip, half, midSec):
-        """Trail cream pip bloom — peak → mid → fade (not #230/#236/#226)."""
+        """Trail cream pip bloom — juicier peak → mid hold → rest → rebound.
+
+        Distinct from #241 peak→mid→rest (no hold/rebound), placemarker
+        halo rim #252, and fog rim #250.
+        """
         peakScale = float(_CRUMB_PIP_SCALE_PEAK)
+        holdSec = max(0.03, float(_CRUMB_PIP_HOLD_SEC))
+        reboundSec = max(0.03, float(_CRUMB_PIP_REBOUND_SEC))
+        reboundScale = float(_CRUMB_PIP_REBOUND_SCALE)
+        # Settle mid window uses crumb cream midSec; pip then holds + rebounds.
+        settleSec = max(0.03, float(midSec))
         return Parallel(
             Sequence(
                 LerpColorScaleInterval(
                     pip, half, _CRUMB_PIP_PEAK,
                     startColorScale=_CRUMB_PIP_REST, blendType='easeOut'),
                 LerpColorScaleInterval(
-                    pip, midSec, _CRUMB_PIP_MID,
+                    pip, settleSec, _CRUMB_PIP_MID,
                     startColorScale=_CRUMB_PIP_PEAK, blendType='easeInOut'),
+                # Soft mid linger so the sunny pip blot reads before fade.
+                LerpColorScaleInterval(
+                    pip, holdSec, _CRUMB_PIP_MID,
+                    startColorScale=_CRUMB_PIP_MID, blendType='easeInOut'),
                 LerpColorScaleInterval(
                     pip, half, _CRUMB_PIP_REST,
                     startColorScale=_CRUMB_PIP_MID, blendType='easeIn'),
+                # Micro cream rebound flash — pip deepen residual (not #252).
+                LerpColorScaleInterval(
+                    pip, reboundSec * 0.45, _CRUMB_PIP_REBOUND_PEAK,
+                    startColorScale=_CRUMB_PIP_REST, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    pip, reboundSec * 0.55, _CRUMB_PIP_REST,
+                    startColorScale=_CRUMB_PIP_REBOUND_PEAK,
+                    blendType='easeIn'),
             ),
             Sequence(
                 LerpScaleInterval(
                     pip, half, peakScale, startScale=1.0,
                     blendType='easeOut'),
                 LerpScaleInterval(
-                    pip, half + midSec, 1.0, startScale=peakScale,
+                    pip, settleSec + holdSec, 1.0, startScale=peakScale,
+                    blendType='easeIn'),
+                Wait(half),  # color fade to rest; hold scale at 1.0
+                LerpScaleInterval(
+                    pip, reboundSec * 0.45, reboundScale, startScale=1.0,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    pip, reboundSec * 0.55, 1.0, startScale=reboundScale,
                     blendType='easeIn'),
             ),
         )
