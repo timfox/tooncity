@@ -5,14 +5,17 @@ auto-arm melee, auto-start reclaim packs (no ~spawncorrupt), show prompts,
 bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
 
 On polluted ACTS street enter: brief rubber-hose ink edge vignette that
-fades as the tip bar appears (Toontown spiritual sequel — no KH branding).
+fades as the tip bar appears. Tip bar itself plays a short rubber-hose
+scale pop when it lands (Toontown spiritual sequel — no KH branding).
 """
 
-from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
+from panda3d.core import (
+    CardMaker, Point3, TextNode, TransparencyAttrib, Vec4)
 
 from direct.interval.IntervalGlobal import (
     Func,
     LerpColorScaleInterval,
+    LerpScaleInterval,
     Parallel,
     Sequence,
     Wait,
@@ -316,9 +319,16 @@ class PlayEntryClient(DirectObject):
             ),
         ]
         if tipNP is not None and not tipNP.isEmpty():
+            # Fade + hose pop land together after the ink edge holds.
+            tipParts = [
+                LerpColorScaleInterval(tipNP, tipFade, Vec4(1, 1, 1, 1)),
+            ]
+            hose = self._tipHosePopInterval(tipNP)
+            if hose is not None:
+                tipParts.append(hose)
             parts.append(Sequence(
                 Wait(tipDelay),
-                LerpColorScaleInterval(tipNP, tipFade, Vec4(1, 1, 1, 1)),
+                Parallel(*tipParts),
             ))
         self._vignetteIval = Sequence(
             Parallel(*parts),
@@ -383,12 +393,62 @@ class PlayEntryClient(DirectObject):
         tn.setShadow(0.04, 0.04)
         tn.setShadowColor(0, 0, 0, 0.75)
         np = aspect2d.attachNewNode(tn)  # noqa: F821
-        np.setScale(0.042)
-        np.setPos(0, 0, -0.92)
+        settle = float(CampaignGlobals.PLAY_ENTRY_TIP_SCALE)
+        tipPos = CampaignGlobals.PLAY_ENTRY_TIP_POS
+        np.setScale(settle)
+        np.setPos(float(tipPos[0]), float(tipPos[1]), float(tipPos[2]))
         if fadeIn:
             np.setTransparency(TransparencyAttrib.MAlpha)
             np.setColorScale(1, 1, 1, 0)
         self._tipNP = np
+        # Immediate pop for clean-street / handoff tips; vignette path
+        # starts the hose sequence with the tip fade instead.
+        if not fadeIn:
+            self._playTipHosePop(np)
+
+    def _tipHosePopInterval(self, tipNP):
+        """Build flat squash → tall stretch → settle Sequence (does not start)."""
+        if tipNP is None:
+            return None
+        try:
+            if tipNP.isEmpty():
+                return None
+        except Exception:
+            return None
+        settle = float(CampaignGlobals.PLAY_ENTRY_TIP_SCALE)
+        sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH
+        tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH
+        settleSec = float(CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC)
+        settlePt = Point3(settle, settle, settle)
+        squashPt = Point3(settle * sx, settle * sy, settle * sz)
+        stretchPt = Point3(settle * tx, settle * ty, settle * tz)
+        try:
+            tipNP.setScale(settlePt)
+        except Exception:
+            return None
+        return Sequence(
+            LerpScaleInterval(
+                tipNP, float(squashSec), squashPt, blendType='easeOut'),
+            LerpScaleInterval(
+                tipNP, float(stretchSec), stretchPt, blendType='easeOut'),
+            LerpScaleInterval(
+                tipNP, settleSec, settlePt, blendType='easeIn'),
+            name='playEntryTipHosePop',
+        )
+
+    def _playTipHosePop(self, tipNP):
+        """Short rubber-hose scale pop when the street-entry tip lands."""
+        if self._tipIval:
+            try:
+                self._tipIval.pause()
+            except Exception:
+                pass
+            self._tipIval = None
+        ival = self._tipHosePopInterval(tipNP)
+        if ival is None:
+            return
+        self._tipIval = ival
+        self._tipIval.start()
 
     def _clearTip(self):
         if self._tipIval:
