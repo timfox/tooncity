@@ -773,9 +773,10 @@ class MeleeCombatController(DirectObject):
             name=self.avatar.uniqueName('hackslashDodge'),
         )
         self._dodgeIval.start()
-        # Afterimage smear trail — isolated helper, not hit-squash paths.
+        # Afterimage smear + i-frame cream/ink pulse — isolated helper.
         try:
-            self._dodgeTrail.start()
+            self._dodgeTrail.start(
+                iframeSec=HackSlashConfig.DODGE_IFRAME_SEC)
         except Exception:
             pass
 

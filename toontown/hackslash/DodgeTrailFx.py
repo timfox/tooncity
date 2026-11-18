@@ -1,13 +1,15 @@
 """Rubber-hose dodge-roll afterimage / smear trail.
 
 Client juice for the Shift/X i-frame roll: brief translucent smear ghosts
-(and tiny spark pops) drip behind the toon while rolling. Wired from
-MeleeCombat dodge start/end so hit-squash / hitstop paths stay untouched.
+(and tiny spark pops) drip behind the toon while rolling. While dodge
+i-frames are active, short cream/ink pulses pop along the trail path.
+Wired from MeleeCombat dodge start/end so hit-squash / hitstop paths stay
+untouched.
 
 Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
-from math import cos, sin
+from math import cos, pi, sin
 
 from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec4
 
@@ -31,49 +33,90 @@ class DodgeTrailFx(object):
         self.avatar = avatar
         self._taskName = avatar.uniqueName('hackslashDodgeTrail')
         self._ghosts = []
+        self._pulses = []
         self._nextSpawnAt = 0.0
+        self._nextPulseAt = 0.0
+        self._iframeUntil = 0.0
         self._active = False
         self._spawnIndex = 0
+        self._pulseIndex = 0
 
-    def start(self):
-        """Begin dripping afterimages for the active dodge window."""
+    def start(self, iframeSec=None):
+        """Begin dripping afterimages; cream/ink pulse while i-frames live."""
         self.stop(clearGhosts=False)
         self._active = True
         self._spawnIndex = 0
+        self._pulseIndex = 0
         self._nextSpawnAt = 0.0
+        self._nextPulseAt = 0.0
+        try:
+            now = globalClock.getFrameTime()  # noqa: F821
+        except Exception:
+            now = 0.0
+        if iframeSec is None:
+            iframeSec = HackSlashConfig.DODGE_IFRAME_SEC
+        self._iframeUntil = now + float(iframeSec)
         self._spawnGhost(initial=True)
+        self._spawnPulse()
         try:
             taskMgr.add(self._tick, self._taskName)  # noqa: F821
         except Exception:
             self._active = False
+            self._iframeUntil = 0.0
 
     def stop(self, clearGhosts=False):
-        """Stop spawning; existing ghosts keep fading unless cleared."""
+        """Stop smear spawning; i-frame pulse may keep ticking until clear."""
         self._active = False
+        if clearGhosts:
+            self.clear()
+            return
+        # Keep the task alive while i-frame pulses can still fire.
+        try:
+            now = globalClock.getFrameTime()  # noqa: F821
+        except Exception:
+            now = 0.0
+        if now >= self._iframeUntil:
+            try:
+                taskMgr.remove(self._taskName)  # noqa: F821
+            except Exception:
+                pass
+
+    def clear(self):
+        """Hard-stop and remove every ghost/spark/pulse immediately."""
+        self._active = False
+        self._iframeUntil = 0.0
         try:
             taskMgr.remove(self._taskName)  # noqa: F821
         except Exception:
             pass
-        if clearGhosts:
-            self.clear()
-
-    def clear(self):
-        """Hard-stop and remove every ghost/spark immediately."""
-        self.stop(clearGhosts=False)
         for entry in list(self._ghosts):
             self._destroyEntry(entry)
         self._ghosts = []
+        for entry in list(self._pulses):
+            self._destroyPulse(entry)
+        self._pulses = []
 
     def _tick(self, task):
-        if not self._active:
-            return Task.done
         try:
             now = globalClock.getFrameTime()  # noqa: F821
         except Exception:
             return Task.done
-        if now >= self._nextSpawnAt:
+
+        iframeLive = now < self._iframeUntil
+        if not self._active and not iframeLive:
+            return Task.done
+
+        if self._active and now >= self._nextSpawnAt:
             self._spawnGhost()
             self._nextSpawnAt = now + float(HackSlashConfig.DODGE_TRAIL_SPAWN_SEC)
+
+        if iframeLive and now >= self._nextPulseAt:
+            self._spawnPulse()
+            self._nextPulseAt = now + float(
+                HackSlashConfig.DODGE_TRAIL_PULSE_SPAWN_SEC)
+
+        if not self._active and not iframeLive:
+            return Task.done
         return Task.cont
 
     def _spawnGhost(self, initial=False):
@@ -189,6 +232,122 @@ class DodgeTrailFx(object):
             )
             entry['sparks'].append({'np': spark, 'ival': sIval})
             sIval.start()
+
+    def _spawnPulse(self):
+        """Short cream/ink fleck pulse at the toon while dodge i-frames live."""
+        try:
+            pos = self.avatar.getPos(render)  # noqa: F821
+        except Exception:
+            return
+
+        lift = float(HackSlashConfig.DODGE_TRAIL_LIFT)
+        origin = Point3(
+            pos[0], pos[1],
+            pos[2] + lift + float(HackSlashConfig.DODGE_TRAIL_PULSE_LIFT))
+        sec = float(HackSlashConfig.DODGE_TRAIL_PULSE_SEC)
+        size = float(HackSlashConfig.DODGE_TRAIL_PULSE_SIZE)
+        drift = float(HackSlashConfig.DODGE_TRAIL_PULSE_DRIFT)
+        parts = []
+        nodes = []
+        self._pulseIndex += 1
+
+        creamCount = int(HackSlashConfig.DODGE_TRAIL_PULSE_CREAM_COUNT)
+        inkCount = int(HackSlashConfig.DODGE_TRAIL_PULSE_INK_COUNT)
+        cr, cg, cb, ca = HackSlashConfig.DODGE_TRAIL_PULSE_CREAM_COLOR
+        cer, ceg, ceb, cea = HackSlashConfig.DODGE_TRAIL_PULSE_CREAM_END
+        ir, ig, ib, ia = HackSlashConfig.DODGE_TRAIL_PULSE_INK_COLOR
+        ier, ieg, ieb, iea = HackSlashConfig.DODGE_TRAIL_PULSE_INK_END
+
+        for i in range(creamCount):
+            part, np = self._makePulseFleck(
+                origin, i, creamCount, size, drift, sec,
+                (cr, cg, cb, ca), (cer, ceg, ceb, cea), ink=False)
+            if part is not None:
+                parts.append(part)
+                nodes.append(np)
+
+        for i in range(inkCount):
+            part, np = self._makePulseFleck(
+                origin, i, max(1, inkCount), size * 0.85, drift * 1.1, sec,
+                (ir, ig, ib, ia), (ier, ieg, ieb, iea), ink=True)
+            if part is not None:
+                parts.append(part)
+                nodes.append(np)
+
+        if not parts:
+            return
+
+        ival = Sequence(
+            Parallel(*parts),
+            Func(self._retirePulseNodes, nodes),
+            name=self.avatar.uniqueName(
+                'hackslashDodgeTrailPulse-%s' % self._pulseIndex),
+        )
+        self._pulses.append({'ival': ival, 'nodes': nodes})
+        ival.start()
+
+    def _makePulseFleck(self, origin, index, count, size, drift, sec,
+                        color, endColor, ink=False):
+        count = max(1, int(count))
+        angle = (2.0 * pi * index) / float(count) + (0.55 if ink else 0.18)
+        r, g, b, a = color
+        er, eg, eb, ea = endColor
+        try:
+            cm = CardMaker('hackslash-dodge-pulse-%s-%s-%s' % (
+                self._pulseIndex, 'ink' if ink else 'cream', index))
+            cm.setFrame(-size, size, -size * (0.4 if not ink else 1.0),
+                        size * (0.4 if not ink else 1.0))
+            fleck = render.attachNewNode(cm.generate())  # noqa: F821
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, a)
+            fleck.setPos(
+                origin[0] + cos(angle) * 0.12,
+                origin[1] + sin(angle) * 0.12,
+                origin[2] + (0.08 if not ink else -0.05) * (index % 2))
+            fleck.setScale(0.4 + 0.12 * (index % 3))
+            fleck.setBin('transparent', 22)
+            fleck.setDepthWrite(False)
+            fleck.setBillboardPointEye()
+        except Exception:
+            return None, None
+
+        end = Point3(
+            origin[0] + cos(angle) * drift,
+            origin[1] + sin(angle) * drift,
+            origin[2] + (0.25 if not ink else -0.35) - 0.08 * (index % 3))
+        peak = 1.35 + 0.15 * (index % 2)
+        # Rubber-hose: pop tall, then settle/fade.
+        part = Sequence(
+            Parallel(
+                LerpScaleInterval(
+                    fleck, sec * 0.35, peak, blendType='easeOut'),
+                LerpPosInterval(
+                    fleck, sec * 0.55, end, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    fleck, sec * 0.55, Vec4(r, g, b, a), blendType='easeOut'),
+            ),
+            Parallel(
+                LerpScaleInterval(fleck, sec * 0.45, 0.05, blendType='easeIn'),
+                LerpColorScaleInterval(
+                    fleck, sec * 0.45, Vec4(er, eg, eb, ea),
+                    blendType='easeIn'),
+            ),
+        )
+        return part, fleck
+
+    def _retirePulseNodes(self, nodes):
+        for np in list(nodes or []):
+            self._retireNode(np)
+
+    def _destroyPulse(self, entry):
+        ival = entry.get('ival')
+        if ival is not None:
+            try:
+                ival.pause()
+            except Exception:
+                pass
+        self._retirePulseNodes(entry.get('nodes'))
 
     def _retireNode(self, np):
         try:

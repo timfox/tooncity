@@ -160,6 +160,20 @@ DODGE_TRAIL_SPARK_SIZE = 0.18
 DODGE_TRAIL_SPARK_DRIFT = 0.55
 DODGE_TRAIL_SPARK_COLOR = (1.0, 0.97, 0.75, 0.9)
 
+# I-frame cream/ink pulse along the dodge trail (while dodge i-frames live).
+# Short rubber-hose cream + ink fleck pops — not KH blue streaks.
+DODGE_TRAIL_PULSE_SPAWN_SEC = 0.09
+DODGE_TRAIL_PULSE_SEC = 0.18
+DODGE_TRAIL_PULSE_CREAM_COUNT = 3
+DODGE_TRAIL_PULSE_INK_COUNT = 2
+DODGE_TRAIL_PULSE_SIZE = 0.16
+DODGE_TRAIL_PULSE_DRIFT = 0.7
+DODGE_TRAIL_PULSE_LIFT = 0.15
+DODGE_TRAIL_PULSE_CREAM_COLOR = (1.0, 0.96, 0.62, 0.95)
+DODGE_TRAIL_PULSE_CREAM_END = (1.0, 0.9, 0.45, 0.0)
+DODGE_TRAIL_PULSE_INK_COLOR = (0.2, 0.06, 0.26, 0.9)
+DODGE_TRAIL_PULSE_INK_END = (0.38, 0.1, 0.42, 0.0)
+
 # Perfect dodge — Shift/X i-frames eat a CorruptToon telegraph (or near-miss).
 # Warm cream star pop + ink flecks; not KH blue / keyblade glitter.
 PERFECT_DODGE_STAR_COUNT = 5
