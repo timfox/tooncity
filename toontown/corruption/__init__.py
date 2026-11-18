@@ -28,8 +28,11 @@ drips / sparkles / wash / rim flecks for the wind-up. Ink Smudge wind-ups also f
 SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Ink Smudge hits and
 deaths also flash SmudgeInkSplashFx (cheap purple rubber-hose ink splash for
 swarm readability; composes with telegraph / death / idle ink looks); Smudge
-hits also pulse SmudgeHitCreamWashFx (soft cream wash — cream/pastel contrast
-against purple ink; overlord-hit / telegraph / silhouette / death cream-wash
+hits also fire SmudgeHitCreamSplashFx (brief cream splash + delayed cream
+aftershock — sunny cream/pastel juice against purple ink; Brute spit /
+Gunk puddle / Snare counter cream-splash grammar) and pulse
+SmudgeHitCreamWashFx (soft cream wash — cream/pastel contrast against
+purple ink; overlord-hit / telegraph / silhouette / death cream-wash
 grammar). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
 pop). Sludge Brute spit land / splash also fires BruteSpitCreamSplashFx

@@ -35,6 +35,7 @@ from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
 from toontown.corruption.OverlordTelegraphPunchFx import (
     OverlordTelegraphPunch, overlordTelegraphAnimSecs)
+from toontown.corruption.SmudgeHitCreamSplashFx import SmudgeHitCreamSplash
 from toontown.corruption.SmudgeHitCreamWashFx import SmudgeHitCreamWashPulse
 from toontown.corruption.SmudgeInkSplashFx import SmudgeInkSplash
 from toontown.corruption.SmudgeInkTelegraphFx import SmudgeInkTelegraphFist
@@ -218,6 +219,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearBruteSpitCreamSplash()
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
+        self.__clearSmudgeHitCreamSplash()
         self.__clearSmudgeHitCreamWash()
         self.__clearGagsterTelegraphPuddle()
         self.__clearGagsterPuddleCreamSplash()
@@ -1307,6 +1309,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearBruteSpitCreamSplash()
         self.__clearSmudgeTelegraphInk()
         self.__clearSmudgeInkSplash()
+        self.__clearSmudgeHitCreamSplash()
         self.__clearSmudgeHitCreamWash()
         self.__clearGagsterTelegraphPuddle()
         self.__clearGagsterPuddleCreamSplash()
@@ -2140,6 +2143,35 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
         self._smudgeInkSplash = None
 
+    def __playSmudgeHitCreamSplash(self, pos=None):
+        """Cream splash + delayed aftershock — Ink Smudge hit path only."""
+        if self.getArchetype() != CorruptionGlobals.ARCHETYPE_INK:
+            return
+        if self.__isInkOverlord():
+            return
+        if not getattr(
+                CorruptionGlobals,
+                'SMUDGE_HIT_CREAM_SPLASH_ENABLED', True):
+            return
+        self.__clearSmudgeHitCreamSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = SmudgeHitCreamSplash()
+        self._smudgeHitCreamSplash = splash
+        splash.play(pos)
+
+    def __clearSmudgeHitCreamSplash(self):
+        splash = getattr(self, '_smudgeHitCreamSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._smudgeHitCreamSplash = None
+
     def __playSmudgeHitCreamWash(self):
         """Soft cream wash after Smudge purple hit splash (hit path only)."""
         if self.getArchetype() != CorruptionGlobals.ARCHETYPE_INK:
@@ -2290,6 +2322,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__pauseSilhouetteCreamSparkle()
             self.__pauseSilhouetteCreamWash()
             self.__playSmudgeInkSplash(kind='hit')
+            self.__playSmudgeHitCreamSplash()
             self.__playSmudgeHitCreamWash()
             # Brief resume so idle drips / sparkles / wash / rim flecks return after splash.
             Sequence(

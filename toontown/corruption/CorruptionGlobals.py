@@ -329,8 +329,9 @@ SMUDGE_TELEGRAPH_INK_LOOK = {
 # readability (client only). Composes with SmudgeInkTelegraphFx / CorruptDeathPopFx
 # / IdleInkDripFx palettes via SmudgeInkSplashFx.smudgeInkSplashLook. Hit is the
 # cheap pack-scan cue; death layers a slightly larger splash with DeathPop.
-# Hit path also arms SmudgeHitCreamWashFx (soft cream wash — see
-# SMUDGE_HIT_CREAM_WASH_* below).
+# Hit path also arms SmudgeHitCreamSplashFx (cream splash + aftershock — see
+# SMUDGE_HIT_CREAM_SPLASH_* / SMUDGE_HIT_CREAM_AFTERSHOCK_* below) and
+# SmudgeHitCreamWashFx (soft cream wash — see SMUDGE_HIT_CREAM_WASH_* below).
 SMUDGE_INK_SPLASH_LOOK = {
     'hit': {
         'id': 'smudge-hit-splash',
@@ -597,6 +598,66 @@ OVERLORD_HIT_CREAM_WASH_LOOK = {
     'outSec': OVERLORD_HIT_CREAM_WASH_OUT_SEC,
     'binSort': OVERLORD_HIT_CREAM_WASH_BIN,
 }
+
+# Cream splash + delayed cream aftershock on Ink Smudge hit / splash
+# (after purple SmudgeInkSplashFx #75). Sunny cream / pastel contrast against
+# purple ink so basic corrupt packs read juicier. Same residual grammar as
+# TELEGRAPH_CREAM_WARN_AFTERSHOCK_* / Brute spit cream splash (#223) /
+# Gunk puddle cream splash (#218) / Snare counter cream splash (#214).
+# Client only. No keyblades / KH branding.
+# SMUDGE_HIT_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
+# SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED = False drops aftershock only.
+SMUDGE_HIT_CREAM_SPLASH_ENABLED = True
+SMUDGE_HIT_CREAM_SPLASH_DELAY_SEC = 0.06  # fallback; look prefers purple compose
+SMUDGE_HIT_CREAM_SPLASH_BIN = 46  # above purple ink splash (45)
+SMUDGE_HIT_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.94)  # sunny cream
+SMUDGE_HIT_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.7)
+SMUDGE_HIT_CREAM_SPLASH_FLECK_COLORS = (
+    (1.0, 0.97, 0.82, 0.9),   # sunny cream
+    (1.0, 0.96, 0.62, 0.84),  # butter
+    (1.0, 0.9, 0.78, 0.8),    # soft peach pastel
+)
+SMUDGE_HIT_CREAM_SPLASH_LOOK = {
+    'id': 'smudge-hit-cream-splash',
+    # lift / delaySec composed with smudgeInkSplashLook('hit') when played.
+    'lift': 2.05,
+    'delaySec': SMUDGE_HIT_CREAM_SPLASH_DELAY_SEC,
+    'delayScale': 0.32,
+    'peakAlpha': 0.94,
+    'splatHalf': 0.24,
+    'splatPeak': 1.5,
+    'splatSec': 0.15,
+    'rimScale': 1.28,
+    'splatColor': SMUDGE_HIT_CREAM_SPLASH_COLOR,
+    'rimColor': SMUDGE_HIT_CREAM_SPLASH_RIM_COLOR,
+    'fleckCount': 4,
+    'fleckHalf': 0.1,
+    'fleckDist': 1.0,
+    'fleckLift': 0.38,
+    'fleckSec': 0.2,
+    'fleckColors': SMUDGE_HIT_CREAM_SPLASH_FLECK_COLORS,
+    'binSort': SMUDGE_HIT_CREAM_SPLASH_BIN,
+}
+SMUDGE_HIT_CREAM_AFTERSHOCK_ENABLED = True
+SMUDGE_HIT_CREAM_AFTERSHOCK_DELAY_SEC = 0.16
+SMUDGE_HIT_CREAM_AFTERSHOCK_COUNT = 4  # deepened pack residual vs Snare/Brute (3)
+SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COUNT = 1
+SMUDGE_HIT_CREAM_AFTERSHOCK_SIZE = 0.1
+SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_SIZE = 0.12
+SMUDGE_HIT_CREAM_AFTERSHOCK_DRIFT = 0.62
+SMUDGE_HIT_CREAM_AFTERSHOCK_FALL = 0.4
+SMUDGE_HIT_CREAM_AFTERSHOCK_SEC = 0.34
+SMUDGE_HIT_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.85)
+SMUDGE_HIT_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
+SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.82)
+SMUDGE_HIT_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_ENABLED = True
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_HALF = 0.46
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_START = 0.28
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK = 1.5
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_SEC = 0.3
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.22
+SMUDGE_HIT_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Soft cream wash pulse after Smudge purple ink splash (hit only) —
 # aspect2d veil after SmudgeInkSplashFx (#75) smack (client only).
