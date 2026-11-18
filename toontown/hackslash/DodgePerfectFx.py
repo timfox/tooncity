@@ -3,7 +3,8 @@
 Client juice when Shift/X dodge i-frames eat a CorruptToon telegraph hit
 (or a near-miss while those i-frames are live). Warm cream stars + ink
 flecks, then a delayed cream star aftershock, then a soft cream wash
-pulse — Toontown spiritual-sequel tone only, no keyblades / no KH branding.
+pulse + residual cream wash aftershock — Toontown spiritual-sequel tone
+only, no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -25,7 +26,7 @@ from .PerfectDodgeCreamWashFx import PerfectDodgeCreamWashPulse
 
 
 class DodgePerfectFx(object):
-    """Owns sparkle burst + cream star aftershock + cream wash pulse."""
+    """Owns sparkle burst + cream star aftershock + cream wash + wash aftershock."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -35,7 +36,7 @@ class DodgePerfectFx(object):
         self._creamWash = None
 
     def play(self, parent=None):
-        """Spawn star/ink pop + cream aftershock + delayed cream wash.
+        """Spawn star/ink pop + cream aftershock + delayed cream wash aftershock.
 
         Returns started Sequence or None.
         """
@@ -78,19 +79,17 @@ class DodgePerfectFx(object):
         else:
             burst = Parallel(*parts)
 
-        # Soft cream wash pulse after cream aftershock — entry/purity grammar.
+        # Soft cream wash pulse + wash aftershock — entry/purity grammar.
         washHold = 0.0
         try:
             wash = PerfectDodgeCreamWashPulse()
             if wash.play() is not None:
                 self._creamWash = wash
-                # Hold teardown beside delayed wash so clear() doesn't
-                # kill the veil mid-pulse (wash self-clears too).
-                washHold = (
+                # Hold teardown beside delayed wash + residual aftershock so
+                # clear() doesn't kill the veil/flecks mid-pulse (wash
+                # self-clears too).
+                washDuration = (
                     float(getattr(
-                        HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_DELAY_SEC',
-                        0.40))
-                    + float(getattr(
                         HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_IN_SEC',
                         0.06))
                     + float(getattr(
@@ -101,8 +100,27 @@ class DodgePerfectFx(object):
                         0.08))
                     + float(getattr(
                         HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_OUT_SEC',
+                        0.40)))
+                aftershockTail = 0.0
+                if getattr(
+                        HackSlashConfig,
+                        'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_ENABLED', True):
+                    aftershockTail = (
+                        float(getattr(
+                            HackSlashConfig,
+                            'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                            0.22))
+                        + float(getattr(
+                            HackSlashConfig,
+                            'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_SEC',
+                            0.32))
+                        + 0.05)
+                washHold = (
+                    float(getattr(
+                        HackSlashConfig, 'PERFECT_DODGE_CREAM_WASH_DELAY_SEC',
                         0.40))
-                    + 0.02)
+                    + max(washDuration, aftershockTail)
+                    + 0.04)
             else:
                 self._creamWash = None
         except Exception:

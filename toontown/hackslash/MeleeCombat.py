@@ -850,9 +850,10 @@ class MeleeCombatController(DirectObject):
             pass
 
     def _playPerfectDodge(self):
-        """Star/ink pop + cream aftershock + cream wash at the local toon."""
+        """Star/ink pop + cream aftershock + cream wash aftershock at toon."""
         try:
-            # DodgePerfectFx owns aftershock + PerfectDodgeCreamWashPulse.
+            # DodgePerfectFx owns star aftershock + PerfectDodgeCreamWashPulse
+            # (wash + residual wash aftershock).
             self._dodgePerfect.play()
         except Exception:
             pass
