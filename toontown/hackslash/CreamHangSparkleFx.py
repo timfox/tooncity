@@ -2,10 +2,11 @@
 
 World-space cream flecks + soft cream halo at the launcher apex so suspended
 corrupt toons read before fall, then a delayed cream aftershock (softer flecks
-+ residual halo) settles — same residual grammar as perfect-dodge / hit cream
-aftershock. Layers with HitJuice hang hover/squash and does not fight
-CreamSlamFlashFx (aspect2d finisher connect flash). Toontown spiritual-sequel
-tone only — no keyblades / no KH branding.
++ residual halo) settles, then a soft cream wash pulse so the hang reads sunny
+— same residual grammar as perfect-dodge / hit / combo cream aftershock +
+finisher / dodge / combo cream wash. Layers with HitJuice hang hover/squash
+and does not fight CreamSlamFlashFx (aspect2d finisher connect flash).
+Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -24,10 +25,11 @@ from direct.interval.IntervalGlobal import (
 
 from . import HackSlashConfig
 from . import HitJuice
+from .CreamHangCreamWashFx import CreamHangCreamWashPulse
 
 
 class CreamHangSparkleFx(object):
-    """Owns cream hang sparkle burst + delayed cream aftershock at apex."""
+    """Owns cream hang sparkle + aftershock + cream wash pulse at apex."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -35,13 +37,14 @@ class CreamHangSparkleFx(object):
         self._sparkleIval = None
         self._nodes = []
         self._haloNP = None
+        self._creamWash = None
 
     def play(self, origin=None, hitIndex=0, parent=None):
-        """Spawn cream hang sparkles + delayed cream aftershock.
+        """Spawn cream hang sparkles + aftershock + delayed cream wash.
 
         Returns started Sequence or None. `origin` is render-space hang peak.
         Falls back to classic hang sparks when LAUNCH_HANG_CREAM_ENABLED is
-        False (no aftershock on the classic path).
+        False (no aftershock / wash on the classic path).
         """
         self.clear()
         parentNP = parent
@@ -99,27 +102,55 @@ class CreamHangSparkleFx(object):
         aftershock = None
         if useCream:
             aftershock = self._buildAftershock(parentNP, origin, hitIndex)
+
+        # Soft cream wash pulse after cream aftershock — combo/finisher/dodge
+        # aspect2d grammar. Only on the cream path (classic sparks skip it).
+        washHold = 0.0
+        if useCream:
+            try:
+                wash = CreamHangCreamWashPulse()
+                if wash.play() is not None:
+                    self._creamWash = wash
+                    # Hold teardown beside delayed wash so clear() doesn't
+                    # kill the veil mid-pulse (wash self-clears too).
+                    washHold = (
+                        float(getattr(
+                            HackSlashConfig, 'LAUNCH_HANG_CREAM_WASH_DELAY_SEC',
+                            0.40))
+                        + float(getattr(
+                            HackSlashConfig, 'LAUNCH_HANG_CREAM_WASH_IN_SEC',
+                            0.05))
+                        + float(getattr(
+                            HackSlashConfig, 'LAUNCH_HANG_CREAM_WASH_PULSE_SEC',
+                            0.09))
+                        + float(getattr(
+                            HackSlashConfig, 'LAUNCH_HANG_CREAM_WASH_HOLD_SEC',
+                            0.06))
+                        + float(getattr(
+                            HackSlashConfig, 'LAUNCH_HANG_CREAM_WASH_OUT_SEC',
+                            0.34))
+                        + 0.02)
+                else:
+                    self._creamWash = None
+            except Exception:
+                self._creamWash = None
+
+        holdParts = [Wait(sec + 0.04)]
         if aftershock is not None:
-            # Sparkle Parallel already started; hold its lifetime beside aftershock.
-            self._ival = Sequence(
-                Parallel(
-                    Wait(sec + 0.04),
-                    aftershock,
-                ),
-                Func(self.clear),
-                name=self.avatar.uniqueName('hackslashCreamHangSparkle'),
-            )
-        else:
-            self._ival = Sequence(
-                Wait(sec + 0.04),
-                Func(self.clear),
-                name=self.avatar.uniqueName('hackslashCreamHangSparkle'),
-            )
+            holdParts.append(aftershock)
+        if washHold > 0.0:
+            holdParts.append(Wait(washHold))
+
+        self._ival = Sequence(
+            Parallel(*holdParts),
+            Func(self.clear),
+            name=self.avatar.uniqueName('hackslashCreamHangSparkle'),
+        )
         self._ival.start()
         return self._ival
 
     def clear(self):
-        """Stop the burst/aftershock and remove every cream hang node."""
+        """Stop the burst/aftershock/wash and remove every cream hang node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
@@ -132,6 +163,13 @@ class CreamHangSparkleFx(object):
             except Exception:
                 pass
             self._sparkleIval = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         if self._haloNP is not None:
             self._retireNode(self._haloNP)
             self._haloNP = None

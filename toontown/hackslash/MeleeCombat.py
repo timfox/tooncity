@@ -636,7 +636,8 @@ class MeleeCombatController(DirectObject):
 
         def startCreamHangSparkle():
             # World-space cream flecks + halo at apex, then delayed cream
-            # aftershock — HitJuice hang still owns hover/squash;
+            # aftershock + soft cream wash — HitJuice hang still owns
+            # hover/squash; CreamHangCreamWashPulse owns the aspect2d wash;
             # CreamSlamFlashFx stays aspect2d on connect.
             try:
                 parent = render  # noqa: F821

@@ -12,6 +12,7 @@ from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 from .DodgeTrailCreamWashFx import DodgeTrailCreamWashPulse
 from .ComboCounterCreamWashFx import ComboCounterCreamWashPulse
+from .CreamHangCreamWashFx import CreamHangCreamWashPulse
 from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
 from .FinisherCreamWashFx import FinisherCreamWashPulse
@@ -29,6 +30,7 @@ __all__ = [
     'DemoHostile',
     'HitJuice',
     'ComboCounterCreamWashPulse',
+    'CreamHangCreamWashPulse',
     'CreamHangSparkleFx',
     'CreamSlamFlashFx',
     'DodgePerfectFx',
