@@ -3,7 +3,7 @@
 Soft cream border strips + tip flecks that frame:
   * PlayEntry act-enter flash banners (#70 hose pop) — #110
   * Early/mid Oswald trust handoff banners (#76 hose settle) — #117
-  * Mid-act Oswald trust fracture (Loopy clear) — cool cream → shadow flecks
+  * Mid-act Oswald trust fracture (Loopy + Punchline clears) — cool cream → shadow flecks
   * Hood handoff cream-sparkle carnival banners (#99) — #124
   * Victory cream confetti / sparkle banners (#82/#105) — #129
   * Finale reveal cream aftershock banners (#86) — TC-136
