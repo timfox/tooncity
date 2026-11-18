@@ -14,11 +14,12 @@ Early/mid Oswald trusted reclaim-lead act banners add a soft settle bounce
 after that pop.
 Punchline Place Act 2 uses a campaign-owned entry tip (Brute/Snare cues,
 trusted Oswald lead / unease) with a slightly punchier tip hose pop +
-trust/fracture settle, a deepened cream hose settle (juicier overshoot →
-rest → micro rebound) so the Act 2 unease tip lands rubber-hose and
-reads juicier, and a delayed soft cream wash pulse (act-banner / trust
-wash twin). Distinct from Silly almost-confess tip cream hose (#232) and
-Silly Overlord tip cream wash aftershock (#251).
+trust/fracture settle, a deepened cream hose settle past #256 (juicier
+overshoot → rest → micro rebound) so the Act 2 unease tip lands
+rubber-hose and reads juicier, and a delayed soft cream wash pulse
+(act-banner / trust wash twin). Distinct from Silly almost-confess tip
+cream hose (#232/#279) and Silly Overlord tip cream wash aftershock
+(#251/#279).
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
 cheer-feels-wrong foreshadow) with a slightly heavier tip hose pop +
 fracture trust settle, a deepened cream hose settle past #232 so the
@@ -588,16 +589,17 @@ class PlayEntryClient(DirectObject):
         tipHose='punchline' uses Act 2 Punchline tunables + Oswald-trust
         settle bounce. When the Punchline act carries trustFracture (#190
         deepen), settle holds a rubbery beat longer (unease tip), then a
-        deepened cream hose settle (juicier overshoot → rest → micro
-        rebound) so the Act 2 unease tip lands rubber-hose and reads
-        juicier. tipHose='silly' uses Act 3 Silly Overlord tunables +
-        trust settle; when the finale act carries entryTipUnease, settle
-        holds the longer fracture beat (entry foreshadow + mid-act
+        deepened cream hose settle past #256 (juicier overshoot → rest →
+        micro rebound) so the Act 2 unease tip lands rubber-hose and
+        reads juicier. tipHose='silly' uses Act 3 Silly Overlord tunables
+        + trust settle; when the finale act carries entryTipUnease,
+        settle holds the longer fracture beat (entry foreshadow + mid-act
         almost-confess approach tip — no twist spoil), then a juicier
         cream hose settle so the trust-fracture tip lands rubber-hose and
         clear (taller/longer primary overshoot; no tip rebound —
-        Punchline deepen owns that; distinct from #251 wash aftershock).
-        Default path keeps the shared PLAY_ENTRY_TIP_* hose pop.
+        Punchline deepen owns that; distinct from #251/#279 wash
+        aftershock). Default path keeps the shared PLAY_ENTRY_TIP_* hose
+        pop.
         """
         if tipNP is None:
             return None
@@ -638,7 +640,8 @@ class PlayEntryClient(DirectObject):
                 trustOvershootAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
                 trustRestAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC'
             # Deepened cream hose settle after trust/fracture bounce
-            # (#198 / #227 deepen) — juicier overshoot → rest → micro rebound.
+            # (#198 / #227 / #256 deepen) — juicier overshoot → rest →
+            # micro rebound past #256.
             creamHoseSettle = bool(getattr(
                 CampaignGlobals,
                 'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', True))
@@ -744,7 +747,8 @@ class PlayEntryClient(DirectObject):
                 parts.append(LerpScaleInterval(
                     tipNP, max(0.01, creamRestSec), settlePt,
                     blendType='easeIn'))
-                # Optional micro rebound — Punchline tip cream hose deepen.
+                # Optional micro rebound — Punchline tip cream hose deepen
+                # past #256.
                 if creamHoseReboundAttr:
                     creamRebound = getattr(
                         CampaignGlobals, creamHoseReboundAttr, None)
@@ -790,8 +794,8 @@ class PlayEntryClient(DirectObject):
     def _playTipHosePop(self, tipNP, tipHose=None):
         """Short rubber-hose scale pop when the street-entry tip lands.
 
-        Punchline Act 2 tipHose appends a deepened cream hose settle
-        (overshoot → rest → micro rebound) after the trust/fracture
+        Punchline Act 2 tipHose appends a deepened cream hose settle past
+        #256 (overshoot → rest → micro rebound) after the trust/fracture
         bounce, then arms a delayed soft cream wash pulse. Silly Act 3
         tipHose appends a juicier cream hose settle after the fracture
         bounce (almost-confess / trust-fracture tip; no tip rebound),
