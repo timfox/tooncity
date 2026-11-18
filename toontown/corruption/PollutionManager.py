@@ -4,10 +4,11 @@ from panda3d.core import Fog, Vec4
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption import PollutionPropTint
+from toontown.corruption import PollutionStreetAudio
 
 
 class PollutionManager(DistributedObject.DistributedObject):
-    """Client mirror of per-zone pollution; fog + color grade + prop tint hooks."""
+    """Client mirror of per-zone pollution; fog + color grade + prop tint + audio."""
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManager')
     neverDisable = 1
@@ -19,6 +20,7 @@ class PollutionManager(DistributedObject.DistributedObject):
         self._activeZoneId = None
         self._lastLevel = CorruptionGlobals.POLLUTION_PURE
         self._propTint = None
+        self._streetAudio = None
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
@@ -28,10 +30,16 @@ class PollutionManager(DistributedObject.DistributedObject):
         # Hood-specific street geom tint (listens to pollutionPropTint).
         self._propTint = PollutionPropTint.PollutionPropTint()
         self._propTint.start()
+        # Polluted vs pure street music beds (listens to pollutionChanged / purity).
+        self._streetAudio = PollutionStreetAudio.PollutionStreetAudio()
+        self._streetAudio.start()
 
     def disable(self):
         self.ignoreAll()
         self.__clearPresentation()
+        if self._streetAudio is not None:
+            self._streetAudio.stop()
+            self._streetAudio = None
         if self._propTint is not None:
             self._propTint.stop()
             self._propTint = None
@@ -41,6 +49,9 @@ class PollutionManager(DistributedObject.DistributedObject):
 
     def delete(self):
         self.__clearPresentation()
+        if self._streetAudio is not None:
+            self._streetAudio.stop()
+            self._streetAudio = None
         if self._propTint is not None:
             self._propTint.stop()
             self._propTint = None

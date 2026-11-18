@@ -22,6 +22,8 @@ Sections below remain **debug / magic-word** fallbacks.
    Fog / color grade / street-prop tint are **hood-specific** (Loopy purple ink,
    Punchline sludge green-brown, Silly hot magenta) via `HOOD_POLLUTION_BIAS`
    and `PollutionPropTint` (geom colorScale — does not stomp reclaim render bloom).
+   Street music crossfades via `PollutionStreetAudio`: polluted → darker
+   `encntr_general_bg` bed; purity clear → bright hood bed + cheer/sting (#21).
 5. At `0.0`, director announces reclaim complete and client plays a stronger purity
    restore moment (banner + bloom + sting + FOV/camera punch + rays/sparks via
    `PurityBurstFx` + `ReclaimCheer` local Happy/wave + nearby nudge).

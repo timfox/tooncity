@@ -8,5 +8,7 @@ PollutionManager; hitting 0.0 unlocks purity restore (reclaim / campaign).
 
 Pollution fog / color grade / street-prop tint are hood-biased (Loopy purple
 ink, Punchline sludge green, Silly hot magenta) via CorruptionGlobals bias
-tables and PollutionPropTint on street geom.
+tables and PollutionPropTint on street geom. Street music crossfades to a
+darker encounter bed while polluted and back to the hood bed on purity restore
+(PollutionStreetAudio; pairs with reclaim cheer/sting).
 """

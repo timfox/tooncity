@@ -250,6 +250,16 @@ FINALE_STING_FLASH_COLOR = (1.15, 0.2, 0.55, 1.0)
 FINALE_STING_RENDER_PEAK = (1.85, 0.35, 1.15, 1.0)
 FINALE_STING_RENDER_HOLD = (1.35, 0.45, 0.75, 1.0)
 
+# Polluted vs pure street music beds (existing Toontown BGM — no new assets).
+# Encounter bed lives in phase_3.5 with street loaders, so TT streets can play it.
+POLLUTED_STREET_MUSIC = 'phase_3.5/audio/bgm/encntr_general_bg.ogg'
+POLLUTED_STREET_MUSIC_VOLUME = 0.72
+PURE_STREET_MUSIC_VOLUME = 0.8
+POLLUTION_AUDIO_THRESHOLD = 0.05
+POLLUTION_AUDIO_CROSSFADE_SEC = 1.25
+# Snappier return so reclaim cheer / purity sting (#21) land together.
+POLLUTION_AUDIO_RESTORE_CROSSFADE_SEC = 0.85
+
 
 def finalePhaseLook(phaseIndex):
     """Return presentation dict for Ink Overlord phase, or None."""
