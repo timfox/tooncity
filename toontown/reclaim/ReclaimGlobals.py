@@ -471,7 +471,8 @@ PURITY_COMPLETE_CREAM_WASH_OUT_SEC = 0.55
 # Cream aftershock after purity-complete cream wash (#104) — residual flecks
 # settle downward + soft halo after the wash pulse. Same grammar as entry wash
 # aftershock (#132), wave-clear aftershock (#127), purity-fill aftershock (#123).
-# Above wash (40); below StreetSparkleFx (50). Sunny pastel only — no KH blue.
+# Settle cream wash arms after this residual. Above wash (40); below
+# StreetSparkleFx (50). Sunny pastel only — no KH blue.
 PURITY_COMPLETE_CREAM_AFTERSHOCK_ENABLED = True
 PURITY_COMPLETE_CREAM_AFTERSHOCK_DELAY_SEC = 0.20
 PURITY_COMPLETE_CREAM_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.06)
@@ -490,6 +491,22 @@ PURITY_COMPLETE_CREAM_AFTERSHOCK_HALO_PEAK = 1.18
 PURITY_COMPLETE_CREAM_AFTERSHOCK_HALO_SEC = 0.28
 PURITY_COMPLETE_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.14
 PURITY_COMPLETE_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+# Soft cream wash pulse after purity-complete cream aftershock (#136) / wash (#104).
+# Entry settle (#170) / cheer (#142) / FOV purity (#164) / wave-clear (#144)
+# cream wash grammar. Quieter than the purity-complete wash pulse (peak 0.28);
+# cream/pastel only. Arms from PurityCompleteCreamWashFx.playPulse (delay
+# relative to pulse start). Toggle PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_ENABLED
+# = False drops settle wash only.
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_ENABLED = True
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_DELAY_SEC = 0.40  # after pulse; after aftershock (0.20)
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_PEAK = 0.09
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_MID = 0.045
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_IN_SEC = 0.05
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_PULSE_SEC = 0.09
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_HOLD_SEC = 0.06
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_OUT_SEC = 0.34
+PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_BIN = 38  # soft veil under wash (40) / aftershock (42)
 
 # Full-purity / reclaim-complete street sparkle (horizon cream glitter).
 # Layers with StreetColorWash soft-clear + PurityBurstFx FOV/rays; bigger than

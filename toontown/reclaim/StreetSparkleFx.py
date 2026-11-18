@@ -2,10 +2,10 @@
 
 Cream glitter rises from the street horizon after wash clears — a hood-wide
 payoff layered with StreetColorWash soft-clear, PurityCompleteCreamWashFx
-cream pulse + delayed cream aftershock, PurityBurstFx FOV/rays, and the
-lighter wave cream burst. Birds return stays on the corruption audio path
-via the same purityRestoreFx messenger. Toontown spiritual-sequel tone only
-— no keyblades / no KH branding.
+cream pulse + delayed cream aftershock + settle cream wash, PurityBurstFx
+FOV/rays, and the lighter wave cream burst. Birds return stays on the
+corruption audio path via the same purityRestoreFx messenger. Toontown
+spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin

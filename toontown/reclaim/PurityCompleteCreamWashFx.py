@@ -6,7 +6,9 @@ horizon glitter. Sibling of EntryCreamWashPulseFx (softer entry beat with
 EntryCreamShimmerFx). A delayed cream aftershock (softer flecks settling
 downward + soft halo) follows the wash pulse — same residual grammar as
 entry cream wash aftershock (#132), wave-clear cream aftershock (#127), and
-purity-fill cream aftershock (#123). Does not restage progressive wash geom
+purity-fill cream aftershock (#123) — then a soft cream wash pulse
+(EntryAftershockCreamWashPulse (#170) / CheerCreamWashPulse /
+PurityFovCreamWashPulse vocabulary). Does not restage progressive wash geom
 tint, purity FOV / rays / FOV cream wash, cheer flecks, or wave-clear cream.
 Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
@@ -27,10 +29,12 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.PurityCompleteAftershockCreamWashFx import (
+    PurityCompleteAftershockCreamWashPulse)
 
 
 class PurityCompleteCreamWashFxClient(DirectObject):
-    """Listens for purity restore; owns cream wash pulse + delayed aftershock."""
+    """Listens for purity restore; owns wash pulse + aftershock + settle wash."""
 
     def __init__(self):
         DirectObject.__init__(self)
@@ -39,6 +43,7 @@ class PurityCompleteCreamWashFxClient(DirectObject):
         self._washNP = None
         self._fleckNPs = []
         self._haloNP = None
+        self._creamWash = None
         self.accept('purityRestoreFx', self._onPurityRestore)
         self.accept('purityRestoreSettled', self._onSettled)
 
@@ -53,7 +58,7 @@ class PurityCompleteCreamWashFxClient(DirectObject):
         self.clear()
 
     def playPulse(self):
-        """Two-beat cream wash pulse (bright pop → soft settle → fade) + aftershock."""
+        """Two-beat cream wash pulse + delayed aftershock + settle wash."""
         if not getattr(
                 ReclaimGlobals, 'PURITY_COMPLETE_CREAM_WASH_ENABLED', True):
             return
@@ -138,20 +143,56 @@ class PurityCompleteCreamWashFxClient(DirectObject):
         aftershock = self._buildAftershock(parent, ox, oy, oz)
         if aftershock is not None:
             # Wash Sequence already started; hold its lifetime beside aftershock.
-            self._ival = Sequence(
-                Parallel(
-                    Wait(washLifetime + 0.04),
-                    aftershock,
-                ),
-                Func(self.clear),
-                name='reclaimPurityCompleteCreamWash',
+            burst = Parallel(
+                Wait(washLifetime + 0.04),
+                aftershock,
             )
         else:
-            self._ival = Sequence(
-                Wait(washLifetime + 0.04),
-                Func(self.clear),
-                name='reclaimPurityCompleteCreamWash',
-            )
+            burst = Wait(washLifetime + 0.04)
+
+        # Soft cream wash pulse after cream aftershock — entry settle (#170) grammar.
+        washHold = 0.0
+        try:
+            settle = PurityCompleteAftershockCreamWashPulse()
+            if settle.play() is not None:
+                self._creamWash = settle
+                # Hold teardown beside delayed settle wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_DELAY_SEC',
+                        0.40))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_IN_SEC', 0.05))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_PULSE_SEC',
+                        0.09))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_HOLD_SEC',
+                        0.06))
+                    + float(getattr(
+                        ReclaimGlobals,
+                        'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_OUT_SEC',
+                        0.34))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        hold = [burst]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
+        self._ival = Sequence(
+            Parallel(*hold),
+            Func(self.clear),
+            name='reclaimPurityCompleteCreamWash',
+        )
         self._ival.start()
 
     def _buildAftershock(self, parent, ox, oy, oz):
@@ -303,13 +344,20 @@ class PurityCompleteCreamWashFxClient(DirectObject):
         )
 
     def clear(self):
-        """Stop wash/aftershock and remove every cream purity-complete node."""
+        """Stop wash/aftershock/settle wash and remove every cream purity-complete node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        settle = self._creamWash
+        self._creamWash = None
+        if settle is not None:
+            try:
+                settle.clear()
+            except Exception:
+                pass
         if self._washPlayIval is not None:
             try:
                 self._washPlayIval.pause()

@@ -494,8 +494,8 @@ class StreetColorWash(object):
     def __onPurityRestore(self, zoneId):
         # Soft-clear progressive wash + aftershock; EntryCreamWashPulseFx owns
         # the entry cream pulse with shimmer, PurityCompleteCreamWashFx owns
-        # the discrete purity pulse + delayed cream aftershock layered with
-        # StreetSparkleFx.
+        # the discrete purity pulse + delayed cream aftershock + settle cream
+        # wash layered with StreetSparkleFx.
         if zoneId and self._zoneId and int(zoneId) != int(self._zoneId):
             return
         self._active = False
