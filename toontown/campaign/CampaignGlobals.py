@@ -167,10 +167,10 @@ PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 # veil on PlayEntry tipHose='punchline' path only. Soft under the tip bar;
 # cream / pastel only. A touch quieter / shorter than handoff wash (#141)
 # — tip lands without glitter hang (trust / act-banner wash twin). Loopy /
-# Silly / default tip hose stay wash-free. Act-enter / trust / handoff /
-# victory / finale washes live in their own modules.
-# PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only (hose pop +
-# trust settle remain). No keyblades / KH branding.
+# default tip hose stay wash-free; Silly tip wash lives in its own module.
+# Act-enter / trust / handoff / victory / finale washes live in their own
+# modules. PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only
+# (hose pop + trust settle remain). No keyblades / KH branding.
 PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = True
 PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.36  # after play; after hose settle
 PUNCHLINE_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -192,6 +192,27 @@ SILLY_ACT_TIP_POP_STRETCH = (0.70, 1.0, 1.52, 0.08)
 SILLY_ACT_TIP_POP_SETTLE_SEC = 0.10
 SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.07)
 SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
+
+# Soft cream wash pulse after Silly Act 3 tip hose pop (#95).
+# Act-banner / Punchline tip wash grammar (#154/#158) — delayed two-beat
+# aspect2d veil on PlayEntry tipHose='silly' path only. Soft under the tip
+# bar; cream / pastel only. A touch quieter / shorter than handoff wash
+# (#141) — tip lands without glitter hang (trust / act-banner / Punchline
+# tip wash twin). Loopy / Punchline / default tip hose stay wash-free.
+# Act-enter / trust / handoff / victory / finale washes live in their own
+# modules. SILLY_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only (hose
+# pop + trust settle remain). No keyblades / KH branding.
+SILLY_ACT_TIP_CREAM_WASH_ENABLED = True
+SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.36  # after play; after hose settle
+SILLY_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+SILLY_ACT_TIP_CREAM_WASH_PEAK = 0.12
+SILLY_ACT_TIP_CREAM_WASH_MID = 0.07
+SILLY_ACT_TIP_CREAM_WASH_IN_SEC = 0.07
+SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC = 0.12
+SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.10
+SILLY_ACT_TIP_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
+# Above ink entry vignette (48); soft veil settle under tip bar.
+SILLY_ACT_TIP_CREAM_WASH_BIN = 49
 
 # PlayEntry act-enter flash banner (ACTS['banner'] / reclaim cues).
 # Same squash→stretch→settle hose pop as the tip bar — readable act beat

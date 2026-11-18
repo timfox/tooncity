@@ -7,9 +7,10 @@ HitSparkCreamWashPulse / OswaldTrustCreamWashPulse / HandoffCreamWashPulse
 brief act-enter settle beat. Soft under the act banner + edge strips;
 cream / pastel only (not ink). Wired from PlayEntry creamEdge act-enter
 path only, beside the cream edge. Reclaim cue flashes stay wash-free.
-Punchline tip wash lives in PunchlineTipCreamWashFx; trust / handoff /
-victory / finale-reveal wash live in their own modules. Client only.
-Toontown spiritual sequel — no keyblades / no KH branding.
+Punchline tip wash lives in PunchlineTipCreamWashFx; Silly tip wash lives
+in SillyTipCreamWashFx; trust / handoff / victory / finale-reveal wash
+live in their own modules. Client only. Toontown spiritual sequel — no
+keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4
