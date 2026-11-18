@@ -2093,8 +2093,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('ComboCounterCreamWashPulse', hit_juice_src)
         self.assertIn('ComboCounterCreamWashPulse', hack_init)
 
-        # Combo cream edge deepen past #237 — juicier local edge + aftershock.
-        # Distinct from soft-lock cycle cream deepen (#233) / i-frame (#228).
+        # Combo cream edge deepen past #267 — juicier local edge + aftershock.
+        # Distinct from hurt wash (#287) / dodge flash / i-frame / aim nudge.
         combo_edge_rel = 'toontown/hackslash/ComboCounterCreamEdgeFx.py'
         _assert_module_file(combo_edge_rel)
         combo_edge_names = _class_and_func_names(_module_ast(combo_edge_rel))
@@ -2107,7 +2107,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_spawnAftershockHalo', combo_edge_methods)
         self.assertIn('_spawnAftershockFleck', combo_edge_methods)
         combo_edge_src = _read(combo_edge_rel)
-        self.assertIn('deepened past #237', combo_edge_src.lower())
+        self.assertIn('deepened past #267', combo_edge_src.lower())
         for combo_edge_key in (
                 'COMBO_COUNTER_CREAM_EDGE_ENABLED',
                 'COMBO_COUNTER_CREAM_EDGE_PEAK',
@@ -2124,14 +2124,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('comboCounterCreamEdgeAftershockAtSec', combo_edge_funcs)
         combo_edge_assigns = _assign_map(config_tree)
         self.assertGreaterEqual(
-            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_PEAK'), 0.78)
+            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_PEAK'), 0.84)
         self.assertGreaterEqual(
-            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK'), 1.36)
+            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK'), 1.44)
         self.assertGreaterEqual(
-            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE'), 0.028)
+            combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE'), 0.032)
         self.assertGreaterEqual(
             combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT'),
-            4)
+            5)
         self.assertIs(
             combo_edge_assigns.get('COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED'),
             True)

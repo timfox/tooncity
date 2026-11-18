@@ -829,12 +829,13 @@ class MeleeCombatController(DirectObject):
                 name=self.avatar.uniqueName('hackslashComboCream'))
             self._comboCreamIval = creamIval
             self._comboCreamNodes = creamNodes
-            # Deepened-past-#237 local cream edge pop + richer edge aftershock
-            # so the counter tick reads juicier still (≠ soft-lock / i-frame).
+            # Deepened-past-#267 local cream edge pop + richer edge aftershock
+            # so the counter tick reads juicier still (≠ hurt wash / dodge /
+            # i-frame / aim nudge).
             self._playComboCreamEdge(fleckOrigin)
 
     def _playComboCreamEdge(self, origin=None):
-        """Deepened-past-#237 cream border pop + edge aftershock on tick."""
+        """Deepened-past-#267 cream border pop + edge aftershock on tick."""
         try:
             self._comboCreamEdge.play(origin=origin)
         except Exception:
