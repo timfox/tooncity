@@ -121,7 +121,11 @@ def _mirror_should_show(camp, zoneId, betrayed=False):
     return int(zoneId) in zones
 
 
-def _mirror_greet(camp, zoneId):
+def _mirror_greet(camp, zoneId, cheered=False, softNextStreet=None):
+    helper = getattr(camp, 'oswaldPresenceGreetTip', None)
+    if callable(helper):
+        return str(helper(
+            zoneId, cheered=cheered, softNextStreet=softNextStreet))
     if int(zoneId) == int(camp.HUB_ZONE):
         return str(camp.OSWALD_PRESENCE_HUB_GREET)
     return str(camp.OSWALD_PRESENCE_STREET_GREET)
@@ -162,9 +166,17 @@ class OswaldPresenceTests(unittest.TestCase):
             camp.OSWALD_PRESENCE_CHEERED_SYNC_MSG, 'oswaldCheeredSync')
         self.assertEqual(camp.OSWALD_PRESENCE_MET_MSG, 'oswaldPresenceMet')
         self.assertEqual(camp.OSWALD_PRESENCE_MET_SYNC_MSG, 'oswaldMetSync')
+        self.assertIn('{street}', camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT)
+        self.assertIn('{street}', camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT)
+        self.assertIn('Oswald', camp.OSWALD_PRESENCE_HUB_GREET_CHEERED)
+        self.assertTrue(callable(camp.oswaldPresenceGreetTip))
         blob = ' '.join([
             camp.OSWALD_PRESENCE_HUB_GREET,
             camp.OSWALD_PRESENCE_STREET_GREET,
+            camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT,
+            camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT,
+            camp.OSWALD_PRESENCE_HUB_GREET_CHEERED,
+            camp.OSWALD_PRESENCE_STREET_GREET_CHEERED,
             camp.OSWALD_PRESENCE_FIRST_MEET_TIP,
             camp.OSWALD_PRESENCE_CHEER_TIP,
             camp.OSWALD_PRESENCE_INTERACT_PROMPT,
@@ -192,6 +204,13 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('plaza', hub.lower())
         self.assertIn('packs', street.lower())
         self.assertNotEqual(hub, street)
+        # Soft-next after cheer latch + unlocks.
+        hub_soft = _mirror_greet(
+            camp, TTC, cheered=True, softNextStreet='Punchline Place')
+        self.assertIn('Punchline Place', hub_soft)
+        self.assertNotEqual(hub_soft, hub)
+        cheered_only = _mirror_greet(camp, TTC, cheered=True)
+        self.assertEqual(cheered_only, camp.OSWALD_PRESENCE_HUB_GREET_CHEERED)
 
     def test_presence_module_ast_surface(self):
         rel = 'toontown/campaign/OswaldPresence.py'
@@ -201,6 +220,10 @@ class OswaldPresenceTests(unittest.TestCase):
                 'presenceLabel',
                 'hubGreetTip',
                 'streetGreetTip',
+                'hubGreetSoftNextTip',
+                'streetGreetSoftNextTip',
+                'hubGreetCheeredTip',
+                'streetGreetCheeredTip',
                 'firstMeetTip',
                 'cheerTip',
                 'interactPromptTip',
@@ -234,6 +257,8 @@ class OswaldPresenceTests(unittest.TestCase):
                 '_onOswaldPresenceCheered',
                 '_onOswaldCheeredSync',
                 '_requestPersistCheered',
+                '_onCampaignActUnlocked',
+                '_refreshSoftNextStreet',
                 '_playGreetWave',
                 '_playCheerBounce',
                 '_onReclaimCheer',
