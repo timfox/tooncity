@@ -3,13 +3,16 @@
 Soft cream border strips + tip flecks that frame:
   * PlayEntry act-enter flash banners (#70 hose pop) — #110
   * Early/mid Oswald trust handoff banners (#76 hose settle) — #117
-  * Hood handoff cream-sparkle carnival banners (#99) — TC-126
+  * Hood handoff cream-sparkle carnival banners (#99) — #124
+  * Victory cream confetti / sparkle banners (#82/#105) — TC-132
 
-Handoff cream-sparkle path also rises cream-sparkle flecks along the
-cream frame (wave-edge #113 twin). Mirrors reclaim wave-announce cream
-edge (#87) — sunny Toontown cream only, opposite of the polluted ink
-edge vignette. Campaign-owned; no keyblades / KH branding. Oswald stays
-trusted mid-campaign (no twist spoilers on early handoff cream edges).
+Handoff cream-sparkle and victory cream-sparkle paths also rise cream
+sparkle flecks along the cream frame (wave-edge #113 twin). Mirrors
+reclaim wave-announce cream edge (#87) — sunny Toontown cream only,
+opposite of the polluted ink edge vignette. Campaign-owned; no keyblades
+/ KH branding. Oswald stays trusted mid-campaign (no twist spoilers on
+early handoff cream edges). Victory cream edge clears before the Oswald
+twist / FinalePhaseFx reveal.
 """
 
 from math import cos, pi, sin
@@ -32,20 +35,26 @@ from toontown.campaign import CampaignGlobals
 _CFG_ACT = 'PLAY_ENTRY_BANNER_CREAM_EDGE'
 _CFG_TRUST = 'OSWALD_TRUST_BANNER_CREAM_EDGE'
 _CFG_HANDOFF = 'HANDOFF_CREAM_EDGE'
+_CFG_VICTORY = 'VICTORY_CREAM_EDGE'
 _DEFAULT_ORIGIN_ACT = (0.0, 0.0, 0.72)
 _DEFAULT_ORIGIN_TRUST = (0.0, 0.0, 0.42)
 _DEFAULT_ORIGIN_HANDOFF = (0.0, 0.0, 0.40)
+_DEFAULT_ORIGIN_VICTORY = (0.0, 0.0, 0.36)
 
 _TAG_BY_CFG = {
     _CFG_ACT: 'act-banner',
     _CFG_TRUST: 'oswald-trust',
     _CFG_HANDOFF: 'handoff',
+    _CFG_VICTORY: 'victory',
 }
 _IVAL_BY_CFG = {
     _CFG_ACT: 'actBanner',
     _CFG_TRUST: 'oswaldTrust',
     _CFG_HANDOFF: 'handoff',
+    _CFG_VICTORY: 'victory',
 }
+# Paths that also rise cream-sparkle flecks along the cream frame.
+_SPARKLE_CFGS = (_CFG_HANDOFF, _CFG_VICTORY)
 
 
 class ActBannerCreamEdgeFx(object):
@@ -66,6 +75,8 @@ class ActBannerCreamEdgeFx(object):
         return _TAG_BY_CFG.get(self._cfgPrefix, 'act-banner')
 
     def _defaultOrigin(self):
+        if self._cfgPrefix == _CFG_VICTORY:
+            return _DEFAULT_ORIGIN_VICTORY
         if self._cfgPrefix == _CFG_HANDOFF:
             return _DEFAULT_ORIGIN_HANDOFF
         if self._cfgPrefix == _CFG_TRUST:
@@ -110,8 +121,8 @@ class ActBannerCreamEdgeFx(object):
         fleckParts = self._spawnEdgeFlecks(parent)
         parts = [edgePart]
         parts.extend(fleckParts)
-        # Handoff cream-sparkle banners also rise cream glitter on the frame.
-        if self._cfgPrefix == _CFG_HANDOFF:
+        # Handoff / victory cream-sparkle banners also rise cream glitter.
+        if self._cfgPrefix in _SPARKLE_CFGS:
             parts.extend(self._spawnEdgeSparkles(parent))
         tag = _IVAL_BY_CFG.get(self._cfgPrefix, 'actBanner')
         self._edgeIval = Sequence(
@@ -126,7 +137,7 @@ class ActBannerCreamEdgeFx(object):
         try:
             # Thickness lives on the bare prefix (no _THICKNESS suffix) to
             # match PLAY_ENTRY_BANNER_CREAM_EDGE / OSWALD_TRUST_… /
-            # HANDOFF_CREAM_EDGE.
+            # HANDOFF_CREAM_EDGE / VICTORY_CREAM_EDGE.
             edge = float(getattr(
                 CampaignGlobals, self._cfgPrefix, 0.28))
             binSort = int(self._cfg('BIN', 50))
@@ -236,10 +247,11 @@ class ActBannerCreamEdgeFx(object):
         return parts
 
     def _spawnEdgeSparkles(self, parent):
-        """Cream-sparkle flecks rising along the handoff cream edge frame.
+        """Cream-sparkle flecks rising along a cream-sparkle cream edge frame.
 
-        Wave-edge #113 twin using handoff cream-sparkle warmth (#99) —
-        chip/cross glitter along the top strip while carnival confetti pops.
+        Wave-edge #113 twin — handoff uses carnival cream-sparkle warmth
+        (#99); victory uses victory cream-sparkle warmth (#105). Chip/cross
+        glitter along the top strip while confetti / swell pops.
         """
         if not self._cfg('SPARKLE_ENABLED', True):
             return []
@@ -255,20 +267,25 @@ class ActBannerCreamEdgeFx(object):
             'SPARKLE_COLOR', (1.0, 0.97, 0.78, 0.90))
         er, eg, eb, ea = self._cfg(
             'SPARKLE_END_COLOR', (1.0, 0.94, 0.58, 0.0))
-        origin = self._cfg(
-            'SPARKLE_ORIGIN',
-            getattr(CampaignGlobals, 'HANDOFF_CONFETTI_ORIGIN',
-                    _DEFAULT_ORIGIN_HANDOFF))
+        if self._cfgPrefix == _CFG_VICTORY:
+            defaultOrigin = getattr(
+                CampaignGlobals, 'VICTORY_CREAM_SWELL_ORIGIN',
+                _DEFAULT_ORIGIN_VICTORY)
+        else:
+            defaultOrigin = getattr(
+                CampaignGlobals, 'HANDOFF_CONFETTI_ORIGIN',
+                _DEFAULT_ORIGIN_HANDOFF)
+        origin = self._cfg('SPARKLE_ORIGIN', defaultOrigin)
         try:
             ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
         except Exception:
-            ox, oy, oz = _DEFAULT_ORIGIN_HANDOFF
+            ox, oy, oz = defaultOrigin
 
         tag = self._tag()
         parts = []
         for i in range(count):
             try:
-                # Fan across the top cream strip; chip/cross like #99 glitter.
+                # Fan across the top cream strip; chip/cross like cream glitter.
                 t = (float(i) / max(1, count - 1)) - 0.5
                 angle = (2.0 * pi * i) / float(count) + 0.28
                 cm = CardMaker('%s-cream-edge-sparkle-%s' % (tag, i))
@@ -358,6 +375,7 @@ class ActBannerCreamEdgeFx(object):
 _actFx = None
 _trustFx = None
 _handoffFx = None
+_victoryFx = None
 
 
 def _sharedAct():
@@ -379,6 +397,13 @@ def _sharedHandoff():
     if _handoffFx is None:
         _handoffFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_HANDOFF)
     return _handoffFx
+
+
+def _sharedVictory():
+    global _victoryFx
+    if _victoryFx is None:
+        _victoryFx = ActBannerCreamEdgeFx(cfgPrefix=_CFG_VICTORY)
+    return _victoryFx
 
 
 def playActBannerCreamEdge():
@@ -412,3 +437,14 @@ def clearHandoffCreamEdge():
     """Tear down any in-flight handoff cream-sparkle cream edge pulse."""
     if _handoffFx is not None:
         _handoffFx.clear()
+
+
+def playVictoryCreamEdge():
+    """Fire cream edge on victory cream confetti / sparkle banners."""
+    _sharedVictory().play()
+
+
+def clearVictoryCreamEdge():
+    """Tear down any in-flight victory cream edge pulse."""
+    if _victoryFx is not None:
+        _victoryFx.clear()

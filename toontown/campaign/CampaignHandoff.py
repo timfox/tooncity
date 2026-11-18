@@ -10,9 +10,9 @@ trusted Oswald lead clears also settle-bounce the title and hose-pop the
 Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
 + cream-sparkle pop (CampaignHandoffConfetti) framed by a soft cream edge
 pulse tuned to the carnival glitter — no KH / keyblade framing. Campaign
-victory fires a soft cream confetti swell on the purity cheer only; it
-clears before the Oswald twist / FinalePhaseFx reveal so the bittersweet
-sting stays intact.
+victory fires a soft cream confetti swell + cream sparkle on the purity
+cheer only, framed by a victory-tuned cream edge; it clears before the
+Oswald twist / FinalePhaseFx reveal so the bittersweet sting stays intact.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -31,8 +31,10 @@ from toontown.campaign import CampaignGlobals
 from toontown.campaign.ActBannerCreamEdgeFx import (
     clearHandoffCreamEdge,
     clearOswaldTrustBannerCreamEdge,
+    clearVictoryCreamEdge,
     playHandoffCreamEdge,
     playOswaldTrustBannerCreamEdge,
+    playVictoryCreamEdge,
 )
 from toontown.campaign.CampaignHandoffConfetti import (
     clearHandoffConfetti,
@@ -237,6 +239,12 @@ class CampaignHandoffClient(DirectObject):
                 playVictoryCreamSwell(origin=origin)
             except Exception:
                 pass
+            # Cream edge frame tuned to victory cream confetti / sparkle
+            # (#82/#105). Cheer-only — twist / phase stay edge-free.
+            try:
+                playVictoryCreamEdge()
+            except Exception:
+                pass
         elif confetti:
             # Short carnival burst beside the banner — act handoff juice only.
             try:
@@ -247,7 +255,7 @@ class CampaignHandoffClient(DirectObject):
             except Exception:
                 pass
             # Cream edge frame tuned to cream-sparkle carnival banners (#99).
-            # Early/mid trusted Oswald only — twist / victory / phase stay edge-free.
+            # Early/mid trusted Oswald only — twist / phase stay edge-free.
             try:
                 playHandoffCreamEdge()
             except Exception:
@@ -463,6 +471,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearHandoffCreamEdge()
+        except Exception:
+            pass
+        try:
+            clearVictoryCreamEdge()
         except Exception:
             pass
         try:
