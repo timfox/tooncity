@@ -311,27 +311,54 @@ SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.11
 # the explore / entry foreshadow beat lands first.
 SILLY_APPROACH_TIP_DELAY_SEC = 3.85
 
-# Soft cream wash pulse after Silly Act 3 tip hose pop (#95).
-# Act-banner / Punchline tip wash grammar (#154/#158) — delayed two-beat
-# aspect2d veil on PlayEntry tipHose='silly' path only. Soft under the tip
-# bar; cream / pastel only. A touch quieter / shorter than handoff wash
-# (#141) — tip lands without glitter hang (trust / act-banner / Punchline
-# tip wash twin). Loopy / Punchline / default tip hose stay wash-free.
-# Act-enter / trust / handoff / victory / finale washes live in their own
-# modules. SILLY_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only (hose
-# pop + trust settle + cream hose settle remain). No keyblades / KH
-# branding.
+# Soft cream wash pulse + delayed cream aftershock after Silly Act 3 tip
+# hose pop (#95) / Overlord foreshadow tip (#200). Act-banner / Punchline
+# tip wash grammar (#154/#158) deepened — juicier two-beat aspect2d veil
+# on PlayEntry tipHose='silly' path only, then soft flecks + halo settle
+# under the tip bar so the foreshadow tip reads juicier before the boss.
+# Cream / pastel only. Still quieter / shorter than handoff wash (#141)
+# and victory glitter hang — tip foreshadow residual, not twist payoff.
+# Distinct from victory twist sting cream deepen (#244) and betrayal
+# banner cream hose settle (#235); tip bar cream hose settle deepen
+# (#232) stays on the scale path. Loopy / Punchline / default tip hose
+# stay wash-free. Act-enter / trust / handoff / victory / finale washes
+# live in their own modules. SILLY_ACT_TIP_CREAM_WASH_ENABLED = False
+# drops wash + aftershock only (hose pop + trust settle + cream hose
+# settle remain). No keyblades / KH branding.
 SILLY_ACT_TIP_CREAM_WASH_ENABLED = True
 SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.56  # after play; after cream hose settle
 SILLY_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-SILLY_ACT_TIP_CREAM_WASH_PEAK = 0.12
-SILLY_ACT_TIP_CREAM_WASH_MID = 0.07
+SILLY_ACT_TIP_CREAM_WASH_PEAK = 0.14  # juicier than #162 baseline (0.12)
+SILLY_ACT_TIP_CREAM_WASH_MID = 0.08
 SILLY_ACT_TIP_CREAM_WASH_IN_SEC = 0.07
 SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC = 0.12
-SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.10
-SILLY_ACT_TIP_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
+SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC = 0.12
+SILLY_ACT_TIP_CREAM_WASH_OUT_SEC = 0.40  # soft settle rides tip residual
 # Above ink entry vignette (48); soft veil settle under tip bar.
 SILLY_ACT_TIP_CREAM_WASH_BIN = 49
+# Soft cream fleck / halo residual after Silly tip wash. Tip-bar origin
+# (near PLAY_ENTRY_TIP_POS), quieter than victory twist aftershock (#244)
+# and not a betrayal title hose settle (#235).
+# SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED = False drops residual only.
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED = True
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.18  # after wash starts
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.72)  # under tip bar
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT = 4
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SIZE = 0.014
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_DRIFT = 0.24
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_FALL = 0.18
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC = 0.32
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.72)
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+# Above wash bin (49); soft residual under tip bar.
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_BIN = 51
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.36
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_START = 0.26
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.10
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.26
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.11
+SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # PlayEntry act-enter flash banner (ACTS['banner'] / reclaim cues).
 # Same squash→stretch→settle hose pop as the tip bar — readable act beat

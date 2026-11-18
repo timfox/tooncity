@@ -2338,6 +2338,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             _module_ast(silly_tip_wash_rel), 'SillyTipCreamWashPulse')
         self.assertIn('play', silly_tip_wash_methods)
         self.assertIn('clear', silly_tip_wash_methods)
+        self.assertIn('_buildAftershock', silly_tip_wash_methods)
+        self.assertIn('_spawnAftershockHalo', silly_tip_wash_methods)
+        self.assertIn('_spawnAftershockFleck', silly_tip_wash_methods)
         for silly_tip_wash_key in (
                 'SILLY_ACT_TIP_CREAM_WASH_ENABLED',
                 'SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC',
@@ -2345,6 +2348,12 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'SILLY_ACT_TIP_CREAM_WASH_PEAK',
                 'SILLY_ACT_TIP_CREAM_WASH_MID',
                 'SILLY_ACT_TIP_CREAM_WASH_BIN',
+                'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT',
+                'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COLOR',
+                'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_COLOR',
                 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED',
                 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT',
                 'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC'):
@@ -2354,6 +2363,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('playSillyTipCreamWash', play_src)
         self.assertIn('SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT', play_src)
         self.assertIn('creamHoseSettle', play_src)
+        self.assertIn(
+            'SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED',
+            _read(silly_tip_wash_rel))
 
         # FOV purity burst cream wash (#164) — soft wash after purity FOV punch.
         purity_fov_wash_rel = 'toontown/reclaim/PurityFovCreamWashFx.py'
