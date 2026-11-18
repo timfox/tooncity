@@ -145,29 +145,31 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         messenger.send('campaignPhase', [max(0, phase - 1), title])
 
     def announcePackSpawn(self, count, waveIndex=1):
+        """Short rubber-hose wave plate when a reclaim pack wave starts."""
         wave = max(1, int(waveIndex))
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
+        hold = getattr(ReclaimGlobals, 'WAVE_ANNOUNCE_HOLD_SEC', 2.35)
+        title = ReclaimGlobals.waveAnnounceTitle(
+            wave, self.maxWaves, zoneId=zoneId, finalePhase=self.finalePhase)
         if self.finalePhase >= 1:
-            label = ReclaimGlobals.FINALE_PACK_BANNER.get(
-                self.finalePhase, ReclaimGlobals.waveLabel(wave, self.maxWaves))
-            title = ReclaimGlobals.WAVE_BANNER_FMT % (wave, self.maxWaves, label)
+            # Boss streets keep Overlord flavor on the Oswald tip line.
             color = (
                 (1.0, 0.5, 0.95, 1.0) if self.finalePhase < 2
                 else (1.0, 0.35, 0.25, 1.0))
-            self.__showBanner(title, color, hold=2.2)
-            self.__showSubBanner(
-                '%s  ·  %s inbound' % (
-                    'Overlord pack' if self.finalePhase < 2 else 'Unleashed pack',
-                    int(count)),
-                color,
-                hold=2.2)
+            tip = ReclaimGlobals.FINALE_PACK_BANNER.get(
+                self.finalePhase,
+                ReclaimGlobals.waveOswaldTip(
+                    wave, self.maxWaves, zoneId=zoneId, packCount=count))
+            if int(count) > 0:
+                tip = '%s  ·  pack of %s' % (tip, int(count))
+            self.__showBanner(title, color, hold=hold, pop=True)
+            self.__showSubBanner(tip, color, hold=hold)
         else:
-            label = ReclaimGlobals.waveLabel(wave, self.maxWaves)
-            title = ReclaimGlobals.WAVE_BANNER_FMT % (wave, self.maxWaves, label)
-            self.__showBanner(title, (0.85, 0.55, 1.0, 1.0), hold=2.0)
-            self.__showSubBanner(
-                '%s  ·  %s inbound' % (ReclaimGlobals.BANNER_PACK, int(count)),
-                (0.95, 0.8, 1.0, 1.0),
-                hold=2.0)
+            mainColor, subColor = ReclaimGlobals.waveAnnounceColors(zoneId)
+            tip = ReclaimGlobals.waveOswaldTip(
+                wave, self.maxWaves, zoneId=zoneId, packCount=count)
+            self.__showBanner(title, mainColor, hold=hold, pop=True)
+            self.__showSubBanner(tip, subColor, hold=hold)
         self.__showStatusHud()
 
     def announceWaveCleared(self, waveIndex):
@@ -175,8 +177,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             ReclaimGlobals.BANNER_WAVE_CLEARED,
             (0.7, 0.95, 1.0, 1.0),
             hold=1.4)
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         self.__showSubBanner(
-            'Wave %s down — next surge incoming' % int(waveIndex),
+            ReclaimGlobals.waveClearedOswaldTip(waveIndex, zoneId=zoneId),
             (0.85, 0.95, 1.0, 1.0),
             hold=1.4)
 
@@ -228,11 +231,19 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         np.setPos(0, 0, 0.78)
         self._bannerNP = np
         if pop:
-            # Soft scale punch so "PURITY RESTORED!" lands as a payoff beat.
+            # Soft rubber-hose scale punch (wave announce + purity payoff).
+            popScale = getattr(
+                ReclaimGlobals, 'WAVE_BANNER_POP_SCALE_ANNOUNCE',
+                ReclaimGlobals.PURITY_BANNER_POP_SCALE)
+            popSec = getattr(
+                ReclaimGlobals, 'WAVE_BANNER_POP_SEC_ANNOUNCE',
+                ReclaimGlobals.PURITY_BANNER_POP_SEC)
+            # Purity complete keeps the bigger pop when hold is long.
+            if hold >= 3.0:
+                popScale = ReclaimGlobals.PURITY_BANNER_POP_SCALE
+                popSec = ReclaimGlobals.PURITY_BANNER_POP_SEC
             Sequence(
-                LerpScaleInterval(
-                    np, ReclaimGlobals.PURITY_BANNER_POP_SEC,
-                    ReclaimGlobals.PURITY_BANNER_POP_SCALE),
+                LerpScaleInterval(np, popSec, popScale),
                 LerpScaleInterval(np, 0.22, baseScale),
             ).start()
         taskMgr.doMethodLater(
