@@ -88,6 +88,8 @@ class SpawnCorrupt(MagicWord):
         'vine zip SFX. '
         'All archetypes: ambient idle ink drip between telegraphs + '
         'short rubber-hose ink drip on telegraph. '
+        'Ink Overlord finale phases also play ink crown + ink rain on '
+        'phase telegraphs (see campaign Silly finale). '
         'Optional count (1-8), hp (0=archetype default base), '
         'archetype (0=Ink, 1=Brute, 2=Snare). '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
