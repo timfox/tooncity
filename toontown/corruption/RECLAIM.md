@@ -4,11 +4,13 @@
 
 1. `PollutionManager` holds per-zone pollution `0..1` (pure → polluted).
 2. `~startreclaim` generates a `DistributedReclaimDirector` in the invoker zone,
-   seeds partial pollution, and spawns CorruptToon packs.
+   seeds partial pollution, and spawns escalating CorruptToon waves (size/HP grow).
 3. Melee (`~hackslash 0`) soft-targets CorruptToons; `applyHackSlashHit` →
    `requestHackSlashHit` → AI `takeHackSlashDamage`.
 4. Defeats lower pollution via `PollutionManagerAI.onCorruptToonDefeated`.
-5. At `0.0`, director announces reclaim complete and client plays purity restore FX.
+   HUD shows wave / corruption % / pack remaining; scene tint + fog react to pollution.
+5. At `0.0`, director announces reclaim complete and client plays a stronger purity
+   restore moment (banner + bloom + sting/NPC cheer messenger hooks).
 
 ## Demo
 

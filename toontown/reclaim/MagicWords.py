@@ -47,10 +47,10 @@ class StartReclaim(MagicWord):
             (toon.getX(), toon.getY(), toon.getZ()),
             toon.getH())
         return (
-            'Reclaim started in zone %s (pollution %.2f, packs of %s). '
-            'Enable melee with ~hackslash 0, then clear Corrupt Toons.'
+            'Reclaim started in zone %s (pollution %.2f, %s escalating waves, '
+            'base pack %s). Enable melee with ~hackslash 0, then clear waves.'
             % (zoneId, ReclaimGlobals.RECLAIM_START_POLLUTION,
-               ReclaimGlobals.PACK_SIZE))
+               ReclaimGlobals.MAX_PACKS, ReclaimGlobals.PACK_SIZE))
 
 
 class StopReclaim(MagicWord):

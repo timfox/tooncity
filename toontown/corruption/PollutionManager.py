@@ -6,7 +6,7 @@ from toontown.corruption import CorruptionGlobals
 
 
 class PollutionManager(DistributedObject.DistributedObject):
-    """Client mirror of per-zone pollution; drives light fog tint for demos."""
+    """Client mirror of per-zone pollution; fog + color grade + prop tint hooks."""
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManager')
     neverDisable = 1
@@ -16,6 +16,7 @@ class PollutionManager(DistributedObject.DistributedObject):
         self.zonePollution = {}
         self._fog = None
         self._activeZoneId = None
+        self._lastLevel = CorruptionGlobals.POLLUTION_PURE
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
@@ -25,13 +26,13 @@ class PollutionManager(DistributedObject.DistributedObject):
 
     def disable(self):
         self.ignoreAll()
-        self.__clearFog()
+        self.__clearPresentation()
         if getattr(base.cr, 'pollutionManager', None) is self:
             del base.cr.pollutionManager
         DistributedObject.DistributedObject.disable(self)
 
     def delete(self):
-        self.__clearFog()
+        self.__clearPresentation()
         DistributedObject.DistributedObject.delete(self)
 
     def getPollution(self, zoneId=None):
@@ -63,26 +64,48 @@ class PollutionManager(DistributedObject.DistributedObject):
         self.__applyLocalPresentation(zoneId, self.getPollution(zoneId))
 
     def __handleLeftZone(self, *args):
-        self.__clearFog()
+        self.__clearPresentation()
 
     def __applyLocalPresentation(self, zoneId, level):
-        """Minimal visual driver until slice 3 reclaim FX lands."""
+        """Fog + ink color grade + prop-tint messenger hooks (depth D3)."""
         self._activeZoneId = zoneId
+        self._lastLevel = level
         if level <= CorruptionGlobals.POLLUTION_PURE:
-            self.__clearFog()
+            self.__clearPresentation()
+            messenger.send('pollutionPropTint', [zoneId, 0.0])
+            messenger.send('pollutionColorGrade', [zoneId, 0.0])
             return
+
         if self._fog is None:
             self._fog = Fog('CorruptionFog')
-            self._fog.setColor(*CorruptionGlobals.CORRUPT_FOG_COLOR)
             render.setFog(self._fog)
-        exp = CorruptionGlobals.CORRUPT_FOG_EXP_MAX * level
-        self._fog.setExpDensity(exp)
-        # Subtle scene tint toward ink when polluted.
-        tint = 1.0 - (0.35 * level)
-        render.setColorScale(Vec4(tint, tint * 0.95, tint * 1.05, 1.0))
+        # Fog densifies and drifts toward ink purple as pollution rises.
+        fogR = CorruptionGlobals.CORRUPT_FOG_COLOR[0] * (0.7 + 0.3 * level)
+        fogG = CorruptionGlobals.CORRUPT_FOG_COLOR[1] * (0.75 + 0.25 * level)
+        fogB = CorruptionGlobals.CORRUPT_FOG_COLOR[2]
+        self._fog.setColor(fogR, fogG, fogB)
+        self._fog.setExpDensity(CorruptionGlobals.CORRUPT_FOG_EXP_MAX * level)
 
-    def __clearFog(self):
+        # Scene color grade beyond fog: desaturate toward sickly ink.
+        # Keep mild enough that melee readability survives high pollution.
+        tintR = 1.0 - (0.42 * level)
+        tintG = 1.0 - (0.50 * level)
+        tintB = 1.0 - (0.28 * level)
+        render.setColorScale(Vec4(tintR, tintG, tintB, 1.0))
+
+        # Hooks for street props / future art to tint without hard coupling.
+        messenger.send('pollutionPropTint', [zoneId, level])
+        messenger.send('pollutionColorGrade', [zoneId, level])
+
+    def __clearPresentation(self):
         if self._fog is not None:
             render.clearFog()
             self._fog = None
-        render.clearColorScale()
+        # Avoid stomping an in-flight purity restore bloom on render.
+        reclaim = getattr(base.cr, 'reclaimDirector', None)
+        restoreActive = (
+            reclaim is not None
+            and getattr(reclaim, '_restoreIval', None) is not None)
+        if not restoreActive:
+            render.clearColorScale()
+        self._lastLevel = CorruptionGlobals.POLLUTION_PURE

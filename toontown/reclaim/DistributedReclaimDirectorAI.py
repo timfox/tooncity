@@ -10,7 +10,7 @@ from toontown.reclaim import ReclaimGlobals
 
 
 class DistributedReclaimDirectorAI(DistributedObjectAI):
-    """Owns one-street reclaim: pollution seed, corrupt packs, completion."""
+    """Owns one-street reclaim: pollution seed, escalating waves, completion."""
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedReclaimDirectorAI')
 
@@ -19,11 +19,15 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self.reclaimZoneId = zoneId or 0
         self.state = ReclaimGlobals.STATE_IDLE
         self.pollutionHint = CorruptionGlobals.POLLUTION_PURE
+        self.waveIndex = 0
+        self.maxWaves = ReclaimGlobals.MAX_PACKS
+        self.packAlive = 0
         self._pack = []
         self._packsSpawned = 0
         self._anchorPos = (0.0, 0.0, 0.0)
         self._anchorH = 0.0
         self._tickName = None
+        self._waveDelayName = None
         self._seedPollution = ReclaimGlobals.RECLAIM_START_POLLUTION
         self._packSize = ReclaimGlobals.PACK_SIZE
         self._maxPacks = ReclaimGlobals.MAX_PACKS
@@ -35,6 +39,15 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
     def getPollutionHint(self):
         return self.pollutionHint
+
+    def getWaveIndex(self):
+        return self.waveIndex
+
+    def getMaxWaves(self):
+        return self.maxWaves
+
+    def getPackAlive(self):
+        return self.packAlive
 
     def b_setState(self, state):
         self.setState(state)
@@ -52,10 +65,22 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             'setPollutionHint',
             [CorruptionGlobals.pollutionToNet(self.pollutionHint)])
 
+    def b_setWaveIndex(self, waveIndex):
+        self.waveIndex = max(0, int(waveIndex))
+        self.sendUpdate('setWaveIndex', [self.waveIndex])
+
+    def b_setMaxWaves(self, maxWaves):
+        self.maxWaves = max(1, int(maxWaves))
+        self.sendUpdate('setMaxWaves', [self.maxWaves])
+
+    def b_setPackAlive(self, count):
+        self.packAlive = max(0, int(count))
+        self.sendUpdate('setPackAlive', [self.packAlive])
+
     def start(self, zoneId, anchorPos, anchorH=0.0,
               seedPollution=None, packSize=None, maxPacks=None,
               corruptHp=None, corruptName=None):
-        """Seed pollution and spawn the first corrupt pack.
+        """Seed pollution and spawn the first escalating corrupt wave.
 
         Optional overrides support multi-act campaign difficulty.
         """
@@ -74,12 +99,16 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._corruptName = corruptName
         self._clearPack(delete=True)
         self._packsSpawned = 0
+        self._cancelWaveDelay()
 
         pollutionMgr = getattr(self.air, 'pollutionManager', None)
         if pollutionMgr is not None:
             pollutionMgr.setPollution(
                 self.reclaimZoneId, self._seedPollution)
 
+        self.b_setMaxWaves(self._maxPacks)
+        self.b_setWaveIndex(0)
+        self.b_setPackAlive(0)
         self.b_setState(ReclaimGlobals.STATE_ACTIVE)
         self._syncPollutionHint()
         self.sendUpdate('announceReclaimStart', [])
@@ -94,10 +123,13 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
     def stop(self):
         self.ignore('pollutionReclaimed')
+        self._cancelWaveDelay()
         if self._tickName is not None:
             taskMgr.remove(self._tickName)
             self._tickName = None
         self._clearPack(delete=True)
+        self.b_setPackAlive(0)
+        self.b_setWaveIndex(0)
         self.b_setState(ReclaimGlobals.STATE_IDLE)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
 
@@ -114,6 +146,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
         self._prunePack()
         self._syncPollutionHint()
+        self.b_setPackAlive(len(self._pack))
 
         pollutionMgr = getattr(self.air, 'pollutionManager', None)
         level = (
@@ -124,8 +157,13 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             self.__complete()
             return Task.done
 
-        if not self._pack and self._packsSpawned < self._maxPacks:
-            self._spawnPack()
+        if (not self._pack
+                and self._packsSpawned < self._maxPacks
+                and self._waveDelayName is None):
+            clearedWave = self._packsSpawned
+            if clearedWave > 0:
+                self.sendUpdate('announceWaveCleared', [int(clearedWave)])
+            self._scheduleNextWave()
 
         return Task.again
 
@@ -138,11 +176,13 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
     def __complete(self):
         if self.state == ReclaimGlobals.STATE_COMPLETE:
             return
+        self._cancelWaveDelay()
         self._clearPack(delete=True)
         if self._tickName is not None:
             taskMgr.remove(self._tickName)
             self._tickName = None
         self.ignore('pollutionReclaimed')
+        self.b_setPackAlive(0)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
         self.b_setState(ReclaimGlobals.STATE_COMPLETE)
         self.sendUpdate('announceReclaimComplete', [])
@@ -176,10 +216,40 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
                 except Exception:
                     pass
         self._pack = []
+        self.packAlive = 0
+
+    def _cancelWaveDelay(self):
+        if self._waveDelayName is not None:
+            taskMgr.remove(self._waveDelayName)
+            self._waveDelayName = None
+
+    def _scheduleNextWave(self):
+        """Beat between waves so escalation reads as a moment, not a respawn."""
+        self._cancelWaveDelay()
+        delay = ReclaimGlobals.WAVE_SPAWN_DELAY
+        self._waveDelayName = self.uniqueName('reclaim-wave-delay')
+        taskMgr.doMethodLater(delay, self.__spawnDelayedWave, self._waveDelayName)
+
+    def __spawnDelayedWave(self, task):
+        self._waveDelayName = None
+        if self.state != ReclaimGlobals.STATE_ACTIVE:
+            return Task.done
+        if self._packsSpawned >= self._maxPacks:
+            return Task.done
+        self._prunePack()
+        if self._pack:
+            return Task.done
+        self._spawnPack()
+        return Task.done
 
     def _spawnPack(self):
-        count = max(1, int(self._packSize))
-        self._packsSpawned += 1
+        wave = self._packsSpawned + 1
+        count = ReclaimGlobals.wavePackSize(self._packSize, wave)
+        hp = ReclaimGlobals.waveCorruptHp(self._corruptHp, wave)
+        self._packsSpawned = wave
+        self.b_setWaveIndex(wave)
+        self.b_setMaxWaves(self._maxPacks)
+
         baseX, baseY, baseZ = self._anchorPos
         heading = self._anchorH
         rad = math.radians(heading)
@@ -188,9 +258,15 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             name = self._corruptName
             if name and count > 1 and i > 0:
                 name = '%s %s' % (self._corruptName, i + 1)
+            elif name is None and wave > 1:
+                name = 'Corrupt Wave %s' % wave
             corrupt = DistributedCorruptToonAI(
-                self.air, name=name, maxHp=self._corruptHp)
-            offset = ReclaimGlobals.SPAWN_FORWARD + (i * 0.15)
+                self.air, name=name, maxHp=hp)
+            # Fan packs slightly farther each wave so the street fills forward.
+            offset = (
+                ReclaimGlobals.SPAWN_FORWARD
+                + (i * 0.15)
+                + ((wave - 1) * 1.5))
             lateral = (i - (count - 1) / 2.0) * ReclaimGlobals.SPAWN_SPACING
             x = baseX - math.sin(rad) * offset - math.cos(rad) * lateral
             y = baseY + math.cos(rad) * offset - math.sin(rad) * lateral
@@ -199,7 +275,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             corrupt.generateWithRequired(self.reclaimZoneId)
             spawned.append(corrupt)
         self._pack.extend(spawned)
-        self.sendUpdate('announcePackSpawn', [len(spawned)])
+        self.b_setPackAlive(len(spawned))
+        self.sendUpdate('announcePackSpawn', [len(spawned), wave])
         self.notify.debug(
-            'reclaim zone %s spawned pack #%s (%s)' % (
-                self.reclaimZoneId, self._packsSpawned, len(spawned)))
+            'reclaim zone %s wave #%s/%s pack=%s hp=%s' % (
+                self.reclaimZoneId, wave, self._maxPacks, len(spawned), hp))
