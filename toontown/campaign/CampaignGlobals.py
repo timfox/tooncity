@@ -90,6 +90,12 @@ ACTS = (
         'banner': (
             'Finale Phase 1 — Oswald stands with you against '
             'the Ink Overlord on Silly Street!'),
+        # Act-entry tip (PlayEntry) — Oswald trusted lead + Ink Overlord cues.
+        # Mid-campaign tip only; no twist spoilers. Hose-pop tunables below.
+        'entryTip': (
+            'Oswald leads Act 3 — Silly Street finale: explore → '
+            'F fight the Ink Overlord → reclaim  |  '
+            'Shift dodge  |  C campaign'),
         # Twist: trusted Oswald was the source of the neighborhood pollution.
         'handoffTitle': 'VICTORY…?',
         'handoff': (
@@ -155,6 +161,16 @@ PUNCHLINE_ACT_TIP_POP_STRETCH = (0.74, 1.0, 1.48, 0.08)
 PUNCHLINE_ACT_TIP_POP_SETTLE_SEC = 0.10
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.90, 1.0, 1.16, 0.07)
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
+
+# Silly Street Act 3 entry tip — tip-matched hose pop, slightly heavier for
+# the Ink Overlord finale beat. Oswald stays the trusted mid-campaign lead
+# on this tip (no twist spoilers). Soft trust settle matches Punchline tip
+# #91 / act-banner #76. Toontown spiritual sequel — no keyblades / KH branding.
+SILLY_ACT_TIP_POP_SQUASH = (1.68, 1.0, 0.46, 0.05)   # sx, sy, sz, sec
+SILLY_ACT_TIP_POP_STRETCH = (0.70, 1.0, 1.52, 0.08)
+SILLY_ACT_TIP_POP_SETTLE_SEC = 0.10
+SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.07)
+SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 
 # PlayEntry act-enter flash banner (ACTS['banner'] / reclaim cues).
 # Same squash→stretch→settle hose pop as the tip bar — readable act beat
