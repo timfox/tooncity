@@ -167,7 +167,8 @@ class SpawnGagster(MagicWord):
     desc = 'Spawn Gunk Gagster (teal gag-lob puddle archetype).'
     advancedDesc = (
         'Shortcut for ARCHETYPE_GAGSTER. Optional count, hp (0=default base). '
-        'Gagsters lob a delayed teal puddle trap — dodge out during telegraph. '
+        'Gagsters lob a delayed teal puddle trap — dodge out during telegraph; '
+        'puddle land plays deepened cream splash + ground bloom aftershock. '
         'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
