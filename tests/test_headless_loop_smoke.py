@@ -1379,13 +1379,25 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'HANDOFF_CREAM_EDGE_PEAK',
                 'HANDOFF_CREAM_EDGE_FLECK_COUNT',
                 'HANDOFF_CREAM_EDGE_BIN',
-                'HANDOFF_CREAM_EDGE_SPARKLE_ENABLED'):
+                'HANDOFF_CREAM_EDGE_SPARKLE_ENABLED',
+                'HANDOFF_CREAM_EDGE_SETTLE_ENABLED',
+                'HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT',
+                'HANDOFF_CREAM_EDGE_SETTLE_REST_SEC'):
             self.assertIn(
                 handoff_edge_key, campaign_names,
                 msg='CampaignGlobals missing %s' % handoff_edge_key)
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('playHandoffCreamEdge', handoff_src)
         self.assertIn('confetti=True', handoff_src)
+        # Act handoff cream edge settle — overshoot→rest after edge peak.
+        act_edge_methods = _class_method_names(
+            _module_ast(act_edge_rel), 'ActBannerCreamEdgeFx')
+        self.assertIn('_settleScalePart', act_edge_methods)
+        act_edge_src = _read(act_edge_rel)
+        self.assertIn('SETTLE_OVERSHOOT', act_edge_src)
+        self.assertIn('CreamEdgeSettle', act_edge_src)
+        magic_src_l = _read('toontown/campaign/MagicWords.py').lower()
+        self.assertIn('edge settle', magic_src_l)
 
         # Idle cream drip sparkle (#125) — twinkle flecks on idle cream drip.
         idle_sparkle_rel = 'toontown/corruption/IdleCreamDripSparkleFx.py'

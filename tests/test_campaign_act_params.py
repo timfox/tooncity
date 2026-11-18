@@ -456,6 +456,26 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('almost confess', magic_l)
         self.assertIn('half-truth', magic_l)
 
+    def test_handoff_cream_edge_settle_tunables(self):
+        """Loopy→Punchline→Silly handoff cream edge gets brief settle."""
+        camp = self.camp
+        self.assertTrue(camp.HANDOFF_CREAM_EDGE_SETTLE_ENABLED)
+        over = camp.HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT
+        self.assertEqual(len(over), 4)
+        self.assertGreater(float(over[3]), 0.0)
+        self.assertGreater(float(camp.HANDOFF_CREAM_EDGE_SETTLE_REST_SEC), 0.0)
+        edge_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'ActBannerCreamEdgeFx.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('_settleScalePart', edge_src)
+        self.assertIn('SETTLE_OVERSHOOT', edge_src)
+        magic_l = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8').lower()
+        self.assertIn('edge settle', magic_l)
+
     def test_finale_betrayal_handoff_banner(self):
         """Finale betrayal handoff plate lands twist when reveal fires."""
         camp = self.camp
