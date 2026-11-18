@@ -9,6 +9,7 @@ from toontown.campaign import CampaignGlobals
 from toontown.corruption import CorruptionGlobals
 from toontown.reclaim import ReclaimGlobals
 from toontown.reclaim.PurityMeterHud import PurityMeterHud
+from toontown.reclaim.StreetColorWash import StreetColorWash
 
 
 class DistributedReclaimDirector(DistributedObject.DistributedObject):
@@ -32,6 +33,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._statusNP = None
         self._demoHintNP = None
         self._purityMeter = PurityMeterHud()
+        self._streetWash = StreetColorWash()
         self._restoreIval = None
         self._burstFlashNP = None
         self._burstRingNP = None
@@ -59,16 +61,28 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._puritySfx = None
         if self._purityMeter is not None:
             self._purityMeter.destroy()
+        if self._streetWash is not None:
+            self._streetWash.destroy()
         if getattr(base.cr, 'reclaimDirector', None) is self:
             del base.cr.reclaimDirector
         DistributedObject.DistributedObject.disable(self)
 
     def setState(self, state):
         self.state = int(state)
+        zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         if self.state == ReclaimGlobals.STATE_IDLE:
+            if self._streetWash is not None:
+                self._streetWash.setActive(False, zoneId=zoneId)
             self.__clearHud()
         elif self.state == ReclaimGlobals.STATE_ACTIVE:
+            if self._streetWash is not None:
+                self._streetWash.setActive(True, zoneId=zoneId)
+                self._streetWash.update(zoneId, self.pollutionHint, snap=True)
             self.__showStatusHud()
+        elif self.state == ReclaimGlobals.STATE_COMPLETE:
+            # Purity burst owns the payoff; wash soft-clears via messengers.
+            if self._streetWash is not None:
+                self._streetWash.setActive(False, zoneId=zoneId)
 
     def setPollutionHint(self, netLevel):
         self.pollutionHint = CorruptionGlobals.pollutionFromNet(netLevel)
@@ -133,6 +147,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 pass
         messenger.send('announceReclaimStart', [])
         messenger.send('reclaimFinalePhase', [self.finalePhase])
+        if self._streetWash is not None:
+            self._streetWash.setActive(True, zoneId=zoneId)
+            self._streetWash.update(zoneId, self.pollutionHint, snap=True)
         self.__showDemoHint()
         self.__showStatusHud()
 
@@ -245,6 +262,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             return
         if hasattr(base, 'localAvatar') and getattr(base.localAvatar, 'zoneId', None) == zoneId:
             self.pollutionHint = level
+            if self._streetWash is not None:
+                self._streetWash.update(zoneId, level)
             self.__showStatusHud()
 
     def __showBanner(self, text, color, hold=2.2, pop=False):
@@ -398,6 +417,10 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         if self._purityMeter is not None:
             self._purityMeter.update(
                 self.pollutionHint, finalePhase=self.finalePhase)
+        # Rubber-hose cream wash on street geom + soft veil as purity fills.
+        if self._streetWash is not None and self.state == ReclaimGlobals.STATE_ACTIVE:
+            self._streetWash.setActive(True, zoneId=zoneId)
+            self._streetWash.update(zoneId, self.pollutionHint)
 
     def __hidePollutionHint(self):
         if self._hintNP is not None and not self._hintNP.isEmpty():
@@ -555,3 +578,5 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.__hideStatusHud()
         self.__hideDemoHint()
         self.__clearPurityBurstOverlay()
+        if self._streetWash is not None:
+            self._streetWash.setActive(False)
