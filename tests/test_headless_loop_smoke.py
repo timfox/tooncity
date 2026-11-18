@@ -467,6 +467,12 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('gag_lob', ai_src)
         self.assertIn('__resolveGagsterPuddle', ai_src)
         self.assertIn('_puddleXY', ai_src)
+        # Gunk Gagster linger sludge hazard (DoT / slow) after puddle land.
+        self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_LINGER_ENABLED'))
+        self.assertIs(cg.GAGSTER_PUDDLE_LINGER_ENABLED, True)
+        self.assertGreater(float(cg.GAGSTER_PUDDLE_LINGER_SEC), 1.0)
+        self.assertIn('__armGagsterPuddleLinger', ai_src)
+        self.assertIn('__tickGagsterPuddleLinger', ai_src)
         magic_src = _read('toontown/corruption/MagicWords.py')
         self.assertIn('spawngagster', magic_src)
         self.assertIn('ARCHETYPE_GAGSTER', magic_src)
