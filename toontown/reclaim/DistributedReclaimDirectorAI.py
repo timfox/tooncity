@@ -24,6 +24,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._anchorPos = (0.0, 0.0, 0.0)
         self._anchorH = 0.0
         self._tickName = None
+        self._seedPollution = ReclaimGlobals.RECLAIM_START_POLLUTION
+        self._packSize = ReclaimGlobals.PACK_SIZE
+        self._maxPacks = ReclaimGlobals.MAX_PACKS
+        self._corruptHp = None
+        self._corruptName = None
 
     def getState(self):
         return self.state
@@ -47,19 +52,33 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             'setPollutionHint',
             [CorruptionGlobals.pollutionToNet(self.pollutionHint)])
 
-    def start(self, zoneId, anchorPos, anchorH=0.0):
-        """Seed pollution and spawn the first corrupt pack."""
+    def start(self, zoneId, anchorPos, anchorH=0.0,
+              seedPollution=None, packSize=None, maxPacks=None,
+              corruptHp=None, corruptName=None):
+        """Seed pollution and spawn the first corrupt pack.
+
+        Optional overrides support multi-act campaign difficulty.
+        """
         self.reclaimZoneId = int(zoneId)
         self._anchorPos = (
             float(anchorPos[0]), float(anchorPos[1]), float(anchorPos[2]))
         self._anchorH = float(anchorH)
+        self._seedPollution = (
+            ReclaimGlobals.RECLAIM_START_POLLUTION
+            if seedPollution is None else float(seedPollution))
+        self._packSize = (
+            ReclaimGlobals.PACK_SIZE if packSize is None else int(packSize))
+        self._maxPacks = (
+            ReclaimGlobals.MAX_PACKS if maxPacks is None else int(maxPacks))
+        self._corruptHp = None if corruptHp is None else int(corruptHp)
+        self._corruptName = corruptName
         self._clearPack(delete=True)
         self._packsSpawned = 0
 
         pollutionMgr = getattr(self.air, 'pollutionManager', None)
         if pollutionMgr is not None:
             pollutionMgr.setPollution(
-                self.reclaimZoneId, ReclaimGlobals.RECLAIM_START_POLLUTION)
+                self.reclaimZoneId, self._seedPollution)
 
         self.b_setState(ReclaimGlobals.STATE_ACTIVE)
         self._syncPollutionHint()
@@ -105,7 +124,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             self.__complete()
             return Task.done
 
-        if not self._pack and self._packsSpawned < ReclaimGlobals.MAX_PACKS:
+        if not self._pack and self._packsSpawned < self._maxPacks:
             self._spawnPack()
 
         return Task.again
@@ -159,14 +178,18 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._pack = []
 
     def _spawnPack(self):
-        count = ReclaimGlobals.PACK_SIZE
+        count = max(1, int(self._packSize))
         self._packsSpawned += 1
         baseX, baseY, baseZ = self._anchorPos
         heading = self._anchorH
         rad = math.radians(heading)
         spawned = []
         for i in range(count):
-            corrupt = DistributedCorruptToonAI(self.air)
+            name = self._corruptName
+            if name and count > 1 and i > 0:
+                name = '%s %s' % (self._corruptName, i + 1)
+            corrupt = DistributedCorruptToonAI(
+                self.air, name=name, maxHp=self._corruptHp)
             offset = ReclaimGlobals.SPAWN_FORWARD + (i * 0.15)
             lateral = (i - (count - 1) / 2.0) * ReclaimGlobals.SPAWN_SPACING
             x = baseX - math.sin(rad) * offset - math.cos(rad) * lateral
