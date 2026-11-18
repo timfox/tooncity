@@ -35,6 +35,7 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~spawncorrupt 2
 ~hackslash 0
 # CorruptToons prefer ink-tinted Toon Actor silhouettes (DNA clone of you
-# when available), else improved card limbs. Chase + telegraph + splat stay.
+# when available), else improved card limbs. Chase AI unchanged; telegraph
+# wind-up + impact flash/SFX punch so smacks read without a combat HUD.
 # Melee (F / LMB) splat-defeats them; purity pop + pollution drop.
 ```

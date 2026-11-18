@@ -78,7 +78,8 @@ class SpawnCorrupt(MagicWord):
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
         'Client prefers DNA/Actor ink silhouette, else card limbs. '
-        'They aggro, telegraph attacks, and deal modest HP damage. '
+        'They aggro, telegraph with a charged ink wind-up + whoosh, '
+        'smack with impact flash/thud, and deal modest HP damage. '
         'Optional count (1-8) and hp. Defeat lowers zone pollution. '
         'Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
