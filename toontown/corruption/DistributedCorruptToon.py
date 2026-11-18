@@ -38,6 +38,9 @@ from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
 from toontown.corruption.OverlordTelegraphPunchFx import (
     OverlordTelegraphPunch, overlordTelegraphAnimSecs)
+from toontown.corruption.OswaldBetrayalSplashFx import OswaldBetrayalSplash
+from toontown.corruption.OswaldBetrayalTelegraphFx import (
+    OswaldBetrayalTelegraphStain)
 from toontown.corruption.SmudgeHitCreamSplashFx import SmudgeHitCreamSplash
 from toontown.corruption.SmudgeHitCreamWashFx import SmudgeHitCreamWashPulse
 from toontown.corruption.SmudgeInkSplashFx import SmudgeInkSplash
@@ -128,6 +131,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._smudgeTelegraphInk = None
         self._smudgeInkSplash = None
         self._smudgeHitCreamWash = None
+        self._oswaldTelegraphStain = None
+        self._oswaldBetrayalSplash = None
         self._gagsterTelegraphPuddle = None
         self._gagsterPuddleCreamSplash = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
@@ -228,6 +233,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamSplash()
         self.__clearSmudgeHitCreamWash()
+        self.__clearOswaldTelegraphStain()
+        self.__clearOswaldBetrayalSplash()
         self.__clearGagsterTelegraphPuddle()
         self.__clearGagsterPuddleCreamSplash()
         self.__clearDeathPopSplat()
@@ -548,6 +555,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
             == CorruptionGlobals.ARCHETYPE_GAGSTER)
 
+    def __isCorruptOswald(self):
+        """True when this enemy should use Corrupted Oswald betrayal AV."""
+        return (
+            int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
+            == CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD)
+
     def __isInkOverlord(self):
         """True when finale phase look is active (Ink Overlord boss)."""
         look, phase = self.__finalePhaseLook()
@@ -572,6 +585,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         isBrute = self.__isBruteSpit()
         isSnare = self.__isBalloonSnare()
         isGagster = self.__isGunkGagster()
+        isOswald = self.__isCorruptOswald()
         if look:
             charge = Vec4(*look['telegraphCharge'])
             hold = Vec4(*look['telegraphHold'])
@@ -604,6 +618,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             squash = Point3(*CorruptionGlobals.GAGSTER_TELEGRAPH_SQUASH)
             mid = Point3(*CorruptionGlobals.GAGSTER_TELEGRAPH_MID)
             stretch = Point3(*CorruptionGlobals.GAGSTER_TELEGRAPH_STRETCH)
+        elif isOswald:
+            # Betrayal crimson lunge — not Smudge purple fallthrough.
+            charge = Vec4(*CorruptionGlobals.OSWALD_TELEGRAPH_CHARGE_COLOR)
+            hold = Vec4(*CorruptionGlobals.OSWALD_TELEGRAPH_HOLD_COLOR)
+            squash = Point3(*CorruptionGlobals.OSWALD_TELEGRAPH_SQUASH)
+            mid = Point3(*CorruptionGlobals.OSWALD_TELEGRAPH_MID)
+            stretch = Point3(*CorruptionGlobals.OSWALD_TELEGRAPH_STRETCH)
         else:
             # Ink Smudge melee telegraph — purple charge (unchanged).
             charge = Vec4(*CorruptionGlobals.TELEGRAPH_CHARGE_COLOR)
@@ -629,10 +650,16 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Soft cream wash pulse against ink telegraph (silhouette / idle wash vocab).
         self.__playTelegraphCreamWash(look)
         # Ink Smudge-only: purple ink-fist telegraph pop for melee wind-up read.
-        if (not look) and (not isBrute) and (not isSnare) and (not isGagster):
+        if ((not look) and (not isBrute) and (not isSnare)
+                and (not isGagster) and (not isOswald)):
             self.__playSmudgeTelegraphInk()
         else:
             self.__clearSmudgeTelegraphInk()
+        # Corrupted Oswald-only: crimson stain-lunge telegraph (not Smudge).
+        if isOswald and not look:
+            self.__playOswaldTelegraphStain()
+        else:
+            self.__clearOswaldTelegraphStain()
         # Sludge Brute-only: green spit-gob telegraph pop for ranged spit read.
         if isBrute and not look:
             self.__playBruteTelegraphSpit()
@@ -743,6 +770,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
+        self.__clearOswaldTelegraphStain()
         self.__clearGagsterTelegraphPuddle()
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
@@ -751,6 +779,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         isBrute = self.__isBruteSpit()
         isSnare = self.__isBalloonSnare()
         isGagster = self.__isGunkGagster()
+        isOswald = self.__isCorruptOswald()
         if look:
             impactScale = Point3(*look['impactScale'])
             impactColor = Vec4(*look['impactColor'])
@@ -782,6 +811,15 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             impactScale = Point3(1.45, 1.45, 0.7)
             impactColor = Vec4(0.45, 2.15, 2.35, 1.0)
             rebound = Vec4(0.45, 1.15, 1.25, 1.0)
+            slamSec = 0.06
+            reboundSec = 0.1
+            settleSec = 0.12
+            reboundScale = Point3(0.85, 0.85, 1.25)
+        elif isOswald:
+            # Betrayal crimson impact — not Smudge purple.
+            impactScale = Point3(1.7, 1.45, 0.5)
+            impactColor = Vec4(2.35, 0.55, 0.65, 1.0)
+            rebound = Vec4(1.45, 0.35, 0.42, 1.0)
             slamSec = 0.06
             reboundSec = 0.1
             settleSec = 0.12
@@ -1438,6 +1476,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSmudgeInkSplash()
         self.__clearSmudgeHitCreamSplash()
         self.__clearSmudgeHitCreamWash()
+        self.__clearOswaldTelegraphStain()
+        self.__clearOswaldBetrayalSplash()
         self.__clearGagsterTelegraphPuddle()
         self.__clearGagsterPuddleCreamSplash()
         self.__clearDeathPopSplat()
@@ -1463,6 +1503,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Balloon Snare: amber string-snap splash so zip-flier pops stay scannable.
         elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_SNARE:
             self.__playSnareStringSnapSplash(splatPos, kind='death')
+        # Corrupted Oswald: crimson betrayal splash — not Smudge purple.
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD:
+            self.__playOswaldBetrayalSplash(splatPos, kind='death')
         if bodyPop is None:
             self.__playPurityReclaimPop()
             self.hide()
@@ -2325,6 +2368,49 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
         self._smudgeHitCreamWash = None
 
+    def __playOswaldTelegraphStain(self):
+        """Crimson stain-lunge telegraph — Corrupted Oswald wind-ups only."""
+        self.__clearOswaldTelegraphStain()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        stain = OswaldBetrayalTelegraphStain()
+        self._oswaldTelegraphStain = stain
+        stain.play(pos)
+
+    def __clearOswaldTelegraphStain(self):
+        stain = getattr(self, '_oswaldTelegraphStain', None)
+        if stain is not None:
+            try:
+                stain.clear()
+            except Exception:
+                pass
+        self._oswaldTelegraphStain = None
+
+    def __playOswaldBetrayalSplash(self, pos=None, kind='hit'):
+        """Crimson betrayal splash — Corrupted Oswald hit / death only."""
+        if self.getArchetype() != CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD:
+            return
+        self.__clearOswaldBetrayalSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = OswaldBetrayalSplash()
+        self._oswaldBetrayalSplash = splash
+        splash.play(pos, kind=kind)
+
+    def __clearOswaldBetrayalSplash(self):
+        splash = getattr(self, '_oswaldBetrayalSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._oswaldBetrayalSplash = None
+
     def __playBruteSludgeSplash(self, pos=None, kind='hit'):
         """Green sludge splash — Sludge Brute hit / death readability only."""
         if self.getArchetype() != CorruptionGlobals.ARCHETYPE_BRUTE:
@@ -2508,6 +2594,26 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__consumeSnareStringCounterCreamSplash()
             Sequence(
                 Wait(0.26),
+                Func(self.__resumeIdleInkDrip),
+                Func(self.__resumeIdleCreamDrip),
+                Func(self.__resumeIdleCreamDripSparkle),
+                Func(self.__resumeIdleCreamWash),
+                Func(self.__resumeSilhouetteCreamRim),
+                Func(self.__resumeSilhouetteCreamSparkle),
+                Func(self.__resumeSilhouetteCreamWash),
+            ).start()
+        # Corrupted Oswald: crimson betrayal splash — twist fight, not Smudge.
+        elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD:
+            self.__pauseIdleInkDrip()
+            self.__pauseIdleCreamDrip()
+            self.__pauseIdleCreamDripSparkle()
+            self.__pauseIdleCreamWash()
+            self.__pauseSilhouetteCreamRim()
+            self.__pauseSilhouetteCreamSparkle()
+            self.__pauseSilhouetteCreamWash()
+            self.__playOswaldBetrayalSplash(kind='hit')
+            Sequence(
+                Wait(0.28),
                 Func(self.__resumeIdleInkDrip),
                 Func(self.__resumeIdleCreamDrip),
                 Func(self.__resumeIdleCreamDripSparkle),
