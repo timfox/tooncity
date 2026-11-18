@@ -112,11 +112,13 @@ leaves room for an Oswald twist tease (he caused the corruption); full
 dialogue is out of scope here.
 
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
-   SFX, HUD `OVERLORD · P1 RISE`, wind-up chip `P1 MAGENTA SWELL`.
+   SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), HUD
+   `OVERLORD · P1 RISE`, wind-up chip `P1 MAGENTA SWELL`.
 2. Clear packs → purity beat → director restarts **Phase 2**.
 3. **Phase 2 — Unleashed**: crimson telegraphs (wider squash / taller stretch) +
-   phase-two SFX, hotter hit flash, FOV + fullscreen ink slam transition sting
-   (`announceFinalePhaseTransition`), HUD `OVERLORD · P2 UNLEASHED`, wind-up
+   phase-two SFX, hotter crown flash, hotter hit flash, FOV + fullscreen ink
+   slam transition sting (`announceFinalePhaseTransition`), HUD
+   `OVERLORD · P2 UNLEASHED`, wind-up
    chip `P2 CRIMSON FURY`.
 4. Clear again → campaign victory + soft twist tease
    (`CampaignGlobals.FINALE_TWIST_TEASE`).
