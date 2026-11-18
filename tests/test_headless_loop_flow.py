@@ -898,8 +898,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(pending['victoryEpilogue'])
         self.assertTrue(pending['betrayed'])
         self.assertTrue(pending['chasePending'])
-        tip = camp.hubPlayEntryTip(victory=pending['victoryEpilogue'])
-        self.assertIn('Campaign complete', tip)
+        tip = camp.hubPlayEntryTip(
+            victory=pending['victoryEpilogue'],
+            chasePending=pending['chasePending'])
+        self.assertEqual(tip, camp.HUB_CHASE_PENDING_TIP)
+        self.assertNotIn('stain is washed', tip.lower())
+        self.assertNotIn('Campaign complete', tip)
 
         cleared = save.clientMirrorFromProgress({
             'unlockedThrough': 2,
@@ -909,6 +913,11 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         })
         self.assertTrue(cleared['victoryEpilogue'])
         self.assertFalse(cleared['chasePending'])
+        washed = camp.hubPlayEntryTip(
+            victory=cleared['victoryEpilogue'],
+            chasePending=cleared['chasePending'])
+        self.assertEqual(washed, camp.HUB_VICTORY_TIP)
+        self.assertIn('stain is washed', washed.lower())
 
         dc = _read('etc/toon.dc')
         self.assertIn('requestCampaignProgress', dc)

@@ -283,10 +283,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
 
         campaign_names = _class_and_func_names(self.campaign_tree)
         self.assertIn('hubPlayEntryTip', campaign_names)
+        self.assertIn('hubChasePendingTip', campaign_names)
         self.assertIn('hubVictoryReplayTip', campaign_names)
         self.assertIn('handoffTravelHint', campaign_names)
         hub_tip = _toplevel_value(self.campaign_tree, 'HUB_TIP')
         self.assertIsNotNone(hub_tip)
+        hub_chase_pending = _toplevel_value(
+            self.campaign_tree, 'HUB_CHASE_PENDING_TIP')
+        self.assertIsNotNone(hub_chase_pending)
         hub_victory = _toplevel_value(self.campaign_tree, 'HUB_VICTORY_TIP')
         self.assertIsNotNone(hub_victory)
         hub_zone = _toplevel_value(self.campaign_tree, 'HUB_ZONE')

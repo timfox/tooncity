@@ -99,7 +99,10 @@ class PlayEntryClient(DirectObject):
         # After STATE_VICTORY / chase-clear epilogue, hub tip uses replay copy.
         # Also latched from AI CampaignProgressSave via campaignProgressSync
         # so relog mirrors victory / unlock (not process-local only).
+        # chasePending (victory + chaseCleared=0) keeps hub tip from claiming
+        # the stain is washed before the betrayal chase clears.
         self._victoryEpilogue = False
+        self._chasePending = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
         # KO fail (#323) — clear live latch so same-street R / re-enter retry.
@@ -200,12 +203,14 @@ class PlayEntryClient(DirectObject):
         except Exception:
             return
         self._victoryEpilogue = bool(mirror.get('victoryEpilogue'))
+        self._chasePending = bool(mirror.get('chasePending'))
         if self._victoryEpilogue:
             # Victory / chase soft-end — drop mid-act soft cues.
             self._softNextCue = None
             self._softNextZone = None
             self._softNextStreet = None
         else:
+            self._chasePending = False
             softStreet = mirror.get('softNextStreet')
             if softStreet:
                 self._softNextStreet = softStreet
@@ -506,7 +511,10 @@ class PlayEntryClient(DirectObject):
         if self._softNextCue:
             tip = self._softNextCue
         elif self._victoryEpilogue:
-            tip = CampaignGlobals.hubPlayEntryTip(face=face, victory=True)
+            tip = CampaignGlobals.hubPlayEntryTip(
+                face=face,
+                victory=True,
+                chasePending=bool(self._chasePending))
         elif self._softNextStreet:
             tip = CampaignGlobals.hubPlayEntryTip(
                 face=face, nextStreet=self._softNextStreet)
@@ -515,7 +523,11 @@ class PlayEntryClient(DirectObject):
                 CampaignGlobals, 'HUB_TIP', None) or (
                 CampaignGlobals.hubPlayEntryTip(face=face))
         self._showTip(tip)
-        if self._victoryEpilogue and not self._softNextCue:
+        if self._victoryEpilogue and self._chasePending and not self._softNextCue:
+            self._flashBanner(
+                "%s's stain remains — wash the betrayal chase!" % face,
+                trustSettle=True)
+        elif self._victoryEpilogue and not self._softNextCue:
             self._flashBanner(
                 'Campaign complete — replay from hub / C on Loopy!',
                 trustSettle=True)
@@ -526,7 +538,9 @@ class PlayEntryClient(DirectObject):
 
     def _onCampaignVictory(self, reclaimCount=0):
         # Latch victory so hub tip stops inviting Act 1 as if brand-new.
+        # Chase is still pending until oswaldBetrayalChaseCleared / epilogue.
         self._victoryEpilogue = True
+        self._chasePending = True
 
     def _onCampaignEpilogue(self, doId=0):
         """Chase-clear soft-end — hub replay tip + Loopy rematch latch."""
@@ -534,6 +548,7 @@ class PlayEntryClient(DirectObject):
                 CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True)):
             return
         self._victoryEpilogue = True
+        self._chasePending = False
         face = _face()
         tip = getattr(
             CampaignGlobals, 'CAMPAIGN_EPILOGUE_CUE', None) or (
@@ -694,6 +709,7 @@ class PlayEntryClient(DirectObject):
         # Replay from victory clears the epilogue hub tip for the new run.
         if self._victoryEpilogue:
             self._victoryEpilogue = False
+            self._chasePending = False
             self._softNextCue = None
             self._softNextZone = None
             self._softNextStreet = None

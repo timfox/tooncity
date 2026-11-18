@@ -130,6 +130,11 @@ class CampaignEpilogueTests(unittest.TestCase):
         fresh = camp.hubPlayEntryTip()
         self.assertIn('Loopy', fresh)
         self.assertNotIn('Campaign complete', fresh)
+        # Chase still pending — do not claim stain washed.
+        pending = camp.hubPlayEntryTip(victory=True, chasePending=True)
+        self.assertEqual(pending, camp.hubChasePendingTip())
+        self.assertNotIn('stain is washed', pending.lower())
+        self.assertNotIn('Campaign complete', pending)
         victory = camp.hubPlayEntryTip(victory=True)
         self.assertEqual(victory, camp.hubVictoryReplayTip())
         self.assertIn('Campaign complete', victory)
@@ -209,8 +214,10 @@ class CampaignEpilogueTests(unittest.TestCase):
 
         play = _read('toontown/campaign/PlayEntry.py')
         self.assertIn('_victoryEpilogue', play)
+        self.assertIn('_chasePending', play)
         self.assertIn('_onCampaignEpilogue', play)
         self.assertIn("victory=True", play)
+        self.assertIn('chasePending=', play)
         self.assertIn('hubVictoryReplayTip', play)
         # Presence stub wiring must remain.
         self.assertIn('ensureOswaldPresenceClient', play)
