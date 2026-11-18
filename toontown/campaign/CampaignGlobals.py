@@ -228,6 +228,30 @@ OSWALD_TRUST_SUB_POP_SQUASH = (1.50, 1.0, 0.56, 0.05)   # sx, sy, sz, sec
 OSWALD_TRUST_SUB_POP_STRETCH = (0.80, 1.0, 1.40, 0.08)
 OSWALD_TRUST_SUB_POP_SETTLE_SEC = 0.10
 
+# Cream edge pulse framing early/mid Oswald trust handoff banners.
+# Composes with trust hose settle (#76) — mirrors act-enter cream edge (#110)
+# / wave-announce cream edge (#87). Sunny cream / pastel only; trusted-hero
+# mid-campaign beat (no twist spoilers). No keyblades / KH branding.
+OSWALD_TRUST_BANNER_CREAM_EDGE_ENABLED = True
+OSWALD_TRUST_BANNER_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)
+OSWALD_TRUST_BANNER_CREAM_EDGE = 0.28  # strip thickness in aspect2d units
+OSWALD_TRUST_BANNER_CREAM_EDGE_PEAK = 0.42
+OSWALD_TRUST_BANNER_CREAM_EDGE_PULSE = 0.28  # mid-beat alpha after peak
+OSWALD_TRUST_BANNER_CREAM_EDGE_IN_SEC = 0.08
+OSWALD_TRUST_BANNER_CREAM_EDGE_HOLD_SEC = 0.10
+OSWALD_TRUST_BANNER_CREAM_EDGE_PULSE_SEC = 0.12
+OSWALD_TRUST_BANNER_CREAM_EDGE_OUT_SEC = 0.36
+# Below handoff plate/title bins (60/62); above ink entry vignette (48).
+OSWALD_TRUST_BANNER_CREAM_EDGE_BIN = 55
+OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_COUNT = 6
+OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_SIZE = 0.022
+OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_DRIFT = 0.18
+OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_SEC = 0.28
+OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_COLOR = (1.0, 0.96, 0.62, 0.9)
+OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
+# Flecks cluster near the handoff plate (root ~z 0.42).
+OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.42)
+
 # Campaign handoff confetti / streamer pop (CampaignHandoffConfetti).
 # Short rubber-hose carnival burst on Loopy→Punchline (and act) handoffs.
 # Toontown spiritual sequel — no keyblades / KH branding.

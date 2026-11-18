@@ -7,8 +7,9 @@ cue — not a single toast line. Finale victory keeps the Oswald twist beat.
 Title lands with the same squash→stretch→settle rubber-hose scale pop as
 PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
-Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
-pop (CampaignHandoffConfetti) — carnival reclaim juice, no KH / keyblade
+Oswald cheer/lead subtitle, plus a soft cream edge pulse (act-enter cream
+edge twin). Act handoffs fire a short confetti / streamer pop
+(CampaignHandoffConfetti) — carnival reclaim juice, no KH / keyblade
 framing. Campaign victory fires a soft cream confetti swell on the purity
 cheer only; it clears before the Oswald twist / FinalePhaseFx reveal so
 the bittersweet sting stays intact.
@@ -27,6 +28,10 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
+from toontown.campaign.ActBannerCreamEdgeFx import (
+    clearOswaldTrustBannerCreamEdge,
+    playOswaldTrustBannerCreamEdge,
+)
 from toontown.campaign.CampaignHandoffConfetti import (
     clearHandoffConfetti,
     clearVictoryCreamSwell,
@@ -240,6 +245,14 @@ class CampaignHandoffClient(DirectObject):
             except Exception:
                 pass
 
+        if trustSettle:
+            # Soft cream edge frame with early/mid Oswald trust hose settle.
+            # Trusted-hero mid-campaign only — twist / reveal paths stay edge-free.
+            try:
+                playOswaldTrustBannerCreamEdge()
+            except Exception:
+                pass
+
         try:
             cm = CardMaker('campaign-handoff-card')
             cm.setFrame(-1.15, 1.15, -0.28, 0.22)
@@ -440,6 +453,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearVictoryCreamSwell()
+        except Exception:
+            pass
+        try:
+            clearOswaldTrustBannerCreamEdge()
         except Exception:
             pass
         if self._rootNP and not self._rootNP.isEmpty():
