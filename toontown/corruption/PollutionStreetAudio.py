@@ -1,17 +1,15 @@
 """Client street music beds driven by PollutionManager / reclaim purity.
 
-When a street is polluted, crossfade the bright neighborhood bed to a darker
+When a street is polluted, fade the bright neighborhood bed to a darker
 encounter bed (existing phase_3.5 BGM — no new binary assets). On reclaim /
-purity clear, crossfade back to the hood music so it pairs with cheer/sting #21.
+purity clear, fade back to the hood music so it pairs with cheer/sting #21.
+
+Uses a sequential fade-out / fade-in switch (musicManager is typically
+single-channel) rather than overlapping both tracks.
 """
 
 from direct.directnotify import DirectNotifyGlobal
-from direct.interval.IntervalGlobal import (
-    Func,
-    LerpFunctionInterval,
-    Parallel,
-    Sequence,
-)
+from direct.interval.IntervalGlobal import Func, LerpFunctionInterval, Sequence
 from panda3d.core import AudioSound
 
 from toontown.corruption import CorruptionGlobals
@@ -137,7 +135,7 @@ class PollutionStreetAudio:
             self._suspendedForBattle = False
             if self._pollutedMode and self._zoneId is not None:
                 # Street.exitBattle already restarted bright music — swap back.
-                self._crossfadeToPolluted(
+                self._fadeSwitchToPolluted(
                     CorruptionGlobals.POLLUTION_AUDIO_CROSSFADE_SEC)
         return task.cont
 
@@ -174,7 +172,7 @@ class PollutionStreetAudio:
         if self._pollutedMode and self._musicPlaying(self._pollutedMusic):
             return
         self._pollutedMode = True
-        self._crossfadeToPolluted(
+        self._fadeSwitchToPolluted(
             CorruptionGlobals.POLLUTION_AUDIO_CROSSFADE_SEC)
 
     def _enterPure(self, restoreCrossfade=False):
@@ -189,46 +187,38 @@ class PollutionStreetAudio:
             CorruptionGlobals.POLLUTION_AUDIO_RESTORE_CROSSFADE_SEC
             if restoreCrossfade
             else CorruptionGlobals.POLLUTION_AUDIO_CROSSFADE_SEC)
-        self._crossfadeToPure(duration)
+        self._fadeSwitchToPure(duration)
 
-    def _crossfadeToPolluted(self, duration):
+    def _fadeVolume(self, music, startVol, endVol, duration):
+        """Build a volume lerp interval for one music handle."""
+
+        def setVol(t, handle=music, a=startVol, b=endVol):
+            if handle is None:
+                return
+            try:
+                handle.setVolume(a + (b - a) * float(t))
+            except Exception:
+                pass
+
+        return LerpFunctionInterval(
+            setVol, fromData=0.0, toData=1.0, duration=max(0.05, duration))
+
+    def _fadeSwitchToPolluted(self, duration):
         polluted = self._ensurePollutedMusic()
         if polluted is None:
             return
         street = self._streetMusic()
         self._finishFade()
-        outVol = CorruptionGlobals.PURE_STREET_MUSIC_VOLUME
+        half = max(0.05, float(duration) * 0.5)
+        outStart = CorruptionGlobals.PURE_STREET_MUSIC_VOLUME
         if street is not None:
             try:
-                outVol = float(street.getVolume())
+                outStart = float(street.getVolume())
             except Exception:
                 pass
         inVol = CorruptionGlobals.POLLUTED_STREET_MUSIC_VOLUME
 
-        def fadeOut(t, music=street, start=outVol):
-            if music is None:
-                return
-            try:
-                music.setVolume(max(0.0, start * (1.0 - float(t))))
-            except Exception:
-                pass
-
-        def fadeIn(t, music=polluted, peak=inVol):
-            try:
-                music.setVolume(peak * float(t))
-            except Exception:
-                pass
-
-        def startPolluted():
-            try:
-                polluted.setLoop(1)
-                polluted.setVolume(0.0)
-                if not self._musicPlaying(polluted):
-                    polluted.play()
-            except Exception:
-                pass
-
-        def finishOut():
+        def stopStreet():
             if street is None:
                 return
             try:
@@ -237,66 +227,44 @@ class PollutionStreetAudio:
             except Exception:
                 pass
 
-        steps = [
-            Func(startPolluted),
-            Parallel(
-                LerpFunctionInterval(
-                    fadeOut, fromData=0.0, toData=1.0, duration=duration),
-                LerpFunctionInterval(
-                    fadeIn, fromData=0.0, toData=1.0, duration=duration),
-            ),
-            Func(finishOut),
-        ]
+        def startPolluted():
+            try:
+                polluted.setLoop(1)
+                polluted.setVolume(0.0)
+                base.playMusic(polluted, looping=1, interrupt=1, volume=0.0)
+                if not self._musicPlaying(polluted):
+                    polluted.play()
+            except Exception:
+                try:
+                    polluted.play()
+                except Exception:
+                    pass
+
+        steps = []
+        if street is not None and self._musicPlaying(street):
+            steps.append(self._fadeVolume(street, outStart, 0.0, half))
+            steps.append(Func(stopStreet))
+        else:
+            steps.append(Func(stopStreet))
+        steps.append(Func(startPolluted))
+        steps.append(self._fadeVolume(polluted, 0.0, inVol, half))
         self._fadeIval = Sequence(*steps)
         self._fadeIval.start()
 
-    def _crossfadeToPure(self, duration):
+    def _fadeSwitchToPure(self, duration):
         street = self._streetMusic()
         polluted = self._pollutedMusic
         self._finishFade()
-        outVol = CorruptionGlobals.POLLUTED_STREET_MUSIC_VOLUME
+        half = max(0.05, float(duration) * 0.5)
+        outStart = CorruptionGlobals.POLLUTED_STREET_MUSIC_VOLUME
         if polluted is not None:
             try:
-                outVol = float(polluted.getVolume())
+                outStart = float(polluted.getVolume())
             except Exception:
                 pass
         inVol = CorruptionGlobals.PURE_STREET_MUSIC_VOLUME
 
-        def fadeOut(t, music=polluted, start=outVol):
-            if music is None:
-                return
-            try:
-                music.setVolume(max(0.0, start * (1.0 - float(t))))
-            except Exception:
-                pass
-
-        def fadeIn(t, music=street, peak=inVol):
-            if music is None:
-                return
-            try:
-                music.setVolume(peak * float(t))
-            except Exception:
-                pass
-
-        def startStreet():
-            if street is None:
-                return
-            try:
-                street.setLoop(1)
-                street.setVolume(0.0)
-                if not self._musicPlaying(street):
-                    # Prefer playMusic so base tracks current music handle.
-                    base.playMusic(
-                        street, looping=1, interrupt=0, volume=0.0)
-                    if not self._musicPlaying(street):
-                        street.play()
-            except Exception:
-                try:
-                    street.play()
-                except Exception:
-                    pass
-
-        def finishOut():
+        def stopPolluted():
             self._stopPollutedMusic()
             if polluted is not None:
                 try:
@@ -304,21 +272,30 @@ class PollutionStreetAudio:
                         CorruptionGlobals.POLLUTED_STREET_MUSIC_VOLUME)
                 except Exception:
                     pass
-            if street is not None:
+
+        def startStreet():
+            if street is None:
+                return
+            try:
+                street.setLoop(1)
+                street.setVolume(0.0)
+                base.playMusic(street, looping=1, interrupt=1, volume=0.0)
+                if not self._musicPlaying(street):
+                    street.play()
+            except Exception:
                 try:
-                    street.setVolume(inVol)
+                    street.play()
                 except Exception:
                     pass
 
-        steps = [
-            Func(startStreet),
-            Parallel(
-                LerpFunctionInterval(
-                    fadeOut, fromData=0.0, toData=1.0, duration=duration),
-                LerpFunctionInterval(
-                    fadeIn, fromData=0.0, toData=1.0, duration=duration),
-            ),
-            Func(finishOut),
-        ]
+        steps = []
+        if polluted is not None and self._musicPlaying(polluted):
+            steps.append(self._fadeVolume(polluted, outStart, 0.0, half))
+            steps.append(Func(stopPolluted))
+        else:
+            steps.append(Func(stopPolluted))
+        steps.append(Func(startStreet))
+        if street is not None:
+            steps.append(self._fadeVolume(street, 0.0, inVol, half))
         self._fadeIval = Sequence(*steps)
         self._fadeIval.start()
