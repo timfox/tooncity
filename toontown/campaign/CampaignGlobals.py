@@ -252,6 +252,27 @@ OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
 # Flecks cluster near the handoff plate (root ~z 0.42).
 OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.42)
 
+# Soft cream wash pulse after Oswald trust banner cream edge (#117).
+# Handoff / victory cream wash grammar (#141/#138) — delayed two-beat
+# aspect2d veil on early/mid trusted Oswald settle only (no carnival).
+# Soft under edge strips (bin 55) / plate (60); cream / pastel only. A
+# touch quieter / shorter than handoff wash (#141) — trust settles fire
+# without glitter hang. Twist / victory / phase / carnival stay on their
+# own wash modules (no twist spoilers here).
+# OSWALD_TRUST_BANNER_CREAM_WASH_ENABLED = False drops wash only (hose
+# settle + cream edge remain). No keyblades / KH branding.
+OSWALD_TRUST_BANNER_CREAM_WASH_ENABLED = True
+OSWALD_TRUST_BANNER_CREAM_WASH_DELAY_SEC = 0.36  # after play; after edge peak
+OSWALD_TRUST_BANNER_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+OSWALD_TRUST_BANNER_CREAM_WASH_PEAK = 0.12
+OSWALD_TRUST_BANNER_CREAM_WASH_MID = 0.07
+OSWALD_TRUST_BANNER_CREAM_WASH_IN_SEC = 0.07
+OSWALD_TRUST_BANNER_CREAM_WASH_PULSE_SEC = 0.12
+OSWALD_TRUST_BANNER_CREAM_WASH_HOLD_SEC = 0.10
+OSWALD_TRUST_BANNER_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
+# Under cream edge (55) / plate (60); soft veil settle beat.
+OSWALD_TRUST_BANNER_CREAM_WASH_BIN = 54
+
 # Campaign handoff confetti / streamer pop (CampaignHandoffConfetti).
 # Short rubber-hose carnival burst on Loopy→Punchline (and act) handoffs.
 # Toontown spiritual sequel — no keyblades / KH branding.
@@ -342,13 +363,13 @@ HANDOFF_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 HANDOFF_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.38)
 
 # Soft cream wash pulse after handoff cream edge / sparkle (#124/#99).
-# Perfect-dodge / melee hit / victory cream wash grammar — delayed two-beat
-# aspect2d veil on Loopy→Punchline (and act) carnival handoffs only. Soft
-# under edge strips (bin 55) / plate (60); cream / pastel only. A touch
-# quieter / shorter than victory wash (#138) — handoffs fire more often.
-# Early/mid trusted Oswald only — twist / victory / phase stay wash-free.
-# HANDOFF_CREAM_WASH_ENABLED = False drops wash only (carnival + sparkle +
-# edge remain). No keyblades / KH branding.
+# Perfect-dodge / melee hit / victory / Oswald-trust cream wash grammar —
+# delayed two-beat aspect2d veil on Loopy→Punchline (and act) carnival
+# handoffs only. Soft under edge strips (bin 55) / plate (60); cream /
+# pastel only. A touch quieter / shorter than victory wash (#138) —
+# handoffs fire more often. Oswald trust wash lives separately; twist /
+# phase stay wash-free. HANDOFF_CREAM_WASH_ENABLED = False drops wash only
+# (carnival + sparkle + edge remain). No keyblades / KH branding.
 HANDOFF_CREAM_WASH_ENABLED = True
 HANDOFF_CREAM_WASH_DELAY_SEC = 0.40  # after play; after edge peak (~0.20)
 HANDOFF_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -467,11 +488,12 @@ VICTORY_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 VICTORY_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.36)
 
 # Soft cream wash pulse after victory cream edge / sparkle (#129/#105).
-# Perfect-dodge / melee hit cream wash grammar — delayed two-beat aspect2d
-# veil on the purity cheer ("TOON CITY IS SAVED!") only. Soft under edge
-# strips (bin 58) / plate (60); cream / pastel only. Clears before Oswald
-# twist / FinalePhaseFx reveal. VICTORY_CREAM_WASH_ENABLED = False drops
-# wash only (swell + sparkle + edge remain). No keyblades / KH branding.
+# Perfect-dodge / melee hit / handoff / Oswald-trust cream wash grammar —
+# delayed two-beat aspect2d veil on the purity cheer ("TOON CITY IS
+# SAVED!") only. Soft under edge strips (bin 58) / plate (60); cream /
+# pastel only. Clears before Oswald twist / FinalePhaseFx reveal.
+# VICTORY_CREAM_WASH_ENABLED = False drops wash only (swell + sparkle +
+# edge remain). No keyblades / KH branding.
 VICTORY_CREAM_WASH_ENABLED = True
 VICTORY_CREAM_WASH_DELAY_SEC = 0.48  # after play; after edge peak (~0.20)
 VICTORY_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream

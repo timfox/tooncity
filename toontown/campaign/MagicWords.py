@@ -10,9 +10,10 @@ class StartCampaign(MagicWord):
     desc = 'Start or resume the multi-neighborhood reclaim campaign act.'
     advancedDesc = (
         'Uses CampaignDirector + ReclaimDirector. Oswald leads Loopy → '
-        'Punchline → Silly two-phase Ink Overlord finale (act handoffs: '
-        'carnival confetti / cream sparkle / edge + soft cream wash pulse; '
-        'P1 magenta rise / P2 crimson unleash telegraphs + ink crown '
+        'Punchline → Silly two-phase Ink Overlord finale (early/mid trust '
+        'settle: cream edge + soft cream wash pulse; act handoffs: carnival '
+        'confetti / cream sparkle / edge + soft cream wash pulse; P1 '
+        'magenta rise / P2 crimson unleash telegraphs + ink crown '
         'silhouette flash + FOV/flash sting; purity victory cheer: cream '
         'swell / sparkle / edge + soft cream wash pulse; victory reveal '
         'sting: Oswald caused the corruption — banner + rubber-hose '

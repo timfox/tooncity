@@ -8,15 +8,16 @@ Soft cream border strips + tip flecks that frame:
   * Finale reveal cream aftershock banners (#86) — TC-136
 
 Handoff / victory / finale-reveal cream-sparkle paths also rise cream
-sparkle flecks along the cream frame (wave-edge #113 twin). Handoff
-carnival and victory cheer also arm a delayed soft cream wash pulse
-(HandoffCreamWashFx / VictoryCreamWashFx; melee / perfect-dodge wash
-twins) under this edge. Mirrors reclaim wave-announce cream edge (#87)
-— sunny Toontown cream only, opposite of the polluted ink edge vignette.
-Campaign-owned; no keyblades / KH branding. Oswald stays trusted
-mid-campaign (no twist spoilers on early handoff cream edges). Victory
-cream edge + wash clear before the Oswald twist; finale-reveal cream
-edge frames residual cream aftershock only.
+sparkle flecks along the cream frame (wave-edge #113 twin). Oswald trust
+settle, handoff carnival, and victory cheer also arm a delayed soft cream
+wash pulse (OswaldTrustCreamWashFx / HandoffCreamWashFx /
+VictoryCreamWashFx; melee / perfect-dodge wash twins) under this edge.
+Mirrors reclaim wave-announce cream edge (#87) — sunny Toontown cream
+only, opposite of the polluted ink edge vignette. Campaign-owned; no
+keyblades / KH branding. Oswald stays trusted mid-campaign (no twist
+spoilers on early trust cream edge / wash). Victory cream edge + wash
+clear before the Oswald twist; finale-reveal cream edge frames residual
+cream aftershock only.
 """
 
 from math import cos, pi, sin

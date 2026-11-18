@@ -3,10 +3,11 @@
 Fullscreen soft cream veil that settles *after* victory cream confetti
 swell (#82), cream sparkle (#105), and cream edge (#129) — same
 PerfectDodgeCreamWashPulse / HitSparkCreamWashPulse / HandoffCreamWashPulse
-overlay grammar as a brief purity-cheer settle beat. Soft under the
-victory plate + edge strips; cream / pastel only (not ink). Wired from
-CampaignHandoff creamSwell (victory path only) beside the cream edge.
-Handoff carnival wash lives in HandoffCreamWashFx. Clears before Oswald
+/ OswaldTrustCreamWashPulse overlay grammar as a brief purity-cheer
+settle beat. Soft under the victory plate + edge strips; cream / pastel
+only (not ink). Wired from CampaignHandoff creamSwell (victory path only)
+beside the cream edge. Handoff carnival wash lives in HandoffCreamWashFx;
+Oswald trust wash lives in OswaldTrustCreamWashFx. Clears before Oswald
 twist / FinalePhaseFx reveal. Client only. Toontown spiritual sequel —
 no keyblades / no KH branding.
 """
