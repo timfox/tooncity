@@ -88,6 +88,10 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         punch = self.cg.OVERLORD_TELEGRAPH_PUNCH_LOOK
         self.assertEqual(punch.get('id'), 'overlord-telegraph-punch')
         self.assertTrue(self.cg.OVERLORD_TELEGRAPH_PUNCH_ENABLED)
+        self.assertTrue(self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED)
+        self.assertGreaterEqual(int(punch.get('creamFleckCount', 0)), 6)
+        self.assertTrue(
+            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED)
 
     def test_normalize_and_lookup_edges(self):
         self.assertEqual(self.cg.normalizeFinalePhase(1), 1)

@@ -61,8 +61,10 @@ sunny cream/pastel juice on the trap impact; telegraph cream warn aftershock
 grammar / Snare counter cream splash #214). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
 OverlordPhaseInkRainFx (ink rain / ink fall shower) plus
-OverlordTelegraphPunchFx (ground danger-ring warn + impact punch bloom;
-phase-timed AV squash/stretch hold for fair punish windows). Ink Overlord
+OverlordTelegraphPunchFx (deepened cream danger-ring warn + radial cream
+phase flecks + impact punch bloom with cream aftershock; phase-timed AV
+squash/stretch hold for fair punish windows — distinct from Brute spit
+cream drip #249 / Snare whip cream #245). Ink Overlord
 hits and deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
 rubber-hose ink splash; phase-retinted; composes with crown / rain / death /
 idle looks — not street Smudge purple); Overlord hits also pulse
