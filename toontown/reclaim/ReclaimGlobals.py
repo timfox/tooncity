@@ -568,20 +568,43 @@ SECURED_LOCK_STING_SETTLE_SEC = 0.11
 SECURED_LOCK_METER_POP_SCALE = 1.18
 SECURED_LOCK_METER_POP_SEC = 0.11
 
-# Purity-complete meter hose settle — after restore celebration settles
-# (purityRestoreSettled), soft tall stretch → longer settle on the full meter
-# so the finish reads clearly. Distinct from wave-start squash→stretch pop
-# (#220) and secured-lock green soft uniform scale (#209). Sunny pure cream
-# rim accent only; no KH branding. Toggle PURITY_COMPLETE_METER_SETTLE_ENABLED
-# = False drops meter settle only (celebration / lock tip still fire).
+# Purity-complete meter hose settle cream — after restore celebration settles
+# (purityRestoreSettled), deepened soft tall stretch → longer settle on the
+# full meter with settling pure-cream flecks / soft halo so the finish reads
+# juicier. Distinct from wave-start squash→stretch + rising cream (#220 /
+# deepen #239), secured-lock green soft uniform scale + tip-near green-cream
+# sparkle (#209 / deepen #243), and mid-wave warm rim-flash cream (#234).
+# Sunny pure cream only; no KH branding. Toggle
+# PURITY_COMPLETE_METER_SETTLE_ENABLED = False drops meter settle only
+# (celebration / lock tip still fire). PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED
+# = False drops flecks + halo only (hose + rim still fire).
 PURITY_COMPLETE_METER_SETTLE_ENABLED = True
-# Mild tall stretch (no flat squash — that is wave-start's signature).
-PURITY_COMPLETE_METER_SETTLE_STRETCH = (1.05, 1.0, 1.22, 0.08)  # sx, sy, sz, sec
-PURITY_COMPLETE_METER_SETTLE_SEC = 0.16
-PURITY_COMPLETE_METER_SETTLE_RIM_COLOR = (1.0, 0.97, 0.70, 0.82)  # pure cream
-PURITY_COMPLETE_METER_SETTLE_RIM_SEC = 0.28
+# Juicier tall stretch (no flat squash — that is wave-start's signature).
+PURITY_COMPLETE_METER_SETTLE_STRETCH = (1.08, 1.0, 1.34, 0.09)  # sx, sy, sz, sec
+PURITY_COMPLETE_METER_SETTLE_SEC = 0.20
+PURITY_COMPLETE_METER_SETTLE_RIM_COLOR = (1.0, 0.98, 0.74, 0.92)  # creamier pure cream
+PURITY_COMPLETE_METER_SETTLE_RIM_SEC = 0.36
 # Keep meter up through restore celebration + hose settle (not just lock confirm).
-PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC = 0.55
+PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC = 0.65
+# Settling pure-cream flecks + soft halo layered on the complete hose settle —
+# downward finish residual (not rising wave-start cream #239, not tip-near
+# green lock glitter #243). Toggle PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED.
+PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED = True
+PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT = 6
+PURITY_COMPLETE_METER_SETTLE_CREAM_SIZE = 0.014
+PURITY_COMPLETE_METER_SETTLE_CREAM_FALL = 0.11
+PURITY_COMPLETE_METER_SETTLE_CREAM_SPREAD = 0.20
+PURITY_COMPLETE_METER_SETTLE_CREAM_SEC = 0.32
+PURITY_COMPLETE_METER_SETTLE_CREAM_COLOR = (1.0, 0.98, 0.76, 0.92)
+PURITY_COMPLETE_METER_SETTLE_CREAM_END_COLOR = (1.0, 0.94, 0.58, 0.0)
+PURITY_COMPLETE_METER_SETTLE_CREAM_BIN = 48  # over meter rim (45); under fill shimmer (49)
+PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_ENABLED = True
+PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_HALF = 0.082
+PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_START = 0.38
+PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK = 1.28
+PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_SEC = 0.30
+PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA = 0.15
+PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_COLOR = (1.0, 0.97, 0.80, 1.0)
 
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.

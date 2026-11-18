@@ -16,9 +16,11 @@ reads juicier — distinct from mid-wave warm rim-flash cream (#213 / #234),
 wave-clear mid-screen sparkle (#229), purity-complete hose settle (#225),
 and secured-lock green hold (#209).
 
-Purity complete (after celebration settles): soft tall stretch → longer settle
-on the full meter so the finish reads clearly — not wave-start squash→stretch
-(#220) and not secured-lock green soft uniform scale (#209).
+Purity complete (after celebration settles): deepened soft tall stretch →
+longer settle on the full meter with settling pure-cream flecks / soft halo
+so the finish reads juicier — not wave-start squash→stretch + rising cream
+(#220 / #239) and not secured-lock green soft uniform scale + tip-near
+green-cream sparkle (#209 / #243).
 
 Mid-wave purity pressure (director tip): deepened warm triple-pulse contested
 rim flash + local cream flecks / soft halo when purity stalls or ink pressure
@@ -716,10 +718,12 @@ class PurityMeterHud(object):
             pass
 
     def settleComplete(self):
-        """Soft tall stretch → settle after purity celebration lands.
+        """Deepened soft tall stretch → settle after purity celebration lands.
 
-        Finish-read hose on the full meter — not wave-start squash→stretch
-        (#220) and not secured-lock green soft uniform scale (#209).
+        Finish-read hose on the full meter with settling pure-cream flecks /
+        soft halo so reclaim finish reads juicier — not wave-start
+        squash→stretch + rising cream (#220 / #239) and not secured-lock
+        green soft uniform scale + tip-near green-cream sparkle (#209 / #243).
         """
         if not getattr(
                 ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_ENABLED', True):
@@ -729,9 +733,9 @@ class PurityMeterHud(object):
         self._clearPressureWarn()
         rimColor = getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_COLOR',
-            (1.0, 0.97, 0.70, 0.82))
+            (1.0, 0.98, 0.74, 0.92))
         rimSec = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.28))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.36))
         if self._rimNP is not None and not self._rimNP.isEmpty():
             try:
                 self._rimNP.setColor(*rimColor)
@@ -740,9 +744,9 @@ class PurityMeterHud(object):
 
         stx, sty, stz, stretchSec = getattr(
             ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_STRETCH',
-            (1.05, 1.0, 1.22, 0.08))
+            (1.08, 1.0, 1.34, 0.09))
         settleSec = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_SEC', 0.16))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_SEC', 0.20))
         try:
             baseScale = self._root.getScale()
             try:
@@ -764,6 +768,7 @@ class PurityMeterHud(object):
                 LerpScaleInterval(
                     self._root, max(0.01, settleSec), settle,
                     blendType='easeIn'),
+                name='reclaimPurityMeterCompleteSettleHoseCore',
             )
         except Exception:
             return
@@ -771,13 +776,184 @@ class PurityMeterHud(object):
             max(0.01, float(stretchSec))
             + max(0.01, settleSec))
         holdAfter = max(0.01, rimSec - hoseDur)
+        creamPart = self._buildCompleteSettleCreamJuice()
+        if creamPart is not None:
+            juice = Parallel(
+                hose,
+                creamPart,
+                name='reclaimPurityMeterCompleteSettleJuice',
+            )
+        else:
+            juice = hose
         self._warnIval = Sequence(
-            hose,
+            juice,
             Wait(holdAfter),
             Func(self._onPressureWarnDone),
             name='reclaimPurityMeterCompleteSettle',
         )
         self._warnIval.start()
+
+    def _buildCompleteSettleCreamJuice(self):
+        """Settling pure-cream flecks + soft halo on purity-complete hose."""
+        if not getattr(
+                ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED',
+                True):
+            return None
+        if self._root is None or self._root.isEmpty():
+            return None
+        self._clearWarnCream()
+
+        parts = []
+        haloPart = self._spawnCompleteSettleCreamHalo()
+        if haloPart is not None:
+            parts.append(haloPart)
+        fleckParts = self._spawnCompleteSettleCreamFlecks()
+        if fleckParts:
+            parts.extend(fleckParts)
+        if not parts:
+            return None
+        return Parallel(*parts, name='reclaimPurityMeterCompleteSettleCream')
+
+    def _spawnCompleteSettleCreamHalo(self):
+        """Soft pure-cream halo that blooms with the complete hose settle."""
+        if not getattr(
+                ReclaimGlobals,
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_ENABLED', True):
+            return None
+        if self._root is None or self._root.isEmpty():
+            return None
+        half = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_HALF',
+            0.082))
+        start = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_START',
+            0.38))
+        peak = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK',
+            1.28))
+        sec = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_SEC',
+            0.30))
+        peakA = float(getattr(
+            ReclaimGlobals,
+            'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA', 0.15))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_COLOR',
+            (1.0, 0.97, 0.80, 1.0))
+        binSort = int(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_BIN', 48))
+        try:
+            cm = CardMaker('reclaim-purity-meter-complete-settle-halo')
+            cm.setFrame(-half, half, -half * 0.55, half * 0.55)
+            halo = self._root.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, 0)
+            halo.setPos(0, 0, 0)
+            halo.setScale(start)
+            halo.setBin('fixed', binSort)
+            halo.setDepthTest(False)
+            halo.setDepthWrite(False)
+        except Exception:
+            return None
+        self._warnCreamHaloNP = halo
+        return Sequence(
+            Parallel(
+                LerpScaleInterval(
+                    halo, max(0.01, sec * 0.45), peak, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.35),
+                    Vec4(r, g, b, peakA), blendType='easeOut'),
+            ),
+            Parallel(
+                LerpScaleInterval(
+                    halo, max(0.01, sec * 0.55), peak * 1.05,
+                    blendType='easeIn'),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.55),
+                    Vec4(r, g, b, 0.0), blendType='easeIn'),
+            ),
+            name='reclaimPurityMeterCompleteSettleHalo',
+        )
+
+    def _spawnCompleteSettleCreamFlecks(self):
+        """Pure-cream chips that settle downward during complete hose settle."""
+        count = int(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT', 6))
+        if count <= 0 or self._root is None or self._root.isEmpty():
+            return []
+        halfW = float(ReclaimGlobals.PURITY_METER_WIDTH) * 0.5
+        halfH = float(ReclaimGlobals.PURITY_METER_HEIGHT) * 0.5
+        size = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SIZE', 0.014))
+        fall = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_FALL', 0.11))
+        spread = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SPREAD', 0.20))
+        sec = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_SEC', 0.32))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_COLOR',
+            (1.0, 0.98, 0.76, 0.92))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_END_COLOR',
+            (1.0, 0.94, 0.58, 0.0))
+        fleckBin = int(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_CREAM_BIN', 48))
+
+        parts = []
+        for i in range(count):
+            try:
+                cm = CardMaker(
+                    'reclaim-purity-meter-complete-settle-cream-%s' % i)
+                # Alternate chip / streak — quieter residual of finish cream.
+                if i % 2:
+                    cm.setFrame(
+                        -size * 0.35, size * 0.35, -size * 1.20, size * 1.20)
+                else:
+                    cm.setFrame(-size, size, -size * 0.85, size * 0.85)
+                fleck = self._root.attachNewNode(cm.generate())
+                fleck.setTransparency(TransparencyAttrib.MAlpha)
+                fleck.setColor(r, g, b, 1)
+                fleck.setColorScale(r, g, b, 0)
+                # Fan along the bar — settle downward, not rising wave-start.
+                t = (float(i) / max(1.0, float(count - 1))) - 0.5
+                start = Point3(t * halfW * 1.5, 0, halfH * 0.55)
+                fleck.setPos(start)
+                fleck.setScale(0.38 + 0.10 * (i % 3))
+                fleck.setBin('fixed', fleckBin + (i % 2))
+                fleck.setDepthTest(False)
+                fleck.setDepthWrite(False)
+            except Exception:
+                continue
+
+            end = Point3(
+                start[0] + t * spread * 0.40,
+                0,
+                start[2] - fall * (0.70 + 0.10 * (i % 3)))
+            peak = 1.12 + 0.08 * (i % 2)
+            stagger = 0.014 * (i % 3)
+            parts.append(Sequence(
+                Wait(stagger),
+                Parallel(
+                    LerpColorScaleInterval(
+                        fleck, 0.045, Vec4(r, g, b, a), blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec * 0.28), peak,
+                        blendType='easeOut'),
+                ),
+                Parallel(
+                    LerpPosInterval(
+                        fleck, max(0.01, sec * 0.72), end, blendType='easeIn'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec * 0.72), 0.05, blendType='easeIn'),
+                    LerpColorScaleInterval(
+                        fleck, max(0.01, sec * 0.72),
+                        Vec4(er, eg, eb, ea), blendType='easeIn'),
+                ),
+            ))
+            self._warnCreamNPs.append(fleck)
+        return parts
 
     def confirmSecured(self):
         """Brief cream/green rim + juicier soft uniform meter pop on lock.
