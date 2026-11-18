@@ -4,11 +4,12 @@ Combo-ish swings with cartoon squash/stretch timing and soft targeting.
 Client-local prototype — does not enter turn-based battle FSM.
 """
 
-from panda3d.core import Point3, TextNode, Vec4
+from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
 
 from direct.interval.IntervalGlobal import (
     ActorInterval,
     Func,
+    LerpColorScaleInterval,
     LerpScaleInterval,
     Parallel,
     Sequence,
@@ -39,6 +40,8 @@ class MeleeCombatController(DirectObject):
         self._hoseIval = None
         self._hitstopIval = None
         self._fovIval = None
+        self._flashIval = None
+        self._flashNP = None
         self._origScale = None
         self._baseFov = None
         self.targetFinder = SoftTargetFinder(avatar)
@@ -74,6 +77,7 @@ class MeleeCombatController(DirectObject):
         self._restoreScale()
         self._clearHitstop()
         self._restoreFov()
+        self._clearHitFlash()
         self.targetFinder.clear()
         self._hideHint()
         self._hideLockHint()
@@ -106,9 +110,45 @@ class MeleeCombatController(DirectObject):
             name = target.getHackSlashName()
             hp = target.getHackSlashHp()
             self._showLockHint('%s  [%d]' % (name, hp))
+            self._nudgeTowardLock(target)
         else:
             self._hideLockHint()
         return Task.cont
+
+    def _nudgeTowardLock(self, target):
+        """Subtle avatar + camera lean toward the sticky soft-lock target."""
+        try:
+            pos = target.getHackSlashPos()
+        except Exception:
+            return
+        # Soft heads-up: lerp facing instead of snapping (keeps locomotion feel).
+        try:
+            av = self.avatar
+            curH = av.getH(render)  # noqa: F821
+            av.headsUp(pos)
+            wantH = av.getH(render)  # noqa: F821
+            av.setH(render, curH)  # noqa: F821
+            delta = ((wantH - curH + 180.0) % 360.0) - 180.0
+            av.setH(render, curH + delta * HackSlashConfig.LOCK_FACE_LERP)  # noqa: F821
+        except Exception:
+            pass
+        # Soft camera look-at nudge: blend a fraction of lookAt toward the lock.
+        try:
+            look = Point3(pos)
+            look.setZ(look.getZ() + HackSlashConfig.LOCK_CAM_LOOK_HEIGHT)
+            cam = base.camera  # noqa: F821
+            curHpr = cam.getHpr()
+            cam.lookAt(look)
+            wantHpr = cam.getHpr()
+            cam.setHpr(curHpr)
+            t = HackSlashConfig.LOCK_CAM_LERP
+            cam.setHpr(
+                curHpr[0] + (((wantHpr[0] - curHpr[0] + 180.0) % 360.0) - 180.0) * t,
+                curHpr[1] + (wantHpr[1] - curHpr[1]) * t,
+                curHpr[2] + (wantHpr[2] - curHpr[2]) * t,
+            )
+        except Exception:
+            pass
 
     def _onAttackPressed(self):
         if not self.enabled:
@@ -226,6 +266,7 @@ class MeleeCombatController(DirectObject):
         if landed:
             messenger.send('hackslash-hit', [self.avatar, target, damage, hitIndex])  # noqa: F821
             self._playHitstop(hitIndex)
+            self._playHitFlash()
             if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
                 self._playFinisherFovPunch()
 
@@ -278,6 +319,47 @@ class MeleeCombatController(DirectObject):
                 self._hoseIval.resume()
         except Exception:
             pass
+
+    def _playHitFlash(self):
+        """Brief full-screen white flash so connects read beyond hitstop alone."""
+        self._clearHitFlash()
+        try:
+            cm = CardMaker('hackslash-hit-flash')
+            cm.setFrame(-2, 2, -2, 2)
+            np = aspect2d.attachNewNode(cm.generate())  # noqa: F821
+            np.setTransparency(TransparencyAttrib.MAlpha)
+            np.setColor(1, 1, 1, 1)
+            np.setColorScale(1, 1, 1, 0)
+            np.setBin('fixed', 60)
+            np.setDepthTest(False)
+            np.setDepthWrite(False)
+            self._flashNP = np
+            peak = HackSlashConfig.HIT_FLASH_PEAK_ALPHA
+            self._flashIval = Sequence(
+                LerpColorScaleInterval(
+                    np, HackSlashConfig.HIT_FLASH_IN_SEC, Vec4(1, 1, 1, peak)),
+                LerpColorScaleInterval(
+                    np, HackSlashConfig.HIT_FLASH_OUT_SEC, Vec4(1, 1, 1, 0)),
+                Func(self._clearHitFlash),
+                name=self.avatar.uniqueName('hackslashHitFlash'),
+            )
+            self._flashIval.start()
+        except Exception:
+            self._clearHitFlash()
+
+    def _clearHitFlash(self):
+        if self._flashIval:
+            try:
+                self._flashIval.pause()
+            except Exception:
+                pass
+            self._flashIval = None
+        if self._flashNP and not self._flashNP.isEmpty():
+            try:
+                self._flashNP.removeNode()
+            except Exception:
+                pass
+        self._flashNP = None
 
     def _playFinisherFovPunch(self):
         """Quick FOV kick on the 3rd hit so finishers feel heavier."""

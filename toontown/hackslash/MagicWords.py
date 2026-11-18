@@ -9,7 +9,9 @@ class ToggleHackSlash(MagicWord):
     desc = 'Toggle real-time rubber-hose melee demo mode.'
     advancedDesc = (
         'Enables the KH-style hack-and-slash prototype: press F (or LMB) to '
-        'swing a short 3-hit combo with soft nearest-hostile targeting. '
+        'swing a short 3-hit combo with soft nearest-hostile targeting, a '
+        'subtle camera/facing nudge toward the sticky lock, hitstop, and a '
+        'brief white flash on connect (finisher also FOV-punches). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
@@ -30,6 +32,7 @@ class ToggleHackSlash(MagicWord):
         if enabled:
             return (
                 'Hack-Slash demo ON. Press F (or LMB) for melee combos. '
+                'Camera/facing nudge toward soft-lock; white flash on hit. '
                 'Soft-targets demo hostiles (and street suits).'
             )
         return 'Hack-Slash demo OFF.'
