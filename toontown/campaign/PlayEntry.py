@@ -149,6 +149,13 @@ class PlayEntryClient(DirectObject):
             ensureOswaldPresenceClient()
         except Exception:
             pass
+        # Washed-plaza epilogue beat client (TTC placemarker after chase clear).
+        try:
+            from toontown.campaign.HubEpilogueBeat import (
+                ensureHubEpilogueBeatClient)
+            ensureHubEpilogueBeatClient()
+        except Exception:
+            pass
         taskMgr.doMethodLater(2.0, self._bootZone, 'playEntryBoot')  # noqa: F821
         # Login mirror — ask AI for persisted victory / unlock / chaseCleared
         # so hub tip matches story before the player presses C/R.
@@ -558,6 +565,13 @@ class PlayEntryClient(DirectObject):
             tip,
             nextZone=CampaignGlobals.ACTS[0]['zoneId'],
             nextStreet=CampaignGlobals.ACTS[0]['name'])
+        # Washed-plaza world beat beyond tip / handoff plate.
+        try:
+            from toontown.campaign.HubEpilogueBeat import (
+                refreshHubEpilogueBeat)
+            refreshHubEpilogueBeat()
+        except Exception:
+            pass
 
     def _onCampaignActUnlocked(self, nextIndex=0, zoneId=0):
         """Latch unlock + refresh hub crumbs (dim locked acts → full reclaim)."""
@@ -714,6 +728,12 @@ class PlayEntryClient(DirectObject):
             self._softNextCue = None
             self._softNextZone = None
             self._softNextStreet = None
+            try:
+                from toontown.campaign.HubEpilogueBeat import (
+                    clearHubEpilogueBeat)
+                clearHubEpilogueBeat()
+            except Exception:
+                pass
         pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
         if pm is None:
             return

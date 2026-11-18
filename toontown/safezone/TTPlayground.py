@@ -37,6 +37,13 @@ class TTPlayground(Playground.Playground):
             refreshHubStainConfront()
         except Exception:
             pass
+        # Washed-plaza epilogue beat after chase clear (beyond plate + tip).
+        try:
+            from toontown.campaign.HubEpilogueBeat import (
+                refreshHubEpilogueBeat)
+            refreshHubEpilogueBeat()
+        except Exception:
+            pass
 
     def exit(self):
         CorruptStreetBreadcrumb.stopCorruptStreetBreadcrumbs()
@@ -50,6 +57,12 @@ class TTPlayground(Playground.Playground):
             from toontown.campaign.HubStainConfront import (
                 stopHubStainConfront)
             stopHubStainConfront()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.HubEpilogueBeat import (
+                stopHubEpilogueBeat)
+            stopHubEpilogueBeat()
         except Exception:
             pass
         Playground.Playground.exit(self)
