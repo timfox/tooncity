@@ -4,10 +4,11 @@ Sunny Toontown cream chips that twinkle beside falling idle cream drips —
 purity sparkle contrast, not another ink spray. Reuses silhouette cream rim
 (#114) sparkle grammar (orbit/drift chips + twinkle scale) while composing
 lift / period with IdleCreamDripContrastFx.idleCreamDripLook so sparkles sit
-on the cream drip layer without sync-locking drips or rim flecks. Wired from
-DistributedCorruptToon beside IdleInkDrip + IdleCreamDripContrast +
-SilhouetteCreamRimFlecks (start / pause / resume / clear together). Client
-only. Toontown spiritual sequel — no keyblades / no KH branding.
+on the cream drip layer without sync-locking drips or rim flecks. Idle cream
+wash pulses softly against ink drips beside this sparkle layer.
+Wired from DistributedCorruptToon beside IdleInkDrip + IdleCreamDripContrast +
+IdleCreamWashPulse + SilhouetteCreamRimFlecks (start / pause / resume / clear
+together). Client only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
