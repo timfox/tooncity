@@ -506,6 +506,20 @@ CHEER_CREAM_AFTERSHOCK_HALO_PEAK = 1.15
 CHEER_CREAM_AFTERSHOCK_HALO_SEC = 0.30
 CHEER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.18
 CHEER_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+# Cheer cream wash pulse — soft aspect2d veil after cream aftershock (#118).
+# Hit / perfect-dodge / entry / purity cream wash grammar. Quieter than
+# purity-complete wash (cheer also layers with that on restore); cream/pastel
+# only. Toggle CHEER_CREAM_WASH_ENABLED = False drops wash only.
+CHEER_CREAM_WASH_ENABLED = True
+CHEER_CREAM_WASH_DELAY_SEC = 0.40  # after play; after aftershock (0.22)
+CHEER_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+CHEER_CREAM_WASH_PEAK = 0.11
+CHEER_CREAM_WASH_MID = 0.06
+CHEER_CREAM_WASH_IN_SEC = 0.05
+CHEER_CREAM_WASH_PULSE_SEC = 0.09
+CHEER_CREAM_WASH_HOLD_SEC = 0.06
+CHEER_CREAM_WASH_OUT_SEC = 0.36
+CHEER_CREAM_WASH_BIN = 50  # soft veil under cheer sparkle flecks (53)
 # Light avatar squash on wave clear (full bounce stays on purity restore).
 WAVE_CLEAR_BOUNCE_PEAK = 1.08
 WAVE_CLEAR_BOUNCE_SEC = 0.1

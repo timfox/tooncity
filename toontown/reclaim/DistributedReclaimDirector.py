@@ -510,7 +510,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         PurityCompleteCreamWashFx pulses a StreetColorWash-style cream veil
         under that sparkle and owns a delayed cream aftershock (flecks + halo).
         ReclaimCheer + CheerCreamSparkleFx layer pitch swell cream flecks +
-        delayed cream aftershock.
+        delayed cream aftershock + soft cream wash pulse.
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -532,7 +532,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             ensurePurityCompleteCreamWashFxClient()
         except Exception:
             pass
-        # Pitch swell + cream flecks + aftershock (ensure arms CheerCreamSparkleFx).
+        # Pitch swell + cream flecks + aftershock + wash (arms CheerCreamSparkleFx).
         try:
             from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
             ensureReclaimCheerClient()
