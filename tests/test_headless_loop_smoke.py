@@ -3184,6 +3184,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
                 'playgroundFogEdgePulseParams',
+                'playgroundFogEdgeCreamParams',
                 'CorruptStreetBreadcrumb',
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
@@ -3207,6 +3208,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_startFogPulseLoop', crumb_src)
         self.assertIn('_FOG_PULSE_GAP_SEC', crumb_src)
         self.assertIn('playgroundPollutionFogEdge', crumb_src)
+        # Fog edge cream deepen (cream rim mid-settle; not #230 / #226).
+        self.assertIn('_FOG_CREAM_MID', crumb_src)
+        self.assertIn('_attachFogCreamRim', crumb_src)
+        self.assertIn('playgroundPollutionFogCreamRim', crumb_src)
         # Birds-return cream wash on hub pollution clear (pairs with #55).
         birds_wash_rel = 'toontown/safezone/BirdsReturnCreamWashFx.py'
         _assert_module_file(birds_wash_rel)
