@@ -1,4 +1,4 @@
-"""Air-local campaign director: multi-act reclaim progression."""
+"""Air-local campaign director: multi-act reclaim progression + finale phases."""
 
 from direct.directnotify import DirectNotifyGlobal
 from direct.showbase.DirectObject import DirectObject
@@ -19,8 +19,10 @@ class CampaignDirectorAI(DirectObject):
         self.state = CampaignGlobals.STATE_IDLE
         self.actIndex = 0
         self.reclaimCount = 0
-        self.unlockedThrough = 0  # highest act index the player may start
+        self.unlockedThrough = 0
         self._activeZoneId = None
+        self._finalePhase = 0
+        self._lastToonId = None
         self.accept('neighborhoodReclaimed', self.__onNeighborhoodReclaimed)
 
     def statusText(self):
@@ -35,8 +37,11 @@ class CampaignDirectorAI(DirectObject):
             CampaignGlobals.ACTS[i]['name']
             for i in range(self.unlockedThrough + 1)
         ]
+        phaseNote = ''
+        if act.get('finale'):
+            phaseNote = ' | finale phase %s/2' % (self._finalePhase + 1)
         return (
-            'Campaign %s | act %s/%s (%s zone %s) | reclaims %s | '
+            'Campaign %s | act %s/%s (%s zone %s)%s | reclaims %s | '
             'unlocked: %s | hub %s (%s)'
             % (
                 CampaignGlobals.STATE_NAMES.get(self.state, '?'),
@@ -44,6 +49,7 @@ class CampaignDirectorAI(DirectObject):
                 len(CampaignGlobals.ACTS),
                 act['name'],
                 act['zoneId'],
+                phaseNote,
                 self.reclaimCount,
                 ', '.join(unlocked),
                 CampaignGlobals.HUB_NAME,
@@ -52,10 +58,12 @@ class CampaignDirectorAI(DirectObject):
 
     def startCampaign(self, toon):
         """Begin or resume the current unlocked act in the invoker's zone."""
+        self._lastToonId = getattr(toon, 'doId', None)
         if self.state == CampaignGlobals.STATE_VICTORY:
             self.actIndex = 0
             self.unlockedThrough = 0
             self.reclaimCount = 0
+            self._finalePhase = 0
 
         self.state = CampaignGlobals.STATE_ACTIVE
         act = CampaignGlobals.ACTS[self.actIndex]
@@ -75,6 +83,7 @@ class CampaignDirectorAI(DirectObject):
 
     def advanceCampaign(self, toon, force=False):
         """Unlock / jump to the next act (moderator force for demos)."""
+        self._lastToonId = getattr(toon, 'doId', None)
         if self.state == CampaignGlobals.STATE_VICTORY:
             return 'Campaign already complete. ~startcampaign to replay.'
 
@@ -92,12 +101,32 @@ class CampaignDirectorAI(DirectObject):
         self._stopActiveReclaim()
         self.actIndex = nextIndex
         self.unlockedThrough = max(self.unlockedThrough, nextIndex)
+        self._finalePhase = 0
         self.state = CampaignGlobals.STATE_ACTIVE
         act = CampaignGlobals.ACTS[self.actIndex]
+        self._tellToon(
+            toon,
+            'NEXT HOOD: %s (zone %s). %s'
+            % (act['name'], act['zoneId'], act['banner']))
         return (
             'Advanced to act %s: %s (zone %s). Teleport there, then '
             '~startcampaign. %s'
             % (self.actIndex + 1, act['name'], act['zoneId'], act['banner']))
+
+    def _actParams(self, act):
+        """Resolve start() kwargs, including finale phase 2 overrides."""
+        params = {
+            'seedPollution': act.get('seedPollution'),
+            'packSize': act.get('packSize'),
+            'maxPacks': act.get('maxPacks'),
+            'corruptHp': act.get('corruptHp'),
+            'corruptName': act.get('corruptName'),
+            'banner': act.get('banner'),
+        }
+        if act.get('finale') and self._finalePhase >= 1:
+            phase2 = act.get('phase2') or {}
+            params.update(phase2)
+        return params
 
     def _startActReclaim(self, toon, act):
         directors = getattr(self.air, 'reclaimDirectors', None)
@@ -115,6 +144,7 @@ class CampaignDirectorAI(DirectObject):
             existing.requestDelete()
             directors.pop(zoneId, None)
 
+        params = self._actParams(act)
         director = DistributedReclaimDirectorAI(self.air, zoneId=zoneId)
         director.generateWithRequired(zoneId)
         directors[zoneId] = director
@@ -123,21 +153,23 @@ class CampaignDirectorAI(DirectObject):
             zoneId,
             (toon.getX(), toon.getY(), toon.getZ()),
             toon.getH(),
-            seedPollution=act.get('seedPollution'),
-            packSize=act.get('packSize'),
-            maxPacks=act.get('maxPacks'),
-            corruptHp=act.get('corruptHp'),
-            corruptName=act.get('corruptName'))
+            seedPollution=params.get('seedPollution'),
+            packSize=params.get('packSize'),
+            maxPacks=params.get('maxPacks'),
+            corruptHp=params.get('corruptHp'),
+            corruptName=params.get('corruptName'))
+        banner = params.get('banner') or act.get('banner')
+        self._tellToon(toon, banner)
         return (
             '%s Reclaim started in %s (zone %s, pollution %.2f, pack %s, hp %s). '
             'Enable melee with ~hackslash 0.'
             % (
-                act['banner'],
+                banner,
                 act['name'],
                 zoneId,
-                act.get('seedPollution', ReclaimGlobals.RECLAIM_START_POLLUTION),
-                act.get('packSize', ReclaimGlobals.PACK_SIZE),
-                act.get('corruptHp', '?'),
+                params.get('seedPollution', ReclaimGlobals.RECLAIM_START_POLLUTION),
+                params.get('packSize', ReclaimGlobals.PACK_SIZE),
+                params.get('corruptHp', '?'),
             ))
 
     def _stopActiveReclaim(self):
@@ -151,6 +183,22 @@ class CampaignDirectorAI(DirectObject):
             directors.pop(self._activeZoneId, None)
         self._activeZoneId = None
 
+    def _tellToon(self, toon, message):
+        if toon is None or not message:
+            return
+        try:
+            if hasattr(toon, 'd_setSystemMessage'):
+                toon.d_setSystemMessage(0, str(message)[:200])
+            elif hasattr(toon, 'setSystemMessage'):
+                toon.setSystemMessage(0, str(message)[:200])
+        except Exception:
+            pass
+
+    def _toonFromLast(self):
+        if self._lastToonId is None:
+            return None
+        return self.air.doId2do.get(self._lastToonId)
+
     def __onNeighborhoodReclaimed(self, zoneId):
         zoneId = int(zoneId)
         if self.state != CampaignGlobals.STATE_ACTIVE:
@@ -160,27 +208,49 @@ class CampaignDirectorAI(DirectObject):
             return
 
         self.reclaimCount += 1
+        toon = self._toonFromLast()
         self.notify.info(
-            'campaign reclaimed act %s zone %s (count %s)'
-            % (act['id'], zoneId, self.reclaimCount))
+            'campaign reclaimed act %s zone %s (count %s phase %s)'
+            % (act['id'], zoneId, self.reclaimCount, self._finalePhase))
 
+        # Finale phase 1 → restart tougher phase 2 before victory.
+        if act.get('finale') and self._finalePhase < 1:
+            self._finalePhase = 1
+            self._activeZoneId = None
+            phase2 = act.get('phase2') or {}
+            msg = phase2.get('banner') or 'Finale Phase 2!'
+            self._tellToon(toon, msg)
+            if toon is not None and int(toon.zoneId) == zoneId:
+                self._startActReclaim(toon, act)
+            return
+
+        handoff = act.get('handoff') or ('%s reclaimed!' % act['name'])
         if act.get('finale'):
             self.state = CampaignGlobals.STATE_VICTORY
             self._activeZoneId = None
-            messenger.send('campaignVictory', [self.reclaimCount])
+            self._finalePhase = 0
+            self._tellToon(toon, handoff)
+            messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
             return
 
         nextIndex = self.actIndex + 1
         if nextIndex < len(CampaignGlobals.ACTS):
             self.unlockedThrough = max(self.unlockedThrough, nextIndex)
             self.actIndex = nextIndex
+            self._finalePhase = 0
             self._activeZoneId = None
             nxt = CampaignGlobals.ACTS[nextIndex]
-            messenger.send('campaignActUnlocked', [nextIndex, nxt['zoneId']])
+            self._tellToon(
+                toon,
+                '%s Teleport to zone %s and ~startcampaign.'
+                % (handoff, nxt['zoneId']))
+            messenger.send(  # noqa: F821
+                'campaignActUnlocked', [nextIndex, nxt['zoneId']])
         else:
             self.state = CampaignGlobals.STATE_VICTORY
             self._activeZoneId = None
-            messenger.send('campaignVictory', [self.reclaimCount])
+            self._tellToon(toon, handoff)
+            messenger.send('campaignVictory', [self.reclaimCount])  # noqa: F821
 
 
 def getCampaignDirector(air):

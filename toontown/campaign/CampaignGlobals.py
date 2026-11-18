@@ -6,8 +6,12 @@ from toontown.toonbase import ToontownGlobals
 HUB_ZONE = ToontownGlobals.ToontownCentral
 HUB_NAME = 'Toontown Central'
 
+# Per reclaim: multiplicative bump applied to HackSlashConfig.COMBO_DAMAGE.
+POWER_BUMP_PER_RECLAIM = 0.08
+POWER_BUMP_MAX = 0.40
+
 # Escalating reclaim acts: explore → fight → reclaim → next hood.
-# Finale uses a boss-scale CorruptToon and heavier pollution.
+# Finale uses a two-phase Ink Overlord fight.
 ACTS = (
     {
         'id': 'loopy',
@@ -19,6 +23,7 @@ ACTS = (
         'corruptHp': 30,
         'corruptName': 'Ink Smudge',
         'banner': 'Act 1 — Corruption stains Loopy Lane!',
+        'handoff': 'Loopy Lane is pure again! Next: Punchline Place (zone 2300).',
     },
     {
         'id': 'punchline',
@@ -30,18 +35,29 @@ ACTS = (
         'corruptHp': 40,
         'corruptName': 'Gunk Gagster',
         'banner': 'Act 2 — Punchline Place is drowning in sludge!',
+        'handoff': 'Punchline Place laughs clean! Finale awaits on Silly Street (zone 2100).',
     },
     {
         'id': 'finale',
         'name': 'Silly Street Finale',
         'zoneId': ToontownGlobals.SillyStreet,
-        'seedPollution': 0.90,
+        'seedPollution': 0.75,
         'packSize': 1,
         'maxPacks': 2,
-        'corruptHp': 120,
+        'corruptHp': 90,
         'corruptName': 'Ink Overlord',
-        'banner': 'Finale — Defeat the Ink Overlord and reclaim Silly Street!',
+        'banner': 'Finale Phase 1 — The Ink Overlord rises on Silly Street!',
+        'handoff': 'Toon City is saved! Purity restored across every neighborhood.',
         'finale': True,
+        # Phase 2 overrides after the first Silly Street reclaim clears.
+        'phase2': {
+            'seedPollution': 0.95,
+            'packSize': 2,
+            'maxPacks': 3,
+            'corruptHp': 160,
+            'corruptName': 'Ink Overlord Unleashed',
+            'banner': 'Finale Phase 2 — Ink Overlord Unleashed! Finish it!',
+        },
     },
 )
 
