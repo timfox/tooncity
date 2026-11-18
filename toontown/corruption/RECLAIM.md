@@ -359,16 +359,18 @@ dialogue is out of scope here.
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
    SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), ink rain /
    ink fall shower (`OverlordPhaseInkRainFx`), deepened cream danger-ring
-   warn + radial cream phase flecks + impact punch bloom with cream
-   aftershock (`OverlordTelegraphPunchFx`; stretch hold tracks
-   telegraphDelay — distinct from Brute spit cream drip / Snare whip cream),
+   warn beyond #255 + denser radial cream phase flecks + juicier impact
+   punch bloom with wider cream aftershock (`OverlordTelegraphPunchFx`;
+   stretch hold tracks telegraphDelay — distinct from Brute spit cream drip
+   / Snare whip / Smudge hose / Gunk puddle bloom),
    HUD `OVERLORD · P1 RISE`, wind-up chip `P1 MAGENTA SWELL`.
    **AI**: slower chase + mid-range **ink-rain AoE** (`OVERLORD_PHASE_COMBAT[1]`)
    matching the rain puddle / spread — not Smudge melee smack.
 2. Clear packs → purity beat → director restarts **Phase 2**.
 3. **Phase 2 — Unleashed**: crimson telegraphs (wider squash / taller stretch) +
    phase-two SFX, hotter crown flash, denser ink rain, snappier cream
-   danger-ring / impact punch (juicier cream rim + flecks + aftershock),
+   danger-ring / impact punch (juicier cream rim + denser flecks + wider
+   aftershock beyond #255),
    hotter hit flash, FOV + fullscreen ink slam transition sting
    (`announceFinalePhaseTransition`), HUD `OVERLORD · P2 UNLEASHED`, wind-up
    chip `P2 CRIMSON FURY`.
