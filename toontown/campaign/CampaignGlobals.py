@@ -232,6 +232,29 @@ HANDOFF_STREAMER_COLORS = (
     (0.65, 0.82, 1.0, 0.95),
 )
 
+# Cream sparkle flecks layered on hood handoff confetti (#57).
+# Soft cream/pastel glitter on Loopy→Punchline (and act) carnival pops —
+# warm sparkle, not a second victory cream swell (#82). Oswald stays the
+# trusted mid-campaign reclaim lead. No keyblades / KH branding.
+HANDOFF_CREAM_SPARKLE_ENABLED = True
+HANDOFF_CREAM_SPARKLE_COUNT = 8
+HANDOFF_CREAM_SPARKLE_STREAK_COUNT = 4
+HANDOFF_CREAM_SPARKLE_SIZE = 0.016
+HANDOFF_CREAM_SPARKLE_STREAK_SIZE = 0.012
+HANDOFF_CREAM_SPARKLE_DRIFT = 0.48
+HANDOFF_CREAM_SPARKLE_SEC = 0.68
+# Above carnival chips (64) / streamers (63) so cream glitter reads on top.
+HANDOFF_CREAM_SPARKLE_BIN = 66
+# Cream / soft pastel only — warmer than carnival mint/coral/sky.
+HANDOFF_CREAM_SPARKLE_COLORS = (
+    (1.0, 0.97, 0.84, 0.95),
+    (1.0, 0.94, 0.70, 0.92),
+    (0.98, 0.92, 0.58, 0.90),
+    (1.0, 0.98, 0.90, 0.90),
+    (0.96, 0.88, 0.64, 0.88),
+    (1.0, 0.90, 0.74, 0.90),
+)
+
 # Campaign victory cream confetti swell (CampaignHandoffConfetti).
 # Soft rubber-hose cream burst on the purity cheer ("TOON CITY IS SAVED!")
 # only — clears before the Oswald twist / FinalePhaseFx reveal so the

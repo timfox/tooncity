@@ -2,7 +2,8 @@
 
 Short aspect2d carnival burst when Loopy→Punchline (or act) celebration
 fires from CampaignHandoff. Squash/stretch streamers + drifting confetti
-bits — Toontown spiritual sequel, never keyblade / KH framing.
+bits, plus cream/pastel sparkle flecks layered on the hood handoff pop —
+Toontown spiritual sequel, never keyblade / KH framing.
 
 Also owns the soft cream confetti swell on campaign victory purity cheer
 ("TOON CITY IS SAVED!"). That swell clears before the Oswald twist /
@@ -29,7 +30,7 @@ from toontown.campaign import CampaignGlobals
 
 
 class HandoffConfettiPop(object):
-    """Owns one brief confetti + streamer burst on aspect2d."""
+    """Owns one brief confetti + streamer + cream-sparkle burst on aspect2d."""
 
     def __init__(self):
         self._ival = None
@@ -67,6 +68,23 @@ class HandoffConfettiPop(object):
             part = self._spawnStreamer(parentNP, ox, oy, oz, i, streamerCount)
             if part is not None:
                 parts.append(part)
+
+        # Cream/pastel sparkle flecks on the carnival pop — not victory swell.
+        if getattr(CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_ENABLED', True):
+            fleckCount = int(getattr(
+                CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_COUNT', 8))
+            for i in range(fleckCount):
+                part = self._spawnCreamSparkle(
+                    parentNP, ox, oy, oz, i, fleckCount, elongated=False)
+                if part is not None:
+                    parts.append(part)
+            streakCount = int(getattr(
+                CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_STREAK_COUNT', 4))
+            for i in range(streakCount):
+                part = self._spawnCreamSparkle(
+                    parentNP, ox, oy, oz, i, streakCount, elongated=True)
+                if part is not None:
+                    parts.append(part)
 
         if not parts:
             return None
@@ -201,6 +219,95 @@ class HandoffConfettiPop(object):
             ),
         )
 
+    def _spawnCreamSparkle(self, parentNP, ox, oy, oz, index, total,
+                           elongated=False):
+        """Cream/pastel fleck or thin streak glitter on the carnival pop.
+
+        Matches victory cream palette warmth (#82) but stays a light sparkle
+        layer on act handoffs — smaller, faster, above carnival chips.
+        """
+        colors = getattr(CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_COLORS', ())
+        if not colors:
+            return None
+        r, g, b, a = colors[index % len(colors)]
+        if elongated:
+            size = float(getattr(
+                CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_STREAK_SIZE', 0.012))
+        else:
+            size = float(getattr(
+                CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_SIZE', 0.016))
+        drift = float(getattr(
+            CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_DRIFT', 0.48))
+        sec = float(getattr(
+            CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_SEC', 0.68))
+        binSort = int(getattr(
+            CampaignGlobals, 'HANDOFF_CREAM_SPARKLE_BIN', 66))
+        # Offset flecks vs streaks so they don't stack on the same rays.
+        liftBias = 0.55 if elongated else 0.22
+        angle = (2.0 * pi * index) / float(max(1, total)) + liftBias
+        try:
+            suffix = 'streak' if elongated else 'fleck'
+            cm = CardMaker('handoff-cream-sparkle-%s-%s' % (suffix, index))
+            if elongated:
+                cm.setFrame(
+                    -size * 0.32, size * 0.32,
+                    -size * 1.55, size * 1.55)
+            elif (index % 2) == 0:
+                cm.setFrame(
+                    -size * 1.15, size * 1.15,
+                    -size * 0.55, size * 0.55)
+            else:
+                cm.setFrame(
+                    -size * 0.55, size * 0.55,
+                    -size * 1.15, size * 1.15)
+            bit = parentNP.attachNewNode(cm.generate())
+            bit.setTransparency(TransparencyAttrib.MAlpha)
+            bit.setColor(r, g, b, 1)
+            bit.setColorScale(r, g, b, 0)
+            # Orbit a touch farther than carnival chips so cream reads as glitter.
+            start = Point3(
+                ox + cos(angle) * 0.06,
+                oy,
+                oz + sin(angle) * 0.045)
+            bit.setPos(start)
+            bit.setScale(0.28)
+            bit.setR(angle * 48.0)
+            bit.setBin('fixed', binSort)
+            bit.setDepthTest(False)
+            bit.setDepthWrite(False)
+        except Exception:
+            return None
+
+        self._nodes.append(bit)
+        end = Point3(
+            start[0] + cos(angle) * drift,
+            oy,
+            start[2] + abs(sin(angle)) * drift * 0.9 + 0.05)
+        delay = 0.012 * (index % 5)
+        return Sequence(
+            Wait(delay),
+            Parallel(
+                LerpColorScaleInterval(
+                    bit, 0.06, Vec4(r, g, b, a), blendType='easeOut'),
+                # Flat squash → tall stretch sparkle pop (hose glitter).
+                LerpScaleInterval(
+                    bit, 0.06, Point3(1.65, 1, 0.4), blendType='easeOut'),
+            ),
+            LerpScaleInterval(
+                bit, 0.08, Point3(0.58, 1, 1.5), blendType='easeOut'),
+            Parallel(
+                LerpPosInterval(bit, sec, end, blendType='easeOut'),
+                LerpScaleInterval(
+                    bit, sec, Point3(0.1, 1, 0.1), blendType='easeIn'),
+                LerpColorScaleInterval(
+                    bit, sec, Vec4(r, g, b, 0), blendType='easeIn'),
+                LerpHprInterval(
+                    bit, sec,
+                    Point3(0, 0, bit.getR() + 150 + 30 * (index % 3)),
+                    blendType='easeOut'),
+            ),
+        )
+
     def clear(self):
         if self._ival is not None:
             try:
@@ -228,7 +335,10 @@ def ensureHandoffConfettiPop():
 
 
 def playHandoffConfetti(origin=None, parent=None):
-    """Fire the shared handoff confetti/streamer pop. Returns Sequence or None."""
+    """Fire the shared handoff confetti/streamer/cream-sparkle pop.
+
+    Returns Sequence or None.
+    """
     return ensureHandoffConfettiPop().play(origin=origin, parent=parent)
 
 
