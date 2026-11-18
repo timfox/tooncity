@@ -2825,6 +2825,34 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_armSillyApproachTip', play_src)
         self.assertIn('SILLY_APPROACH_TIP_DELAY_SEC', campaign_names)
 
+        # Finale betrayal handoff banner — hose-pop plate when reveal fires.
+        self.assertTrue(finale_act.get('betrayalHandoff'))
+        for betrayal_key in (
+                'FINALE_BETRAYAL_HANDOFF_CUE',
+                'FINALE_BETRAYAL_HANDOFF_HOLD_SEC',
+                'FINALE_BETRAYAL_SETTLE_OVERSHOOT',
+                'FINALE_BETRAYAL_SETTLE_REST_SEC',
+                'FINALE_BETRAYAL_SUB_COLOR',
+                'FINALE_BETRAYAL_CUE_COLOR'):
+            self.assertIn(
+                betrayal_key, campaign_names,
+                msg='CampaignGlobals missing %s' % betrayal_key)
+        self.assertIn('oswaldRevealBanner', handoff_src)
+        self.assertIn('_onOswaldBetrayalBanner', handoff_src)
+        self.assertIn('_showBetrayalHandoff', handoff_src)
+        self.assertIn('betrayalHandoff', handoff_src)
+        self.assertIn('FINALE_BETRAYAL_SETTLE_OVERSHOOT', handoff_src)
+        finale_fx_src = _read('toontown/campaign/FinalePhaseFx.py')
+        self.assertIn('ensureCampaignHandoffClient', finale_fx_src)
+        self.assertIn('betrayal handoff', camp_magic_l)
+        betrayal_cue = campaign_assigns.get('FINALE_BETRAYAL_HANDOFF_CUE') or ''
+        if isinstance(betrayal_cue, list):
+            betrayal_cue = ''.join(str(part) for part in betrayal_cue)
+        betrayal_cue_l = str(betrayal_cue).lower()
+        self.assertIn('smile', betrayal_cue_l)
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, betrayal_cue_l)
+
         # TTC polluted tunnel placemarkers (#192) — hub discoverability.
         crumb_rel = 'toontown/safezone/CorruptStreetBreadcrumb.py'
         _assert_module_file(crumb_rel)

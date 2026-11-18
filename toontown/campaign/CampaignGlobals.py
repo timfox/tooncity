@@ -146,6 +146,8 @@ ACTS = (
             'then laughs too loud: Overlord first!  |  '
             'F fight  |  Shift dodge  |  C campaign'),
         # Twist: trusted Oswald was the source of the neighborhood pollution.
+        # betrayalHandoff: CampaignHandoff lands a hose-pop plate when
+        # oswaldRevealSting / oswaldRevealBanner fires (after purity cheer).
         'handoffTitle': 'VICTORY…?',
         'handoff': (
             'Oswald smiles too wide. '
@@ -153,6 +155,7 @@ ACTS = (
         'nextCue': 'Oswald caused the corruption',
         'nextStreet': None,
         'finale': True,
+        'betrayalHandoff': True,
         # Client-readable phase index (1-based) for reclaim director / telegraphs.
         'finalePhase': 1,
         # Phase 2 overrides after the first Silly Street reclaim clears.
@@ -770,6 +773,17 @@ FINALE_REVEAL_SUB_COLOR = (1.0, 0.72, 0.48, 1.0)
 # Hold purity cheer first, then land the twist sting as its own beat.
 FINALE_REVEAL_DELAY_SEC = 2.45
 FINALE_REVEAL_HOLD_SEC = 3.6
+
+# CampaignHandoff betrayal plate when oswaldRevealBanner fires (after cheer).
+# Hose-pop handoff grammar lands the twist — complements almost-confess tip
+# (#207) and FinalePhaseFx AV (flash/shadow/cream). No carnival / no KH.
+FINALE_BETRAYAL_HANDOFF_CUE = (
+    "The trusted ally's smile was the stain all along")
+FINALE_BETRAYAL_HANDOFF_HOLD_SEC = 3.8
+FINALE_BETRAYAL_SETTLE_OVERSHOOT = (0.86, 1.0, 1.22, 0.10)
+FINALE_BETRAYAL_SETTLE_REST_SEC = 0.16
+FINALE_BETRAYAL_SUB_COLOR = (1.0, 0.78, 0.62, 1.0)
+FINALE_BETRAYAL_CUE_COLOR = (1.0, 0.88, 0.52, 1.0)
 
 # Oswald shadow flash — rubber-hose silhouette on the reveal sting.
 # Trusted lead shape → ink shadow that sells the twist. Campaign-owned
