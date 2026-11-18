@@ -3,15 +3,16 @@
 World-space CardMaker juice for Ink Overlord phase wind-ups / hits — a
 readable ground danger ring during announceAttackTelegraph (fair punish /
 dodge footprint) and a rubber-hose impact punch bloom on announceAttackHit.
-Deepened cream punch (#208 deepen): juicier cream/pastel rim + radial cream
-phase flecks on the warn footprint + cream impact aftershock so P1/P2 phase
-shifts read juicier. Distinct from Brute spit cream deepen (#249, vertical
-drip filaments) and Snare splash cream deepen (#245, horizontal whip
-filaments) — Overlord cream stays ground-plane radial around the phase
-telegraph punch. Composes beside OverlordTelegraphCrownFx +
-OverlordPhaseInkRainFx; phase charge colors tint magenta rise vs crimson
-unleash. Client only; AI timings unchanged. Toontown spiritual sequel —
-no keyblades / no KH branding.
+Deepened cream punch beyond #255 (#208 deepen): juicier cream/pastel rim +
+denser radial cream phase flecks on the warn footprint + wider cream impact
+aftershock so P1/P2 phase shifts read juicier still. Distinct from Brute spit
+cream deepen (#289 / #264, vertical drip), Snare splash cream deepen (#293 /
+#269, horizontal whip), Smudge hit cream deepen (#283 / #259, mid-body hose),
+and Gunk puddle cream deepen (#299 / #276, flat trap-plane bloom) — Overlord
+cream stays ground-plane radial around the phase telegraph punch. Composes
+beside OverlordTelegraphCrownFx + OverlordPhaseInkRainFx; phase charge colors
+tint magenta rise vs crimson unleash. Client only; AI timings unchanged.
+Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -47,7 +48,7 @@ def overlordTelegraphPunchLook(finaleLook=None, phase=1):
         hitRange = float(combat.get('attackHitRange', 9.5))
         scale = float(look.get('warnHitRangeScale', 0.32))
         look['warnHalf'] = max(
-            float(look.get('warnHalf', 2.7)), hitRange * scale)
+            float(look.get('warnHalf', 2.8)), hitRange * scale)
         if phaseIndex >= 2:
             # Unleashed: slightly wider / hotter ring; slam still fits inside.
             look['warnHalf'] = float(look['warnHalf']) * float(
@@ -323,9 +324,11 @@ class OverlordTelegraphPunch(object):
     def _spawnWarnCreamFlecks(self, parentNP, bossPos, look):
         """Radial cream phase flecks along the danger-ring edge.
 
-        Ground-plane chips that pop outward from the warn footprint — phase
-        telegraph cream read. Distinct from Brute vertical drip filaments
-        (#249) and Snare horizontal whip filaments (#245).
+        Ground-plane chips (+ thin radial streaks beyond #255) that pop
+        outward from the warn footprint — phase telegraph cream read.
+        Distinct from Brute vertical drip (#289 / #264), Snare horizontal
+        whip (#293 / #269), Smudge mid-body hose (#283 / #259), and Gunk
+        flat trap bloom (#299 / #276).
         """
         if not look.get(
                 'creamFleckEnabled',
@@ -337,7 +340,7 @@ class OverlordTelegraphPunch(object):
             'creamFleckCount',
             getattr(
                 CorruptionGlobals,
-                'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_COUNT', 6))))
+                'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_COUNT', 7))))
         if count <= 0:
             return None
         parts = []
@@ -350,37 +353,56 @@ class OverlordTelegraphPunch(object):
         return Parallel(*parts, name='overlordWarnCreamFlecks')
 
     def _spawnWarnCreamFleck(self, parentNP, bossPos, look, index, count):
-        """One cream chip riding the warn ring edge (radial, slight lift)."""
+        """One cream chip / radial streak riding the warn ring edge."""
         try:
-            half = float(look.get('warnHalf', 2.7))
+            half = float(look.get('warnHalf', 2.8))
             lift = float(look.get('warnLift', 0.1))
             fleckLift = float(look.get(
                 'creamFleckLift',
                 getattr(
                     CorruptionGlobals,
-                    'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_LIFT', 0.22)))
+                    'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_LIFT', 0.28)))
             origin = Point3(
                 bossPos[0], bossPos[1], float(bossPos[2]) + lift)
-            # Ring-edge radial — phase footprint chips, not drip / whip.
+            # Ring-edge radial — phase footprint chips, not drip / whip /
+            # trap bloom. Beyond #255: alternate soft chip vs thin radial
+            # streak so denser flecks still read as ring chips.
             angle = (2.0 * pi * index) / float(count) + 0.22 * (index % 3)
             radius = half * (0.78 + 0.08 * (index % 3))
             start = Point3(
-                origin[0] + cos(angle) * radius * 0.55,
-                origin[1] + sin(angle) * radius * 0.55,
+                origin[0] + cos(angle) * radius * 0.52,
+                origin[1] + sin(angle) * radius * 0.52,
                 origin[2] + 0.04,
             )
             end = Point3(
-                origin[0] + cos(angle) * radius * 1.12,
-                origin[1] + sin(angle) * radius * 1.12,
+                origin[0] + cos(angle) * radius * 1.18,
+                origin[1] + sin(angle) * radius * 1.18,
                 origin[2] + fleckLift * (0.55 + 0.18 * (index % 3)),
             )
             fleckHalf = float(look.get(
                 'creamFleckHalf',
                 getattr(
                     CorruptionGlobals,
-                    'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_HALF', 0.11)))
-            cm = CardMaker('overlord-telegraph-cream-fleck-%s' % index)
-            cm.setFrame(-fleckHalf, fleckHalf, -fleckHalf * 0.9, fleckHalf * 0.9)
+                    'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_HALF', 0.13)))
+            elongated = (index % 2 == 1)
+            if elongated:
+                cm = CardMaker(
+                    'overlord-telegraph-cream-fleck-streak-%s' % index)
+                # Thin radial streak along the ring — still ground-plane
+                # radial (not Snare sideways whip / Brute vertical drip).
+                cm.setFrame(
+                    -fleckHalf * 0.38, fleckHalf * 0.38,
+                    -fleckHalf * 1.35, fleckHalf * 1.35)
+                startScale = 0.3
+                midScale = 1.28
+                endScale = 0.28
+            else:
+                cm = CardMaker('overlord-telegraph-cream-fleck-%s' % index)
+                cm.setFrame(
+                    -fleckHalf, fleckHalf, -fleckHalf * 0.9, fleckHalf * 0.9)
+                startScale = 0.32
+                midScale = 1.28
+                endScale = 0.32
             fleck = parentNP.attachNewNode(cm.generate())
             fleck.setPos(start)
             fleck.setBillboardPointEye()
@@ -396,7 +418,7 @@ class OverlordTelegraphPunch(object):
                 color = (1.0, 0.97, 0.82, 0.9)
             fleck.setColor(color[0], color[1], color[2], color[3])
             fleck.setColorScale(1, 1, 1, 0)
-            fleck.setScale(0.35)
+            fleck.setScale(startScale)
             fleck.setBin('fixed', int(look.get('binSort', 42)) + 2)
             fleck.setDepthWrite(False)
             self._nodes.append(fleck)
@@ -405,18 +427,18 @@ class OverlordTelegraphPunch(object):
                 'creamFleckSec',
                 getattr(
                     CorruptionGlobals,
-                    'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_SEC', 0.28)))
+                    'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_SEC', 0.32)))
             peakA = float(color[3]) if len(color) > 3 else 0.9
-            delay = 0.018 * index
+            delay = 0.016 * index
             return Sequence(
                 Wait(delay),
                 Parallel(
                     LerpPosInterval(fleck, sec, end, blendType='easeOut'),
                     Sequence(
                         LerpScaleInterval(
-                            fleck, sec * 0.35, 1.15, blendType='easeOut'),
+                            fleck, sec * 0.35, midScale, blendType='easeOut'),
                         LerpScaleInterval(
-                            fleck, sec * 0.65, 0.35, blendType='easeIn'),
+                            fleck, sec * 0.65, endScale, blendType='easeIn'),
                     ),
                     Sequence(
                         LerpColorScaleInterval(
@@ -434,7 +456,7 @@ class OverlordTelegraphPunch(object):
     def _spawnImpactBloom(self, parentNP, bossPos, look):
         """Fast rubber-hose ground punch bloom + cream rim on attack land."""
         try:
-            half = float(look.get('impactHalf', 1.55))
+            half = float(look.get('impactHalf', 1.7))
             lift = float(look.get('impactLift', 0.08))
             origin = Point3(
                 bossPos[0], bossPos[1], float(bossPos[2]) + lift)
@@ -444,15 +466,15 @@ class OverlordTelegraphPunch(object):
             bloom.setPos(origin)
             bloom.setP(-90)
             bloom.setTransparency(TransparencyAttrib.MAlpha)
-            color = look.get('impactColor', (2.55, 0.55, 2.7, 0.88))
+            color = look.get('impactColor', (2.55, 0.55, 2.7, 0.9))
             bloom.setColor(color[0], color[1], color[2], color[3])
             bloom.setColorScale(1, 1, 1, 0)
-            bloom.setScale(0.25)
+            bloom.setScale(0.24)
             bloom.setBin('fixed', int(look.get('impactBin', 45)))
             bloom.setDepthWrite(False)
             self._nodes.append(bloom)
 
-            rimHalf = half * float(look.get('impactCreamRimScale', 1.28))
+            rimHalf = half * float(look.get('impactCreamRimScale', 1.38))
             cmRim = CardMaker('overlord-telegraph-impact-cream-rim')
             cmRim.setFrame(-rimHalf, rimHalf, -rimHalf * 0.55, rimHalf * 0.55)
             rim = parentNP.attachNewNode(cmRim.generate())
@@ -460,21 +482,21 @@ class OverlordTelegraphPunch(object):
             rim.setP(-90)
             rim.setTransparency(TransparencyAttrib.MAlpha)
             rimColor = look.get(
-                'impactCreamRimColor', (1.0, 0.97, 0.84, 0.82))
+                'impactCreamRimColor', (1.0, 0.97, 0.84, 0.88))
             rim.setColor(
                 rimColor[0], rimColor[1], rimColor[2], rimColor[3])
             rim.setColorScale(1, 1, 1, 0)
-            rim.setScale(0.22)
+            rim.setScale(0.2)
             rim.setBin('fixed', int(look.get('impactBin', 45)) + 1)
             rim.setDepthWrite(False)
             self._nodes.append(rim)
 
-            peak = float(look.get('impactPeak', 2.95))
+            peak = float(look.get('impactPeak', 3.15))
             fadeIn = float(look.get('impactInSec', 0.05))
             hold = float(look.get('impactHoldSec', 0.07))
-            fadeOut = float(look.get('impactOutSec', 0.24))
-            peakA = float(look.get('impactPeakAlpha', 0.96))
-            rimPeakA = float(look.get('impactCreamRimPeakAlpha', 0.9))
+            fadeOut = float(look.get('impactOutSec', 0.26))
+            peakA = float(look.get('impactPeakAlpha', 0.97))
+            rimPeakA = float(look.get('impactCreamRimPeakAlpha', 0.94))
 
             return Parallel(
                 Sequence(
@@ -488,7 +510,7 @@ class OverlordTelegraphPunch(object):
                     Wait(hold),
                     Parallel(
                         LerpScaleInterval(
-                            bloom, fadeOut, peak * 1.38, blendType='easeIn'),
+                            bloom, fadeOut, peak * 1.42, blendType='easeIn'),
                         LerpColorScaleInterval(
                             bloom, fadeOut, Vec4(1, 1, 1, 0),
                             blendType='easeIn'),
@@ -497,7 +519,7 @@ class OverlordTelegraphPunch(object):
                 Sequence(
                     Parallel(
                         LerpScaleInterval(
-                            rim, fadeIn, peak * 1.05, blendType='easeOut'),
+                            rim, fadeIn, peak * 1.08, blendType='easeOut'),
                         LerpColorScaleInterval(
                             rim, fadeIn, Vec4(1, 1, 1, rimPeakA),
                             blendType='easeOut'),
@@ -505,7 +527,7 @@ class OverlordTelegraphPunch(object):
                     Wait(hold),
                     Parallel(
                         LerpScaleInterval(
-                            rim, fadeOut, peak * 1.45, blendType='easeIn'),
+                            rim, fadeOut, peak * 1.5, blendType='easeIn'),
                         LerpColorScaleInterval(
                             rim, fadeOut, Vec4(1, 1, 1, 0),
                             blendType='easeIn'),
@@ -519,9 +541,10 @@ class OverlordTelegraphPunch(object):
     def _buildImpactCreamAftershock(self, parentNP, bossPos, look):
         """Delayed cream halo + residual flecks after impact punch bloom.
 
-        Ground-plane settle aftershock — phase punch residual. Same residual
-        grammar as telegraph cream warn aftershock (#121); distinct from
-        Brute spit drip settle (#249) and Snare whip residual (#245).
+        Ground-plane settle aftershock — phase punch residual beyond #255.
+        Same residual grammar as telegraph cream warn aftershock (#121);
+        distinct from Brute spit drip settle (#289 / #264), Snare whip
+        residual (#293 / #269), and Gunk trap-plane bloom (#299 / #276).
         """
         if not look.get(
                 'creamAftershockEnabled',
@@ -532,7 +555,7 @@ class OverlordTelegraphPunch(object):
             return None
         delay = float(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DELAY_SEC', 0.08))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DELAY_SEC', 0.07))
         lift = float(look.get('impactLift', 0.08))
         origin = Point3(
             bossPos[0], bossPos[1], float(bossPos[2]) + lift)
@@ -547,10 +570,10 @@ class OverlordTelegraphPunch(object):
 
         creamCount = max(0, int(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT', 5)))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT', 6)))
         streakCount = max(0, int(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COUNT', 2)))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COUNT', 3)))
         for i in range(creamCount):
             part = self._spawnImpactCreamSpark(
                 parentNP, origin, i, creamCount, elongated=False)
@@ -571,20 +594,20 @@ class OverlordTelegraphPunch(object):
     def _spawnImpactCreamHalo(self, parentNP, origin):
         half = float(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_HALF', 0.62))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_HALF', 0.72))
         startScale = float(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_START', 0.28))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_START', 0.26))
         peakScale = float(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK', 1.7))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK', 1.9))
         sec = float(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_SEC', 0.34))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_SEC', 0.38))
         peakA = float(getattr(
             CorruptionGlobals,
             'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA',
-            0.26))
+            0.3))
         r, g, b, _a = getattr(
             CorruptionGlobals,
             'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_COLOR',
@@ -612,7 +635,7 @@ class OverlordTelegraphPunch(object):
                 ),
                 Parallel(
                     LerpScaleInterval(
-                        halo, sec * 0.6, peakScale * 1.2, blendType='easeIn'),
+                        halo, sec * 0.6, peakScale * 1.22, blendType='easeIn'),
                     LerpColorScaleInterval(
                         halo, sec * 0.65, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
@@ -629,11 +652,11 @@ class OverlordTelegraphPunch(object):
             size = float(getattr(
                 CorruptionGlobals,
                 'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_SIZE',
-                0.16))
+                0.18))
             color = getattr(
                 CorruptionGlobals,
                 'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COLOR',
-                (1.0, 0.98, 0.82, 0.88))
+                (1.0, 0.98, 0.82, 0.9))
             endColor = getattr(
                 CorruptionGlobals,
                 'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_END',
@@ -642,11 +665,11 @@ class OverlordTelegraphPunch(object):
         else:
             size = float(getattr(
                 CorruptionGlobals,
-                'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SIZE', 0.12))
+                'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SIZE', 0.14))
             color = getattr(
                 CorruptionGlobals,
                 'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COLOR',
-                (1.0, 0.96, 0.72, 0.9))
+                (1.0, 0.96, 0.72, 0.92))
             endColor = getattr(
                 CorruptionGlobals,
                 'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_END',
@@ -654,10 +677,10 @@ class OverlordTelegraphPunch(object):
             angleBias = 0.12
         drift = float(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DRIFT', 0.85))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DRIFT', 1.0))
         sec = float(getattr(
             CorruptionGlobals,
-            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SEC', 0.36))
+            'OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SEC', 0.4))
         angle = (2.0 * pi * index) / float(count) + angleBias
         try:
             kind = 'streak' if elongated else 'fleck'
@@ -673,29 +696,30 @@ class OverlordTelegraphPunch(object):
             spark.setTransparency(TransparencyAttrib.MAlpha)
             spark.setColor(color[0], color[1], color[2], color[3])
             spark.setColorScale(1, 1, 1, 0)
-            spark.setScale(0.4)
+            spark.setScale(0.38)
             spark.setBin('fixed', 44)
             spark.setDepthWrite(False)
             self._nodes.append(spark)
         except Exception:
             return None
 
-        # Radial ground settle — phase punch residual (not drip / whip).
+        # Radial ground settle — phase punch residual (not drip / whip /
+        # Gunk trap bloom).
         end = Point3(
-            origin[0] + cos(angle) * drift * (0.7 + 0.12 * (index % 3)),
-            origin[1] + sin(angle) * drift * (0.7 + 0.12 * (index % 3)),
+            origin[0] + cos(angle) * drift * (0.72 + 0.12 * (index % 3)),
+            origin[1] + sin(angle) * drift * (0.72 + 0.12 * (index % 3)),
             origin[2] + 0.08 + 0.05 * (index % 3))
-        peak = size * (1.2 + 0.1 * (index % 2))
-        stagger = 0.018 * (index % 3)
+        peak = size * (1.25 + 0.1 * (index % 2))
+        stagger = 0.016 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(
                 LerpPosInterval(spark, sec, end, blendType='easeOut'),
                 Sequence(
                     LerpScaleInterval(
-                        spark, sec * 0.3, peak * 4.2, blendType='easeOut'),
+                        spark, sec * 0.3, peak * 4.4, blendType='easeOut'),
                     LerpScaleInterval(
-                        spark, sec * 0.7, peak * 1.2, blendType='easeIn'),
+                        spark, sec * 0.7, peak * 1.15, blendType='easeIn'),
                 ),
                 Sequence(
                     LerpColorScaleInterval(

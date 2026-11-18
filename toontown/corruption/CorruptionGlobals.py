@@ -2066,15 +2066,16 @@ OVERLORD_PHASE_INK_RAIN_LOOK = {
 }
 
 # Overlord telegraph punch cream deepen — ground danger-ring warn + impact
-# bloom on announceAttackTelegraph / announceAttackHit (client only). Builds
-# on Overlord telegraph punch (#208): juicier cream/pastel rim + radial cream
-# phase flecks on the warn footprint + cream impact aftershock so P1/P2 phase
-# shifts read juicier. Distinct from Brute spit cream deepen (#249, vertical
-# drip filaments) and Snare splash cream deepen (#245, horizontal whip
-# filaments) — Overlord cream stays ground-plane radial around the phase
-# telegraph punch. Composes with crown + ink rain; phase charge colors tint
-# via OverlordTelegraphPunchFx. AI timings unchanged. No KH branding /
-# keyblades.
+# bloom on announceAttackTelegraph / announceAttackHit (client only). Beyond
+# #255 (#208 deepen): juicier cream/pastel rim + denser radial cream phase
+# flecks on the warn footprint + wider cream impact aftershock so P1/P2 phase
+# shifts read juicier still. Distinct from Brute spit cream deepen (#289 /
+# #264, vertical drip), Snare splash cream deepen (#293 / #269, horizontal
+# whip), Smudge hit cream deepen (#283 / #259, mid-body hose), and Gunk puddle
+# cream deepen (#299 / #276, flat trap-plane bloom) — Overlord cream stays
+# ground-plane radial around the phase telegraph punch. Composes with crown +
+# ink rain; phase charge colors tint via OverlordTelegraphPunchFx. AI timings
+# unchanged. No KH branding / keyblades.
 # OVERLORD_TELEGRAPH_PUNCH_ENABLED = False drops warn + impact + cream.
 # OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED = False drops warn flecks only.
 # OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED = False drops impact cream
@@ -2082,61 +2083,61 @@ OVERLORD_PHASE_INK_RAIN_LOOK = {
 OVERLORD_TELEGRAPH_PUNCH_ENABLED = True
 OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED = True
 OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED = True
-OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_COUNT = 6
-OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_HALF = 0.11
-OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_SEC = 0.28
-OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_LIFT = 0.22
+OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_COUNT = 7  # beyond #255 (6)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_HALF = 0.13  # beyond #255 (0.11)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_SEC = 0.32  # beyond #255 (0.28)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_LIFT = 0.28  # beyond #255 (0.22)
 OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_COLORS = (
-    (1.0, 0.97, 0.82, 0.94),  # sunny cream
-    (1.0, 0.96, 0.62, 0.88),  # butter
-    (1.0, 0.9, 0.78, 0.84),   # soft peach pastel
-    (0.98, 0.88, 1.0, 0.8),   # soft lilac cream — phase magenta cousin
+    (1.0, 0.97, 0.82, 0.96),  # sunny cream
+    (1.0, 0.96, 0.62, 0.9),   # butter
+    (1.0, 0.9, 0.78, 0.86),   # soft peach pastel
+    (0.98, 0.88, 1.0, 0.84),  # soft lilac cream — phase magenta cousin
 )
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DELAY_SEC = 0.08
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT = 5
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COUNT = 2
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SIZE = 0.12
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_SIZE = 0.16
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DRIFT = 0.85
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SEC = 0.36
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.9)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DELAY_SEC = 0.07
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT = 6  # beyond #255 (5)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COUNT = 3  # beyond #255 (2)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SIZE = 0.14  # beyond #255 (0.12)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_SIZE = 0.18  # beyond #255 (0.16)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DRIFT = 1.0  # beyond #255 (0.85)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_SEC = 0.4  # beyond #255 (0.36)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.92)
 OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.88)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.9)
 OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
 OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_ENABLED = True
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_HALF = 0.62
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_START = 0.28
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK = 1.7
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_SEC = 0.34
-OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.26
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_HALF = 0.72  # beyond #255 (0.62)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_START = 0.26
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK = 1.9  # beyond #255 (1.7)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_SEC = 0.38  # beyond #255 (0.34)
+OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.3  # beyond #255 (0.26)
 OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 OVERLORD_TELEGRAPH_PUNCH_LOOK = {
     'id': 'overlord-telegraph-punch',
     # Ground warn ring — footprint scales from overlordPhaseCombat hit range.
-    'warnHalf': 2.7,  # deepened vs #208 (2.6)
+    'warnHalf': 2.8,  # deepened beyond #255 (2.7) / #208 (2.6)
     'warnHitRangeScale': 0.32,
-    'p2WarnScale': 1.14,
-    'p2WarnPeakScale': 1.1,
+    'p2WarnScale': 1.16,  # beyond #255 (1.14)
+    'p2WarnPeakScale': 1.12,  # beyond #255 (1.1)
     'warnLift': 0.1,
-    'warnPeak': 1.06,
+    'warnPeak': 1.08,  # beyond #255 (1.06)
     'warnFillScale': 0.92,
-    'warnRimScale': 1.12,  # juicier cream rim vs #208 (1.05)
+    'warnRimScale': 1.18,  # juicier cream rim beyond #255 (1.12) / #208 (1.05)
     'warnInSec': 0.09,
     'warnPulseSec': 0.18,
     'warnOutSec': 0.24,
-    'warnPeakAlpha': 0.92,
-    'warnRimPeakAlpha': 0.94,  # cream rim punchier vs ink fill
+    'warnPeakAlpha': 0.94,  # beyond #255 (0.92)
+    'warnRimPeakAlpha': 0.97,  # cream rim punchier vs ink fill
     'holdSec': 0.42,
     'holdSecP1': 0.48,
     'holdSecP2': 0.32,
-    'warnColorP1': (2.4, 0.35, 2.7, 0.58),
-    'warnColorP2': (2.7, 0.18, 0.22, 0.66),
+    'warnColorP1': (2.4, 0.35, 2.7, 0.6),
+    'warnColorP2': (2.7, 0.18, 0.22, 0.68),
     # Cream / pastel rim — sunny contrast against magenta / crimson fill.
-    'warnRimColorP1': (1.0, 0.96, 0.82, 0.88),
-    'warnRimColorP2': (1.0, 0.92, 0.7, 0.9),
+    'warnRimColorP1': (1.0, 0.96, 0.82, 0.92),
+    'warnRimColorP2': (1.0, 0.92, 0.7, 0.94),
     'binSort': 42,
     # Radial cream phase flecks — ground-plane ring chips (not Brute drip /
-    # Snare whip).
+    # Snare whip / Gunk trap bloom / Smudge hose).
     'creamFleckEnabled': OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED,
     'creamFleckCount': OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_COUNT,
     'creamFleckHalf': OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_HALF,
@@ -2144,20 +2145,20 @@ OVERLORD_TELEGRAPH_PUNCH_LOOK = {
     'creamFleckLift': OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_LIFT,
     'creamFleckColors': OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_COLORS,
     # Impact ground punch bloom — juicier land cue after the warn holds.
-    'impactHalf': 1.55,
+    'impactHalf': 1.7,  # beyond #255 (1.55)
     'impactLift': 0.08,
-    'impactPeak': 2.95,
+    'impactPeak': 3.15,  # beyond #255 (2.95)
     'impactInSec': 0.05,
     'impactHoldSec': 0.07,
-    'impactOutSec': 0.24,
-    'impactPeakAlpha': 0.96,
-    'impactColorP1': (2.55, 0.55, 2.7, 0.88),
-    'impactColorP2': (2.85, 0.35, 0.2, 0.94),
+    'impactOutSec': 0.26,  # beyond #255 (0.24)
+    'impactPeakAlpha': 0.97,
+    'impactColorP1': (2.55, 0.55, 2.7, 0.9),
+    'impactColorP2': (2.85, 0.35, 0.2, 0.96),
     'impactBin': 45,
     # Cream impact rim + aftershock — phase punch settle (ground bloom).
-    'impactCreamRimScale': 1.28,
-    'impactCreamRimColor': (1.0, 0.97, 0.84, 0.82),
-    'impactCreamRimPeakAlpha': 0.9,
+    'impactCreamRimScale': 1.38,  # beyond #255 (1.28)
+    'impactCreamRimColor': (1.0, 0.97, 0.84, 0.88),
+    'impactCreamRimPeakAlpha': 0.94,  # beyond #255 (0.9)
     'creamAftershockEnabled': (
         OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED),
 }

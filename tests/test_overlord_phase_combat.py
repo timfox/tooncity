@@ -89,7 +89,10 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertEqual(punch.get('id'), 'overlord-telegraph-punch')
         self.assertTrue(self.cg.OVERLORD_TELEGRAPH_PUNCH_ENABLED)
         self.assertTrue(self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED)
-        self.assertGreaterEqual(int(punch.get('creamFleckCount', 0)), 6)
+        self.assertGreaterEqual(int(punch.get('creamFleckCount', 0)), 7)
+        self.assertGreaterEqual(float(punch.get('warnRimScale', 0)), 1.16)
+        self.assertGreaterEqual(
+            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT, 6)
         self.assertTrue(
             self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED)
 

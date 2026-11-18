@@ -481,8 +481,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIsNotNone(cg.finalePhaseLook(2))
         self.assertEqual(
             cg.OVERLORD_TELEGRAPH_CROWN_LOOK.get('id'), 'ink-crown')
-        # Overlord telegraph cream deepen — radial phase flecks + impact
-        # aftershock (distinct from Brute spit drip #249 / Snare whip #245).
+        # Overlord telegraph cream deepen beyond #255 — denser radial phase
+        # flecks + wider impact aftershock (distinct from Brute drip / Snare
+        # whip / Smudge hose / Gunk puddle bloom #299).
         self.assertTrue(hasattr(cg, 'OVERLORD_TELEGRAPH_PUNCH_LOOK'))
         self.assertTrue(hasattr(cg, 'OVERLORD_TELEGRAPH_PUNCH_CREAM_FLECK_ENABLED'))
         self.assertTrue(
@@ -493,10 +494,16 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED, True)
         punch_look = cg.OVERLORD_TELEGRAPH_PUNCH_LOOK
         self.assertEqual(punch_look.get('id'), 'overlord-telegraph-punch')
-        self.assertGreaterEqual(int(punch_look.get('creamFleckCount', 0)), 6)
+        self.assertGreaterEqual(int(punch_look.get('creamFleckCount', 0)), 7)
+        self.assertGreaterEqual(float(punch_look.get('warnRimScale', 0)), 1.16)
+        self.assertGreaterEqual(
+            float(punch_look.get('impactCreamRimScale', 0)), 1.35)
         self.assertTrue(punch_look.get('creamFleckEnabled'))
         self.assertGreaterEqual(
-            int(cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT), 5)
+            int(cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT), 6)
+        self.assertGreaterEqual(
+            float(cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_HALF),
+            0.7)
         punch_fx_rel = 'toontown/corruption/OverlordTelegraphPunchFx.py'
         _assert_module_file(punch_fx_rel)
         punch_methods = _class_method_names(

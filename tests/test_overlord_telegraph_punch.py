@@ -2,9 +2,10 @@
 """Behavioral headless tests for Ink Overlord telegraph cream punch deepen.
 
 Imports CorruptionGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-OVERLORD_TELEGRAPH_PUNCH_LOOK / cream deepen tunables, phase timing vs combat
-delay, and AST wiring on OverlordTelegraphPunchFx + DistributedCorruptToon.
-Deepen is distinct from Brute spit cream #249 and Snare splash cream #245.
+OVERLORD_TELEGRAPH_PUNCH_LOOK / cream deepen tunables beyond #255, phase
+timing vs combat delay, and AST wiring on OverlordTelegraphPunchFx +
+DistributedCorruptToon. Deepen is distinct from Brute spit cream, Snare
+splash cream, Smudge hose cream, and Gunk puddle cream (#299).
 
 Run from repo root:
   python3 tests/test_overlord_telegraph_punch.py
@@ -100,19 +101,31 @@ class OverlordTelegraphPunchTest(unittest.TestCase):
             self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_ENABLED)
         self.assertGreater(float(look.get('warnHalf', 0)), 1.0)
         self.assertGreater(float(look.get('warnHitRangeScale', 0)), 0.1)
-        # Deepened cream rim / flecks vs #208 baseline.
-        self.assertGreaterEqual(float(look.get('warnRimScale', 0)), 1.1)
-        self.assertGreaterEqual(float(look.get('warnRimPeakAlpha', 0)), 0.9)
+        # Deepened cream rim / flecks beyond #255 (#208 baseline).
+        self.assertGreaterEqual(float(look.get('warnRimScale', 0)), 1.16)
+        self.assertGreaterEqual(float(look.get('warnRimPeakAlpha', 0)), 0.95)
+        self.assertGreaterEqual(float(look.get('warnHalf', 0)), 2.75)
         self.assertTrue(look.get('creamFleckEnabled'))
-        self.assertGreaterEqual(int(look.get('creamFleckCount', 0)), 6)
-        self.assertGreater(float(look.get('creamFleckLift', 0)), 0.0)
+        self.assertGreaterEqual(int(look.get('creamFleckCount', 0)), 7)
+        self.assertGreaterEqual(float(look.get('creamFleckHalf', 0)), 0.12)
+        self.assertGreaterEqual(float(look.get('creamFleckLift', 0)), 0.25)
         self.assertTrue(look.get('creamAftershockEnabled'))
         self.assertGreaterEqual(
-            float(look.get('impactCreamRimScale', 0)), 1.2)
+            float(look.get('impactCreamRimScale', 0)), 1.35)
         self.assertGreaterEqual(
-            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT, 5)
+            float(look.get('impactCreamRimPeakAlpha', 0)), 0.92)
+        self.assertGreaterEqual(float(look.get('impactHalf', 0)), 1.65)
+        self.assertGreaterEqual(float(look.get('impactPeak', 0)), 3.1)
         self.assertGreaterEqual(
-            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_HALF, 0.55)
+            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_COUNT, 6)
+        self.assertGreaterEqual(
+            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_STREAK_COUNT, 3)
+        self.assertGreaterEqual(
+            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_DRIFT, 0.95)
+        self.assertGreaterEqual(
+            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_HALF, 0.7)
+        self.assertGreaterEqual(
+            self.cg.OVERLORD_TELEGRAPH_PUNCH_CREAM_AFTERSHOCK_HALO_PEAK, 1.85)
         # Cream rim stays sunny (high R/G) vs ink fill.
         rim1 = look.get('warnRimColorP1')
         self.assertGreaterEqual(float(rim1[0]), 0.9)
@@ -125,7 +138,7 @@ class OverlordTelegraphPunchTest(unittest.TestCase):
         self.assertIsInstance(p2, tuple)
         self.assertGreater(float(p1[2]), float(p1[1]))
         self.assertGreater(float(p2[0]), float(p2[2]))
-        # Distinct from Brute spit / Snare splash cream splash ids.
+        # Distinct from Brute / Snare / Smudge / Gunk cream splash ids.
         self.assertNotEqual(
             look.get('id'),
             getattr(self.cg, 'BRUTE_SPIT_CREAM_SPLASH_LOOK', {}).get('id'))
@@ -133,6 +146,12 @@ class OverlordTelegraphPunchTest(unittest.TestCase):
             look.get('id'),
             getattr(self.cg, 'SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK',
                     {}).get('id'))
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'SMUDGE_HIT_CREAM_SPLASH_LOOK', {}).get('id'))
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_LOOK', {}).get('id'))
         look_id = str(look.get('id', '')).lower()
         self.assertNotIn('keyblade', look_id)
         self.assertNotIn('kingdom hearts', look_id)
@@ -181,8 +200,12 @@ class OverlordTelegraphPunchTest(unittest.TestCase):
         src = _read('toontown/corruption/OverlordTelegraphPunchFx.py')
         self.assertIn('_spawnWarnCreamFlecks', src)
         self.assertIn('_buildImpactCreamAftershock', src)
-        self.assertIn('Brute', src)  # docstring distinctness vs #249
-        self.assertIn('Snare', src)  # docstring distinctness vs #245
+        self.assertIn('overlord-telegraph-cream-fleck-streak', src)
+        self.assertIn('Brute', src)  # docstring distinctness vs drip
+        self.assertIn('Snare', src)  # docstring distinctness vs whip
+        self.assertIn('Gunk', src)  # docstring distinctness vs #299 bloom
+        self.assertIn('Smudge', src)  # docstring distinctness vs hose
+        self.assertIn('#255', src)  # beyond prior deepen
         # Ban copy only — no KH identity / keyblade promotion in juice code.
         lower = src.lower()
         self.assertIn('no keyblades', lower)
@@ -193,8 +216,10 @@ class OverlordTelegraphPunchTest(unittest.TestCase):
         self.assertNotIn('kingdom_hearts', lower)
         reclaim = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('radial cream phase flecks', reclaim.lower())
+        self.assertIn('beyond #255', reclaim.lower())
         init_src = _read('toontown/corruption/__init__.py')
         self.assertIn('radial cream', init_src.lower())
+        self.assertIn('beyond #255', init_src.lower())
 
     def test_distributed_wiring(self):
         src = _read('toontown/corruption/DistributedCorruptToon.py')
