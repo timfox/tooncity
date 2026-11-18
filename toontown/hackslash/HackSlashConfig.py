@@ -25,6 +25,13 @@ TARGET_CYCLE_COOLDOWN_SEC = 0.12
 TARGET_CYCLE_RANGE = 18.0
 TARGET_CYCLE_HALF_ANGLE_DEG = 95.0
 
+# Soft-lock climax / twist priority — prefer Ink Overlord and Corrupted
+# Oswald over nearer pack Smudge adds (Silly P2 adds / betrayal chase).
+# Auto-acquire and fresh Tab still use the forward cone; sticky hold keeps
+# a manual cycle so players can still focus trash when they want. Toggle
+# TARGET_PRIORITY_ENABLED = False restores nearest-only soft-lock.
+TARGET_PRIORITY_ENABLED = True
+
 # Soft-lock cycle reticle pulse — brief rubber-hose pulse when Tab/` switches
 # the sticky lock so the new target reads clearly (tracking feel without the
 # full acquire snap FOV / accents spam). Milder/snappier than

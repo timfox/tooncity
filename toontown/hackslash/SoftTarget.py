@@ -6,11 +6,43 @@ then falls back to street suits as stand-ins for the prototype.
 Includes manual soft-lock cycle (next/prev) so players can switch focus
 among sticky-range hostiles during stretch-punch melee — KH-feel targeting
 without KH branding / keyblades.
+
+Auto-acquire (and fresh Tab with no lock) also prefers Ink Overlord /
+Corrupted Oswald over nearer pack Smudge adds so climax and twist fights
+do not glue onto trash.
 """
 
 import math
 
 from . import HackSlashConfig
+
+
+def softLockAcquireRank(dist, priority=False):
+    """Sort key for soft-lock acquire — lower wins.
+
+    Priority subjects (Overlord / Corrupted Oswald) sort before pack adds;
+    nearest wins within the same tier. Pure helper for headless tests.
+    """
+    return (0 if priority else 1, float(dist))
+
+
+def pickSoftLockAcquire(scoredRows):
+    """Pick best soft-lock candidate from scored rows.
+
+    ``scoredRows`` is an iterable of ``(priority, dist, payload)``. Empty
+    input → None. Priority beats non-priority; nearest wins within a tier.
+    """
+    best = None
+    bestKey = None
+    for row in scoredRows:
+        if row is None or len(row) < 3:
+            continue
+        priority, dist, payload = row[0], row[1], row[2]
+        key = softLockAcquireRank(dist, priority=bool(priority))
+        if bestKey is None or key < bestKey:
+            bestKey = key
+            best = payload
+    return best
 
 
 def nextCycleIndex(count, currentIndex, direction=1):
@@ -188,11 +220,18 @@ class SoftTargetFinder:
 
         scored.sort(key=lambda row: (row[0], row[1], str(row[2])))
         orderedKeys = [row[2] for row in scored]
-        # Fresh Tab with nothing locked: land on nearest sticky hostile
-        # (direction still used once a lock exists for orbit next/prev).
+        # Fresh Tab with nothing locked: land on preferred sticky hostile
+        # (Overlord / Oswald over nearer pack adds; direction still used
+        # once a lock exists for orbit next/prev).
         if self._lockedKey not in byKey:
-            nearestIdx = min(range(len(scored)), key=lambda i: scored[i][1])
-            newKey = orderedKeys[nearestIdx]
+            ranked = []
+            for yaw, dist, key in scored:
+                target = byKey.get(key)
+                ranked.append((
+                    self._isPriorityTarget(target),
+                    dist,
+                    key))
+            newKey = pickSoftLockAcquire(ranked)
             snapped = newKey is not None
         else:
             newKey, snapped = pickCycleChoice(
@@ -223,17 +262,17 @@ class SoftTargetFinder:
                 return locked
             self._lockedKey = None
 
-        best = None
-        bestDist = HackSlashConfig.TARGET_RANGE
+        scored = []
         for target in candidates:
             if not self._isValid(target):
                 continue
             if not self._inCone(target):
                 continue
-            dist = self._distance(target)
-            if dist < bestDist:
-                bestDist = dist
-                best = target
+            scored.append((
+                self._isPriorityTarget(target),
+                self._distance(target),
+                target))
+        best = pickSoftLockAcquire(scored)
 
         newKey = self._key(best) if best is not None else None
         self._lockedKey = newKey
@@ -241,6 +280,47 @@ class SoftTargetFinder:
         # Snap = first lock or switch onto a different living hostile.
         self._snapped = newKey is not None and newKey != prevKey
         return best
+
+    def _isPriorityTarget(self, target):
+        """True for Ink Overlord / Corrupted Oswald soft-lock preference."""
+        if target is None:
+            return False
+        if not getattr(HackSlashConfig, 'TARGET_PRIORITY_ENABLED', True):
+            return False
+        try:
+            from toontown.corruption import CorruptionGlobals
+        except ImportError:
+            return False
+        archetype = 0
+        name = ''
+        finalePhase = 0
+        try:
+            if callable(getattr(target, 'getArchetype', None)):
+                archetype = int(target.getArchetype())
+            elif hasattr(target, 'archetype'):
+                archetype = int(getattr(target, 'archetype', 0) or 0)
+        except Exception:
+            archetype = 0
+        try:
+            if callable(getattr(target, 'getHackSlashName', None)):
+                name = str(target.getHackSlashName() or '')
+            elif callable(getattr(target, 'getName', None)):
+                name = str(target.getName() or '')
+            else:
+                name = str(getattr(target, 'name', '') or '')
+        except Exception:
+            name = ''
+        # Per-hostile phase only (AI Overlord DOs). Never use reclaim-director
+        # street phase — P2 Smudge adds share that street flag.
+        try:
+            finalePhase = int(getattr(target, 'finalePhase', 0) or 0)
+        except Exception:
+            finalePhase = 0
+        try:
+            return bool(CorruptionGlobals.isSoftLockPrioritySubject(
+                archetype, name=name, finalePhase=finalePhase))
+        except Exception:
+            return False
 
     def _key(self, target):
         if target is None:
