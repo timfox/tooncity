@@ -67,8 +67,9 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ## Archetype spawn mix
 
 Per-wave `waveScripts` on `STREET_PACKS` / campaign `ACTS` drive pack composition
-(and pack size) when present; `bruteFraction` / `snareFraction` remain the fallback
-via `pickPackArchetype`. Scripts use `ink` / `brute` / `snare` tokens.
+(and pack size) when present; `bruteFraction` / `snareFraction` / `gagsterFraction`
+remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snare`
+/ `gagster` tokens.
 
 - **Loopy street pack** (`ReclaimGlobals.STREET_PACKS` / `loopy-smudge`, zone `2200`):
   scripted Smudge tutorial → Brute intro → Snare joins → mixed elite
@@ -77,9 +78,10 @@ via `pickPackArchetype`. Scripts use `ink` / `brute` / `snare` tokens.
 - Loopy campaign **C** mirrors that ramp across 3 waves (`ACTS` `waveScripts`);
   fraction fields stay `0` as fallback only.
 - **Punchline street pack** (`punchline-sludge`, zone `2300`):
-  scripted Snare-front opener → Snare swarm → Brute pair → sludge elite
-  (seed 0.70, maxPacks 4, Gunk Gagster / Sludge Brute / Balloon Snare).
-  PlayEntry tip reads explore → fight → reclaim; start banner is gag-green.
+  scripted Snare-front + Gunk Gagster lob → Gagster swarm → Brute pair → elite
+  (seed 0.70, maxPacks 4). Gunk Gagster is a real fourth archetype (teal
+  gag-lob puddle trap), not a Smudge rename. PlayEntry tip reads explore →
+  fight → reclaim; start banner is gag-green.
 - Punchline campaign ACTS `waveScripts` stay the source of truth for **C**;
   STREET_PACKS mirrors so discoverable auto-reclaim matches the second-hood beat.
 - **Silly street pack** (`silly-overlord`, zone `2100`): Overlord-only scripts
@@ -89,6 +91,8 @@ via `pickPackArchetype`. Scripts use `ink` / `brute` / `snare` tokens.
 ~spawncorrupt 2 0 0   # Ink Smudge
 ~spawncorrupt 1 0 1   # Sludge Brute
 ~spawncorrupt 1 0 2   # Balloon Snare
+~spawncorrupt 1 0 3   # Gunk Gagster
+~spawngagster         # Gunk Gagster shortcut
 ```
 
 ## Depth D2 enemy demo

@@ -62,29 +62,32 @@ ACTS = (
         'packSize': 4,
         'maxPacks': 4,
         'corruptHp': 40,
-        'corruptName': 'Gunk Gagster',
-        # Mix Brutes (tank spit) + Balloon Snares (zip/lash) with Smudges.
-        'bruteFraction': 0.4,
+        'corruptName': 'Ink Smudge',
+        # Mix Gunk Gagsters (gag-lob puddle) + Brutes + Balloon Snares.
+        'bruteFraction': 0.3,
         'bruteWaveStart': 1,
         'bruteName': 'Sludge Brute',
-        'snareFraction': 0.25,
+        'snareFraction': 0.2,
         'snareWaveStart': 1,
         'snareName': 'Balloon Snare',
-        # Scripted sludge beats (Snare-front → swarm → Brute pair → elite).
+        'gagsterFraction': 0.3,
+        'gagsterWaveStart': 1,
+        'gagsterName': 'Gunk Gagster',
+        # Scripted sludge beats (Snare + Gagster → swarm → Brute pair → elite).
         'waveScripts': (
-            ('snare', 'ink', 'ink', 'brute'),
-            ('snare', 'snare', 'ink', 'brute', 'ink'),
-            ('snare', 'ink', 'brute', 'brute', 'ink'),
-            ('snare', 'snare', 'ink', 'brute', 'snare', 'ink'),
+            ('snare', 'gagster', 'ink', 'brute'),
+            ('snare', 'gagster', 'gagster', 'brute', 'ink'),
+            ('snare', 'gagster', 'brute', 'brute', 'ink'),
+            ('snare', 'gagster', 'gagster', 'brute', 'snare', 'ink'),
         ),
         'banner': (
             'Act 2 — Oswald leads the reclaim — '
             'Punchline Place is drowning in sludge!'),
-        # Act-entry tip (PlayEntry) — Oswald trusted lead + Brute/Snare cues.
+        # Act-entry tip (PlayEntry) — Oswald trusted lead + Gagster/Brute/Snare.
         # Mid-campaign only; no twist spoilers. Hose-pop tunables below.
         'entryTip': (
             'Oswald leads Act 2 — Punchline Place sludge: explore → '
-            'F fight Sludge Brutes & Balloon Snares → reclaim  |  '
+            'F fight Gunk Gagsters, Sludge Brutes & Balloon Snares → reclaim  |  '
             'Shift dodge  |  C campaign'),
         'handoffTitle': 'PUNCHLINE PLACE LAUGHS CLEAN!',
         'handoff': (
@@ -102,9 +105,10 @@ ACTS = (
         'maxPacks': 2,
         'corruptHp': 90,
         'corruptName': 'Ink Overlord',
-        # Boss fight stays Overlord-only (no Brute / Snare mix).
+        # Boss fight stays Overlord-only (no Brute / Snare / Gagster mix).
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
+        'gagsterFraction': 0.0,
         # P1: solo Overlord → twin swell (matches Silly STREET_PACKS).
         'waveScripts': (
             ('ink',),
@@ -143,6 +147,7 @@ ACTS = (
             'transitionSting': True,
             'bruteFraction': 0.0,
             'snareFraction': 0.0,
+            'gagsterFraction': 0.0,
             # Unleashed Overlord swells — still Overlord-only (ink tokens).
             'waveScripts': (
                 ('ink', 'ink'),

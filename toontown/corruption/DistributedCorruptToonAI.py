@@ -38,6 +38,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._attackReadyAt = 0.0
         self._stats = stats
         self._attackMove = 'smack'
+        self._puddleXY = None
         self.finalePhase = 0
         self.setFinalePhase(finalePhase)
 
@@ -234,7 +235,20 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def __beginAttack(self, target):
         self._attacking = True
         self._targetId = target.doId
-        move = self.__pickOverlordMove(target) if self._isOverlord() else 'smack'
+        if self._isOverlord():
+            move = self.__pickOverlordMove(target)
+            self._puddleXY = None
+        else:
+            move = str(self._stats.get('attackMove', 'smack') or 'smack')
+            # Gunk Gagster: snapshot target XY at wind-up so the puddle lands
+            # where they stood — dodge out during telegraph to escape the trap.
+            if move == 'gag_lob':
+                try:
+                    self._puddleXY = (float(target.getX()), float(target.getY()))
+                except Exception:
+                    self._puddleXY = (float(self.getX()), float(self.getY()))
+            else:
+                self._puddleXY = None
         self._attackMove = move
         self.sendUpdate('announceAttackTelegraph', [])
         delay = self.__telegraphDelayForMove(move)
@@ -304,7 +318,55 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
         if self._isOverlord() and move == 'rain' and self._stats.get('aoe'):
             return self.__resolveOverlordRain()
+        if move == 'gag_lob':
+            return self.__resolveGagsterPuddle()
         return self.__resolveSingleTargetHit(move)
+
+    def __resolveGagsterPuddle(self):
+        """Teal gag-lob puddle — AoE at the wind-up snapshot, not at self.
+
+        Distinct from Smudge/Brute/Snare single-target smack and Overlord rain
+        (self-centered). Players who dodge out of the lob zone during telegraph
+        escape; anyone still standing in the puddle takes damage.
+        """
+        puddle = self._puddleXY
+        self._puddleXY = None
+        if puddle is None:
+            # Fallback: treat as single-target if snapshot failed.
+            return self.__resolveSingleTargetHit('gag_lob')
+        px, py = puddle
+        hitRange, nearMiss = self.__hitRangesForMove('gag_lob')
+        dmg = self.__damageForMove('gag_lob')
+        now = globalClock.getFrameTime()  # noqa: F821
+        anyHit = False
+        anyDodge = False
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - px
+                dy = float(target.getY()) - py
+            except Exception:
+                continue
+            dist = math.sqrt(dx * dx + dy * dy)
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            iframes = now < iframeUntil
+            if iframes and dist <= max(hitRange, nearMiss):
+                anyDodge = True
+                continue
+            if dist > hitRange:
+                continue
+            try:
+                target.takeDamage(dmg)
+                anyHit = True
+            except Exception:
+                self.notify.debug(
+                    'gag_lob takeDamage failed on av %s' % getattr(
+                        target, 'doId', '?'))
+        if anyHit:
+            self.sendUpdate('announceAttackHit', [])
+        elif anyDodge:
+            self.sendUpdate('announceAttackDodged', [])
+        return Task.done
 
     def __resolveOverlordRain(self):
         """Ink-rain AoE — damage every in-zone toon inside the puddle radius."""

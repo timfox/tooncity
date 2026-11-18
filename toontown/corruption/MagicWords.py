@@ -127,13 +127,13 @@ class SpawnCorrupt(MagicWord):
         'spawncorrupttoon', 'corrupttoon', 'spawnct',
         'spawnbrute', 'spawnsnare', 'spawnballoon',
     ]
-    desc = 'Spawn CorruptToon enemies (Smudge, Brute, Snare, or Overlord).'
+    desc = 'Spawn CorruptToon enemies (Smudge, Brute, Snare, Gagster, Overlord).'
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
         'Optional count (1-8), hp (0=archetype default base), '
-        'archetype (0=Ink, 1=Brute, 2=Snare), finalePhase (0=street, '
-        '1=Overlord P1 rain AoE, 2=Unleashed rain+slam). '
-        'Use ~spawnoverlord for a P1 Overlord shortcut. '
+        'archetype (0=Ink, 1=Brute, 2=Snare, 3=Gagster), finalePhase '
+        '(0=street, 1=Overlord P1 rain AoE, 2=Unleashed rain+slam). '
+        'Use ~spawngagster / ~spawnoverlord for shortcuts. '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
@@ -155,6 +155,29 @@ class SpawnCorrupt(MagicWord):
         return _spawnCorruptPack(
             self.air, toon, count=count, hpArg=hpArg, archetype=archetype,
             finalePhase=finalePhase)
+
+
+class SpawnGagster(MagicWord):
+    aliases = ['spawngagster', 'spawngunk', 'gunkgagster']
+    desc = 'Spawn Gunk Gagster (teal gag-lob puddle archetype).'
+    advancedDesc = (
+        'Shortcut for ARCHETYPE_GAGSTER. Optional count, hp (0=default base). '
+        'Gagsters lob a delayed teal puddle trap — dodge out during telegraph. '
+        'Pair with ~hackslash 0.')
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    accessLevel = 'MODERATOR'
+    affectRange = [MagicWordConfig.AFFECT_SELF]
+    arguments = [
+        ('count', int, False, 1),
+        ('hp', int, False, 0),
+    ]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        count = int(args[0]) if args else 1
+        hpArg = int(args[1]) if len(args) > 1 else 0
+        return _spawnCorruptPack(
+            self.air, toon, count=count, hpArg=hpArg,
+            archetype=CorruptionGlobals.ARCHETYPE_GAGSTER)
 
 
 class SpawnOverlord(MagicWord):
@@ -188,4 +211,5 @@ def registerCorruptionMagicWords():
     Pollute()
     Purify()
     SpawnCorrupt()
+    SpawnGagster()
     SpawnOverlord()

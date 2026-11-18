@@ -29,6 +29,7 @@ _ACT_PARAM_KEYS = (
     'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
     'bruteFraction', 'bruteWaveStart', 'bruteName',
     'snareFraction', 'snareWaveStart', 'snareName',
+    'gagsterFraction', 'gagsterWaveStart', 'gagsterName',
     'waveScripts',
     'banner',
 )
@@ -105,6 +106,9 @@ def resolve_act_params(act, finale_phase=0):
         'snareFraction': act.get('snareFraction'),
         'snareWaveStart': act.get('snareWaveStart'),
         'snareName': act.get('snareName'),
+        'gagsterFraction': act.get('gagsterFraction'),
+        'gagsterWaveStart': act.get('gagsterWaveStart'),
+        'gagsterName': act.get('gagsterName'),
         'waveScripts': act.get('waveScripts'),
         'banner': act.get('banner'),
         'finalePhase': 0,
@@ -153,15 +157,18 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(params['finalePhase'], 0)
         self.assertFalse(params['transitionSting'])
 
-    def test_punchline_act_params_brute_snare_from_wave1(self):
+    def test_punchline_act_params_gagster_brute_snare_from_wave1(self):
         params = resolve_act_params(self.acts_by_id['punchline'])
         self.assertEqual(params['packSize'], 4)
         self.assertEqual(params['corruptHp'], 40)
-        self.assertEqual(params['corruptName'], 'Gunk Gagster')
-        self.assertEqual(params['bruteFraction'], 0.4)
+        self.assertEqual(params['corruptName'], 'Ink Smudge')
+        self.assertEqual(params['bruteFraction'], 0.3)
         self.assertEqual(params['bruteWaveStart'], 1)
-        self.assertEqual(params['snareFraction'], 0.25)
+        self.assertEqual(params['snareFraction'], 0.2)
         self.assertEqual(params['snareWaveStart'], 1)
+        self.assertEqual(params['gagsterFraction'], 0.3)
+        self.assertEqual(params['gagsterWaveStart'], 1)
+        self.assertEqual(params['gagsterName'], 'Gunk Gagster')
         self.assertTrue(params.get('waveScripts'))
         self.assertEqual(params['finalePhase'], 0)
 
@@ -177,6 +184,7 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertEqual(params['seedPollution'], 0.75)
         self.assertEqual(params['bruteFraction'], 0.0)
         self.assertEqual(params['snareFraction'], 0.0)
+        self.assertEqual(params['gagsterFraction'], 0.0)
         self.assertEqual(params.get('waveScripts'), act.get('waveScripts'))
         self.assertFalse(params['transitionSting'])
         self.assertIn('Phase 1', params['banner'])
@@ -197,6 +205,7 @@ class CampaignActParamsTest(unittest.TestCase):
         # Explicit Overlord-only mix retained on P2.
         self.assertEqual(params['bruteFraction'], 0.0)
         self.assertEqual(params['snareFraction'], 0.0)
+        self.assertEqual(params['gagsterFraction'], 0.0)
         self.assertEqual(params.get('waveScripts'), phase2.get('waveScripts'))
         # P2 is strictly harder than P1 on the key combat scalars.
         self.assertGreater(params['corruptHp'], act['corruptHp'])
@@ -220,7 +229,7 @@ class CampaignActParamsTest(unittest.TestCase):
         rg = self.rg
         shared = (
             'seedPollution', 'packSize', 'maxPacks', 'corruptHp',
-            'corruptName', 'bruteFraction', 'snareFraction',
+            'corruptName', 'bruteFraction', 'snareFraction', 'gagsterFraction',
         )
         # Loopy campaign Act 1 is Smudge-only (brute/snare 0); STREET_PACKS
         # Loopy still introduces Brutes from wave 2 for auto-reclaim demos.
@@ -234,7 +243,9 @@ class CampaignActParamsTest(unittest.TestCase):
 
         punch_act = self.acts_by_id['punchline']
         punch_pack = rg.STREET_PACKS[PUNCHLINE]
-        for key in shared + ('bruteWaveStart', 'snareWaveStart', 'waveScripts'):
+        for key in shared + (
+                'bruteWaveStart', 'snareWaveStart', 'gagsterWaveStart',
+                'waveScripts'):
             self.assertEqual(
                 punch_act[key], punch_pack[key],
                 msg='punchline %s act vs STREET_PACKS' % key)
@@ -244,7 +255,8 @@ class CampaignActParamsTest(unittest.TestCase):
         silly_pack = rg.STREET_PACKS[SILLY]
         for key in (
                 'seedPollution', 'packSize', 'maxPacks', 'corruptHp',
-                'corruptName', 'bruteFraction', 'snareFraction', 'waveScripts'):
+                'corruptName', 'bruteFraction', 'snareFraction',
+                'gagsterFraction', 'waveScripts'):
             self.assertEqual(
                 finale_p1[key], silly_pack[key],
                 msg='finale P1 %s vs silly STREET_PACKS' % key)
@@ -316,7 +328,8 @@ class CampaignActParamsTest(unittest.TestCase):
                 # Optional mix keys may be absent on Smudge-only acts.
                 if key in (
                         'bruteWaveStart', 'bruteName',
-                        'snareWaveStart', 'snareName'):
+                        'snareWaveStart', 'snareName',
+                        'gagsterWaveStart', 'gagsterName'):
                     continue
                 self.assertIn(
                     key, params,
