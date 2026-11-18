@@ -224,6 +224,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         helper_names = _class_and_func_names(self.reclaim_tree)
         for helper in (
                 'streetPack', 'streetPackId', 'streetPackParams',
+                'streetPackRequiredActIndex', 'streetPackUnlocked',
+                'streetPackGateMessage',
                 'streetPlayEntryTip', 'resolveWaveScript',
                 'normalizeWaveScriptToken', 'pickPackArchetype'):
             self.assertIn(helper, helper_names)
@@ -308,13 +310,22 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertNotIn('~startcampaign', director_src)
 
         pollution_src = _read('toontown/corruption/PollutionManagerAI.py')
-        self.assertIn('STATE_ACTIVE', pollution_src)
+        # R path soft-gates STREET_PACKS via reclaim director helper
+        # (campaign prefer + act unlock live there — not inlined here).
+        self.assertIn('startStreetPackForToon', pollution_src)
         self.assertIn('startCampaign', pollution_src)
         # Incomplete-reclaim re-creep — contested streets slowly re-ink.
         self.assertIn('markStreetContested', pollution_src)
         self.assertIn('markStreetSecured', pollution_src)
         self.assertIn('markStreetReclaiming', pollution_src)
         self.assertIn('pollutionRecreepStep', pollution_src)
+
+        reclaim_director_src = _read(
+            'toontown/reclaim/DistributedReclaimDirectorAI.py')
+        self.assertIn('startStreetPackForToon', reclaim_director_src)
+        self.assertIn('streetPackUnlocked', reclaim_director_src)
+        self.assertIn('unlockedThrough', reclaim_director_src)
+        self.assertIn('STATE_ACTIVE', reclaim_director_src)
 
     def test_corrupt_archetypes_registered(self):
         cg = self.corruption

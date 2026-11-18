@@ -240,57 +240,14 @@ class PollutionManagerAI(DistributedObjectAI):
                 self.notify.warning('requestStreetEvent campaign failed')
                 return
         else:
-            # Prefer campaign attach when a campaign act is already live for
-            # this street — stops street-pack R from racing past C unlocks.
+            # STREET_PACKS R path — soft-gate Punchline/Silly behind act
+            # unlock (Loopy stays open). Prefer campaign when live on this
+            # street. Logic lives on DistributedReclaimDirectorAI.
             try:
-                from toontown.campaign import CampaignGlobals
-                from toontown.campaign.CampaignDirectorAI import (
-                    getCampaignDirector)
-                zoneId = int(toon.zoneId)
-                campaign = getCampaignDirector(self.air)
-                if campaign.state == CampaignGlobals.STATE_ACTIVE:
-                    act = CampaignGlobals.ACTS[campaign.actIndex]
-                    if zoneId == int(act['zoneId']):
-                        msg = campaign.startCampaign(toon)
-                        try:
-                            if hasattr(toon, 'd_setSystemMessage'):
-                                toon.d_setSystemMessage(0, str(msg)[:200])
-                        except Exception:
-                            pass
-                        return
-            except Exception:
-                self.notify.warning(
-                    'requestStreetEvent campaign-prefer check failed')
-            try:
-                from toontown.reclaim import ReclaimGlobals
                 from toontown.reclaim.DistributedReclaimDirectorAI import (
                     DistributedReclaimDirectorAI)
-                zoneId = int(toon.zoneId)
-                directors = getattr(self.air, 'reclaimDirectors', None)
-                if directors is None:
-                    directors = {}
-                    self.air.reclaimDirectors = directors
-                existing = directors.get(zoneId)
-                if existing is not None and not existing.isDeleted():
-                    if existing.state == ReclaimGlobals.STATE_ACTIVE:
-                        return
-                    existing.requestDelete()
-                    directors.pop(zoneId, None)
-                director = DistributedReclaimDirectorAI(self.air, zoneId=zoneId)
-                director.generateWithRequired(zoneId)
-                directors[zoneId] = director
-                # Hood street packs (Loopy / Punchline / Silly) deepen auto / R.
-                packKwargs = ReclaimGlobals.streetPackParams(zoneId)
-                director.start(
-                    zoneId,
-                    (toon.getX(), toon.getY(), toon.getZ()),
-                    toon.getH(),
-                    **packKwargs)
-                packId = ReclaimGlobals.streetPackId(zoneId)
-                if packId:
-                    msg = 'Reclaim started (%s)' % packId
-                else:
-                    msg = 'Reclaim packs inbound — press F to fight!'
+                msg = DistributedReclaimDirectorAI.startStreetPackForToon(
+                    self.air, toon, force=False)
             except Exception:
                 self.notify.warning('requestStreetEvent reclaim failed')
                 return

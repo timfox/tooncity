@@ -66,8 +66,12 @@ DEMO_HINT = (
 # Overlord finale street (Oswald still trusted — twist stays campaign P2
 # reveal). Discoverable Silly starts Rising (P1) then HP-thresholds into
 # Unleashed (P2 slam + adds) mid-fight without a campaign restart.
-# Campaign C still uses ACTS params; this table keeps discoverable
-# auto-reclaim matched to each hood fantasy. No keyblades / KH branding.
+# Soft-gate: Punchline / Silly STREET_PACK starts (R / ~startreclaim)
+# require campaign unlockedThrough >= act index; Loopy (act 0) stays open
+# so discoverable play entry is never bricked. Soft nudge only — tips /
+# breadcrumbs / explore keep working. Campaign C still uses ACTS params;
+# this table keeps discoverable auto-reclaim matched to each hood fantasy.
+# No keyblades / KH branding.
 # Keys match DistributedReclaimDirectorAI.start() kwargs (+ copy helpers).
 _STREET_PACK_START_KEYS = (
     'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
@@ -1118,6 +1122,81 @@ def streetPackId(zoneId):
     if not pack:
         return None
     return pack.get('packId')
+
+
+def streetPackRequiredActIndex(zoneId):
+    """Campaign ACTS index required to soft-unlock STREET_PACKS reclaim.
+
+    Matches STREET_PACKS zones to CampaignGlobals.ACTS by zoneId.
+    Returns None when the zone is not a gated street pack (fail-open so
+    non-campaign / unknown streets stay discoverable). Thin campaign
+    read only — no PollutionManager / hackslash coupling.
+    """
+    zoneId = int(zoneId or 0)
+    if streetPack(zoneId) is None:
+        return None
+    try:
+        from toontown.campaign import CampaignGlobals
+        for index, act in enumerate(CampaignGlobals.ACTS):
+            if int(act.get('zoneId', -1)) == zoneId:
+                return int(index)
+    except Exception:
+        return None
+    return None
+
+
+def streetPackUnlocked(zoneId, unlockedThrough=0):
+    """True when R / auto street-pack reclaim may field for this zone.
+
+    Soft-gate (story skip reduction): Loopy (act 0) always opens so
+    discoverable play entry works. Punchline / Silly need
+    unlockedThrough >= their ACTS index. Unknown / non-pack zones
+    stay unlocked (not a hard brick on explore).
+    """
+    required = streetPackRequiredActIndex(zoneId)
+    if required is None:
+        return True
+    try:
+        unlocked = max(0, int(unlockedThrough))
+    except (TypeError, ValueError):
+        unlocked = 0
+    return unlocked >= int(required)
+
+
+def streetPackGateMessage(zoneId, unlockedThrough=0, face=None):
+    """Player-facing soft nudge when street-pack R would skip story acts.
+
+    Points at the frontier unlocked street by name (no zone ids / no
+    magic-word memorization). Explore tips / breadcrumbs stay live —
+    only pack fielding is deferred.
+    """
+    if face is None:
+        try:
+            from toontown.campaign import CampaignGlobals
+            face = getattr(
+                CampaignGlobals, 'RECLAIM_FACE',
+                getattr(CampaignGlobals, 'PROTAGONIST', 'Oswald'))
+        except Exception:
+            face = 'Oswald'
+    pack = streetPack(zoneId) or {}
+    lockedName = pack.get('name') or 'this street'
+    frontierName = 'Loopy Lane'
+    try:
+        unlocked = max(0, int(unlockedThrough))
+    except (TypeError, ValueError):
+        unlocked = 0
+    try:
+        from toontown.campaign import CampaignGlobals
+        acts = getattr(CampaignGlobals, 'ACTS', ()) or ()
+        if acts:
+            frontier = acts[min(unlocked, len(acts) - 1)]
+            frontierName = frontier.get('name') or frontierName
+    except Exception:
+        pass
+    return (
+        '%s: %s unlocks after earlier streets — head to %s '
+        '(explore the tunnel / press C).'
+        % (face, lockedName, frontierName))
 
 
 def streetPackParams(zoneId):

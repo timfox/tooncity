@@ -53,6 +53,68 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._overlordP2HpFrac = None
         self._streetP2Promoted = False
 
+    @staticmethod
+    def startStreetPackForToon(air, toon, force=False):
+        """Start STREET_PACKS reclaim with soft act-unlock gate.
+
+        Soft-gate (story skip reduction): Punchline / Silly packs need
+        campaign unlockedThrough >= their ACTS index. Loopy (act 0) stays
+        open so discoverable play entry works. When a campaign act is
+        already live on this street, prefer campaign attach (C path) so
+        R cannot race past unlocks. force=True bypasses the soft-gate for
+        ~startreclaim demos — not a hard brick on tips / explore.
+
+        Returns a short player-facing message (started / gated / prefer).
+        """
+        zoneId = int(getattr(toon, 'zoneId', 0) or 0)
+        unlockedThrough = 0
+        campaign = None
+        try:
+            from toontown.campaign import CampaignGlobals
+            from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+            campaign = getCampaignDirector(air)
+            unlockedThrough = int(
+                getattr(campaign, 'unlockedThrough', 0) or 0)
+            # Prefer campaign attach when live on this street.
+            if (not force
+                    and campaign.state == CampaignGlobals.STATE_ACTIVE):
+                act = CampaignGlobals.ACTS[campaign.actIndex]
+                if zoneId == int(act['zoneId']):
+                    return campaign.startCampaign(toon)
+        except Exception:
+            DistributedReclaimDirectorAI.notify.warning(
+                'startStreetPackForToon campaign-prefer check failed')
+
+        if not force and not ReclaimGlobals.streetPackUnlocked(
+                zoneId, unlockedThrough):
+            return ReclaimGlobals.streetPackGateMessage(
+                zoneId, unlockedThrough)
+
+        directors = getattr(air, 'reclaimDirectors', None)
+        if directors is None:
+            directors = {}
+            air.reclaimDirectors = directors
+        existing = directors.get(zoneId)
+        if existing is not None and not existing.isDeleted():
+            if existing.state == ReclaimGlobals.STATE_ACTIVE:
+                return 'Reclaim already active in zone %s.' % zoneId
+            existing.requestDelete()
+            directors.pop(zoneId, None)
+
+        director = DistributedReclaimDirectorAI(air, zoneId=zoneId)
+        director.generateWithRequired(zoneId)
+        directors[zoneId] = director
+        packKwargs = ReclaimGlobals.streetPackParams(zoneId)
+        director.start(
+            zoneId,
+            (toon.getX(), toon.getY(), toon.getZ()),
+            toon.getH(),
+            **packKwargs)
+        packId = ReclaimGlobals.streetPackId(zoneId)
+        if packId:
+            return 'Reclaim started (%s)' % packId
+        return 'Reclaim packs inbound — press F to fight!'
+
     def getState(self):
         return self.state
 
