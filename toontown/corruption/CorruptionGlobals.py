@@ -367,6 +367,29 @@ DEATH_POP_LOOK = {
     },
 }
 
+# Overlord telegraph ink crown / silhouette flash — short rubber-hose juice
+# above the boss on announceAttackTelegraph when a finale phase look is active.
+# Distinct from street CorruptTelegraphInkFx drips: crown silhouette reads as
+# boss wind-up. Client only; AI timings unchanged. No KH branding.
+OVERLORD_TELEGRAPH_CROWN_LOOK = {
+    'id': 'ink-crown',
+    'lift': 3.35,
+    'scale': 1.0,
+    'peakAlpha': 0.95,
+    'fadeInSec': 0.05,
+    'holdSec': 0.18,
+    'fadeOutSec': 0.32,
+    'squash': (1.4, 1.0, 0.55),
+    'stretch': (0.7, 1.0, 1.55),
+    'squashSec': 0.06,
+    'stretchSec': 0.1,
+    'settleSec': 0.14,
+    'bodyColor': (0.06, 0.02, 0.08, 1.0),
+    'rimColor': (0.85, 0.25, 0.95, 1.0),
+    'flashColor': (1.15, 0.45, 1.25, 1.0),
+    'binSort': 44,
+}
+
 # Ink Overlord finale phase looks (client-readable; AI timings unchanged).
 # Phase 1 = rising magenta swell; Phase 2 = crimson unleashed fury.
 # Keep P1/P2 telegraphs readable at a glance: color, rubber scale, SFX, HUD cue.

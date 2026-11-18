@@ -12,6 +12,7 @@ from toontown.corruption.CorruptDeathPopFx import (
     DeathPopSplat, buildBodyPopInterval, deathPopLook)
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
+from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
 
 
 class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
@@ -60,6 +61,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._stringLashNP = None
         self._deathPopSplat = None
         self._telegraphInkDrip = None
+        self._overlordCrown = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -120,6 +122,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSpitBlob()
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
+        self.__clearOverlordTelegraphCrown()
         self.__clearDeathPopSplat()
 
     def __buildGeom(self):
@@ -461,12 +464,16 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
         self.__playTelegraphInkDrip(look)
+        # Overlord-only: ink crown / silhouette flash for phase telegraph read.
         if look and phase >= 1:
+            self.__playOverlordTelegraphCrown(look, phase)
             # Phase HUD cue so P1 magenta vs P2 crimson reads mid-wind-up.
             messenger.send(  # noqa: F821
                 'finaleTelegraphCue',
                 [phase, look.get('hudCue', 'OVERLORD P%s' % phase),
                  look.get('hudColor', (1.0, 0.55, 1.0, 1.0))])
+        else:
+            self.__clearOverlordTelegraphCrown()
         # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
         # wind-up reads clearly before announceAttackHit's slam lands.
         self._telegraphIval = Sequence(
@@ -502,8 +509,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip so impact flash / spit / lash own the frame.
+        # Clear telegraph drip / crown so impact flash / spit / lash own the frame.
         self.__clearTelegraphInkDrip()
+        self.__clearOverlordTelegraphCrown()
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
@@ -889,6 +897,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSpitBlob()
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
+        self.__clearOverlordTelegraphCrown()
         self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
         look = deathPopLook(self.getArchetype())
@@ -943,6 +952,26 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._telegraphInkDrip = None
+
+    def __playOverlordTelegraphCrown(self, finaleLook=None, phase=1):
+        """Ink crown / silhouette flash — Overlord phase telegraphs only."""
+        self.__clearOverlordTelegraphCrown()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        crown = OverlordTelegraphCrown()
+        self._overlordCrown = crown
+        crown.play(pos, finaleLook=finaleLook, phase=phase)
+
+    def __clearOverlordTelegraphCrown(self):
+        crown = getattr(self, '_overlordCrown', None)
+        if crown is not None:
+            try:
+                crown.clear()
+            except Exception:
+                pass
+        self._overlordCrown = None
 
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""
