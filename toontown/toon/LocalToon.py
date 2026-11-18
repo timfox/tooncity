@@ -122,6 +122,9 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             self.tossPieStart = None
             self.__presentingPie = 0
             self.__pieSequence = 0
+            # KH-style rubber-hose melee prototype (see toontown/hackslash/).
+            self.hackSlashCombat = None
+            self.hackSlashDemoHostiles = []
             self.wantBattles = base.config.GetBool('want-battles', 1)
             self.seeGhosts = base.config.GetBool('see-ghosts', 0)
             wantNameTagAvIds = base.config.GetBool('want-nametag-avids', 0)
@@ -242,6 +245,7 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
         from otp.friends import FriendInfo
 
     def disable(self):
+        self.disableHackSlashMelee()
         self.laffMeter.destroy()
         del self.laffMeter
         self.questMap.destroy()
@@ -834,6 +838,30 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
     def endAllowPies(self):
         self.allowPies = 0
         self.updatePieButton()
+
+    def enableHackSlashMelee(self, spawnHostiles=True):
+        """Enable real-time rubber-hose melee (KH hack-and-slash prototype)."""
+        if self.hackSlashCombat is None:
+            from toontown.hackslash.MeleeCombat import MeleeCombatController
+            self.hackSlashCombat = MeleeCombatController(self)
+        if not self.hackSlashCombat.isEnabled():
+            self.hackSlashCombat.enable(spawnHostiles=spawnHostiles)
+        return True
+
+    def disableHackSlashMelee(self):
+        if self.hackSlashCombat is not None:
+            self.hackSlashCombat.destroy()
+            self.hackSlashCombat = None
+        return False
+
+    def toggleHackSlashMelee(self, spawnHostiles=True):
+        if self.hackSlashCombat is not None and self.hackSlashCombat.isEnabled():
+            return self.disableHackSlashMelee()
+        return self.enableHackSlashMelee(spawnHostiles=spawnHostiles)
+
+    def isHackSlashMeleeEnabled(self):
+        return bool(self.hackSlashCombat and self.hackSlashCombat.isEnabled())
+
 
     def makePiePowerMeter(self):
         from direct.gui.DirectGui import DirectWaitBar, DGG
