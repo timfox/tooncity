@@ -3103,6 +3103,21 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_startFogPulseLoop', crumb_src)
         self.assertIn('_FOG_PULSE_GAP_SEC', crumb_src)
         self.assertIn('playgroundPollutionFogEdge', crumb_src)
+        # Birds-return cream wash on hub pollution clear (pairs with #55).
+        birds_wash_rel = 'toontown/safezone/BirdsReturnCreamWashFx.py'
+        _assert_module_file(birds_wash_rel)
+        birds_wash_names = _class_and_func_names(_module_ast(birds_wash_rel))
+        for birds_sym in (
+                'birdsReturnCreamWashParams',
+                'shouldPlayBirdsReturnCreamWash',
+                'BirdsReturnCreamWashPulse',
+                'playBirdsReturnCreamWash',
+                'clearBirdsReturnCreamWash'):
+            self.assertIn(
+                birds_sym, birds_wash_names,
+                msg='BirdsReturnCreamWashFx missing %s' % birds_sym)
+        self.assertIn('_cueBirdsReturnCreamWash', crumb_src)
+        self.assertIn('playBirdsReturnCreamWash', crumb_src)
         playground_src = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('ensureCorruptStreetBreadcrumbs', playground_src)
         self.assertIn('stopCorruptStreetBreadcrumbs', playground_src)

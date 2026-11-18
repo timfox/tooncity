@@ -12,6 +12,11 @@ fog edge veil also breathes at the playground-side tunnel lip so
 corruption presence reads before you enter a reclaim street — distinct
 from both placemarker (#211) and crumb (#216) scale pulses.
 
+When a polluted reclaim tunnel clears (or purityRestoreFx fires while
+the hub is live), a brief birds-return cream wash pulses so the
+playground feeling clean reads juicily beside PollutionStreetAudio
+pure-street birds (#55) — see BirdsReturnCreamWashFx.
+
 Reads PollutionManager + reclaim/campaign street tables (import only);
 does not rewrite those packages. Rubber-hose Toontown voice — no KH.
 """
@@ -229,6 +234,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._pulseIvals = {}
         self._crumbPulseIvals = {}
         self._fogPulseIvals = {}
+        self._lastPollutionLevels = {}  # zoneId -> last known level
         self._active = False
 
     def start(self):
@@ -249,11 +255,29 @@ class CorruptStreetBreadcrumb(DirectObject):
         self.ignore('purityRestoreFx')
         self.ignore('exitPlayground')
         self._clearMarkers()
+        self._clearBirdsReturnCreamWash()
 
     def destroy(self):
         self.stop()
         self.ignoreAll()
         self._playground = None
+
+    def _cueBirdsReturnCreamWash(self):
+        """Soft cream wash when playground pollution clears / birds return."""
+        try:
+            from toontown.safezone.BirdsReturnCreamWashFx import (
+                playBirdsReturnCreamWash)
+            playBirdsReturnCreamWash()
+        except Exception:
+            self.notify.debug('birds return cream wash unavailable')
+
+    def _clearBirdsReturnCreamWash(self):
+        try:
+            from toontown.safezone.BirdsReturnCreamWashFx import (
+                clearBirdsReturnCreamWash)
+            clearBirdsReturnCreamWash()
+        except Exception:
+            pass
 
     def _requestStreetPollution(self):
         """Ask PollutionManager for Loopy / Punchline / Silly samples."""
@@ -279,11 +303,43 @@ class CorruptStreetBreadcrumb(DirectObject):
         reclaimZones = {z for z, _n, _t, _s in reclaimStreetEntries()}
         if zoneId is not None and int(zoneId) not in reclaimZones:
             return
+        prevLevel = None
+        if zoneId is not None:
+            zid = int(zoneId)
+            prevLevel = self._lastPollutionLevels.get(zid)
+            if level is not None:
+                try:
+                    self._lastPollutionLevels[zid] = float(level)
+                except (TypeError, ValueError):
+                    pass
+        hadMarker = (
+            zoneId is not None and int(zoneId) in self._markers)
         self.refresh()
+        # Pollution clear → cream wash beside pure-street birds return (#55).
+        # Debounce lives in BirdsReturnCreamWashFx.
+        clearedMarker = (
+            hadMarker and zoneId is not None
+            and int(zoneId) not in self._markers)
+        flippedPure = False
+        if prevLevel is not None and level is not None:
+            try:
+                from toontown.safezone.BirdsReturnCreamWashFx import (
+                    shouldPlayBirdsReturnCreamWash)
+                flippedPure = shouldPlayBirdsReturnCreamWash(
+                    prevLevel, level)
+            except Exception:
+                flippedPure = False
+        if clearedMarker or flippedPure:
+            self._cueBirdsReturnCreamWash()
 
     def _onPurityRestore(self, *args):
-        if self._active:
-            self.refresh()
+        if not self._active:
+            return
+        hadAny = bool(self._markers)
+        self.refresh()
+        # Reclaim complete / purity restore while hub live — birds return cue.
+        if hadAny or args:
+            self._cueBirdsReturnCreamWash()
 
     def refresh(self):
         if not self._active:
@@ -302,7 +358,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         for zoneId, name, text, seed in reclaimStreetEntries():
             if streetNeedsBreadcrumb(zoneId, pollution, seed, pure=pure):
                 wanted[int(zoneId)] = (name, text)
-        # Drop cleared streets.
+        # Drop cleared streets (caller may cue birds-return cream wash).
         for zoneId in list(self._markers.keys()):
             if zoneId not in wanted:
                 self._removeMarker(zoneId)
