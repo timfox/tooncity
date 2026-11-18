@@ -125,12 +125,18 @@ ACTS = (
         'banner': (
             'Finale Phase 1 — Oswald stands with you against '
             'the Ink Overlord on Silly Street!'),
-        # Act-entry tip (PlayEntry) — Oswald trusted lead + Ink Overlord cues.
-        # Mid-campaign tip only; no twist spoilers. Hose-pop tunables below.
+        # Act-entry tip (PlayEntry) — Oswald lead + Ink Overlord cues.
+        # Deepens Punchline unease (#198): cheer feels wrong beside the
+        # Overlord fight ahead — foreshadow only (no twist spoilers /
+        # no "Oswald caused it"). Hose-pop tunables below.
         'entryTip': (
-            'Oswald leads Act 3 — Silly Street finale: explore → '
+            'Oswald leads Act 3 — cheer feels wrong on this street — '
+            'Silly Street finale: explore → '
             'F fight the Ink Overlord → reclaim  |  '
             'Shift dodge  |  C campaign'),
+        # Tip-only unease: longer fracture hose settle on entry. Do NOT set
+        # trustFracture here — victory / twist stay on the sunny reveal path.
+        'entryTipUnease': True,
         # Twist: trusted Oswald was the source of the neighborhood pollution.
         'handoffTitle': 'VICTORY…?',
         'handoff': (
@@ -256,9 +262,10 @@ PUNCHLINE_ACT_TIP_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
 PUNCHLINE_ACT_TIP_CREAM_WASH_BIN = 49
 
 # Silly Street Act 3 entry tip — tip-matched hose pop, slightly heavier for
-# the Ink Overlord finale beat. Oswald stays the trusted mid-campaign lead
-# on this tip (no twist spoilers). Soft trust settle matches Punchline tip
-# #91 / act-banner #76. Toontown spiritual sequel — no keyblades / KH branding.
+# the Ink Overlord finale beat. entryTipUnease deepens Punchline half-beat
+# off (#198): cheer feels wrong beside the Overlord fight — foreshadow only
+# (no twist spoilers). Soft sunny settle kept as fallback; PlayEntry swaps
+# to OSWALD_TRUST_FRACTURE_* when entryTipUnease is armed. No KH branding.
 SILLY_ACT_TIP_POP_SQUASH = (1.68, 1.0, 0.46, 0.05)   # sx, sy, sz, sec
 SILLY_ACT_TIP_POP_STRETCH = (0.70, 1.0, 1.52, 0.08)
 SILLY_ACT_TIP_POP_SETTLE_SEC = 0.10
@@ -367,8 +374,9 @@ OSWALD_TRUST_SUB_POP_SETTLE_SEC = 0.10
 # Off-tone trust foreshadow only — no twist spoilers / no KH branding.
 # Hose settle holds a rubbery beat longer than sunny trust (#76); cream
 # edge cools toward a soft shadow fleck settle (ActBannerCreamEdgeFx).
-# Punchline deepens Loopy unease (#190) — Silly finale path stays twist-free
-# until victory reveal.
+# Punchline deepens Loopy unease (#190); Silly Act 3 entry tip reuses the
+# longer settle via entryTipUnease (Overlord foreshadow) without arming
+# finale trustFracture — victory / twist stay sunny until reveal.
 OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.09)
 OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC = 0.14
 OSWALD_TRUST_FRACTURE_SUB_COLOR = (0.88, 0.92, 0.86, 1.0)
