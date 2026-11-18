@@ -2,13 +2,13 @@
 
 Fullscreen soft cream veil that settles *after* early/mid Oswald trust
 hose settle (#76) and cream edge (#117) — same PerfectDodgeCreamWashPulse /
-HitSparkCreamWashPulse / HandoffCreamWashPulse / VictoryCreamWashPulse
-overlay grammar as a brief trusted-hero settle beat. Soft under the
-trust plate + edge strips; cream / pastel only (not ink). Wired from
-CampaignHandoff trustSettle (Oswald trusted early/mid only) beside the
-cream edge. No carnival / no twist spoilers — twist / victory / phase /
-handoff carnival stay on their own wash modules. Client only. Toontown
-spiritual sequel — no keyblades / no KH branding.
+HitSparkCreamWashPulse / HandoffCreamWashPulse / VictoryCreamWashPulse /
+FinaleRevealCreamWashPulse overlay grammar as a brief trusted-hero settle
+beat. Soft under the trust plate + edge strips; cream / pastel only (not
+ink). Wired from CampaignHandoff trustSettle (Oswald trusted early/mid
+only) beside the cream edge. No carnival / no twist spoilers — twist /
+victory / phase / handoff carnival stay on their own wash modules.
+Client only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4

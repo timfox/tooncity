@@ -367,9 +367,10 @@ HANDOFF_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.38)
 # delayed two-beat aspect2d veil on Loopy→Punchline (and act) carnival
 # handoffs only. Soft under edge strips (bin 55) / plate (60); cream /
 # pastel only. A touch quieter / shorter than victory wash (#138) —
-# handoffs fire more often. Oswald trust wash lives separately; twist /
-# phase stay wash-free. HANDOFF_CREAM_WASH_ENABLED = False drops wash only
-# (carnival + sparkle + edge remain). No keyblades / KH branding.
+# handoffs fire more often. Oswald trust / finale-reveal wash live
+# separately; phase stays wash-free here. HANDOFF_CREAM_WASH_ENABLED =
+# False drops wash only (carnival + sparkle + edge remain). No keyblades /
+# KH branding.
 HANDOFF_CREAM_WASH_ENABLED = True
 HANDOFF_CREAM_WASH_DELAY_SEC = 0.40  # after play; after edge peak (~0.20)
 HANDOFF_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -491,9 +492,10 @@ VICTORY_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.36)
 # Perfect-dodge / melee hit / handoff / Oswald-trust cream wash grammar —
 # delayed two-beat aspect2d veil on the purity cheer ("TOON CITY IS
 # SAVED!") only. Soft under edge strips (bin 58) / plate (60); cream /
-# pastel only. Clears before Oswald twist / FinalePhaseFx reveal.
-# VICTORY_CREAM_WASH_ENABLED = False drops wash only (swell + sparkle +
-# edge remain). No keyblades / KH branding.
+# pastel only. Clears before Oswald twist / FinalePhaseFx reveal (which
+# arms its own finale-reveal wash). VICTORY_CREAM_WASH_ENABLED = False
+# drops wash only (swell + sparkle + edge remain). No keyblades / KH
+# branding.
 VICTORY_CREAM_WASH_ENABLED = True
 VICTORY_CREAM_WASH_DELAY_SEC = 0.48  # after play; after edge peak (~0.20)
 VICTORY_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -609,6 +611,27 @@ FINALE_REVEAL_CREAM_EDGE_SPARKLE_SEC = 0.38
 FINALE_REVEAL_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.80, 0.82)
 FINALE_REVEAL_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.60, 0.0)
 FINALE_REVEAL_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.10)
+
+# Soft cream wash pulse after finale reveal cream edge / aftershock
+# (#133/#86). Trust / handoff / victory cream wash grammar (#145/#141/#138)
+# — delayed two-beat aspect2d veil on the Oswald-twist residual only.
+# Soft under edge strips (bin 56) / aftershock (58); cream / pastel only.
+# Quieter / shorter than victory wash (#138) so the truth sting stays
+# bittersweet; rides with aftershock fleck hang (~0.85s). Mid-campaign
+# trust / handoff / victory stay on their own wash modules.
+# FINALE_REVEAL_CREAM_WASH_ENABLED = False drops wash only (aftershock +
+# edge remain). No keyblades / KH branding.
+FINALE_REVEAL_CREAM_WASH_ENABLED = True
+FINALE_REVEAL_CREAM_WASH_DELAY_SEC = 0.40  # after play; after edge peak
+FINALE_REVEAL_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+FINALE_REVEAL_CREAM_WASH_PEAK = 0.13
+FINALE_REVEAL_CREAM_WASH_MID = 0.07
+FINALE_REVEAL_CREAM_WASH_IN_SEC = 0.07
+FINALE_REVEAL_CREAM_WASH_PULSE_SEC = 0.12
+FINALE_REVEAL_CREAM_WASH_HOLD_SEC = 0.10
+FINALE_REVEAL_CREAM_WASH_OUT_SEC = 0.42  # soft residual settle under twist
+# Under cream edge (56) / aftershock (58); soft veil settle beat.
+FINALE_REVEAL_CREAM_WASH_BIN = 54
 
 STATE_IDLE = 0
 STATE_ACTIVE = 1

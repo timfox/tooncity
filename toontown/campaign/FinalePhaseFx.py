@@ -6,10 +6,11 @@ purity-restore patterns so the phase flip reads as a boss moment.
 On Silly finale victory / twist, plays a short readable AV reveal sting
 (banner + FOV/flash + rubber-hose Oswald silhouette shadow flash +
 optional SFX) that Oswald caused the corruption, then a soft cream
-aftershock framed by a quieter cream edge pulse that supports the beat
-without undoing it. Composes with #82 victory cream swell (cheer only —
-cleared before reveal) and #129 victory cream edge. Toontown spiritual
-sequel — no keyblades / no KH branding.
+aftershock framed by a quieter cream edge pulse and a delayed soft cream
+wash pulse that support the beat without undoing it. Composes with #82
+victory cream swell (cheer only — cleared before reveal) and #129
+victory cream edge. Toontown spiritual sequel — no keyblades / no KH
+branding.
 """
 
 from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec3, Vec4
@@ -33,6 +34,10 @@ from toontown.campaign.ActBannerCreamEdgeFx import (
 from toontown.campaign.FinaleCreamAftershockFx import (
     clearFinaleCreamAftershock,
     playFinaleCreamAftershock,
+)
+from toontown.campaign.FinaleRevealCreamWashFx import (
+    clearFinaleRevealCreamWash,
+    playFinaleRevealCreamWash,
 )
 from toontown.corruption import CorruptionGlobals
 
@@ -239,8 +244,9 @@ class FinalePhaseFxClient(DirectObject):
     def _playCreamAftershock(self):
         """Soft cream residual after the reveal sting lands.
 
-        Cream aftershock (#86) + quieter cream edge frame (#129 twin) —
-        Oswald-twist path only; mid-campaign stays edge-free of spoilers.
+        Cream aftershock (#86) + quieter cream edge frame (#133) + soft
+        cream wash pulse (#145/#141/#138 twin) — Oswald-twist path only;
+        mid-campaign stays edge/wash-free of spoilers.
         """
         try:
             playFinaleCreamAftershock()
@@ -248,6 +254,12 @@ class FinalePhaseFxClient(DirectObject):
             pass
         try:
             playFinaleRevealCreamEdge()
+        except Exception:
+            pass
+        # Soft cream wash pulse after cream edge (#133) — trust / handoff /
+        # victory wash grammar (#145/#141/#138). Twist residual only.
+        try:
+            playFinaleRevealCreamWash()
         except Exception:
             pass
 
@@ -564,6 +576,10 @@ class FinalePhaseFxClient(DirectObject):
             pass
         try:
             clearFinaleRevealCreamEdge()
+        except Exception:
+            pass
+        try:
+            clearFinaleRevealCreamWash()
         except Exception:
             pass
         try:
