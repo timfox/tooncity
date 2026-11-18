@@ -2,9 +2,10 @@
 
 Warm cream aspect2d flash + expanding cream ring when the 3rd stretch-punch
 slam lands, then a delayed cream sparkle hang (soft veil + flecks/streaks),
-then a delayed cream aftershock (softer flecks + soft halo) so the slam
-settles sunny — same residual grammar as CreamHangSparkleFx / HitJuice
-combo cream aftershock. Layers with SlamDustFx (feet thud), HitJuice
+then a delayed cream aftershock (softer flecks + soft halo), then a soft
+cream wash pulse so the slam settles sunny — same residual grammar as
+CreamHangSparkleFx / HitJuice combo cream aftershock + perfect-dodge /
+melee-hit cream wash. Layers with SlamDustFx (feet thud), HitJuice
 finisher slam scale, HitStopFx freeze (flash reads during the stick), and
 soft-lock FOV (#74) — finisher FOV still owns the lens after resume.
 Toontown spiritual-sequel tone only — no keyblades / no KH branding.
@@ -25,10 +26,11 @@ from direct.interval.IntervalGlobal import (
 )
 
 from . import HackSlashConfig
+from .FinisherCreamWashFx import FinisherCreamWashPulse
 
 
 class CreamSlamFlashFx(object):
-    """Owns cream screen flash + ring, sparkle hang, then cream aftershock."""
+    """Owns cream flash + ring, hang, aftershock, then cream wash pulse."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -39,9 +41,10 @@ class CreamSlamFlashFx(object):
         self._aftershockHaloNP = None
         self._hangNodes = []
         self._aftershockNodes = []
+        self._creamWash = None
 
     def play(self):
-        """Spawn cream flash + ring, sparkle hang, then delayed aftershock.
+        """Spawn cream flash + ring, hang, aftershock, then delayed cream wash.
 
         Returns started Sequence or None.
         """
@@ -80,8 +83,42 @@ class CreamSlamFlashFx(object):
         if aftershock is not None:
             layers.append(aftershock)
 
+        # Soft cream wash pulse after cream aftershock — hit/perfect-dodge grammar.
+        washHold = 0.0
+        try:
+            wash = FinisherCreamWashPulse()
+            if wash.play() is not None:
+                self._creamWash = wash
+                # Hold teardown beside delayed wash so clear() doesn't
+                # kill the veil mid-pulse (wash self-clears too).
+                washHold = (
+                    float(getattr(
+                        HackSlashConfig, 'FINISHER_CREAM_WASH_DELAY_SEC',
+                        0.60))
+                    + float(getattr(
+                        HackSlashConfig, 'FINISHER_CREAM_WASH_IN_SEC',
+                        0.06))
+                    + float(getattr(
+                        HackSlashConfig, 'FINISHER_CREAM_WASH_PULSE_SEC',
+                        0.10))
+                    + float(getattr(
+                        HackSlashConfig, 'FINISHER_CREAM_WASH_HOLD_SEC',
+                        0.08))
+                    + float(getattr(
+                        HackSlashConfig, 'FINISHER_CREAM_WASH_OUT_SEC',
+                        0.40))
+                    + 0.02)
+            else:
+                self._creamWash = None
+        except Exception:
+            self._creamWash = None
+
+        hold = [Parallel(*layers)]
+        if washHold > 0.0:
+            hold.append(Wait(washHold))
+
         self._ival = Sequence(
-            Parallel(*layers),
+            Parallel(*hold),
             Func(self.clear),
             name=self.avatar.uniqueName('hackslashCreamSlamFlash'),
         )
@@ -89,13 +126,20 @@ class CreamSlamFlashFx(object):
         return self._ival
 
     def clear(self):
-        """Stop the flash/hang/aftershock and remove cream nodes."""
+        """Stop the flash/hang/aftershock/wash and remove cream nodes."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         for attr in ('_flashNP', '_ringNP', '_hangVeilNP', '_aftershockHaloNP'):
             np = getattr(self, attr, None)
             setattr(self, attr, None)
