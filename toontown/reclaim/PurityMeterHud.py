@@ -25,8 +25,10 @@ rim flash + local cream flecks / soft halo when purity stalls or ink pressure
 rises — rubber-hose urgency after re-creep #194 so danger reads juicier
 (distinct from secured-lock #209, wave-clear sparkle #229, complete hose
 settle #225, wave-start sunny hose cream).
-Full reclaim secured lock: brief cream/green rim confirm + soft meter hose-pop
-that purity is locked (pairs with SecuredLockSparkleFx flecks / pitch sting).
+Full reclaim secured lock: brief cream/green rim confirm + juicier soft meter
+hose-pop that purity is locked (pairs with deepened SecuredLockSparkleFx
+green-cream flecks / aftershock / pitch sting — tip-near, not wave-clear
+sparkle #229, rim-flash cream #234, or wave-start hose #239).
 """
 
 from math import cos, pi, sin
@@ -778,10 +780,11 @@ class PurityMeterHud(object):
         self._warnIval.start()
 
     def confirmSecured(self):
-        """Brief cream/green rim + soft uniform meter pop when purity locks.
+        """Brief cream/green rim + juicier soft uniform meter pop on lock.
 
-        Soft ease scale (not squash→stretch wave-start hose, not complete
-        settle stretch→settle) + green rim hold.
+        Soft ease scale (not squash→stretch wave-start hose #239, not warm
+        rim-flash cream #234, not complete settle stretch→settle) + green
+        rim hold — pairs with deepened tip-near green-cream sparkle sting.
         """
         if not getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_ENABLED', True):
             return
@@ -800,9 +803,9 @@ class PurityMeterHud(object):
         popParts = []
         if self._root is not None and not self._root.isEmpty():
             popScale = float(getattr(
-                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SCALE', 1.12))
+                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SCALE', 1.18))
             popSec = float(getattr(
-                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SEC', 0.09))
+                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SEC', 0.11))
             try:
                 baseScale = self._root.getScale()
                 try:

@@ -939,6 +939,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'SECURED_LOCK_HUD_HOLD_SEC',
                 'SECURED_LOCK_SPARKLE_ENABLED',
                 'SECURED_LOCK_SPARKLE_COLOR',
+                'SECURED_LOCK_SPARKLE_POP',
+                'SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED',
+                'SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT',
+                'SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_ENABLED',
                 'SECURED_LOCK_STING_ENABLED',
                 'SECURED_LOCK_STING_SFX',
                 'SECURED_LOCK_METER_POP_SCALE'):
@@ -954,6 +958,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             'toontown/reclaim/SecuredLockSparkleFx.py')
         self.assertIn('playLockSting', sparkle_fx_src)
         self.assertIn('SECURED_LOCK_SPARKLE', sparkle_fx_src)
+        self.assertIn('_buildSparkleAftershock', sparkle_fx_src)
+        self.assertIn('SECURED_LOCK_SPARKLE_AFTERSHOCK', sparkle_fx_src)
         for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
             self.assertNotIn(banned, sparkle_fx_src.lower())
         secured_helpers = _class_and_func_names(self.reclaim_tree)
@@ -962,6 +968,13 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             msg='ReclaimGlobals missing securedLockTipText')
         secured_assigns = _assign_map(self.reclaim_tree)
         self.assertIs(secured_assigns.get('SECURED_LOCK_TIP_ENABLED'), True)
+        self.assertIs(
+            secured_assigns.get('SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED'),
+            True)
+        self.assertGreaterEqual(
+            int(secured_assigns.get('SECURED_LOCK_SPARKLE_COUNT', 0)), 9)
+        self.assertGreater(
+            float(secured_assigns.get('SECURED_LOCK_SPARKLE_POP', 0)), 1.10)
         secured_tip = str(secured_assigns.get('SECURED_LOCK_TIP', '')).lower()
         self.assertIn('secured', secured_tip)
         self.assertIn('ink', secured_tip)
