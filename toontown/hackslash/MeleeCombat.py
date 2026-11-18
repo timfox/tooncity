@@ -299,10 +299,17 @@ class MeleeCombatController(DirectObject):
                 self._playLauncher(target, hitIndex)
             if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
                 self._playFinisherFovPunch()
+                self._playFinisherSelfHop()
         else:
             # Whiff inside a live string soft-breaks the on-screen counter.
             if self._comboHits > 0:
                 self._armComboBreak(delay=0.35)
+
+    def _launchTiming(self, table, hitIndex):
+        """Pick per-hit timing/height; scalars still work for older configs."""
+        if isinstance(table, (int, float)):
+            return float(table)
+        return float(table[min(hitIndex, len(table) - 1)])
 
     def _onHackSlashHit(self, avatar=None, target=None, damage=0, hitIndex=0):
         """Tick the on-screen combo counter for any local melee connect."""
@@ -407,7 +414,7 @@ class MeleeCombatController(DirectObject):
         self._comboHits = 0
 
     def _playLauncher(self, target, hitIndex):
-        """Brief upward juggle on mid/finisher hits (rubber-hose pop)."""
+        """Upward juggle with hang time — clearer KH-style mid/finisher pop."""
         self._clearLaunch()
         try:
             node = target
@@ -416,23 +423,81 @@ class MeleeCombatController(DirectObject):
             start = node.getPos()
         except Exception:
             return
-        heights = HackSlashConfig.LAUNCH_HEIGHT
-        lift = heights[min(hitIndex, len(heights) - 1)]
+        lift = self._launchTiming(HackSlashConfig.LAUNCH_HEIGHT, hitIndex)
         if lift <= 0.01:
             return
+        upSec = self._launchTiming(HackSlashConfig.LAUNCH_UP_SEC, hitIndex)
+        hangSec = self._launchTiming(HackSlashConfig.LAUNCH_HANG_SEC, hitIndex)
+        downSec = self._launchTiming(HackSlashConfig.LAUNCH_DOWN_SEC, hitIndex)
         peak = Point3(start[0], start[1], start[2] + lift)
+        stretch = (
+            Point3(0.7, 0.7, 1.65)
+            if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1
+            else Point3(0.75, 0.75, 1.55))
         self._launchIval = Sequence(
             Parallel(
-                LerpPosInterval(node, HackSlashConfig.LAUNCH_UP_SEC, peak),
-                LerpScaleInterval(node, HackSlashConfig.LAUNCH_UP_SEC, Point3(0.75, 0.75, 1.55)),
+                LerpPosInterval(node, upSec, peak),
+                LerpScaleInterval(node, upSec, stretch),
             ),
+            Wait(hangSec),
             Parallel(
-                LerpPosInterval(node, HackSlashConfig.LAUNCH_DOWN_SEC, start),
-                LerpScaleInterval(node, HackSlashConfig.LAUNCH_DOWN_SEC, Point3(1.0, 1.0, 1.0)),
+                LerpPosInterval(node, downSec, start),
+                LerpScaleInterval(node, downSec, Point3(1.0, 1.0, 1.0)),
             ),
             name=self.avatar.uniqueName('hackslashLaunch'),
         )
         self._launchIval.start()
+
+    def _playFinisherSelfHop(self):
+        """Brief local hop so the finisher juggle feels shared / airborne."""
+        if getattr(self, '_selfHopIval', None):
+            try:
+                self._selfHopIval.finish()
+            except Exception:
+                pass
+            self._selfHopIval = None
+        try:
+            start = self.avatar.getPos(render)  # noqa: F821
+            peak = Point3(
+                start[0], start[1],
+                start[2] + HackSlashConfig.FINISHER_SELF_HOP)
+        except Exception:
+            return
+        try:
+            controls = self.avatar.controlManager.currentControls
+            setattr(controls, 'isAirborne', 1)
+        except Exception:
+            controls = None
+
+        def clearAir():
+            try:
+                if controls is not None:
+                    setattr(controls, 'isAirborne', 0)
+            except Exception:
+                pass
+            self._selfHopIval = None
+
+        self._selfHopIval = Sequence(
+            Parallel(
+                LerpPosInterval(
+                    self.avatar, HackSlashConfig.FINISHER_SELF_UP_SEC, peak,
+                    other=render),  # noqa: F821
+                LerpScaleInterval(
+                    self.avatar, HackSlashConfig.FINISHER_SELF_UP_SEC,
+                    Point3(0.85, 0.85, 1.25)),
+            ),
+            Parallel(
+                LerpPosInterval(
+                    self.avatar, HackSlashConfig.FINISHER_SELF_DOWN_SEC, start,
+                    other=render),  # noqa: F821
+                LerpScaleInterval(
+                    self.avatar, HackSlashConfig.FINISHER_SELF_DOWN_SEC,
+                    Point3(1.0, 1.0, 1.0)),
+            ),
+            Func(clearAir),
+            name=self.avatar.uniqueName('hackslashSelfHop'),
+        )
+        self._selfHopIval.start()
 
     def _clearLaunch(self):
         if self._launchIval:
