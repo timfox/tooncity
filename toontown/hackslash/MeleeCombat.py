@@ -10,6 +10,7 @@ from direct.interval.IntervalGlobal import (
     ActorInterval,
     Func,
     LerpColorScaleInterval,
+    LerpPosInterval,
     LerpScaleInterval,
     Parallel,
     Sequence,
@@ -42,6 +43,8 @@ class MeleeCombatController(DirectObject):
         self._fovIval = None
         self._flashIval = None
         self._flashNP = None
+        self._launchIval = None
+        self._iframeUntil = 0.0
         self._origScale = None
         self._baseFov = None
         self.targetFinder = SoftTargetFinder(avatar)
@@ -56,12 +59,14 @@ class MeleeCombatController(DirectObject):
         self.comboIndex = 0
         self.comboWindowOpen = False
         self.busy = False
+        self._iframeUntil = 0.0
         self.avatar.hackSlashDemoHostiles = getattr(
             self.avatar, 'hackSlashDemoHostiles', []) or []
         if spawnHostiles and not self.avatar.hackSlashDemoHostiles:
             self.avatar.hackSlashDemoHostiles = spawnDemoHostiles(self.avatar)
         self.accept(HackSlashConfig.ATTACK_KEY, self._onAttackPressed)
         self.accept(HackSlashConfig.ATTACK_KEY_ALT, self._onAttackPressed)
+        self.accept('corruptToonHitPlayer', self._onCorruptHitPlayer)
         self._showHint(HackSlashConfig.DEMO_HINT)
         taskMgr.add(self._tick, self._taskName)  # noqa: F821
 
@@ -72,12 +77,15 @@ class MeleeCombatController(DirectObject):
         self.enabled = False
         self.ignore(HackSlashConfig.ATTACK_KEY)
         self.ignore(HackSlashConfig.ATTACK_KEY_ALT)
+        self.ignore('corruptToonHitPlayer')
         taskMgr.remove(self._taskName)  # noqa: F821
         self._finishSwing()
         self._restoreScale()
         self._clearHitstop()
         self._restoreFov()
         self._clearHitFlash()
+        self._clearLaunch()
+        self._iframeUntil = 0.0
         self.targetFinder.clear()
         self._hideHint()
         self._hideLockHint()
@@ -267,8 +275,60 @@ class MeleeCombatController(DirectObject):
             messenger.send('hackslash-hit', [self.avatar, target, damage, hitIndex])  # noqa: F821
             self._playHitstop(hitIndex)
             self._playHitFlash()
+            if hitIndex >= HackSlashConfig.LAUNCH_HIT_INDEX:
+                self._playLauncher(target, hitIndex)
             if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
                 self._playFinisherFovPunch()
+
+    def _playLauncher(self, target, hitIndex):
+        """Brief upward juggle on mid/finisher hits (rubber-hose pop)."""
+        self._clearLaunch()
+        try:
+            node = target
+            if hasattr(target, 'visualRoot') and target.visualRoot is not None:
+                node = target.visualRoot
+            start = node.getPos()
+        except Exception:
+            return
+        heights = HackSlashConfig.LAUNCH_HEIGHT
+        lift = heights[min(hitIndex, len(heights) - 1)]
+        if lift <= 0.01:
+            return
+        peak = Point3(start[0], start[1], start[2] + lift)
+        self._launchIval = Sequence(
+            Parallel(
+                LerpPosInterval(node, HackSlashConfig.LAUNCH_UP_SEC, peak),
+                LerpScaleInterval(node, HackSlashConfig.LAUNCH_UP_SEC, Point3(0.75, 0.75, 1.55)),
+            ),
+            Parallel(
+                LerpPosInterval(node, HackSlashConfig.LAUNCH_DOWN_SEC, start),
+                LerpScaleInterval(node, HackSlashConfig.LAUNCH_DOWN_SEC, Point3(1.0, 1.0, 1.0)),
+            ),
+            name=self.avatar.uniqueName('hackslashLaunch'),
+        )
+        self._launchIval.start()
+
+    def _clearLaunch(self):
+        if self._launchIval:
+            try:
+                self._launchIval.finish()
+            except Exception:
+                pass
+            self._launchIval = None
+
+    def _onCorruptHitPlayer(self, corrupt=None):
+        """Readable i-frame / dodge window after a CorruptToon smack."""
+        if not self.enabled:
+            return
+        now = globalClock.getFrameTime()  # noqa: F821
+        self._iframeUntil = now + HackSlashConfig.IFRAME_SEC
+        self.avatar.hackSlashIFrameUntil = self._iframeUntil
+        # Stronger flash than normal hit confirm so the window is obvious.
+        self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
+        messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
+
+    def isInvulnerable(self):
+        return globalClock.getFrameTime() < self._iframeUntil  # noqa: F821
 
     def _playHitstop(self, hitIndex):
         """Brief attack freeze so contacts read as rubber-hose impacts."""
@@ -320,7 +380,7 @@ class MeleeCombatController(DirectObject):
         except Exception:
             pass
 
-    def _playHitFlash(self):
+    def _playHitFlash(self, peakAlpha=None):
         """Brief full-screen white flash so connects read beyond hitstop alone."""
         self._clearHitFlash()
         try:
@@ -334,7 +394,9 @@ class MeleeCombatController(DirectObject):
             np.setDepthTest(False)
             np.setDepthWrite(False)
             self._flashNP = np
-            peak = HackSlashConfig.HIT_FLASH_PEAK_ALPHA
+            peak = (
+                HackSlashConfig.HIT_FLASH_PEAK_ALPHA
+                if peakAlpha is None else float(peakAlpha))
             self._flashIval = Sequence(
                 LerpColorScaleInterval(
                     np, HackSlashConfig.HIT_FLASH_IN_SEC, Vec4(1, 1, 1, peak)),
