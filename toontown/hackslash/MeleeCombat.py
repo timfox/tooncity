@@ -69,6 +69,11 @@ class MeleeCombatController(DirectObject):
         self._perfectCounterUntil = 0.0
         self._perfectCounterBuffered = False
         self._perfectCounterPending = False
+        # Air-juggle → slam cancel window (armed on mid-combo launch hang).
+        self._juggleCancelArmed = False
+        self._juggleCancelOpenAt = 0.0
+        self._juggleCancelUntil = 0.0
+        self._juggleAttackBuffered = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
         self._hitStop = HitStopFx(avatar)
@@ -115,6 +120,7 @@ class MeleeCombatController(DirectObject):
         self._dodging = False
         self._clearDodgeCancelWindow()
         self._clearPerfectDodgeCounterWindow()
+        self._clearJuggleCancelWindow()
         self._comboHits = 0
         self.avatar.hackSlashDemoHostiles = getattr(
             self.avatar, 'hackSlashDemoHostiles', []) or []
@@ -164,6 +170,7 @@ class MeleeCombatController(DirectObject):
         self._clearDodge()
         self._clearDodgeCancelWindow()
         self._clearPerfectDodgeCounterWindow()
+        self._clearJuggleCancelWindow()
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
@@ -230,9 +237,11 @@ class MeleeCombatController(DirectObject):
     def _tick(self, task):
         if not self.enabled:
             return Task.done
-        # Flush buffered F/LMB once dodge-cancel / perfect-dodge counter opens.
+        # Flush buffered F/LMB once dodge-cancel / perfect-dodge / juggle-cancel
+        # windows open.
         self._flushPerfectDodgeCounterBuffer()
         self._flushDodgeCancelBuffer()
+        self._flushJuggleCancelBuffer()
         target = self.targetFinder.acquire()
         snapped = self.targetFinder.didSnap()
         if target is not None:
@@ -412,23 +421,40 @@ class MeleeCombatController(DirectObject):
     def _onAttackPressed(self):
         if not self.enabled:
             return
-        if getattr(self.avatar.controlManager.currentControls, 'isAirborne', 0):
-            return
         # Presenting a pie — don't overlap classic toss.
         if getattr(self.avatar, 'tossPieStart', None) is not None:
+            return
+
+        # Air-juggle → slam cancel: early rise can buffer; once hang opens,
+        # F/LMB cancels into the finisher slam (aerial control — bypasses the
+        # grounded-only attack gate while the window is live).
+        fromJuggleCancel = False
+        if getattr(HackSlashConfig, 'JUGGLE_CANCEL_ENABLED', True):
+            if self._isInJuggleCancelLockout():
+                if getattr(HackSlashConfig, 'JUGGLE_CANCEL_BUFFER', True):
+                    self._juggleAttackBuffered = True
+                return
+            if self.isJuggleCancelOpen():
+                self._cancelJuggleIntoSlam()
+                fromJuggleCancel = True
+
+        if (not fromJuggleCancel and
+                getattr(self.avatar.controlManager.currentControls,
+                        'isAirborne', 0)):
             return
 
         # Perfect-dodge counter → melee takes priority over plain dodge cancel:
         # rewarded opener (damage + snappy rate) after i-frames eat a telegraph.
         fromPerfectCounter = False
         fromDodgeCancel = False
-        if self.isPerfectDodgeCounterOpen():
+        if not fromJuggleCancel and self.isPerfectDodgeCounterOpen():
             if self._dodging or self.isDodgeCancelOpen():
                 self._cancelDodgeIntoMelee()
             self._consumePerfectDodgeCounter()
             fromPerfectCounter = True
             fromDodgeCancel = True
-        elif getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True):
+        elif (not fromJuggleCancel and
+                getattr(HackSlashConfig, 'DODGE_CANCEL_ENABLED', True)):
             # Dodge → melee cancel: early roll is locked (optional buffer); once
             # the cancel window opens, F/LMB aborts remaining dodge recovery
             # into a fresh stretch-punch so Shift→F combo flow reads clean.
@@ -440,11 +466,15 @@ class MeleeCombatController(DirectObject):
                 self._cancelDodgeIntoMelee()
                 fromDodgeCancel = True
 
-        if self.busy and not self.comboWindowOpen:
+        if self.busy and not self.comboWindowOpen and not fromJuggleCancel:
             return
 
         messenger.send('wakeup')  # noqa: F821
-        if (not fromDodgeCancel and self.comboWindowOpen and
+        if fromJuggleCancel:
+            # Mid-juggle cancel always jumps to the finisher slam hit.
+            hitIndex = HackSlashConfig.juggleCancelSlamHitIndex()
+            self.comboIndex = hitIndex
+        elif (not fromDodgeCancel and self.comboWindowOpen and
                 self.comboIndex < HackSlashConfig.COMBO_LENGTH):
             hitIndex = self.comboIndex
         else:
@@ -762,8 +792,14 @@ class MeleeCombatController(DirectObject):
                 LerpScaleInterval(node, downSec, Point3(1.0, 1.0, 1.0)),
             ),
             Func(self._clearLaunchSparks),
+            Func(self._expireJuggleCancelIfNeeded),
             name=self.avatar.uniqueName('hackslashLaunch'),
         )
+        # Mid-combo juggle arms cancel-into-slam; finisher already is the slam.
+        if hitIndex < HackSlashConfig.COMBO_LENGTH - 1:
+            self._armJuggleCancelWindow()
+        else:
+            self._clearJuggleCancelWindow()
         self._launchIval.start()
 
     def _playFinisherSelfHop(self):
@@ -1091,6 +1127,103 @@ class MeleeCombatController(DirectObject):
             self._onAttackPressed()
             return
         self._perfectCounterBuffered = False
+
+    def _armJuggleCancelWindow(self, now=None):
+        """Arm the mid-juggle cancel-into-slam window from launch start."""
+        self._juggleAttackBuffered = False
+        if not getattr(HackSlashConfig, 'JUGGLE_CANCEL_ENABLED', True):
+            self._clearJuggleCancelWindow()
+            return
+        if now is None:
+            now = globalClock.getFrameTime()  # noqa: F821
+        start = float(getattr(HackSlashConfig, 'JUGGLE_CANCEL_START_SEC', 0.12))
+        window = float(
+            getattr(HackSlashConfig, 'JUGGLE_CANCEL_WINDOW_SEC', 0.45))
+        self._juggleCancelArmed = True
+        self._juggleCancelOpenAt = now + max(0.0, start)
+        self._juggleCancelUntil = self._juggleCancelOpenAt + max(0.0, window)
+
+    def _clearJuggleCancelWindow(self):
+        self._juggleCancelArmed = False
+        self._juggleCancelOpenAt = 0.0
+        self._juggleCancelUntil = 0.0
+        self._juggleAttackBuffered = False
+
+    def _expireJuggleCancelIfNeeded(self):
+        """Drop arming once launch settles and the cancel window has closed."""
+        if not self._juggleCancelArmed:
+            return
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now >= self._juggleCancelUntil:
+            self._clearJuggleCancelWindow()
+
+    def _isInJuggleCancelLockout(self):
+        """True during early juggle rise before cancel-into-slam opens."""
+        if not getattr(HackSlashConfig, 'JUGGLE_CANCEL_ENABLED', True):
+            return False
+        if not self._juggleCancelArmed:
+            return False
+        now = globalClock.getFrameTime()  # noqa: F821
+        return now < self._juggleCancelOpenAt
+
+    def isJuggleCancelOpen(self):
+        """True while F/LMB may cancel air-juggle hang into a finisher slam."""
+        if not getattr(HackSlashConfig, 'JUGGLE_CANCEL_ENABLED', True):
+            return False
+        open_ = HackSlashConfig.isJuggleCancelWindowOpen(
+            self._juggleCancelArmed,
+            self._juggleCancelOpenAt,
+            self._juggleCancelUntil,
+            globalClock.getFrameTime())  # noqa: F821
+        if self._juggleCancelArmed and not open_:
+            now = globalClock.getFrameTime()  # noqa: F821
+            if now >= self._juggleCancelUntil:
+                self._clearJuggleCancelWindow()
+        return open_
+
+    def _cancelJuggleIntoSlam(self):
+        """Abort remaining juggle fall so the finisher slam can own the beat.
+
+        Pauses the launch ival in place (hostile hangs at current apex) so the
+        slam cancel lands while they are still airborne — clearer juggle→F
+        rubber-hose aerial control.
+        """
+        self._juggleAttackBuffered = False
+        self._clearJuggleCancelWindow()
+        if self._launchIval:
+            try:
+                self._launchIval.pause()
+            except Exception:
+                pass
+            self._launchIval = None
+        # Interrupt mid-string recovery so slam owns the beat.
+        if self.busy:
+            self._finishSwing()
+            self.busy = False
+            self.comboWindowOpen = False
+            self._restoreScale()
+        messenger.send('hackslash-juggle-cancel', [self.avatar])  # noqa: F821
+
+    def _flushJuggleCancelBuffer(self):
+        """Fire a buffered F/LMB once the juggle → slam cancel window opens."""
+        if not self._juggleAttackBuffered:
+            # Expire a stale armed window with no buffer.
+            if self._juggleCancelArmed:
+                now = globalClock.getFrameTime()  # noqa: F821
+                if now >= self._juggleCancelUntil:
+                    self._clearJuggleCancelWindow()
+            return
+        if self.isJuggleCancelOpen():
+            self._juggleAttackBuffered = False
+            self._onAttackPressed()
+            return
+        # Window expired (or never armed) — drop the buffer.
+        if self._juggleCancelArmed:
+            now = globalClock.getFrameTime()  # noqa: F821
+            if now >= self._juggleCancelUntil:
+                self._clearJuggleCancelWindow()
+        else:
+            self._juggleAttackBuffered = False
 
     def _finishDodge(self):
         self._dodging = False

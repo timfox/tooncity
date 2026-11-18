@@ -6,7 +6,9 @@ Slice 1: stretch punches, short combo window, soft nearest-hostile targeting.
 
 from .MeleeCombat import MeleeCombatController
 from .HackSlashConfig import (
+    isJuggleCancelWindowOpen,
     isPerfectDodgeCounterWindowOpen,
+    juggleCancelSlamHitIndex,
     perfectDodgeCounterOpenerDamage,
     perfectDodgeCounterOpenerRate,
 )
@@ -38,7 +40,9 @@ from .SoftLockReticleFx import SoftLockReticleFx
 
 __all__ = [
     'MeleeCombatController',
+    'isJuggleCancelWindowOpen',
     'isPerfectDodgeCounterWindowOpen',
+    'juggleCancelSlamHitIndex',
     'perfectDodgeCounterOpenerDamage',
     'perfectDodgeCounterOpenerRate',
     'SoftTargetFinder',
