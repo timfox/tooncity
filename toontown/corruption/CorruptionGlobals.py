@@ -107,7 +107,8 @@ CHASE_SPEED = 9.0
 ATTACK_TELEGRAPH_DELAY = 0.55
 ATTACK_DAMAGE = 2
 ATTACK_COOLDOWN = 1.75
-DEFEAT_DELETE_DELAY = 0.85
+# Client death pop (~0.4s body + ~0.45s splat) must finish before AI delete.
+DEFEAT_DELETE_DELAY = 0.95
 
 # Visual ink / sickly palette (not classic cog gray).
 CORRUPT_TINT = (0.22, 0.05, 0.32, 0.92)
@@ -216,6 +217,87 @@ SNARE_LASH_HALF_W = 0.12
 SNARE_LASH_HALF_H = 0.55
 SNARE_LASH_TRAVEL = 0.18
 SNARE_LASH_Z = 2.1
+
+# Defeat pop juice — rubber-hose ink splat / balloon pop on announceDefeat.
+# Per-archetype palette so Smudge (purple), Brute (green), Snare (amber) read.
+DEATH_POP_SFX_VOLUME = 0.78
+DEATH_POP_LOOK = {
+    ARCHETYPE_INK: {
+        'id': 'ink-splat',
+        'burstScale': (1.75, 1.75, 1.75),
+        'pancakeScale': (2.15, 2.15, 0.1),
+        'vanishScale': (0.02, 0.02, 0.02),
+        'burstSec': 0.07,
+        'pancakeSec': 0.12,
+        'vanishSec': 0.18,
+        'burstColor': (2.0, 1.35, 2.4, 1.0),
+        'pancakeColor': (1.55, 0.85, 1.9, 1.0),
+        'fadeColor': (1.2, 1.35, 1.05, 0.0),
+        'lift': 1.35,
+        'ringHalf': 0.85,
+        'ringPeak': 2.6,
+        'ringSec': 0.32,
+        'ringColor': (0.55, 0.2, 0.85, 0.9),
+        'dropletCount': 8,
+        'dropletHalf': 0.28,
+        'dropletDist': 2.4,
+        'dropletLift': 1.1,
+        'dropletSec': 0.34,
+        'dropletColor': (0.42, 0.12, 0.62, 0.95),
+        'sfx': 'phase_3.5/audio/sfx/AA_pie_throw_only.ogg',
+        'sfxVolume': 0.72,
+    },
+    ARCHETYPE_BRUTE: {
+        'id': 'sludge-splat',
+        'burstScale': (1.95, 1.95, 1.55),
+        'pancakeScale': (2.55, 2.55, 0.08),
+        'vanishScale': (0.02, 0.02, 0.02),
+        'burstSec': 0.08,
+        'pancakeSec': 0.14,
+        'vanishSec': 0.2,
+        'burstColor': (0.85, 2.2, 0.55, 1.0),
+        'pancakeColor': (0.55, 1.55, 0.35, 1.0),
+        'fadeColor': (0.7, 1.25, 0.55, 0.0),
+        'lift': 1.55,
+        'ringHalf': 1.05,
+        'ringPeak': 2.9,
+        'ringSec': 0.36,
+        'ringColor': (0.25, 0.75, 0.22, 0.92),
+        'dropletCount': 9,
+        'dropletHalf': 0.34,
+        'dropletDist': 2.85,
+        'dropletLift': 0.85,
+        'dropletSec': 0.38,
+        'dropletColor': (0.22, 0.68, 0.18, 0.95),
+        'sfx': 'phase_4/audio/sfx/AA_squirt_glasswater.ogg',
+        'sfxVolume': 0.8,
+    },
+    ARCHETYPE_SNARE: {
+        'id': 'balloon-pop',
+        'burstScale': (2.25, 2.25, 2.25),
+        'pancakeScale': (2.85, 2.85, 0.12),
+        'vanishScale': (0.02, 0.02, 0.02),
+        'burstSec': 0.06,
+        'pancakeSec': 0.1,
+        'vanishSec': 0.16,
+        'burstColor': (2.4, 1.55, 0.45, 1.0),
+        'pancakeColor': (1.85, 1.05, 0.28, 1.0),
+        'fadeColor': (1.45, 1.15, 0.55, 0.0),
+        'lift': 1.15,
+        'ringHalf': 0.75,
+        'ringPeak': 3.1,
+        'ringSec': 0.28,
+        'ringColor': (0.95, 0.55, 0.15, 0.92),
+        'dropletCount': 7,
+        'dropletHalf': 0.24,
+        'dropletDist': 2.65,
+        'dropletLift': 1.35,
+        'dropletSec': 0.3,
+        'dropletColor': (0.9, 0.48, 0.12, 0.95),
+        'sfx': 'phase_3/audio/sfx/GUI_balloon_popup.ogg',
+        'sfxVolume': 0.85,
+    },
+}
 
 # Ink Overlord finale phase looks (client-readable; AI timings unchanged).
 # Phase 1 = rising magenta swell; Phase 2 = crimson unleashed fury.

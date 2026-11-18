@@ -8,6 +8,8 @@ from direct.interval.IntervalGlobal import (
     Sequence, Func, Wait)
 
 from toontown.corruption import CorruptionGlobals
+from toontown.corruption.CorruptDeathPopFx import (
+    DeathPopSplat, buildBodyPopInterval, deathPopLook)
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 
 
@@ -55,6 +57,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._spitBlobNP = None
         self._stringLashIval = None
         self._stringLashNP = None
+        self._deathPopSplat = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -114,6 +117,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearAttackFlash()
         self.__clearSpitBlob()
         self.__clearStringLash()
+        self.__clearDeathPopSplat()
 
     def __buildGeom(self):
         self.visualRoot = self.attachNewNode('corrupt-visual')
@@ -859,21 +863,36 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearAttackFlash()
         self.__clearSpitBlob()
         self.__clearStringLash()
+        self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
-        # Satisfying ink splat + purity reclaim flash tied to pollution drop.
+        look = deathPopLook(self.getArchetype())
+        bodyPop = buildBodyPopInterval(target, look=look)
+        # Rubber-hose ink splat / balloon pop + purity reclaim flash.
+        try:
+            splatPos = self.getPos(render)
+        except Exception:
+            splatPos = Point3(0, 0, 0)
+        self._deathPopSplat = DeathPopSplat()
+        self._deathPopSplat.play(splatPos, archetype=self.getArchetype())
+        if bodyPop is None:
+            self.__playPurityReclaimPop()
+            self.hide()
+            return
         self._defeatIval = Sequence(
-            Parallel(
-                LerpScaleInterval(target, 0.18, Point3(1.85, 1.85, 0.12)),
-                LerpColorScaleInterval(target, 0.18, Vec4(1.8, 1.5, 2.2, 1.0)),
-            ),
-            Parallel(
-                LerpScaleInterval(self, 0.22, Point3(0.02, 0.02, 0.02)),
-                LerpColorScaleInterval(target, 0.22, Vec4(1.4, 1.6, 1.1, 0.0)),
-            ),
+            bodyPop,
             Func(self.__playPurityReclaimPop),
             Func(self.hide),
         )
         self._defeatIval.start()
+
+    def __clearDeathPopSplat(self):
+        splat = getattr(self, '_deathPopSplat', None)
+        if splat is not None:
+            try:
+                splat.clear()
+            except Exception:
+                pass
+        self._deathPopSplat = None
 
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""
