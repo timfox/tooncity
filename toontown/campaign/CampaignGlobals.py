@@ -140,6 +140,26 @@ PLAY_ENTRY_TIP_POP_SQUASH = (1.55, 1.0, 0.55, 0.05)   # sx, sy, sz, sec
 PLAY_ENTRY_TIP_POP_STRETCH = (0.78, 1.0, 1.42, 0.08)
 PLAY_ENTRY_TIP_POP_SETTLE_SEC = 0.10
 
+# PlayEntry act-enter flash banner (ACTS['banner'] / reclaim cues).
+# Same squash→stretch→settle hose pop as the tip bar — readable act beat
+# without touching reclaim/ wave banners. No keyblades / KH branding.
+PLAY_ENTRY_BANNER_SCALE = 0.06
+PLAY_ENTRY_BANNER_POS = (0.0, 0.0, 0.72)
+PLAY_ENTRY_BANNER_HOLD_SEC = 2.4
+PLAY_ENTRY_BANNER_FADE_IN_SEC = 0.15
+PLAY_ENTRY_BANNER_FADE_OUT_SEC = 0.35
+PLAY_ENTRY_BANNER_POP_SQUASH = (1.48, 1.0, 0.58, 0.05)   # sx, sy, sz, sec
+PLAY_ENTRY_BANNER_POP_STRETCH = (0.80, 1.0, 1.38, 0.09)
+PLAY_ENTRY_BANNER_POP_SETTLE_SEC = 0.11
+
+# CampaignHandoff celebration title — rubber-hose scale pop on act clears.
+# Matches PlayEntry tip/banner hose pattern; cue keeps a lighter settle.
+# Oswald twist / victory copy unchanged — juice only. No KH branding.
+HANDOFF_TITLE_SCALE = 0.078
+HANDOFF_TITLE_POP_SQUASH = (1.42, 1.0, 0.62, 0.06)   # sx, sy, sz, sec
+HANDOFF_TITLE_POP_STRETCH = (0.82, 1.0, 1.36, 0.10)
+HANDOFF_TITLE_POP_SETTLE_SEC = 0.12
+
 # Campaign handoff confetti / streamer pop (CampaignHandoffConfetti).
 # Short rubber-hose carnival burst on Loopy→Punchline (and act) handoffs.
 # Toontown spiritual sequel — no keyblades / KH branding.

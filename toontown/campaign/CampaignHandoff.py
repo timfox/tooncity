@@ -1,14 +1,16 @@
 """Client-visible campaign handoff banners + melee power bump on reclaim.
 
 Act clears (Loopy → Punchline → Silly) play as a short Toontown reclaim
-celebration — Oswald as the trusted face, title pop, clear next-street cue —
-not a single toast line. Finale victory keeps the Oswald twist beat.
+celebration — Oswald as the trusted face, title hose-pop, clear next-street
+cue — not a single toast line. Finale victory keeps the Oswald twist beat.
 
-Act handoffs also fire a short rubber-hose confetti / streamer pop
-(CampaignHandoffConfetti) — carnival reclaim juice, no KH / keyblade framing.
+Title lands with the same squash→stretch→settle rubber-hose scale pop as
+PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Act handoffs
+also fire a short confetti / streamer pop (CampaignHandoffConfetti) —
+carnival reclaim juice, no KH / keyblade framing.
 """
 
-from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
+from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
 
 from direct.interval.IntervalGlobal import (
     Func,
@@ -28,8 +30,7 @@ from toontown.campaign.CampaignHandoffConfetti import (
 from toontown.campaign.CampaignPower import applyPowerBump
 
 # Celebration timing — readable rubber-hose reclaim beat, not a flash toast.
-_TITLE_BASE = 0.078
-_TITLE_POP = 0.118
+# Title settle/pop tunables live in CampaignGlobals (HANDOFF_TITLE_*).
 _SUB_SCALE = 0.048
 _CUE_SCALE = 0.052
 _POWER_SCALE = 0.036
@@ -230,8 +231,10 @@ class CampaignHandoffClient(DirectObject):
         except Exception:
             pass
 
+        titleScale = float(getattr(
+            CampaignGlobals, 'HANDOFF_TITLE_SCALE', 0.078))
         titleNP = self._makeLine(
-            root, 'campaign-handoff-title', title, color, _TITLE_BASE, 0.08)
+            root, 'campaign-handoff-title', title, color, titleScale, 0.08)
         subNP = None
         if subtitle:
             subNP = self._makeLine(
@@ -258,14 +261,7 @@ class CampaignHandoffClient(DirectObject):
 
         parts = [
             LerpColorScaleInterval(root, 0.18, Vec4(1, 1, 1, 1)),
-            Parallel(
-                LerpScaleInterval(titleNP, 0.14, _TITLE_POP),
-                Sequence(
-                    Wait(0.08),
-                    LerpScaleInterval(titleNP, 0.16, _TITLE_BASE * 0.92),
-                    LerpScaleInterval(titleNP, 0.12, _TITLE_BASE),
-                ),
-            ),
+            self._titleHosePopInterval(titleNP, titleScale),
         ]
         if subNP is not None:
             parts.append(Sequence(
@@ -306,6 +302,34 @@ class CampaignHandoffClient(DirectObject):
             name='campaignHandoffCelebrate',
         )
         self._ival.start()
+
+    def _titleHosePopInterval(self, titleNP, settleScale):
+        """Tip-matched squash → stretch → settle on the handoff title."""
+        settle = float(settleScale)
+        sx, sy, sz, squashSec = getattr(
+            CampaignGlobals, 'HANDOFF_TITLE_POP_SQUASH',
+            (1.42, 1.0, 0.62, 0.06))
+        tx, ty, tz, stretchSec = getattr(
+            CampaignGlobals, 'HANDOFF_TITLE_POP_STRETCH',
+            (0.82, 1.0, 1.36, 0.10))
+        settleSec = float(getattr(
+            CampaignGlobals, 'HANDOFF_TITLE_POP_SETTLE_SEC', 0.12))
+        settlePt = Point3(settle, settle, settle)
+        squashPt = Point3(settle * sx, settle * sy, settle * sz)
+        stretchPt = Point3(settle * tx, settle * ty, settle * tz)
+        try:
+            titleNP.setScale(settlePt)
+        except Exception:
+            return Sequence(name='campaignHandoffTitleHosePopEmpty')
+        return Sequence(
+            LerpScaleInterval(
+                titleNP, float(squashSec), squashPt, blendType='easeOut'),
+            LerpScaleInterval(
+                titleNP, float(stretchSec), stretchPt, blendType='easeOut'),
+            LerpScaleInterval(
+                titleNP, settleSec, settlePt, blendType='easeIn'),
+            name='campaignHandoffTitleHosePop',
+        )
 
     def _makeLine(self, parent, name, text, color, scale, z):
         tn = TextNode(name)
