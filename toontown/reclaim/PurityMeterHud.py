@@ -14,6 +14,10 @@ Wave start (pack spawn): brief sunny cream rim + whole-meter squash→stretch
 hose-pop so wave begin reads clearly — distinct from mid-wave rim flash
 (#213) and secured-lock green hold (#209).
 
+Purity complete (after celebration settles): soft tall stretch → longer settle
+on the full meter so the finish reads clearly — not wave-start squash→stretch
+(#220) and not secured-lock green soft uniform scale (#209).
+
 Mid-wave purity pressure (director tip): warm double-pulse contested rim
 flash when purity stalls or ink pressure rises — rubber-hose urgency after
 re-creep #194 so danger reads clearly (distinct from secured-lock #209).
@@ -371,10 +375,75 @@ class PurityMeterHud(object):
         except Exception:
             pass
 
+    def settleComplete(self):
+        """Soft tall stretch → settle after purity celebration lands.
+
+        Finish-read hose on the full meter — not wave-start squash→stretch
+        (#220) and not secured-lock green soft uniform scale (#209).
+        """
+        if not getattr(
+                ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_ENABLED', True):
+            return
+        if self._root is None or self._root.isEmpty():
+            return
+        self._clearPressureWarn()
+        rimColor = getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_COLOR',
+            (1.0, 0.97, 0.70, 0.82))
+        rimSec = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.28))
+        if self._rimNP is not None and not self._rimNP.isEmpty():
+            try:
+                self._rimNP.setColor(*rimColor)
+            except Exception:
+                pass
+
+        stx, sty, stz, stretchSec = getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_STRETCH',
+            (1.05, 1.0, 1.22, 0.08))
+        settleSec = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_SEC', 0.16))
+        try:
+            baseScale = self._root.getScale()
+            try:
+                bx = float(baseScale[0])
+                by = float(baseScale[1])
+                bz = float(baseScale[2])
+            except Exception:
+                bx = by = bz = 1.0
+        except Exception:
+            bx = by = bz = 1.0
+        settle = Point3(bx, by, bz)
+        stretch = Point3(
+            bx * float(stx), by * float(sty), bz * float(stz))
+        try:
+            hose = Sequence(
+                LerpScaleInterval(
+                    self._root, max(0.01, float(stretchSec)), stretch,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    self._root, max(0.01, settleSec), settle,
+                    blendType='easeIn'),
+            )
+        except Exception:
+            return
+        hoseDur = (
+            max(0.01, float(stretchSec))
+            + max(0.01, settleSec))
+        holdAfter = max(0.01, rimSec - hoseDur)
+        self._warnIval = Sequence(
+            hose,
+            Wait(holdAfter),
+            Func(self._onPressureWarnDone),
+            name='reclaimPurityMeterCompleteSettle',
+        )
+        self._warnIval.start()
+
     def confirmSecured(self):
         """Brief cream/green rim + soft uniform meter pop when purity locks.
 
-        Soft ease scale (not squash→stretch wave-start hose) + green rim hold.
+        Soft ease scale (not squash→stretch wave-start hose, not complete
+        settle stretch→settle) + green rim hold.
         """
         if not getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_ENABLED', True):
             return

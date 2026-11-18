@@ -551,7 +551,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         cream veil under that sparkle and owns a delayed cream aftershock
         (flecks + halo) + settle cream wash. ReclaimCheer + CheerCreamSparkleFx
         layer pitch swell cream flecks + delayed cream aftershock + soft cream
-        wash pulse.
+        wash pulse. After celebration lands, PurityMeterHud.settleComplete
+        hose-settles the full meter so the finish reads clearly.
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -584,6 +585,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         messenger.send('npcCheerStub', [self.reclaimZoneId])
         self.__playPurityStingSfx()
         self.__spawnPurityBurstOverlay()
+        # Keep purity meter through celebration + hose settle (lock confirm
+        # hold alone is shorter than the restore sequence).
+        self.__cancelSecuredHudHold()
         # Stronger two-beat wash: bright lift, then warm settle.
         self._restoreIval = Sequence(
             Parallel(
@@ -599,9 +603,35 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             LerpColorScaleInterval(render, 0.7, Vec4(1, 1, 1, 1)),
             Func(render.clearColorScale),
             Func(self.__clearPurityBurstOverlay),
+            Func(self.__hoseSettlePurityMeterComplete),
             Func(messenger.send, 'purityRestoreSettled', [self.reclaimZoneId]),
         )
         self._restoreIval.start()
+
+    def __hoseSettlePurityMeterComplete(self):
+        """After celebration, hose-settle the meter so the finish reads clearly.
+
+        Soft tall stretch→settle (#230) — not wave-start squash pop (#220) and
+        not secured-lock green soft scale (#209).
+        """
+        if self._purityMeter is not None:
+            try:
+                self._purityMeter.settleComplete()
+            except Exception:
+                pass
+        # Re-arm HUD hide after settle rim hold (meter stayed up through restore).
+        rimSec = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.28))
+        hold = float(getattr(
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC', 0.55))
+        self.__cancelSecuredHudHold()
+        try:
+            taskMgr.doMethodLater(  # noqa: F821
+                max(0.2, rimSec + hold),
+                self.__securedHudTimeout,
+                self.uniqueName('reclaim-secured-hud'))
+        except Exception:
+            pass
 
     def __playPurityStingSfx(self):
         """Fire an existing celebration SFX if the asset is present."""

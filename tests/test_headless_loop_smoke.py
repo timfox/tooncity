@@ -1235,6 +1235,29 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('WAVE_START_METER_POP', wave_start_hud_src)
         self.assertIn('reclaimPurityMeterWaveStartHose', wave_start_hud_src)
 
+        # Purity-complete meter hose settle — stretch→settle after celebration.
+        for complete_settle_key in (
+                'PURITY_COMPLETE_METER_SETTLE_ENABLED',
+                'PURITY_COMPLETE_METER_SETTLE_STRETCH',
+                'PURITY_COMPLETE_METER_SETTLE_SEC',
+                'PURITY_COMPLETE_METER_SETTLE_RIM_COLOR',
+                'PURITY_COMPLETE_METER_SETTLE_RIM_SEC',
+                'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC'):
+            self.assertIn(
+                complete_settle_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % complete_settle_key)
+        complete_settle_assigns = _assign_map(self.reclaim_tree)
+        self.assertIs(
+            complete_settle_assigns.get(
+                'PURITY_COMPLETE_METER_SETTLE_ENABLED'), True)
+        self.assertIn('settleComplete', wave_start_hud_methods)
+        self.assertIn(
+            '__hoseSettlePurityMeterComplete', wave_start_director_src)
+        self.assertIn('settleComplete', wave_start_director_src)
+        self.assertIn(
+            'reclaimPurityMeterCompleteSettle', wave_start_hud_src)
+        self.assertIn('PURITY_COMPLETE_METER_SETTLE', wave_start_hud_src)
+
         # Silhouette cream rim flecks (#114) — cream rim sparkle on corrupt ink.
         rim_rel = 'toontown/corruption/CorruptSilhouetteCreamRimFx.py'
         _assert_module_file(rim_rel)
