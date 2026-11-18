@@ -4,7 +4,8 @@ CardMaker bar + Oswald-flavored label — rubber-hose Toontown tone, no
 Kingdom Hearts / keyblade branding. Driven by DistributedReclaimDirector.
 
 On purity advances: short squash→stretch→settle fill pop, matching pct tick,
-and sunny cream flecks at the fill tip.
+sunny cream flecks at the fill tip, and StreetSparkle/EntryCream-style cream
+shimmer flecks along the filled bar.
 """
 
 from math import cos, pi, sin
@@ -24,6 +25,7 @@ from direct.interval.IntervalGlobal import (
     LerpScaleInterval,
     Parallel,
     Sequence,
+    Wait,
 )
 
 from toontown.reclaim import ReclaimGlobals
@@ -49,6 +51,8 @@ class PurityMeterHud(object):
         self._pctPopIval = None
         self._fleckIval = None
         self._fleckNPs = []
+        self._shimmerIval = None
+        self._shimmerNPs = []
         self._lastPopPurity = None
 
     def isShown(self):
@@ -123,6 +127,7 @@ class PurityMeterHud(object):
     def hide(self):
         self._clearPop()
         self._clearFlecks()
+        self._clearFillShimmer()
         if self._root is not None and not self._root.isEmpty():
             self._root.removeNode()
         self._root = None
@@ -195,7 +200,7 @@ class PurityMeterHud(object):
         return self._pctPopIval is not None and self._pctPopIval.isPlaying()
 
     def _popTick(self):
-        """Short hose fill pop + pct tick + cream flecks at the advancing tip."""
+        """Hose fill pop + pct tick + tip flecks + cream shimmer along fill."""
         if self._fillNP is None or self._fillNP.isEmpty():
             return
         if (self._lastPopPurity is not None
@@ -207,6 +212,7 @@ class PurityMeterHud(object):
         self._popFillHose()
         self._popPctHose()
         self._spawnTickFlecks()
+        self._spawnFillShimmerFlecks()
 
     def _popFillHose(self):
         """Fill bar: flat squash → tall stretch (brief X overshoot) → settle."""
@@ -323,6 +329,102 @@ class PurityMeterHud(object):
         )
         self._fleckIval.start()
 
+    def _spawnFillShimmerFlecks(self):
+        """Cream shimmer flecks along the filled bar (StreetSparkle / EntryCream)."""
+        self._clearFillShimmer()
+        if not getattr(ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_ENABLED', True):
+            return
+        if self._root is None or self._root.isEmpty() or self._purity is None:
+            return
+        count = int(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_COUNT', 7))
+        if count <= 0:
+            return
+
+        purity = max(0.001, float(self._purity))
+        halfW = ReclaimGlobals.PURITY_METER_WIDTH * 0.5
+        fillW = purity * ReclaimGlobals.PURITY_METER_WIDTH
+        size = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_SIZE', 0.011))
+        rise = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_RISE', 0.055))
+        sec = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_SEC', 0.28))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_COLOR',
+            (1.0, 0.98, 0.72, 0.92))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_END_COLOR',
+            (1.0, 0.94, 0.55, 0.0))
+        fleckBin = int(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_BIN', 49))
+
+        parts = []
+        for i in range(count):
+            try:
+                # Spread along the filled span (left edge → tip).
+                t = float(i) / float(max(1, count - 1))
+                angle = (2.0 * pi * i) / float(count) + 0.28
+                cm = CardMaker('reclaim-purity-meter-fill-shimmer-%s' % i)
+                # Alternate chip / cross fleck — rubber-hose cream glitter.
+                if (i % 3) == 0:
+                    cm.setFrame(
+                        -size * 0.35, size * 0.35, -size * 1.25, size * 1.25)
+                elif (i % 3) == 1:
+                    cm.setFrame(
+                        -size * 1.25, size * 1.25, -size * 0.35, size * 0.35)
+                else:
+                    cm.setFrame(-size, size, -size, size)
+                fleck = self._root.attachNewNode(cm.generate())
+                fleck.setTransparency(TransparencyAttrib.MAlpha)
+                fleck.setColor(r, g, b, 1)
+                fleck.setColorScale(r, g, b, 0)
+                startX = -halfW + t * fillW + cos(angle) * 0.008
+                startZ = sin(angle) * 0.012 + 0.006 * (i % 3)
+                fleck.setPos(startX, 0, startZ)
+                fleck.setScale(0.4 + 0.08 * (i % 3))
+                fleck.setBin('fixed', fleckBin + (i % 2))
+                fleck.setDepthTest(False)
+                fleck.setDepthWrite(False)
+            except Exception:
+                continue
+
+            end = Point3(
+                startX + cos(angle) * 0.02,
+                0,
+                startZ + rise * (0.55 + 0.45 * ((i % 4) / 3.0)))
+            delay = 0.016 * i
+            twinkle = 0.04 + 0.01 * (i % 3)
+            parts.append(Sequence(
+                Wait(delay),
+                Parallel(
+                    LerpColorScaleInterval(
+                        fleck, twinkle, Vec4(r, g, b, a),
+                        blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, twinkle, 1.1, blendType='easeOut'),
+                ),
+                Parallel(
+                    LerpPosInterval(
+                        fleck, max(0.01, sec), end, blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec), 0.05, blendType='easeIn'),
+                    LerpColorScaleInterval(
+                        fleck, max(0.01, sec), Vec4(er, eg, eb, ea),
+                        blendType='easeIn'),
+                ),
+            ))
+            self._shimmerNPs.append(fleck)
+
+        if not parts:
+            return
+        self._shimmerIval = Sequence(
+            Parallel(*parts, name='reclaimPurityMeterFillShimmer'),
+            Func(self._clearFillShimmer),
+            name='reclaimPurityMeterFillShimmerSeq',
+        )
+        self._shimmerIval.start()
+
     def _onPopDone(self):
         self._popIval = None
         # Snap fill to current purity in case another update arrived mid-pop.
@@ -369,3 +471,18 @@ class PurityMeterHud(object):
                 except Exception:
                     pass
         self._fleckNPs = []
+
+    def _clearFillShimmer(self):
+        if self._shimmerIval is not None:
+            try:
+                self._shimmerIval.pause()
+            except Exception:
+                pass
+            self._shimmerIval = None
+        for np in self._shimmerNPs:
+            if np is not None and not np.isEmpty():
+                try:
+                    np.removeNode()
+                except Exception:
+                    pass
+        self._shimmerNPs = []
