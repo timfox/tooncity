@@ -1,8 +1,10 @@
-"""Cream / pastel warn flecks at CorruptToon attack telegraph start.
+"""Cream / pastel warn flecks + delayed cream aftershock at telegraph start.
 
 Sunny Toontown cream chips that pop with the telegraph ink drip / silhouette
-— warn readability contrast against dark ink, not another ink spray. Composes
-lift with CorruptTelegraphInkFx.telegraphInkLook. Wired from
+— warn readability contrast against dark ink, not another ink spray — then a
+delayed cream aftershock settles downward (soft halo + residual flecks /
+streaks). Composes lift with CorruptTelegraphInkFx.telegraphInkLook; aftershock
+grammar matches hit-spark / perfect-dodge / hang cream aftershock. Wired from
 DistributedCorruptToon.announceAttackTelegraph. Client only. Toontown
 spiritual sequel — no keyblades / no KH branding.
 """
@@ -42,14 +44,15 @@ def telegraphCreamWarnLook(archetype=None, finaleLook=None):
 
 
 class TelegraphCreamWarnFlecks(object):
-    """Owns a brief cream/pastel warn fleck spray at telegraph start."""
+    """Owns cream/pastel warn flecks + delayed cream aftershock at telegraph."""
 
     def __init__(self):
         self._ival = None
         self._nodes = []
+        self._haloNP = None
 
     def play(self, pos, archetype=None, finaleLook=None, parent=None):
-        """Spawn cream warn flecks at `pos` (render space). Returns Sequence or None."""
+        """Spawn cream warn flecks + delayed aftershock. Returns Sequence or None."""
         if not getattr(CorruptionGlobals, 'TELEGRAPH_CREAM_WARN_ENABLED', True):
             return None
         self.clear()
@@ -78,21 +81,42 @@ class TelegraphCreamWarnFlecks(object):
         if not parts:
             return None
 
-        self._ival = Sequence(
-            Parallel(*parts),
-            Func(self.clear),
-            name='corruptTelegraphCreamWarn',
-        )
+        fleckParallel = Parallel(*parts)
+        # Residual cream aftershock after the warn fleck spray settles.
+        aftershock = self._buildAftershock(parentNP, origin)
+        if aftershock is not None:
+            self._ival = Sequence(
+                Parallel(
+                    fleckParallel,
+                    aftershock,
+                ),
+                Func(self.clear),
+                name='corruptTelegraphCreamWarn',
+            )
+        else:
+            self._ival = Sequence(
+                fleckParallel,
+                Func(self.clear),
+                name='corruptTelegraphCreamWarn',
+            )
         self._ival.start()
         return self._ival
 
     def clear(self):
+        """Stop flecks/aftershock and remove every cream node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        if self._haloNP is not None:
+            try:
+                if not self._haloNP.isEmpty():
+                    self._haloNP.removeNode()
+            except Exception:
+                pass
+            self._haloNP = None
         for np in list(self._nodes):
             try:
                 if np is not None and not np.isEmpty():
@@ -100,6 +124,189 @@ class TelegraphCreamWarnFlecks(object):
             except Exception:
                 pass
         self._nodes = []
+
+    def _buildAftershock(self, parentNP, origin):
+        """Delayed soft cream flecks (+ optional halo) after the warn pop."""
+        if not getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_ENABLED', True):
+            return None
+        delay = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_DELAY_SEC', 0.18))
+        parts = []
+
+        if getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_ENABLED', True):
+            halo = self._spawnAftershockHalo(parentNP, origin)
+            if halo is not None:
+                parts.append(halo)
+
+        creamCount = max(0, int(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_COUNT', 3)))
+        streakCount = max(0, int(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_STREAK_COUNT', 2)))
+        for i in range(creamCount):
+            part = self._spawnAftershockSpark(
+                parentNP, origin, i, creamCount, elongated=False)
+            if part is not None:
+                parts.append(part)
+        for i in range(streakCount):
+            part = self._spawnAftershockSpark(
+                parentNP, origin, i, streakCount, elongated=True)
+            if part is not None:
+                parts.append(part)
+
+        if not parts:
+            return None
+        return Sequence(
+            Wait(max(0.0, delay)),
+            Parallel(*parts),
+        )
+
+    def _spawnAftershockHalo(self, parentNP, origin):
+        half = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_HALF', 0.48))
+        startScale = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_START', 0.3))
+        peakScale = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_PEAK', 1.55))
+        sec = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_SEC', 0.32))
+        peakA = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_PEAK_ALPHA', 0.26))
+        r, g, b, _a = getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_COLOR',
+            (1.0, 0.96, 0.78, 1.0))
+        try:
+            cm = CardMaker('corrupt-telegraph-cream-aftershock-halo')
+            cm.setFrame(-half, half, -half, half)
+            halo = parentNP.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, peakA)
+            halo.setPos(origin)
+            halo.setScale(startScale)
+            binSort = int(getattr(
+                CorruptionGlobals, 'TELEGRAPH_CREAM_WARN_BIN', 43))
+            halo.setBin('fixed', binSort - 1)
+            halo.setDepthWrite(False)
+            halo.setBillboardPointEye()
+        except Exception:
+            return None
+        self._haloNP = halo
+        return Parallel(
+            LerpScaleInterval(
+                halo, max(0.01, sec), peakScale, blendType='easeOut'),
+            Sequence(
+                Wait(max(0.0, sec * 0.2)),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.8), Vec4(r, g, b, 0),
+                    blendType='easeIn'),
+            ),
+        )
+
+    def _spawnAftershockSpark(self, parentNP, origin, index, total,
+                              elongated=False):
+        """Softer cream fleck / streak that settles — residual aftershock."""
+        count = max(1, int(total))
+        if elongated:
+            size = float(getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_STREAK_SIZE', 0.16))
+            r, g, b, a = getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_STREAK_COLOR',
+                (1.0, 0.98, 0.82, 0.85))
+            er, eg, eb, ea = getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_STREAK_END',
+                (1.0, 0.9, 0.5, 0.0))
+            nameSuffix = 'streak'
+            angleBias = 0.55
+        else:
+            size = float(getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_SIZE', 0.11))
+            r, g, b, a = getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_COLOR',
+                (1.0, 0.96, 0.72, 0.88))
+            er, eg, eb, ea = getattr(
+                CorruptionGlobals,
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_END',
+                (1.0, 0.92, 0.55, 0.0))
+            nameSuffix = 'cream'
+            angleBias = 0.22
+        drift = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_DRIFT', 0.7))
+        sec = float(getattr(
+            CorruptionGlobals,
+            'TELEGRAPH_CREAM_WARN_AFTERSHOCK_SEC', 0.38))
+        angle = (2.0 * pi * index) / float(count) + angleBias
+        try:
+            cm = CardMaker(
+                'corrupt-telegraph-cream-aftershock-%s-%s' % (
+                    nameSuffix, index))
+            if elongated:
+                cm.setFrame(
+                    -size * 0.35, size * 0.35,
+                    -size * 1.15, size * 1.15)
+            else:
+                cm.setFrame(
+                    -size, size, -size * 0.85, size * 0.85)
+            spark = parentNP.attachNewNode(cm.generate())
+            spark.setTransparency(TransparencyAttrib.MAlpha)
+            spark.setColor(r, g, b, 1)
+            spark.setColorScale(r, g, b, 0)
+            spark.setPos(
+                origin[0] + cos(angle) * 0.1,
+                origin[1] + sin(angle) * 0.1,
+                origin[2] + 0.03 * (index % 2))
+            spark.setScale(0.28 + 0.08 * (index % 3))
+            binSort = int(getattr(
+                CorruptionGlobals, 'TELEGRAPH_CREAM_WARN_BIN', 43))
+            spark.setBin('fixed', binSort)
+            spark.setDepthWrite(False)
+            spark.setBillboardPointEye()
+        except Exception:
+            return None
+
+        # Settle downward — residual cream, not the initial outward warn glitter.
+        end = Point3(
+            origin[0] + cos(angle) * drift * 0.55,
+            origin[1] + sin(angle) * drift * 0.55,
+            origin[2] - 0.5 - 0.1 * (index % 3))
+        peak = size * (1.2 + 0.1 * (index % 2))
+        self._nodes.append(spark)
+        stagger = 0.02 * (index % 3)
+        return Sequence(
+            Wait(stagger),
+            Parallel(
+                LerpColorScaleInterval(
+                    spark, 0.05, Vec4(r, g, b, a), blendType='easeOut'),
+                LerpScaleInterval(
+                    spark, sec * 0.28, peak, blendType='easeOut'),
+            ),
+            Parallel(
+                LerpPosInterval(spark, sec * 0.72, end, blendType='easeIn'),
+                LerpScaleInterval(
+                    spark, sec * 0.72, 0.04, blendType='easeIn'),
+                LerpColorScaleInterval(
+                    spark, sec * 0.72, Vec4(er, eg, eb, ea),
+                    blendType='easeIn'),
+            ),
+        )
 
     def _spawnFleck(self, parentNP, origin, look, index, count):
         """Radial cream / pastel warn fleck — contrast to ink drip, not ink."""

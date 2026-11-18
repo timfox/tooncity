@@ -99,8 +99,9 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # ink silhouette (CorruptSilhouetteCreamRimFx). Telegraph wind-up pauses
 # idle drips / rim flecks and plays a short ink drip / splat pop
 # (CorruptTelegraphInkFx) layered with sunny cream / pastel warn flecks
-# (CorruptTelegraphCreamWarnFx — contrast to ink) plus squash/SFX so
-# wind-ups read without a combat HUD; impact flash on hit.
+# + delayed cream aftershock (CorruptTelegraphCreamWarnFx — contrast to
+# ink) plus squash/SFX so wind-ups read without a combat HUD; impact
+# flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
 # Melee hits on Smudge flash SmudgeInkSplashFx (cheap purple ink splash);
 # Smudge death layers splash with CorruptDeathPopFx for swarm readability.
@@ -132,8 +133,10 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~spawncorrupt 2
 ~hackslash 0
 # Close range — telegraph shows ink drip / silhouette plus sunny cream /
-# pastel warn flecks (CorruptTelegraphCreamWarnFx). Contrast to ink.
-# TELEGRAPH_CREAM_WARN_ENABLED = False drops flecks only.
+# pastel warn flecks (CorruptTelegraphCreamWarnFx), then a delayed cream
+# aftershock (soft halo + residual flecks settling). Contrast to ink.
+# TELEGRAPH_CREAM_WARN_ENABLED = False drops flecks + aftershock.
+# TELEGRAPH_CREAM_WARN_AFTERSHOCK_ENABLED = False drops aftershock only.
 ```
 
 ## Death cream fleck burst demo
