@@ -27,6 +27,7 @@ from . import HitJuice
 from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
 from .DemoHostile import spawnDemoHostiles
+from .ComboCounterCreamEdgeFx import ComboCounterCreamEdgePulse
 from .DodgeCancelCreamWashFx import DodgeCancelCreamWashPulse
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
@@ -115,6 +116,7 @@ class MeleeCombatController(DirectObject):
         self._comboFleckNodes = []
         self._comboCreamIval = None
         self._comboCreamNodes = []
+        self._comboCreamEdge = ComboCounterCreamEdgePulse()
         self.targetFinder = SoftTargetFinder(avatar)
         self._cycleReadyAt = 0.0
         self._hintNP = None
@@ -801,6 +803,21 @@ class MeleeCombatController(DirectObject):
                 name=self.avatar.uniqueName('hackslashComboCream'))
             self._comboCreamIval = creamIval
             self._comboCreamNodes = creamNodes
+            # Local cream edge pop so the counter tick reads clearly.
+            self._playComboCreamEdge(fleckOrigin)
+
+    def _playComboCreamEdge(self, origin=None):
+        """Brief cream border pop framing the punch counter on tick."""
+        try:
+            self._comboCreamEdge.play(origin=origin)
+        except Exception:
+            pass
+
+    def _clearComboCreamEdge(self):
+        try:
+            self._comboCreamEdge.clear()
+        except Exception:
+            pass
 
     def _fadeComboCounter(self):
         if self._comboNP is None or self._comboNP.isEmpty():
@@ -839,6 +856,7 @@ class MeleeCombatController(DirectObject):
             self._comboCreamIval = None
         HitJuice.clearComboCreamSparkles(self._comboCreamNodes)
         self._comboCreamNodes = []
+        self._clearComboCreamEdge()
 
     def _clearComboCounter(self):
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
