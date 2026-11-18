@@ -63,7 +63,12 @@ class MeleeCombatController(DirectObject):
         self._hitStop = HitStopFx(avatar)
         self._hitSpark = HitSparkFx(avatar)
         self._slamDust = SlamDustFx(avatar)
-        self._softLockReticle = SoftLockReticleFx(avatar)
+        # Soft-lock FOV punch defers while HitStopFx is active (#68 compose).
+        self._softLockReticle = SoftLockReticleFx(
+            avatar,
+            hitStop=self._hitStop,
+            beforeFov=self._restoreFov,
+            fovBusy=lambda: self._fovIval is not None)
         self._pendingConnectTarget = None
         self._pendingConnectHitIndex = None
         self._origScale = None
@@ -200,14 +205,21 @@ class MeleeCombatController(DirectObject):
         else:
             self._hideLockHint()
             self._hideSoftLockReticle()
+            # Still flush deferred soft-lock FOV if hitstop just ended.
+            try:
+                self._softLockReticle.tick()
+            except Exception:
+                pass
         # Always after soft-lock so finisher thud isn't lerped away.
         self._applyFinisherShake()
         return Task.cont
 
     def _updateSoftLockReticle(self, target, snapped=False):
-        """Follow soft-lock target; hose-pop + cream/ink accents on snap."""
+        """Follow soft-lock target; hose-pop + FOV punch on snap."""
         try:
             self._softLockReticle.attach(target, snapped=bool(snapped))
+            # Flush deferred soft-lock FOV after HitStopFx resumes.
+            self._softLockReticle.tick()
         except Exception:
             pass
 
@@ -918,6 +930,12 @@ class MeleeCombatController(DirectObject):
 
     def _playFinisherFovPunch(self):
         """Quick FOV kick on the 3rd hit so finishers feel heavier."""
+        # Drop any soft-lock FOV punch so finisher owns the lens cleanly.
+        try:
+            self._softLockReticle.cancelPendingFov()
+            self._softLockReticle.restoreFov()
+        except Exception:
+            pass
         self._restoreFov()
         try:
             lens = base.camLens  # noqa: F821
