@@ -3,6 +3,8 @@
 Act clears (Loopy → Punchline → Silly) play as a short Toontown reclaim
 celebration — Oswald as the trusted face, title hose-pop, clear next-street
 cue — not a single toast line. Finale victory keeps the Oswald twist beat.
+After Corrupted Oswald chase clear, an epilogue soft-end plate points the
+hub replay tip (twist→soft-end authored beat — not cream FX deepen).
 
 Title lands with the same squash→stretch→settle rubber-hose scale pop as
 PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
@@ -121,6 +123,7 @@ class CampaignHandoffClient(DirectObject):
         self._localReclaimCount = 0
         self._finaleClears = 0
         self._betrayalArmed = False
+        self._epilogueShown = False
         self.accept('purityRestoreFx', self._onPurityRestore)
         self.accept('campaignVictory', self._onVictory)
         self.accept('campaignPhase', self._onPhase)
@@ -128,6 +131,9 @@ class CampaignHandoffClient(DirectObject):
         # FinalePhaseFx fires this when the betrayal AV sting lands — handoff
         # plate owns the readable twist copy (hose-pop, not plain TextNode).
         self.accept('oswaldRevealBanner', self._onOswaldBetrayalBanner)
+        # Chase-clear epilogue soft-end (AI-local + client watch rebroadcast).
+        self.accept('oswaldBetrayalChaseCleared', self._onChaseCleared)
+        self.accept('campaignEpilogue', self._onChaseCleared)
 
     def destroy(self):
         self.ignoreAll()
@@ -266,6 +272,38 @@ class CampaignHandoffClient(DirectObject):
                 powerMult=None,
                 nextStreet=None,
                 holdSec=3.8))
+
+    def _onChaseCleared(self, doId=0):
+        """Land epilogue soft-end plate after Corrupted Oswald chase clear."""
+        if not bool(getattr(
+                CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True)):
+            return
+        if self._epilogueShown:
+            return
+        self._epilogueShown = True
+        self._showEpilogueHandoff()
+
+    def _showEpilogueHandoff(self):
+        """Hose-pop soft-end plate: stain washed → hub replay tip."""
+        from toontown.campaign.OswaldBetrayalChase import (
+            epilogueCue, epilogueSub, epilogueTitle)
+
+        title = epilogueTitle()
+        subtitle = epilogueSub()
+        cue = epilogueCue()
+        hold = float(getattr(
+            CampaignGlobals, 'CAMPAIGN_EPILOGUE_HOLD_SEC', 3.6))
+        # Point soft cue at Loopy so hub / rematch latch stays discoverable.
+        nextStreet = CampaignGlobals.ACTS[0]['name']
+        self._celebrate(
+            title,
+            subtitle=subtitle,
+            nextCue=cue,
+            color=_VICTORY_COLOR,
+            powerMult=None,
+            nextStreet=nextStreet,
+            holdSec=hold,
+            trustSettle=True)
 
     def _onOswaldBetrayalBanner(self, title=''):
         """Land the betrayal handoff plate when Silly finale reveal fires."""

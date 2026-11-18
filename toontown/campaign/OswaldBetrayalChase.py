@@ -86,6 +86,27 @@ def chaseClearMsg():
         "Oswald's stain is washed — purity holds for real this time!"))
 
 
+def epilogueEnabled():
+    return bool(getattr(CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True))
+
+
+def epilogueTitle():
+    return str(getattr(
+        CampaignGlobals, 'CAMPAIGN_EPILOGUE_TITLE', 'STAIN WASHED'))
+
+
+def epilogueSub():
+    return str(getattr(
+        CampaignGlobals, 'CAMPAIGN_EPILOGUE_SUB',
+        "Oswald's smile is gone — purity holds for real this time."))
+
+
+def epilogueCue():
+    return str(getattr(
+        CampaignGlobals, 'CAMPAIGN_EPILOGUE_CUE',
+        'Replay from Toon Central hub — C on Loopy Lane to start over'))
+
+
 def spawnCorruptOswald(air, toon, zoneId=None, forward=None):
     """Spawn one fightable Corrupted Oswald near `toon`. Returns AI or None.
 
@@ -142,7 +163,10 @@ class OswaldBetrayalChaseClient(DirectObject):
 
     AI schedules the DistributedCorruptToon spawn; this client mirrors the
     same delay from campaignVictory / reveal so the tip lands without a
-    new distributed announce (messenger is process-local).
+    new distributed announce (messenger is process-local). After clear,
+    accepts ``oswaldBetrayalChaseCleared`` (same-process) and also watches
+    for a live Corrupted Oswald to drop so real clients still fire the
+    campaign epilogue soft-end beat.
     """
 
     def __init__(self):
@@ -152,14 +176,21 @@ class OswaldBetrayalChaseClient(DirectObject):
         self._ival = None
         self._armed = False
         self._cueLatched = False
+        self._chaseDoId = None
+        self._sawChase = False
+        self._epilogueLatched = False
+        self._watchTask = None
         # campaignVictory is local when available; oswaldRevealBanner is the
         # reliable finale client path from FinalePhaseFx.
         self.accept('campaignVictory', self._onVictory)
         self.accept('oswaldRevealBanner', self._onReveal)
         self.accept('oswaldBetrayalChase', self._onChaseSpawned)
+        # AI-local clear + client-emitted clear after defeat watch.
+        self.accept('oswaldBetrayalChaseCleared', self._onChaseCleared)
 
     def destroy(self):
         self.ignoreAll()
+        self._stopChaseWatch()
         self._clear()
 
     def _onVictory(self, reclaimCount=0):
@@ -186,6 +217,10 @@ class OswaldBetrayalChaseClient(DirectObject):
         # Optional same-process hook (tests / AI-local clients).
         if not chaseEnabled():
             return
+        try:
+            self._chaseDoId = int(doId) if doId else None
+        except Exception:
+            self._chaseDoId = None
         self._armMelee()
         tipDelay = max(0.0, float(getattr(
             CampaignGlobals, 'OSWALD_BETRAYAL_CHASE_TIP_DELAY_SEC', 0.35)))
@@ -201,6 +236,7 @@ class OswaldBetrayalChaseClient(DirectObject):
 
         def _show():
             self._showChaseCue()
+            self._startChaseWatch()
 
         if delay <= 0.01:
             _show()
@@ -289,6 +325,132 @@ class OswaldBetrayalChaseClient(DirectObject):
         )
         self._ival.start()
 
+    def _startChaseWatch(self):
+        """Poll for Corrupted Oswald defeat so epilogue fires on real clients.
+
+        AI ``messenger.send('oswaldBetrayalChaseCleared')`` is process-local;
+        watching the live DistributedCorruptToon bridges that gap without a
+        new DC field. Keeps betrayal kit spawn identity intact.
+        """
+        if not epilogueEnabled():
+            return
+        self._stopChaseWatch()
+        period = max(0.2, float(getattr(
+            CampaignGlobals, 'CAMPAIGN_EPILOGUE_WATCH_SEC', 0.45)))
+        self._watchTask = 'oswald-betrayal-chase-clear-watch'
+        try:
+            taskMgr.doMethodLater(  # noqa: F821
+                period, self._pollChaseClear, self._watchTask)
+        except Exception:
+            self._watchTask = None
+
+    def _stopChaseWatch(self):
+        name = self._watchTask
+        self._watchTask = None
+        if not name:
+            return
+        try:
+            taskMgr.remove(name)  # noqa: F821
+        except Exception:
+            pass
+
+    def _pollChaseClear(self, task):
+        if self._epilogueLatched:
+            self._watchTask = None
+            return task.done
+        alive = self._findLiveCorruptOswald()
+        if alive is not None:
+            self._sawChase = True
+            try:
+                self._chaseDoId = int(getattr(alive, 'doId', 0) or 0) or (
+                    self._chaseDoId)
+            except Exception:
+                pass
+            return task.again
+        if self._sawChase or self._chaseDoId:
+            # Saw chase then lost it — treat as clear.
+            doId = int(self._chaseDoId or 0)
+            self._watchTask = None
+            self._emitChaseCleared(doId)
+            return task.done
+        return task.again
+
+    def _findLiveCorruptOswald(self):
+        cr = getattr(base, 'cr', None)  # noqa: F821
+        if cr is None:
+            return None
+        doMap = getattr(cr, 'doId2do', None) or {}
+        wantId = CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD
+        wantName = chaseName().lower()
+        # Prefer tracked doId when AI same-process spawn announced it.
+        if self._chaseDoId:
+            obj = doMap.get(int(self._chaseDoId))
+            if obj is not None and self._isLiveCorruptOswald(
+                    obj, wantId, wantName):
+                return obj
+        for obj in list(doMap.values()):
+            if self._isLiveCorruptOswald(obj, wantId, wantName):
+                return obj
+        return None
+
+    def _isLiveCorruptOswald(self, obj, wantId, wantName):
+        if obj is None:
+            return False
+        try:
+            if getattr(obj, 'isDeleted', lambda: False)():
+                return False
+        except Exception:
+            pass
+        try:
+            hp = int(getattr(obj, 'hp', 0) or 0)
+        except Exception:
+            hp = 0
+        if hp <= 0:
+            return False
+        try:
+            archetype = int(getattr(obj, 'archetype', -1))
+            if hasattr(obj, 'getArchetype'):
+                archetype = int(obj.getArchetype())
+        except Exception:
+            archetype = -1
+        if archetype == int(wantId):
+            return True
+        name = str(getattr(obj, 'name', '') or '').lower()
+        return bool(wantName) and wantName in name
+
+    def _onChaseCleared(self, doId=0):
+        """Accept AI / peer clear — fire epilogue once (no clear rebroadcast)."""
+        self._fireEpilogue(doId, rebroadcastClear=False)
+
+    def _emitChaseCleared(self, doId=0):
+        """Watch-origin clear — broadcast so Handoff/PlayEntry hear it."""
+        self._fireEpilogue(doId, rebroadcastClear=True)
+
+    def _fireEpilogue(self, doId=0, rebroadcastClear=False):
+        if self._epilogueLatched:
+            return
+        if not epilogueEnabled():
+            return
+        self._epilogueLatched = True
+        self._stopChaseWatch()
+        self._clearNodes()
+        try:
+            doId = int(doId or self._chaseDoId or 0)
+        except Exception:
+            doId = 0
+        # Real clients never see AI messenger.send — watch path rebroadcasts
+        # the clear token; both paths emit campaignEpilogue for PlayEntry.
+        if rebroadcastClear:
+            try:
+                messenger.send(  # noqa: F821
+                    'oswaldBetrayalChaseCleared', [doId])
+            except Exception:
+                pass
+        try:
+            messenger.send('campaignEpilogue', [doId])  # noqa: F821
+        except Exception:
+            pass
+
     def _clearNodes(self):
         for attr in ('_tipNP', '_bannerNP'):
             np = getattr(self, attr, None)
@@ -311,6 +473,10 @@ class OswaldBetrayalChaseClient(DirectObject):
         self._clearIntervals()
         self._clearNodes()
         self._cueLatched = False
+        self._chaseDoId = None
+        self._sawChase = False
+        # Keep _epilogueLatched so a destroy/recreate mid-session does not
+        # double-fire; ensureOswaldBetrayalChaseClient is process-singleton.
 
 
 _client = None

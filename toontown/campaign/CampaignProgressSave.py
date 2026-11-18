@@ -41,6 +41,8 @@ def defaultProgress():
         'reclaimCount': 0,
         'state': int(CampaignGlobals.STATE_IDLE),
         'finalePhase': 0,
+        # 1 after Corrupted Oswald chase clear (epilogue soft-end).
+        'chaseCleared': 0,
     }
 
 
@@ -71,23 +73,29 @@ def sanitizeProgress(raw, numActs=None):
         'state', CampaignGlobals.STATE_IDLE,
         CampaignGlobals.STATE_IDLE, CampaignGlobals.STATE_VICTORY)
     finalePhase = _int('finalePhase', 0, 0, 1)
+    chaseCleared = _int('chaseCleared', 0, 0, 1)
     return {
         'unlockedThrough': unlocked,
         'actIndex': actIndex,
         'reclaimCount': reclaimCount,
         'state': state,
         'finalePhase': finalePhase,
+        'chaseCleared': chaseCleared,
     }
 
 
 def snapshotFromDirector(director):
     """Build a sanitizable blob from a live CampaignDirectorAI."""
+    chaseCleared = getattr(director, 'chaseCleared', None)
+    if chaseCleared is None:
+        chaseCleared = getattr(director, '_chaseCleared', 0)
     return sanitizeProgress({
         'unlockedThrough': getattr(director, 'unlockedThrough', 0),
         'actIndex': getattr(director, 'actIndex', 0),
         'reclaimCount': getattr(director, 'reclaimCount', 0),
         'state': getattr(director, 'state', CampaignGlobals.STATE_IDLE),
         'finalePhase': getattr(director, '_finalePhase', 0),
+        'chaseCleared': chaseCleared,
     })
 
 
@@ -99,6 +107,7 @@ def applyProgressToDirector(director, progress):
     director.reclaimCount = blob['reclaimCount']
     director.state = blob['state']
     director._finalePhase = blob['finalePhase']
+    director.chaseCleared = int(blob.get('chaseCleared', 0) or 0)
     return blob
 
 

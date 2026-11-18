@@ -198,18 +198,40 @@ ACTS = (
 
 # Hub PlayEntry tip — points new players at Act 1 without magic words / zone ids.
 # Soft next-street cues reuse hubPlayEntryTip(nextStreet=…) after a handoff.
+# After STATE_VICTORY / chase clear, hubVictoryReplayTip replaces the
+# generic Loopy invite so twist→soft-end has an authored epilogue beat.
 HUB_TIP = (
     'Oswald needs you on Loopy Lane — hop the tunnel and reclaim purity!  |  '
     'C campaign')
+HUB_VICTORY_TIP = (
+    "Campaign complete — Oswald's stain is washed. "
+    'Replay from hub / C on Loopy Lane!  |  C campaign')
 
 
-def hubPlayEntryTip(face=None, nextStreet=None):
-    """Player-facing hub tip. nextStreet overrides Loopy after a handoff."""
+def hubPlayEntryTip(face=None, nextStreet=None, victory=False):
+    """Player-facing hub tip. nextStreet overrides Loopy after a handoff.
+
+    When ``victory`` is True (STATE_VICTORY / chase-clear epilogue), return
+    the soft-end replay tip instead of the Act 1 invite.
+    """
+    if victory:
+        return hubVictoryReplayTip(face=face)
     face = face or RECLAIM_FACE
     street = nextStreet or ACTS[0]['name']
     return (
         '%s needs you on %s — hop the tunnel and reclaim purity!  |  '
         'C campaign' % (face, street))
+
+
+def hubVictoryReplayTip(face=None):
+    """Hub tip after campaign victory / chase-clear epilogue (soft end)."""
+    tip = HUB_VICTORY_TIP
+    if tip:
+        return str(tip)
+    face = face or RECLAIM_FACE
+    return (
+        'Campaign complete — %s\'s stain is washed. '
+        'Replay from hub / C on Loopy Lane!  |  C campaign' % face)
 
 
 def handoffTravelHint(nextAct, face=None):
@@ -895,6 +917,22 @@ OSWALD_BETRAYAL_CHASE_CLEAR_MSG = (
     "Oswald's stain is washed — purity holds for real this time!")
 # Tip lands slightly after spawn so the enemy is already fielded.
 OSWALD_BETRAYAL_CHASE_TIP_DELAY_SEC = 0.35
+
+# Campaign epilogue after Corrupted Oswald chase clear (gameplay soft-end).
+# Client accepts oswaldBetrayalChaseCleared → CampaignHandoff plate + PlayEntry
+# hub victory replay tip. Not cream FX; keeps betrayal kit / presence intact.
+# CAMPAIGN_EPILOGUE_ENABLED = False drops chase-clear handoff + hub victory
+# tip only (clear system message + chase spawn remain).
+CAMPAIGN_EPILOGUE_ENABLED = True
+CAMPAIGN_EPILOGUE_TITLE = 'STAIN WASHED'
+CAMPAIGN_EPILOGUE_SUB = (
+    "Oswald's smile is gone — purity holds for real this time.")
+CAMPAIGN_EPILOGUE_CUE = (
+    'Replay from Toon Central hub — C on Loopy Lane to start over')
+CAMPAIGN_EPILOGUE_HOLD_SEC = 3.6
+# Client watch polls for Corrupted Oswald defeat when AI messenger is
+# process-local (real clients never see AI messenger.send).
+CAMPAIGN_EPILOGUE_WATCH_SEC = 0.45
 
 # Trusted Oswald hub/street presence stub (meet the trust face before twist).
 # World placemarker + proximity greet — stub-shippable, not a full

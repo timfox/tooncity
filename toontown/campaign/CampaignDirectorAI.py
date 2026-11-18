@@ -35,6 +35,8 @@ class CampaignDirectorAI(DirectObject):
         self.unlockedThrough = 0
         self._activeZoneId = None
         self._finalePhase = 0
+        # 1 after Corrupted Oswald chase clear (epilogue soft-end persist).
+        self.chaseCleared = 0
         self._lastToonId = None
         self._hydratedToonId = None
         self._oswaldChaseDoId = None
@@ -104,7 +106,11 @@ class CampaignDirectorAI(DirectObject):
         if self.state == CampaignGlobals.STATE_VICTORY:
             chaseNote = ''
             if chaseEnabled():
-                chaseNote = ' Corrupted-Oswald chase after betrayal.'
+                if int(getattr(self, 'chaseCleared', 0) or 0):
+                    chaseNote = (
+                        ' Oswald stain washed — epilogue soft-end ready.')
+                else:
+                    chaseNote = ' Corrupted-Oswald chase after betrayal.'
             return (
                 'Campaign VICTORY — purity restored, but Oswald caused '
                 'the corruption!%s Reclaims: %s. Replay from %s / C on Loopy.'
@@ -141,6 +147,7 @@ class CampaignDirectorAI(DirectObject):
             self.unlockedThrough = 0
             self.reclaimCount = 0
             self._finalePhase = 0
+            self.chaseCleared = 0
             self._cancelOswaldBetrayalChase()
             # Replay wipe must stick across the next relog.
             self._persistForToon(toon)
@@ -167,9 +174,11 @@ class CampaignDirectorAI(DirectObject):
         self._lastToonId = getattr(toon, 'doId', None)
         self._hydrateFromToon(toon)
         if self.state == CampaignGlobals.STATE_VICTORY:
-            return (
+            tip = getattr(
+                CampaignGlobals, 'HUB_VICTORY_TIP', None) or (
                 'Campaign already complete. Head to %s / press C on Loopy '
                 'to replay.' % CampaignGlobals.HUB_NAME)
+            return tip
 
         nextIndex = self.actIndex + 1
         if nextIndex >= len(CampaignGlobals.ACTS):
@@ -411,9 +420,22 @@ class CampaignDirectorAI(DirectObject):
         toon = self.air.doId2do.get(int(toonId)) if toonId else None
         if toon is None:
             toon = self._toonFromLast()
+        # Persist chase-clear so relog status / epilogue know the soft-end.
+        self.chaseCleared = 1
+        self._persistForToon(toon)
         self._tellToon(toon, chaseClearMsg())
+        if bool(getattr(CampaignGlobals, 'CAMPAIGN_EPILOGUE_ENABLED', True)):
+            epiCue = getattr(
+                CampaignGlobals, 'CAMPAIGN_EPILOGUE_CUE', '') or (
+                'Replay from %s — C on Loopy to start over'
+                % CampaignGlobals.HUB_NAME)
+            self._tellToon(toon, epiCue)
         try:
             messenger.send('oswaldBetrayalChaseCleared', [int(doId)])  # noqa: F821
+        except Exception:
+            pass
+        try:
+            messenger.send('campaignEpilogue', [int(doId)])  # noqa: F821
         except Exception:
             pass
         return Task.done
