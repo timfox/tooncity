@@ -2832,6 +2832,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         for crumb_sym in (
                 'reclaimStreetEntries',
                 'streetNeedsBreadcrumb',
+                'placemarkerPulseParams',
                 'CorruptStreetBreadcrumb',
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
@@ -2841,6 +2842,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         crumb_src = _read(crumb_rel)
         self.assertIn('Ink stains Loopy', crumb_src)
         self.assertIn('streetNeedsBreadcrumb', crumb_src)
+        # Brief pulse / cream highlight so reclaim tunnels catch the eye.
+        self.assertIn('_startPulseLoop', crumb_src)
+        self.assertIn('_PULSE_HIGHLIGHT', crumb_src)
         playground_src = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('ensureCorruptStreetBreadcrumbs', playground_src)
         self.assertIn('stopCorruptStreetBreadcrumbs', playground_src)

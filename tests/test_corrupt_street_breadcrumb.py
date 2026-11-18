@@ -3,7 +3,7 @@
 
 Loads pure helpers from CorruptStreetBreadcrumb via AST extraction (no
 Panda3D). Covers streetNeedsBreadcrumb pollution/seed rules used by hub
-discoverability (#192).
+discoverability (#192) and placemarker notice-pulse timing.
 
 Run from repo root:
   python3 tests/test_corrupt_street_breadcrumb.py
@@ -22,21 +22,38 @@ BREADCRUMB_REL = 'toontown/safezone/CorruptStreetBreadcrumb.py'
 
 
 def _extract_pure_helpers():
-    """Compile streetNeedsBreadcrumb without importing panda-heavy module."""
+    """Compile pure helpers without importing panda-heavy module."""
     path = REPO_ROOT / BREADCRUMB_REL
-    tree = ast.parse(path.read_text(encoding='utf-8'), filename=BREADCRUMB_REL)
+    src = path.read_text(encoding='utf-8')
+    tree = ast.parse(src, filename=BREADCRUMB_REL)
+    # placemarkerPulseParams closes over module pulse constants — bind them.
+    const_names = {
+        '_PULSE_PEAK', '_PULSE_HALF_SEC', '_PULSE_BEATS', '_PULSE_GAP_SEC',
+        '_MARKER_SCALE',
+    }
     keep = []
     for node in tree.body:
-        if isinstance(node, ast.FunctionDef) and node.name in (
-                'streetNeedsBreadcrumb',):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id in const_names:
+                    keep.append(node)
+                    break
+        elif isinstance(node, ast.FunctionDef) and node.name in (
+                'streetNeedsBreadcrumb', 'placemarkerPulseParams'):
             keep.append(node)
-    if not keep:
+    if not any(
+            isinstance(n, ast.FunctionDef) and n.name == 'streetNeedsBreadcrumb'
+            for n in keep):
         raise AssertionError('streetNeedsBreadcrumb not found in %s' % BREADCRUMB_REL)
+    if not any(
+            isinstance(n, ast.FunctionDef) and n.name == 'placemarkerPulseParams'
+            for n in keep):
+        raise AssertionError('placemarkerPulseParams not found in %s' % BREADCRUMB_REL)
     mod = ast.Module(body=keep, type_ignores=[])
     ast.fix_missing_locations(mod)
     ns = {}
     exec(compile(mod, BREADCRUMB_REL, 'exec'), ns)  # noqa: S102 — test harness
-    return ns['streetNeedsBreadcrumb']
+    return ns['streetNeedsBreadcrumb'], ns['placemarkerPulseParams']
 
 
 class CorruptStreetBreadcrumbTest(unittest.TestCase):
@@ -46,7 +63,9 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
     def setUpClass(cls):
         # Store on the class dict under a private name so Python does not
         # bind the helper as an instance method (which would shift args).
-        cls._needs = staticmethod(_extract_pure_helpers())
+        needs, pulse = _extract_pure_helpers()
+        cls._needs = staticmethod(needs)
+        cls._pulse = staticmethod(pulse)
         cls.src = (REPO_ROOT / BREADCRUMB_REL).read_text(encoding='utf-8')
         cls.tree = ast.parse(cls.src, filename=BREADCRUMB_REL)
 
@@ -75,6 +94,7 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         for expected in (
                 'reclaimStreetEntries',
                 'streetNeedsBreadcrumb',
+                'placemarkerPulseParams',
                 'CorruptStreetBreadcrumb',
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
@@ -87,12 +107,32 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'Silly Street ink-deep',
                 'reclaim'):
             self.assertIn(needle, self.src)
+        # Notice pulse wiring (scale + cream highlight) on polluted markers.
+        for needle in (
+                '_startPulseLoop',
+                '_buildNoticePulseIval',
+                'LerpColorScaleInterval',
+                '_PULSE_HIGHLIGHT',
+                '_PULSE_GAP_SEC'):
+            self.assertIn(needle, self.src, msg='missing pulse cue %s' % needle)
         # No KH branding / magic-word discoverability.
         src_l = self.src.lower()
         self.assertNotIn('keyblade', src_l)
         self.assertNotIn('kingdom hearts', src_l)
         self.assertNotIn('~startcampaign', self.src)
         self.assertNotIn('~reclaim', self.src)
+
+    def test_placemarker_pulse_params(self):
+        params = self._pulse()
+        self.assertGreater(params['peak'], 1.0)
+        self.assertLess(params['peak'], 1.5)
+        self.assertGreater(params['halfSec'], 0.05)
+        self.assertLessEqual(params['halfSec'], 0.35)
+        self.assertGreaterEqual(params['beats'], 2)
+        self.assertLessEqual(params['beats'], 4)
+        self.assertGreaterEqual(params['gapSec'], 2.0)
+        self.assertLessEqual(params['gapSec'], 8.0)
+        self.assertGreater(params['baseScale'], 0.5)
 
     def test_tt_playground_wires_breadcrumbs(self):
         playground = (
