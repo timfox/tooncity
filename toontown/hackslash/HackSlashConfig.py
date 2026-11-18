@@ -205,7 +205,7 @@ COMBO_COUNTER_CREAM_AFTERSHOCK_BIN = 58
 # Combo-counter cream wash pulse — soft aspect2d veil after cream aftershock
 # (#116). Finisher / melee-hit / dodge-trail cream wash grammar. Quieter than
 # finisher wash (counter ticks fire more often); cream/pastel only. Toggle
-# COMBO_COUNTER_CREAM_WASH_ENABLED = False drops wash only.
+# COMBO_COUNTER_CREAM_WASH_ENABLED = False drops wash (+ wash aftershock).
 COMBO_COUNTER_CREAM_WASH_ENABLED = True
 COMBO_COUNTER_CREAM_WASH_DELAY_SEC = 0.34  # after tick; after aftershock (0.16)
 COMBO_COUNTER_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -216,6 +216,31 @@ COMBO_COUNTER_CREAM_WASH_PULSE_SEC = 0.08
 COMBO_COUNTER_CREAM_WASH_HOLD_SEC = 0.05
 COMBO_COUNTER_CREAM_WASH_OUT_SEC = 0.30
 COMBO_COUNTER_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
+
+# Combo-counter cream wash aftershock — residual cream flecks + soft halo after
+# the wash pulse (#147). Same grammar as HIT_SPARK_CREAM_WASH_AFTERSHOCK_*
+# (#174) / PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_* (#171); quieter than melee-hit
+# wash aftershock (counter ticks fire more often). Distinct from tick cream
+# aftershock (#116). Cream/pastel only. Toggle
+# COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_ENABLED = True
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.22  # after wash starts
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.08)
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_COUNT = 3
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_SIZE = 0.011
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_DRIFT = 0.20
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_FALL = 0.16
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_SEC = 0.26
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.64)
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_BIN = 30  # over wash veil (28)
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.36
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_START = 0.20
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.00
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.22
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.08
+COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Mid/finisher launcher juice (upward juggle feel on the target).
 LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more

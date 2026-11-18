@@ -8,8 +8,9 @@ readable airborne float with cream sparkle before fall (spawnHangSparks stays
 as the cream-disabled fallback).
 Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks +
 spawnComboCreamSparkles for a brief rubber-hose number pop with ink flecks
-and cream sparkle on each connect, plus a delayed cream aftershock settle
-and a soft cream wash pulse (ComboCounterCreamWashPulse).
+and cream sparkle on each connect, plus a delayed cream aftershock settle,
+a soft cream wash pulse, and residual cream wash aftershock
+(ComboCounterCreamWashPulse).
 Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
 cream/ink hose pop when soft-lock acquires or snaps a corrupt target.
 Hit connect uses spawnHitSparkFlecks for short cream/ink fleck sparkles that
@@ -641,20 +642,18 @@ def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkl
     aftershock = _buildComboCreamAftershock(
         parentNP, originPt, nodes, name=name + 'Aftershock')
 
-    # Soft cream wash pulse after cream aftershock — finisher/hit/dodge grammar.
+    # Soft cream wash pulse + residual aftershock after cream aftershock —
+    # melee-hit wash aftershock (#174) grammar.
     washHold = 0.0
     try:
         wash = ComboCounterCreamWashPulse()
         if wash.play() is not None:
             _comboCreamWash = wash
-            # Hold teardown beside delayed wash so clear() doesn't kill the
-            # veil mid-pulse when the caller retires the cream ival early
-            # (wash self-clears too).
-            washHold = (
+            # Hold teardown beside delayed wash + residual aftershock so
+            # clear() doesn't kill the veil/flecks mid-pulse when the caller
+            # retires the cream ival early (wash self-clears too).
+            washDuration = (
                 float(getattr(
-                    HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_DELAY_SEC',
-                    0.34))
-                + float(getattr(
                     HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_IN_SEC',
                     0.05))
                 + float(getattr(
@@ -665,8 +664,27 @@ def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkl
                     0.05))
                 + float(getattr(
                     HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_OUT_SEC',
-                    0.30))
-                + 0.02)
+                    0.30)))
+            aftershockTail = 0.0
+            if getattr(
+                    HackSlashConfig,
+                    'COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_ENABLED', True):
+                aftershockTail = (
+                    float(getattr(
+                        HackSlashConfig,
+                        'COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                        0.22))
+                    + float(getattr(
+                        HackSlashConfig,
+                        'COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_SEC',
+                        0.26))
+                    + 0.05)
+            washHold = (
+                float(getattr(
+                    HackSlashConfig, 'COMBO_COUNTER_CREAM_WASH_DELAY_SEC',
+                    0.34))
+                + max(washDuration, aftershockTail)
+                + 0.04)
         else:
             _comboCreamWash = None
     except Exception:
