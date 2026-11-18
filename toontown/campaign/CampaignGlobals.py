@@ -41,12 +41,18 @@ ACTS = (
         ),
         'banner': 'Act 1 — Oswald calls for help! Corruption stains Loopy Lane!',
         # Client celebration copy (title / Oswald tip / next-street cue).
+        # Mid-act trust fracture: still a cheer, smile holds a rubbery beat
+        # too long — foreshadow only (no Silly twist spoilers).
         'handoffTitle': 'LOOPY LANE IS PURE!',
         'handoff': (
             'Oswald cheers: Loopy Lane is pure again! '
+            'Smile holds a rubbery beat too long… '
             'Next: Punchline Place.'),
-        'nextCue': 'Oswald points the tunnel → Punchline Place',
+        'nextCue': (
+            'Oswald points the tunnel → Punchline Place — '
+            'grin still stretchy'),
         'nextStreet': 'Punchline Place',
+        'trustFracture': True,
     },
     {
         'id': 'punchline',
@@ -343,6 +349,38 @@ OSWALD_TRUST_SUB_SCALE = 0.048
 OSWALD_TRUST_SUB_POP_SQUASH = (1.50, 1.0, 0.56, 0.05)   # sx, sy, sz, sec
 OSWALD_TRUST_SUB_POP_STRETCH = (0.80, 1.0, 1.40, 0.08)
 OSWALD_TRUST_SUB_POP_SETTLE_SEC = 0.10
+
+# Mid-act Oswald trust fracture (Loopy clear → Punchline handoff / tip).
+# Off-tone trust foreshadow only — no twist spoilers / no KH branding.
+# Hose settle holds a rubbery beat longer than sunny trust (#76); cream
+# edge cools toward a soft shadow fleck settle (ActBannerCreamEdgeFx).
+OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.09)
+OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC = 0.14
+OSWALD_TRUST_FRACTURE_SUB_COLOR = (0.88, 0.92, 0.86, 1.0)
+# Cooler cream frame + shadow-fade flecks on Loopy trust-fracture handoff.
+# Composes with carnival confetti (#57) — replaces sunny handoff cream edge
+# on trustFracture acts only. Punchline / Silly paths stay sunny.
+# OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED = False drops fracture edge only
+# (carnival + hose settle remain).
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED = True
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_COLOR = (0.90, 0.93, 0.86, 1.0)  # cool cream
+OSWALD_TRUST_FRACTURE_CREAM_EDGE = 0.28  # strip thickness in aspect2d units
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_PEAK = 0.36
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_PULSE = 0.20  # mid-beat alpha after peak
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_IN_SEC = 0.08
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC = 0.12  # held a beat (unease)
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_PULSE_SEC = 0.14
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_OUT_SEC = 0.40  # soft shadow settle
+# Below handoff plate/title bins (60/62); above ink entry vignette (48).
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_BIN = 55
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_COUNT = 5
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_SIZE = 0.020
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_DRIFT = 0.16
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_SEC = 0.32
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_COLOR = (0.82, 0.86, 0.90, 0.82)
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_END_COLOR = (0.28, 0.26, 0.34, 0.0)
+# Flecks cluster near the handoff plate (root ~z 0.42).
+OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.42)
 
 # Cream edge pulse framing early/mid Oswald trust handoff banners.
 # Composes with trust hose settle (#76) — mirrors act-enter cream edge (#110)

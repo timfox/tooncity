@@ -8,7 +8,9 @@ Title lands with the same squash→stretch→settle rubber-hose scale pop as
 PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
 Oswald cheer/lead subtitle, framed by a soft cream edge pulse and a
-delayed soft cream wash pulse (no carnival / no twist spoilers). Act
+delayed soft cream wash pulse (no carnival / no twist spoilers). Loopy
+clear arms a mid-act trust fracture: off-tone cheer copy + cooler cream
+edge that settles into soft shadow flecks (still no Silly spoilers). Act
 handoffs fire a short confetti / streamer + cream-sparkle pop
 (CampaignHandoffConfetti) framed by a soft cream edge pulse and a delayed
 soft cream wash pulse tuned to the carnival glitter — no KH / keyblade
@@ -35,9 +37,11 @@ from toontown.campaign import CampaignGlobals
 from toontown.campaign.ActBannerCreamEdgeFx import (
     clearHandoffCreamEdge,
     clearOswaldTrustBannerCreamEdge,
+    clearOswaldTrustFractureCreamEdge,
     clearVictoryCreamEdge,
     playHandoffCreamEdge,
     playOswaldTrustBannerCreamEdge,
+    playOswaldTrustFractureCreamEdge,
     playVictoryCreamEdge,
 )
 from toontown.campaign.CampaignHandoffConfetti import (
@@ -161,6 +165,7 @@ class CampaignHandoffClient(DirectObject):
             nextCue = act.get('nextCue') or (
                 'Take a victory lap with %s' % face)
         # Loopy→Punchline (and act) handoffs: confetti + Oswald trust settle.
+        # Loopy trustFracture: off-tone cheer + cool cream/shadow edge.
         self._celebrate(
             title,
             subtitle=subtitle,
@@ -169,7 +174,8 @@ class CampaignHandoffClient(DirectObject):
             powerMult=mult,
             nextStreet=nextStreet,
             confetti=True,
-            trustSettle=True)
+            trustSettle=True,
+            trustFracture=bool(act.get('trustFracture')))
 
     def _actsForZone(self, zoneId):
         zoneId = int(zoneId)
@@ -236,7 +242,8 @@ class CampaignHandoffClient(DirectObject):
 
     def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
                    powerMult=None, nextStreet=None, holdSec=None, onDone=None,
-                   confetti=False, trustSettle=False, creamSwell=False):
+                   confetti=False, trustSettle=False, creamSwell=False,
+                   trustFracture=False):
         """Staged rubber-hose celebration: card → title pop → cue → hold."""
         self._clear()
         root = aspect2d.attachNewNode('campaign-handoff-root')  # noqa: F821
@@ -277,18 +284,26 @@ class CampaignHandoffClient(DirectObject):
                 playHandoffConfetti(origin=origin)
             except Exception:
                 pass
-            # Cream edge frame tuned to cream-sparkle carnival banners (#99).
-            # Early/mid trusted Oswald only — twist / phase stay edge-free.
-            try:
-                playHandoffCreamEdge()
-            except Exception:
-                pass
-            # Soft cream wash pulse after cream edge / sparkle (#124/#99) —
-            # victory / melee / perfect-dodge wash grammar. Handoff-only.
-            try:
-                playHandoffCreamWash()
-            except Exception:
-                pass
+            if trustFracture:
+                # Mid-act unease: cool cream → soft shadow flecks (Loopy).
+                # Carnival stays; sunny handoff edge / wash swap out.
+                try:
+                    playOswaldTrustFractureCreamEdge()
+                except Exception:
+                    pass
+            else:
+                # Cream edge frame tuned to cream-sparkle carnival banners (#99).
+                # Early/mid trusted Oswald only — twist / phase stay edge-free.
+                try:
+                    playHandoffCreamEdge()
+                except Exception:
+                    pass
+                # Soft cream wash pulse after cream edge / sparkle (#124/#99) —
+                # victory / melee / perfect-dodge wash grammar. Handoff-only.
+                try:
+                    playHandoffCreamWash()
+                except Exception:
+                    pass
         elif trustSettle:
             # Trust hose-settle without carnival — keep #117 trust cream edge.
             try:
@@ -325,8 +340,14 @@ class CampaignHandoffClient(DirectObject):
             subScale = _SUB_SCALE
         subNP = None
         if subtitle:
+            subColor = _SUB_COLOR
+            if trustFracture:
+                frac = getattr(
+                    CampaignGlobals, 'OSWALD_TRUST_FRACTURE_SUB_COLOR', None)
+                if frac is not None:
+                    subColor = Vec4(*frac)
             subNP = self._makeLine(
-                root, 'campaign-handoff-sub', subtitle, _SUB_COLOR,
+                root, 'campaign-handoff-sub', subtitle, subColor,
                 subScale, -0.02)
             subNP.setColorScale(1, 1, 1, 0)
         cueText = nextCue
@@ -350,7 +371,8 @@ class CampaignHandoffClient(DirectObject):
         parts = [
             LerpColorScaleInterval(root, 0.18, Vec4(1, 1, 1, 1)),
             self._titleHosePopInterval(
-                titleNP, titleScale, trustSettle=trustSettle),
+                titleNP, titleScale, trustSettle=trustSettle,
+                trustFracture=trustFracture),
         ]
         if subNP is not None:
             if trustSettle:
@@ -403,11 +425,13 @@ class CampaignHandoffClient(DirectObject):
         )
         self._ival.start()
 
-    def _titleHosePopInterval(self, titleNP, settleScale, trustSettle=False):
+    def _titleHosePopInterval(self, titleNP, settleScale, trustSettle=False,
+                              trustFracture=False):
         """Tip-matched squash → stretch → settle on the handoff title.
 
         Early/mid Oswald trusted reclaim-lead clears append a soft
-        overshoot → rest settle bounce after the hose pop.
+        overshoot → rest settle bounce after the hose pop. Trust fracture
+        holds the settle a rubbery beat longer (mid-act unease).
         """
         settle = float(settleScale)
         sx, sy, sz, squashSec = getattr(
@@ -434,11 +458,20 @@ class CampaignHandoffClient(DirectObject):
                 titleNP, settleSec, settlePt, blendType='easeIn'),
         ]
         if trustSettle:
-            ox, oy, oz, overSec = getattr(
-                CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT',
-                (0.90, 1.0, 1.14, 0.07))
-            restSec = float(getattr(
-                CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_REST_SEC', 0.09))
+            if trustFracture:
+                ox, oy, oz, overSec = getattr(
+                    CampaignGlobals, 'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT',
+                    (0.88, 1.0, 1.18, 0.09))
+                restSec = float(getattr(
+                    CampaignGlobals, 'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC',
+                    0.14))
+            else:
+                ox, oy, oz, overSec = getattr(
+                    CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT',
+                    (0.90, 1.0, 1.14, 0.07))
+                restSec = float(getattr(
+                    CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_REST_SEC',
+                    0.09))
             overPt = Point3(settle * ox, settle * oy, settle * oz)
             parts.append(LerpScaleInterval(
                 titleNP, float(overSec), overPt, blendType='easeOut'))
@@ -523,6 +556,10 @@ class CampaignHandoffClient(DirectObject):
             pass
         try:
             clearOswaldTrustBannerCreamEdge()
+        except Exception:
+            pass
+        try:
+            clearOswaldTrustFractureCreamEdge()
         except Exception:
             pass
         try:
