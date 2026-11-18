@@ -109,7 +109,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~spawncorrupt 1 0 2
 # or ~spawnsnare 1 0 2
 ~hackslash 0
-# Snare: amber horizontal rubber stretch + vine zip SFX, string line snaps on hit.
+# Snare: amber horizontal rubber stretch + string-lash telegraph pop
+# (BalloonSnareTelegraphFx) + vine zip SFX; string line snaps on hit.
 # Fast fragile zip-flier — distinct from Smudge melee and Brute spit.
 ```
 

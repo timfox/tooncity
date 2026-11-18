@@ -10,6 +10,7 @@ from direct.interval.IntervalGlobal import (
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathPopFx import (
     DeathPopSplat, buildBodyPopInterval, deathPopLook)
+from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphString
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
@@ -62,6 +63,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._deathPopSplat = None
         self._telegraphInkDrip = None
         self._overlordCrown = None
+        self._snareTelegraphString = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -123,6 +125,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
         self.__clearOverlordTelegraphCrown()
+        self.__clearSnareTelegraphString()
         self.__clearDeathPopSplat()
 
     def __buildGeom(self):
@@ -464,6 +467,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
         self.__playTelegraphInkDrip(look)
+        # Balloon Snare-only: amber string-lash telegraph pop for zip/lash read.
+        if isSnare and not look:
+            self.__playSnareTelegraphString()
+        else:
+            self.__clearSnareTelegraphString()
         # Overlord-only: ink crown / silhouette flash for phase telegraph read.
         if look and phase >= 1:
             self.__playOverlordTelegraphCrown(look, phase)
@@ -509,9 +517,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / crown so impact flash / spit / lash own the frame.
+        # Clear telegraph drip / crown / snare string so impact owns the frame.
         self.__clearTelegraphInkDrip()
         self.__clearOverlordTelegraphCrown()
+        self.__clearSnareTelegraphString()
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
@@ -898,6 +907,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
         self.__clearOverlordTelegraphCrown()
+        self.__clearSnareTelegraphString()
         self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
         look = deathPopLook(self.getArchetype())
@@ -972,6 +982,26 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._overlordCrown = None
+
+    def __playSnareTelegraphString(self):
+        """Amber string-lash telegraph pop — Balloon Snare wind-ups only."""
+        self.__clearSnareTelegraphString()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        lash = BalloonSnareTelegraphString()
+        self._snareTelegraphString = lash
+        lash.play(pos)
+
+    def __clearSnareTelegraphString(self):
+        lash = getattr(self, '_snareTelegraphString', None)
+        if lash is not None:
+            try:
+                lash.clear()
+            except Exception:
+                pass
+        self._snareTelegraphString = None
 
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""
