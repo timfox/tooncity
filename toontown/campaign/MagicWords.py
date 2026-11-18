@@ -14,7 +14,7 @@ class StartCampaign(MagicWord):
         'P2 crimson unleash telegraphs + ink crown silhouette flash + '
         'FOV/flash sting; victory reveal sting: Oswald caused the '
         'corruption — banner + rubber-hose silhouette shadow flash + '
-        'FOV/SFX). '
+        'FOV/SFX + soft cream aftershock). '
         'Toontown spiritual-sequel fantasy — no keyblades. '
         'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
