@@ -1,0 +1,257 @@
+#!/usr/bin/env python3
+"""Behavioral headless tests for campaign ACTS P1/P2 param merge.
+
+Loads CampaignGlobals (+ ReclaimGlobals STREET_PACKS) with a ToontownGlobals
+stub — no Panda3D. Mirrors CampaignDirectorAI._actParams merge rules and
+checks ACTS ↔ STREET_PACKS consistency for the three-hood loop.
+
+Run from repo root:
+  python3 tests/test_campaign_act_params.py
+  python3 -m unittest tests.test_campaign_act_params -v
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import sys
+import types
+import unittest
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+LOOPY = 2200
+PUNCHLINE = 2300
+SILLY = 2100
+
+# Keys CampaignDirectorAI._actParams pulls from an act (+ phase2 override).
+_ACT_PARAM_KEYS = (
+    'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
+    'bruteFraction', 'bruteWaveStart', 'bruteName',
+    'snareFraction', 'snareWaveStart', 'snareName',
+    'banner',
+)
+
+
+def _ensure_pkg(name: str) -> types.ModuleType:
+    if name not in sys.modules:
+        mod = types.ModuleType(name)
+        mod.__path__ = [str(REPO_ROOT / name.replace('.', '/'))]
+        sys.modules[name] = mod
+    return sys.modules[name]
+
+
+def _load_panda_free_campaign_and_reclaim():
+    """Stub ToontownGlobals; load CampaignGlobals + ReclaimGlobals."""
+    if REPO_ROOT.as_posix() not in sys.path:
+        sys.path.insert(0, str(REPO_ROOT))
+
+    for pkg in (
+            'toontown', 'toontown.toonbase', 'toontown.corruption',
+            'toontown.reclaim', 'toontown.campaign'):
+        _ensure_pkg(pkg)
+
+    tg = types.ModuleType('toontown.toonbase.ToontownGlobals')
+    tg.LoopyLane = LOOPY
+    tg.PunchlinePlace = PUNCHLINE
+    tg.SillyStreet = SILLY
+    tg.ToontownCentral = 2000
+    sys.modules['toontown.toonbase.ToontownGlobals'] = tg
+    sys.modules['toontown.toonbase'].ToontownGlobals = tg
+
+    cg_path = REPO_ROOT / 'toontown' / 'corruption' / 'CorruptionGlobals.py'
+    cg_spec = importlib.util.spec_from_file_location(
+        'toontown.corruption.CorruptionGlobals', cg_path)
+    cg = importlib.util.module_from_spec(cg_spec)
+    assert cg_spec.loader is not None
+    sys.modules['toontown.corruption.CorruptionGlobals'] = cg
+    cg_spec.loader.exec_module(cg)
+    sys.modules['toontown.corruption'].CorruptionGlobals = cg
+
+    rg_path = REPO_ROOT / 'toontown' / 'reclaim' / 'ReclaimGlobals.py'
+    rg_spec = importlib.util.spec_from_file_location(
+        'toontown.reclaim.ReclaimGlobals', rg_path)
+    rg = importlib.util.module_from_spec(rg_spec)
+    assert rg_spec.loader is not None
+    sys.modules['toontown.reclaim.ReclaimGlobals'] = rg
+    rg_spec.loader.exec_module(rg)
+
+    camp_path = REPO_ROOT / 'toontown' / 'campaign' / 'CampaignGlobals.py'
+    camp_spec = importlib.util.spec_from_file_location(
+        'toontown.campaign.CampaignGlobals', camp_path)
+    camp = importlib.util.module_from_spec(camp_spec)
+    assert camp_spec.loader is not None
+    sys.modules['toontown.campaign.CampaignGlobals'] = camp
+    camp_spec.loader.exec_module(camp)
+    return camp, rg
+
+
+def resolve_act_params(act, finale_phase=0):
+    """Pure mirror of CampaignDirectorAI._actParams (panda-free).
+
+    finale_phase mirrors director._finalePhase: 0 = first Silly reclaim (P1),
+    ≥1 = after first Silly clear → apply phase2 overrides (P2).
+    """
+    params = {
+        'seedPollution': act.get('seedPollution'),
+        'packSize': act.get('packSize'),
+        'maxPacks': act.get('maxPacks'),
+        'corruptHp': act.get('corruptHp'),
+        'corruptName': act.get('corruptName'),
+        'bruteFraction': act.get('bruteFraction'),
+        'bruteWaveStart': act.get('bruteWaveStart'),
+        'bruteName': act.get('bruteName'),
+        'snareFraction': act.get('snareFraction'),
+        'snareWaveStart': act.get('snareWaveStart'),
+        'snareName': act.get('snareName'),
+        'banner': act.get('banner'),
+        'finalePhase': 0,
+        'transitionSting': False,
+    }
+    if act.get('finale'):
+        if int(finale_phase or 0) >= 1:
+            phase2 = act.get('phase2') or {}
+            params.update(phase2)
+            params['finalePhase'] = int(phase2.get('finalePhase', 2))
+            params['transitionSting'] = bool(
+                phase2.get('transitionSting', True))
+        else:
+            params['finalePhase'] = int(act.get('finalePhase', 1))
+    return params
+
+
+class CampaignActParamsTest(unittest.TestCase):
+    """ACTS table + finale P1/P2 merge + STREET_PACKS alignment."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.camp, cls.rg = _load_panda_free_campaign_and_reclaim()
+        cls.acts_by_id = {a['id']: a for a in cls.camp.ACTS}
+
+    def test_acts_cover_three_hoods(self):
+        acts = self.camp.ACTS
+        self.assertEqual(len(acts), 3)
+        self.assertEqual(
+            tuple(a['id'] for a in acts), ('loopy', 'punchline', 'finale'))
+        self.assertEqual(self.acts_by_id['loopy']['zoneId'], LOOPY)
+        self.assertEqual(self.acts_by_id['punchline']['zoneId'], PUNCHLINE)
+        self.assertEqual(self.acts_by_id['finale']['zoneId'], SILLY)
+
+    def test_loopy_act_params_pure_smudge_tutorial(self):
+        params = resolve_act_params(self.acts_by_id['loopy'])
+        self.assertEqual(params['packSize'], 3)
+        self.assertEqual(params['maxPacks'], 3)
+        self.assertEqual(params['corruptHp'], 30)
+        self.assertEqual(params['corruptName'], 'Ink Smudge')
+        self.assertEqual(params['bruteFraction'], 0.0)
+        self.assertEqual(params['snareFraction'], 0.0)
+        self.assertEqual(params['finalePhase'], 0)
+        self.assertFalse(params['transitionSting'])
+
+    def test_punchline_act_params_brute_snare_from_wave1(self):
+        params = resolve_act_params(self.acts_by_id['punchline'])
+        self.assertEqual(params['packSize'], 4)
+        self.assertEqual(params['corruptHp'], 40)
+        self.assertEqual(params['corruptName'], 'Gunk Gagster')
+        self.assertEqual(params['bruteFraction'], 0.4)
+        self.assertEqual(params['bruteWaveStart'], 1)
+        self.assertEqual(params['snareFraction'], 0.25)
+        self.assertEqual(params['snareWaveStart'], 1)
+        self.assertEqual(params['finalePhase'], 0)
+
+    def test_finale_p1_params_before_phase_advance(self):
+        act = self.acts_by_id['finale']
+        params = resolve_act_params(act, finale_phase=0)
+        self.assertTrue(act.get('finale'))
+        self.assertEqual(params['finalePhase'], 1)
+        self.assertEqual(params['packSize'], 1)
+        self.assertEqual(params['maxPacks'], 2)
+        self.assertEqual(params['corruptHp'], 90)
+        self.assertEqual(params['corruptName'], 'Ink Overlord')
+        self.assertEqual(params['seedPollution'], 0.75)
+        self.assertEqual(params['bruteFraction'], 0.0)
+        self.assertEqual(params['snareFraction'], 0.0)
+        self.assertFalse(params['transitionSting'])
+        self.assertIn('Phase 1', params['banner'])
+
+    def test_finale_p2_merge_overrides_scalars(self):
+        act = self.acts_by_id['finale']
+        # After first Silly reclaim, director sets _finalePhase >= 1.
+        params = resolve_act_params(act, finale_phase=1)
+        phase2 = act['phase2']
+        self.assertEqual(params['finalePhase'], 2)
+        self.assertEqual(params['packSize'], phase2['packSize'])
+        self.assertEqual(params['maxPacks'], phase2['maxPacks'])
+        self.assertEqual(params['corruptHp'], phase2['corruptHp'])
+        self.assertEqual(params['corruptName'], phase2['corruptName'])
+        self.assertEqual(params['seedPollution'], phase2['seedPollution'])
+        self.assertEqual(params['banner'], phase2['banner'])
+        self.assertTrue(params['transitionSting'])
+        # Explicit Overlord-only mix retained on P2.
+        self.assertEqual(params['bruteFraction'], 0.0)
+        self.assertEqual(params['snareFraction'], 0.0)
+        # P2 is strictly harder than P1 on the key combat scalars.
+        self.assertGreater(params['corruptHp'], act['corruptHp'])
+        self.assertGreater(params['packSize'], act['packSize'])
+        self.assertGreater(params['maxPacks'], act['maxPacks'])
+        self.assertGreater(params['seedPollution'], act['seedPollution'])
+
+    def test_finale_phase2_table_shape(self):
+        phase2 = self.acts_by_id['finale']['phase2']
+        self.assertEqual(phase2['finalePhase'], 2)
+        self.assertEqual(phase2['corruptHp'], 160)
+        self.assertEqual(phase2['packSize'], 2)
+        self.assertEqual(phase2['maxPacks'], 3)
+        self.assertEqual(phase2['corruptName'], 'Ink Overlord Unleashed')
+        self.assertTrue(phase2.get('transitionSting'))
+
+    def test_acts_align_with_street_packs_on_shared_keys(self):
+        """Campaign C and discoverable auto-reclaim share hood fantasy scalars."""
+        rg = self.rg
+        shared = (
+            'seedPollution', 'packSize', 'maxPacks', 'corruptHp',
+            'corruptName', 'bruteFraction', 'snareFraction',
+        )
+        # Loopy campaign Act 1 is Smudge-only (brute/snare 0); STREET_PACKS
+        # Loopy still introduces Brutes from wave 2 for auto-reclaim demos.
+        # Align on HP / pollution / pack size / naming instead.
+        loopy_act = self.acts_by_id['loopy']
+        loopy_pack = rg.STREET_PACKS[LOOPY]
+        for key in ('seedPollution', 'packSize', 'corruptHp', 'corruptName'):
+            self.assertEqual(
+                loopy_act[key], loopy_pack[key],
+                msg='loopy %s act vs STREET_PACKS' % key)
+
+        punch_act = self.acts_by_id['punchline']
+        punch_pack = rg.STREET_PACKS[PUNCHLINE]
+        for key in shared + ('bruteWaveStart', 'snareWaveStart'):
+            self.assertEqual(
+                punch_act[key], punch_pack[key],
+                msg='punchline %s act vs STREET_PACKS' % key)
+
+        # Finale P1 matches Silly STREET_PACKS Overlord-only spawn.
+        finale_p1 = resolve_act_params(self.acts_by_id['finale'], 0)
+        silly_pack = rg.STREET_PACKS[SILLY]
+        for key in (
+                'seedPollution', 'packSize', 'maxPacks', 'corruptHp',
+                'corruptName', 'bruteFraction', 'snareFraction'):
+            self.assertEqual(
+                finale_p1[key], silly_pack[key],
+                msg='finale P1 %s vs silly STREET_PACKS' % key)
+
+    def test_act_param_keys_present_for_director(self):
+        for act_id, act in self.acts_by_id.items():
+            params = resolve_act_params(act)
+            for key in _ACT_PARAM_KEYS:
+                # Optional mix keys may be absent on Smudge-only acts.
+                if key in (
+                        'bruteWaveStart', 'bruteName',
+                        'snareWaveStart', 'snareName'):
+                    continue
+                self.assertIn(
+                    key, params,
+                    msg='%s missing %s after resolve' % (act_id, key))
+
+
+if __name__ == '__main__':
+    unittest.main()
