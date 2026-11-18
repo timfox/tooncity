@@ -585,6 +585,21 @@ WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_PEAK = 1.20
 WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_SEC = 0.28
 WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.14
 WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+# Wave-clear cream wash pulse — soft aspect2d veil after cream aftershock
+# (#127) / clear shimmer (#93). Cheer (#142) / purity-complete (#104) cream
+# wash grammar. Quieter than purity-complete wash; cream/pastel only. Arms
+# from WaveClearCreamShimmerFx hang start (after shimmer delay). Toggle
+# WAVE_CLEAR_CREAM_WASH_ENABLED = False drops wash only.
+WAVE_CLEAR_CREAM_WASH_ENABLED = True
+WAVE_CLEAR_CREAM_WASH_DELAY_SEC = 0.40  # after hang start; after aftershock (0.24)
+WAVE_CLEAR_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+WAVE_CLEAR_CREAM_WASH_PEAK = 0.10
+WAVE_CLEAR_CREAM_WASH_MID = 0.05
+WAVE_CLEAR_CREAM_WASH_IN_SEC = 0.05
+WAVE_CLEAR_CREAM_WASH_PULSE_SEC = 0.09
+WAVE_CLEAR_CREAM_WASH_HOLD_SEC = 0.06
+WAVE_CLEAR_CREAM_WASH_OUT_SEC = 0.34
+WAVE_CLEAR_CREAM_WASH_BIN = 50  # soft veil under shimmer flecks (51) / aftershock (52)
 # Warm cream wave-clear banner (was icy cyan; keep rubber-hose sunny).
 WAVE_CLEAR_BANNER_COLOR = (1.0, 0.94, 0.62, 1.0)
 WAVE_CLEAR_SUB_BANNER_COLOR = (1.0, 0.97, 0.82, 1.0)

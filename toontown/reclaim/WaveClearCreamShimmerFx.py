@@ -5,9 +5,11 @@ settles — residual sunny hang so the clear beat lingers without restaging the
 flash/ring. Matches EntryCreamShimmer / StreetSparkle chip style. A delayed
 cream aftershock (softer flecks settling downward + soft halo) follows the
 hang — same residual grammar as purity-fill cream aftershock (#123) and cheer
-cream aftershock (#118). Layers with cheer pitch swell and street wash; never
-stomps full-purity FOV / StreetSparkle payoff. Toontown spiritual-sequel tone
-only — no keyblades / no KH branding.
+cream aftershock (#118). A soft cream wash pulse then settles after the
+aftershock — CheerCreamWashPulse / PurityCompleteCreamWashFx vocabulary.
+Layers with cheer pitch swell and street wash; never stomps full-purity FOV /
+StreetSparkle payoff. Toontown spiritual-sequel tone only — no keyblades /
+no KH branding.
 """
 
 from math import cos, pi, sin
@@ -26,10 +28,11 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.reclaim import ReclaimGlobals
+from toontown.reclaim.WaveClearCreamWashFx import WaveClearCreamWashPulse
 
 
 class WaveClearCreamShimmerFxClient(DirectObject):
-    """Listens for wave clear; owns cream shimmer hang + delayed aftershock."""
+    """Listens for wave clear; owns shimmer hang + aftershock + cream wash."""
 
     def __init__(self):
         DirectObject.__init__(self)
@@ -38,6 +41,7 @@ class WaveClearCreamShimmerFxClient(DirectObject):
         self._shimmerNP = None
         self._fleckNPs = []
         self._haloNP = None
+        self._creamWash = None
         self.accept('reclaimWaveCleared', self._onWaveCleared)
 
     def destroy(self):
@@ -48,7 +52,7 @@ class WaveClearCreamShimmerFxClient(DirectObject):
         self.playHang()
 
     def playHang(self):
-        """Soft cream veil + flecks after the wave-clear burst peak + aftershock."""
+        """Soft cream veil + flecks + aftershock + delayed cream wash."""
         if not getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_SHIMMER_ENABLED', True):
             return
         self.clear()
@@ -99,32 +103,54 @@ class WaveClearCreamShimmerFxClient(DirectObject):
 
         aftershock = self._buildAftershock(parent, ox, oy, oz)
 
+        # Soft cream wash pulse after cream aftershock — cheer / purity grammar.
+        # Armed when hang kicks so DELAY is relative to hang start (not burst).
+        washHold = 0.0
+
         def _kickHang():
             try:
                 shimmerIval.start()
             except Exception:
                 self.clear()
+                return
+            try:
+                wash = WaveClearCreamWashPulse()
+                if wash.play() is not None:
+                    self._creamWash = wash
+                else:
+                    self._creamWash = None
+            except Exception:
+                self._creamWash = None
 
+        if getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_ENABLED', True):
+            washHold = (
+                float(getattr(
+                    ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_DELAY_SEC', 0.40))
+                + float(getattr(
+                    ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_IN_SEC', 0.05))
+                + float(getattr(
+                    ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_PULSE_SEC', 0.09))
+                + float(getattr(
+                    ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_HOLD_SEC', 0.06))
+                + float(getattr(
+                    ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_OUT_SEC', 0.34))
+                + 0.02)
+
+        hold = [Wait(hangSec + 0.04)]
         if aftershock is not None:
-            # Shimmer Parallel starts after hang delay; aftershock rides beside it.
-            self._ival = Sequence(
-                Wait(max(0.0, delay)),
-                Func(_kickHang),
-                Parallel(
-                    Wait(hangSec + 0.04),
-                    aftershock,
-                ),
-                Func(self.clear),
-                name='reclaimWaveClearCreamShimmer',
-            )
-        else:
-            self._ival = Sequence(
-                Wait(max(0.0, delay)),
-                Func(_kickHang),
-                Wait(hangSec + 0.04),
-                Func(self.clear),
-                name='reclaimWaveClearCreamShimmer',
-            )
+            hold.append(aftershock)
+        if washHold > 0.0:
+            # Hold teardown beside delayed wash so clear() doesn't
+            # kill the veil mid-pulse (wash self-clears too).
+            hold.append(Wait(washHold))
+
+        self._ival = Sequence(
+            Wait(max(0.0, delay)),
+            Func(_kickHang),
+            Parallel(*hold),
+            Func(self.clear),
+            name='reclaimWaveClearCreamShimmer',
+        )
         self._ival.start()
 
     def _spawnShimmer(self, parent, ox, oy, oz, r, g, b, binSort):
@@ -385,13 +411,20 @@ class WaveClearCreamShimmerFxClient(DirectObject):
         )
 
     def clear(self):
-        """Stop shimmer/aftershock and remove every cream hang node."""
+        """Stop shimmer/aftershock/wash and remove every cream hang node."""
         if self._ival is not None:
             try:
                 self._ival.pause()
             except Exception:
                 pass
             self._ival = None
+        wash = self._creamWash
+        self._creamWash = None
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
         if self._shimmerPlayIval is not None:
             try:
                 self._shimmerPlayIval.pause()
