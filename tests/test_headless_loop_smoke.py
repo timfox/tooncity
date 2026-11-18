@@ -1750,6 +1750,106 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 msg='CampaignGlobals missing %s' % tip_wash_key)
         self.assertIn('playPunchlineTipCreamWash', play_src)
 
+        # Street cream wash aftershock (#159) — delayed residual after street wash.
+        street_wash_rel = 'toontown/reclaim/StreetColorWash.py'
+        street_wash_methods = _class_method_names(
+            _module_ast(street_wash_rel), 'StreetColorWash')
+        self.assertIn('__buildAftershock', street_wash_methods)
+        self.assertIn('__spawnAftershockHalo', street_wash_methods)
+        self.assertIn('__spawnAftershockFleck', street_wash_methods)
+        for street_as_key in (
+                'STREET_WASH_AFTERSHOCK_ENABLED',
+                'STREET_WASH_AFTERSHOCK_DELAY_SEC',
+                'STREET_WASH_AFTERSHOCK_COUNT',
+                'STREET_WASH_AFTERSHOCK_COLOR',
+                'STREET_WASH_AFTERSHOCK_HALO_ENABLED',
+                'STREET_WASH_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                street_as_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % street_as_key)
+        street_wash_src = _read(street_wash_rel)
+        self.assertIn('STREET_WASH_AFTERSHOCK_ENABLED', street_wash_src)
+
+        # Soft-lock FOV cream wash (#160) — soft wash after soft-lock FOV punch.
+        fov_wash_rel = 'toontown/hackslash/SoftLockFovCreamWashFx.py'
+        _assert_module_file(fov_wash_rel)
+        fov_wash_names = _class_and_func_names(_module_ast(fov_wash_rel))
+        self.assertIn('SoftLockFovCreamWashPulse', fov_wash_names)
+        fov_wash_methods = _class_method_names(
+            _module_ast(fov_wash_rel), 'SoftLockFovCreamWashPulse')
+        self.assertIn('play', fov_wash_methods)
+        self.assertIn('clear', fov_wash_methods)
+        for fov_wash_key in (
+                'SOFT_LOCK_FOV_CREAM_WASH_ENABLED',
+                'SOFT_LOCK_FOV_CREAM_WASH_DELAY_SEC',
+                'SOFT_LOCK_FOV_CREAM_WASH_COLOR',
+                'SOFT_LOCK_FOV_CREAM_WASH_PEAK',
+                'SOFT_LOCK_FOV_CREAM_WASH_MID',
+                'SOFT_LOCK_FOV_CREAM_WASH_BIN'):
+            self.assertIn(
+                fov_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % fov_wash_key)
+        reticle_src = _read('toontown/hackslash/SoftLockReticleFx.py')
+        self.assertIn('SoftLockFovCreamWashPulse', reticle_src)
+        self.assertIn('_armFovCreamWash', reticle_src)
+        self.assertIn('SoftLockFovCreamWashPulse', hack_init)
+
+        # Overlord hit cream wash (#161) — soft wash after Overlord hit splash.
+        ol_wash_rel = 'toontown/corruption/OverlordHitCreamWashFx.py'
+        _assert_module_file(ol_wash_rel)
+        ol_wash_names = _class_and_func_names(_module_ast(ol_wash_rel))
+        self.assertIn('OverlordHitCreamWashPulse', ol_wash_names)
+        self.assertIn('overlordHitCreamWashLook', ol_wash_names)
+        ol_wash_methods = _class_method_names(
+            _module_ast(ol_wash_rel), 'OverlordHitCreamWashPulse')
+        self.assertIn('play', ol_wash_methods)
+        self.assertIn('clear', ol_wash_methods)
+        self.assertTrue(
+            hasattr(cg, 'OVERLORD_HIT_CREAM_WASH_LOOK'),
+            msg='CorruptionGlobals missing OVERLORD_HIT_CREAM_WASH_LOOK')
+        self.assertEqual(
+            cg.OVERLORD_HIT_CREAM_WASH_LOOK.get('id'),
+            'overlord-hit-cream-wash')
+        self.assertTrue(
+            hasattr(cg, 'OVERLORD_HIT_CREAM_WASH_ENABLED'),
+            msg='CorruptionGlobals missing OVERLORD_HIT_CREAM_WASH_ENABLED')
+        for ol_wash_key in (
+                'OVERLORD_HIT_CREAM_WASH_ENABLED',
+                'OVERLORD_HIT_CREAM_WASH_DELAY_SEC',
+                'OVERLORD_HIT_CREAM_WASH_COLOR',
+                'OVERLORD_HIT_CREAM_WASH_PEAK',
+                'OVERLORD_HIT_CREAM_WASH_MID',
+                'OVERLORD_HIT_CREAM_WASH_BIN'):
+            self.assertTrue(
+                hasattr(cg, ol_wash_key),
+                msg='CorruptionGlobals missing %s' % ol_wash_key)
+        self.assertIn('OverlordHitCreamWashPulse', corrupt_src)
+        self.assertIn('__playOverlordHitCreamWash', corrupt_src)
+
+        # Silly tip cream wash (#162) — soft wash after Silly tip hose pop.
+        silly_tip_wash_rel = 'toontown/campaign/SillyTipCreamWashFx.py'
+        _assert_module_file(silly_tip_wash_rel)
+        silly_tip_wash_names = _class_and_func_names(
+            _module_ast(silly_tip_wash_rel))
+        self.assertIn('SillyTipCreamWashPulse', silly_tip_wash_names)
+        self.assertIn('playSillyTipCreamWash', silly_tip_wash_names)
+        self.assertIn('clearSillyTipCreamWash', silly_tip_wash_names)
+        silly_tip_wash_methods = _class_method_names(
+            _module_ast(silly_tip_wash_rel), 'SillyTipCreamWashPulse')
+        self.assertIn('play', silly_tip_wash_methods)
+        self.assertIn('clear', silly_tip_wash_methods)
+        for silly_tip_wash_key in (
+                'SILLY_ACT_TIP_CREAM_WASH_ENABLED',
+                'SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC',
+                'SILLY_ACT_TIP_CREAM_WASH_COLOR',
+                'SILLY_ACT_TIP_CREAM_WASH_PEAK',
+                'SILLY_ACT_TIP_CREAM_WASH_MID',
+                'SILLY_ACT_TIP_CREAM_WASH_BIN'):
+            self.assertIn(
+                silly_tip_wash_key, campaign_names,
+                msg='CampaignGlobals missing %s' % silly_tip_wash_key)
+        self.assertIn('playSillyTipCreamWash', play_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
