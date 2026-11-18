@@ -46,7 +46,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         # Overlord wind-up cue (P1 magenta vs P2 crimson) from CorruptToon AV.
         self.accept('finaleTelegraphCue', self.__onFinaleTelegraphCue)
         # Polluted STREET_PACK enter cream shimmer + soft wash pulse
-        # (wash client also owns delayed cream aftershock; also via ReclaimCheer).
+        # (wash client also owns delayed cream aftershock + settle cream wash;
+        # also via ReclaimCheer).
         try:
             from toontown.reclaim.EntryCreamShimmerFx import (
                 ensureEntryCreamShimmerFxClient)
