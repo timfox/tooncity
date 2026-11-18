@@ -110,6 +110,7 @@ HOOD_POLLUTION_BIAS = {
 _DEFAULT_HOOD_BIAS = HOOD_POLLUTION_BIAS[2200]
 
 # Telegraph / impact presentation (client AV punch; AI timings unchanged).
+# Ink Smudge = purple melee wind-up; Sludge Brute = green spit (below).
 TELEGRAPH_CHARGE_COLOR = (2.15, 0.25, 2.4, 1.0)
 TELEGRAPH_HOLD_COLOR = (1.55, 0.2, 1.85, 1.0)
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
@@ -121,6 +122,25 @@ TELEGRAPH_SFX = 'phase_3.5/audio/sfx/AA_pie_throw_only.ogg'
 ATTACK_HIT_SFX = 'phase_3.5/audio/sfx/AV_collision.ogg'
 TELEGRAPH_SFX_VOLUME = 0.55
 ATTACK_HIT_SFX_VOLUME = 0.75
+
+# Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
+# Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
+BRUTE_TELEGRAPH_CHARGE_COLOR = (0.45, 2.2, 0.35, 1.0)
+BRUTE_TELEGRAPH_HOLD_COLOR = (0.3, 1.65, 0.22, 1.0)
+BRUTE_TELEGRAPH_SQUASH = (2.35, 2.35, 0.32)
+BRUTE_TELEGRAPH_MID = (2.05, 2.05, 0.42)
+BRUTE_TELEGRAPH_STRETCH = (0.48, 0.48, 1.95)
+BRUTE_TELEGRAPH_SFX = 'phase_4/audio/sfx/AA_squirt_seltzer.ogg'
+BRUTE_TELEGRAPH_SFX_VOLUME = 0.7
+BRUTE_ATTACK_HIT_SFX = 'phase_4/audio/sfx/AA_squirt_glasswater.ogg'
+BRUTE_ATTACK_HIT_SFX_VOLUME = 0.8
+BRUTE_HIT_FLASH_COLOR = (0.45, 1.05, 0.35, 1.0)
+BRUTE_HIT_FLASH_PEAK = 0.62
+# Client-only ink blob that travels toward the local toon on spit hit.
+BRUTE_SPIT_BLOB_COLOR = (0.18, 0.72, 0.22, 0.92)
+BRUTE_SPIT_BLOB_SCALE = 0.55
+BRUTE_SPIT_BLOB_TRAVEL = 0.28
+BRUTE_SPIT_BLOB_Z = 2.4
 
 # Ink Overlord finale phase looks (client-readable; AI timings unchanged).
 # Phase 1 = rising magenta swell; Phase 2 = crimson unleashed fury.

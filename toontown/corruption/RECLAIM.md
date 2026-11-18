@@ -56,6 +56,16 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Melee (F / LMB) splat-defeats them; purity pop + pollution drop.
 ```
 
+## Sludge Brute spit demo
+
+```
+~spawncorrupt 1 40 1
+# or ~spawnbrute 1 40 1
+~hackslash 0
+# Brute: green squash telegraph + squirt SFX, then ink blob flies at you on hit.
+# Compare ~spawncorrupt 1   (Ink Smudge keeps purple melee telegraph).
+```
+
 ## Ink Overlord finale phases
 
 Silly Street campaign (`~advancecampaign force` to skip ahead, then

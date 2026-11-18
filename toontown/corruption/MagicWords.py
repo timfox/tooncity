@@ -73,36 +73,46 @@ class Purify(MagicWord):
 
 
 class SpawnCorrupt(MagicWord):
-    aliases = ['spawncorrupttoon', 'corrupttoon', 'spawnct']
-    desc = 'Spawn ink-tinted CorruptToon enemies (Actor silhouette when loadable).'
+    aliases = ['spawncorrupttoon', 'corrupttoon', 'spawnct', 'spawnbrute']
+    desc = 'Spawn CorruptToon enemies (Ink Smudge or Sludge Brute).'
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
         'Client prefers DNA/Actor ink silhouette, else card limbs. '
-        'They aggro, telegraph with a charged ink wind-up + whoosh, '
-        'smack with impact flash/thud, and deal modest HP damage. '
-        'Optional count (1-8) and hp. Defeat lowers zone pollution. '
-        'Pair with ~hackslash 0 for melee.')
+        'Ink Smudge: purple melee telegraph + impact flash/thud. '
+        'Sludge Brute (archetype=1): green spit telegraph/SFX + ink blob. '
+        'Optional count (1-8), hp, archetype (0=Ink, 1=Brute). '
+        'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]
     arguments = [
         ('count', int, False, 1),
         ('hp', int, False, CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP),
+        ('archetype', int, False, CorruptionGlobals.ARCHETYPE_INK),
     ]
 
     def handleWord(self, invoker, avId, toon, *args):
         count = int(args[0]) if args else 1
         hp = int(args[1]) if len(args) > 1 else CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
+        archetype = (
+            int(args[2]) if len(args) > 2
+            else CorruptionGlobals.ARCHETYPE_INK)
         count = max(1, min(8, count))
         hp = max(1, min(500, hp))
+        if archetype not in (
+                CorruptionGlobals.ARCHETYPE_INK,
+                CorruptionGlobals.ARCHETYPE_BRUTE):
+            archetype = CorruptionGlobals.ARCHETYPE_INK
+        stats = CorruptionGlobals.archetypeStats(archetype)
 
         zoneId = toon.zoneId
         baseX, baseY, baseZ = toon.getX(), toon.getY(), toon.getZ()
         heading = toon.getH()
         spawned = []
         for i in range(count):
-            corrupt = DistributedCorruptToonAI(self.air, maxHp=hp)
-            corrupt.hp = hp
+            corrupt = DistributedCorruptToonAI(
+                self.air, maxHp=hp, archetype=archetype)
+            corrupt.hp = corrupt.maxHp
             # Fan out a few feet in front of the toon.
             offset = 6.0 + (i * 2.5)
             rad = math.radians(heading)
@@ -113,8 +123,8 @@ class SpawnCorrupt(MagicWord):
             corrupt.generateWithRequired(zoneId)
             spawned.append(corrupt.doId)
 
-        return 'Spawned %s CorruptToon(s) in zone %s: %s' % (
-            len(spawned), zoneId, spawned)
+        return 'Spawned %s %s(s) in zone %s: %s' % (
+            len(spawned), stats.get('name', 'CorruptToon'), zoneId, spawned)
 
 
 def registerCorruptionMagicWords():
