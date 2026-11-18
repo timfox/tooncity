@@ -2,27 +2,32 @@
 """Headless behavioral deepen: explore → fight → reclaim → Oswald twist.
 
 Panda-free proof of the multi-hood loop already shipped on develop (through
-systems waves ending at PR #363). Complements `test_headless_loop_smoke.py`
-(registration / juice AST) and the focused wave / act-param / kit suites by
-chaining the spiritual-sequel loop:
+systems waves ending at PR #369 / wave G). Complements
+`test_headless_loop_smoke.py` (registration / juice AST) and the focused
+wave / act-param / kit suites by chaining the spiritual-sequel loop:
 
   explore — zone messengers, Oswald plaza NPC + reclaim cheer (#354) +
-            first-meet tip / oswaldMet persist (#360), Loopy unease, hub
+            first-meet tip / oswaldMet persist (#360) + oswaldCheered
+            latch after reclaim cheer (#369), Loopy unease, hub
             breadcrumb act-unlock dim (#332) + progress-sync rehydrate
             (#357), chase-pending hub tip (#342)
   fight   — archetype kits, melee interrupt (#329/#348/#352/#363),
             Brute/Gagster counters (#343), Overlord rain/slam/ink_surge
             counters (#359), Smudge ink_dash/ink_splat interrupt+counters
-            (#363), Oswald betrayal counters (#352), juggle hang stun,
+            (#363), Oswald betrayal counters (#352), authoritative server
+            melee damage from hitIndex (#366), juggle hang stun,
             reclaim KO fail + retry (#338), soft-lock boss priority (#339)
             + sticky yield (#347) + cycle-with-lock prefer (#356), Overlord
             P1 rising slam (#334) + move-id telegraph (#340) + rain linger
             sludge (#362), boss/chase HP bar (#331)
   reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
             modifiers / earlier-wave ambush + Silly between-swell
-            (#345/#358), street-clear jellybean/laff reward (#361), campaign
-            progress client sync on login (#333), CampaignPower reclaimCount
-            rehydrate (#349), campaignVictory client relay (#351)
+            (#345/#358) + ACTS C path elite/ambush mirror (#365),
+            street-clear jellybean/laff reward (#361), campaign progress
+            client sync on login (#333), CampaignPower reclaimCount
+            rehydrate (#349) + sync/purity dedupe (#367), SECURED
+            purity-lock persist across AI restart (#368), campaignVictory
+            client relay (#351)
   twist   — betrayal chase + kit + chase resume (#330) + false-clear gate
             (#341) + mid-chase HP persist (#350) + Oswald telegraph/hit AV
             (#344) + chase-clear epilogue + hub stain (#336) + washed-plaza
@@ -538,11 +543,21 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(default_progress['oswaldCheered'], 0)
         # #368 securedZones stay on the progress blob beside cheer latch.
         self.assertIn('securedZones', default_progress)
+        self.assertEqual(default_progress['securedZones'], [])
         self.assertEqual(
             self.save.sanitizeProgress({'oswaldMet': 9})['oswaldMet'], 1)
         self.assertEqual(
             self.save.sanitizeProgress(
                 {'oswaldCheered': 9})['oswaldCheered'], 1)
+        # Cheer sanitize must not drop securedZones (#369 beside #368).
+        cheer_keep = self.save.sanitizeProgress({
+            'unlockedThrough': 1,
+            'actIndex': 1,
+            'oswaldCheered': 1,
+            'securedZones': [LOOPY],
+        })
+        self.assertEqual(cheer_keep['oswaldCheered'], 1)
+        self.assertIn(LOOPY, cheer_keep['securedZones'])
         mirror_met = self.save.clientMirrorFromProgress({
             'unlockedThrough': 0,
             'state': camp.STATE_IDLE,
@@ -804,6 +819,55 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('TARGET_CYCLE_ENABLED', melee_src)
         self.assertIn('LOCK_HIT_ASSIST_ENABLED', melee_src)
         self.assertIn('SoftLockReticleFx', melee_src)
+
+        # Authoritative server melee from hitIndex (#366) — fight integrity
+        # for the whole explore→fight→reclaim loop (no client-trusted amount).
+        dmg = cfg.meleeDamageFromHitIndex
+        table = cfg.COMBO_DAMAGE
+        self.assertEqual(len(table), cfg.COMBO_LENGTH)
+        for idx, expected in enumerate(table):
+            self.assertEqual(dmg(idx), int(expected))
+        self.assertEqual(dmg(99), int(table[-1]))
+        self.assertEqual(dmg(-1), int(table[0]))
+        flag = int(cfg.MELEE_COUNTER_FLAG_PERFECT_DODGE)
+        self.assertGreater(dmg(0, flag), int(table[0]))
+        self.assertEqual(
+            dmg(0, flag),
+            cfg.perfectDodgeCounterOpenerDamage(int(table[0])))
+        self.assertEqual(
+            dmg(0, 0, damageTable=(999, 999, 999)),
+            int(cfg.MELEE_DAMAGE_MAX))
+        self.assertLessEqual(int(cfg.MELEE_DAMAGE_MAX), 80)
+        cfg_src = _read('toontown/hackslash/HackSlashConfig.py')
+        self.assertIn('def meleeDamageFromHitIndex', cfg_src)
+        dmg_blob = cfg_src.split('def meleeDamageFromHitIndex', 1)[1][:700].lower()
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, dmg_blob)
+        corrupt_ai = _read('toontown/corruption/DistributedCorruptToonAI.py')
+        req_idx = corrupt_ai.find('def requestHackSlashHit')
+        self.assertGreater(req_idx, 0)
+        req_snip = corrupt_ai[
+            req_idx:corrupt_ai.find('\n    def ', req_idx + 1)]
+        self.assertIn('hitIndex', req_snip)
+        self.assertIn('counterFlags', req_snip)
+        self.assertIn('meleeDamageFromHitIndex', req_snip)
+        self.assertNotIn('min(80', req_snip)
+        self.assertNotIn('damage=', req_snip.split('(', 1)[1].split(')', 1)[0])
+        self.assertIn('takeHackSlashDamage(amount', req_snip)
+        corrupt_client = _read(
+            'toontown/corruption/DistributedCorruptToon.py')
+        self.assertIn(
+            "sendUpdate('requestHackSlashHit', [idx, flags])",
+            corrupt_client)
+        self.assertIn('_pendingCounterFlags', melee_src)
+        self.assertIn('MELEE_COUNTER_FLAG_PERFECT_DODGE', melee_src)
+        dc = _read('etc/toon.dc')
+        self.assertIn('requestHackSlashHit(uint8, uint8)', dc)
+        self.assertNotIn('requestHackSlashHit(uint16, uint8)', dc)
+        self.assertIn('meleeDamageFromHitIndex', hs_init)
+        target_src = _read('toontown/corruption/HackSlashTarget.py')
+        self.assertIn('meleeDamageFromHitIndex', target_src)
+        self.assertIn('counterFlags', target_src)
 
         # Soft-lock reticle / hit-assist cream modules stay registered.
         for rel in (
@@ -1243,8 +1307,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             self.assertIn(
                 needle, ai_src, msg='AI director missing %s' % needle)
 
-        # Campaign C path forwards the same elite/ambush kwargs (no R-only
-        # overlordP2HpFrac promote onto ACTS start).
+        # Campaign C path forwards the same elite/ambush kwargs (#365; no
+        # R-only overlordP2HpFrac promote onto ACTS start).
         camp_ai = _read('toontown/campaign/CampaignDirectorAI.py')
         self.assertIn('waveModifiers=params.get(', camp_ai)
         self.assertIn('ambushBeats=params.get(', camp_ai)
@@ -1284,7 +1348,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertGreater(self.camp.STREET_CLEAR_LAFF, 0)
         self.assertIn('_awardStreetClearRewards', ai_src)
         self.assertIn('awardStreetClearReward', ai_src)
-        # Login rehydrate (#349) + sync/purity dedupe: silent AI reclaimCount.
+        # Login rehydrate (#349) + sync/purity dedupe (#367): silent AI reclaimCount.
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('applyPowerBump', handoff_src)
         self.assertIn('_applyReclaimPower', handoff_src)
@@ -1299,10 +1363,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         purity_idx = handoff_src.find('def _onPurityRestore')
         self.assertGreater(purity_idx, 0)
         purity_win = handoff_src[purity_idx:purity_idx + 1100]
-        # Idempotent dedupe vs progress sync (#349 race) — no blind +=1.
+        # Idempotent dedupe vs progress sync (#367) — no blind +=1.
         self.assertIn('_applyReclaimPower', purity_win)
         self.assertIn('self._localReclaimCount + 1', purity_win)
         self.assertNotIn('_localReclaimCount += 1', purity_win)
+        self.assertIn('max(self._syncedReclaimCount', purity_win)
+        self.assertIn('synced > self._localReclaimCount', purity_win)
         self.assertIn('rewardLine', purity_win)
         self.assertIn('_streetClearRewardLine', purity_win)
 
@@ -1340,6 +1406,47 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('startCampaign', pollution_src)
         self.assertIn('markStreetSecured', pollution_src)
         self.assertIn('markStreetContested', pollution_src)
+        # SECURED purity-lock persist across AI restart (#368) — district
+        # JSON + campaign securedZones hydrate keep cleared streets sealed.
+        self.assertTrue(
+            (REPO_ROOT / 'toontown/corruption/PollutionSecuredSave.py').is_file())
+        self.assertIs(self.cg.POLLUTION_SECURED_PERSIST_ENABLED, True)
+        self.assertEqual(
+            self.cg.POLLUTION_SECURED_FILENAME, 'pollution_secured.json')
+        pollution_methods = _class_method_names(
+            _module_ast('toontown/corruption/PollutionManagerAI.py'),
+            'PollutionManagerAI')
+        for method in (
+                '_hydrateSecuredLocks', '_persistSecuredLocks',
+                'applySecuredZones', 'isPurityLocked'):
+            self.assertIn(
+                method, pollution_methods,
+                msg='PollutionManagerAI missing secured persist %s' % method)
+        self.assertIn('PollutionSecuredSave', pollution_src)
+        delete_idx = pollution_src.find('def delete(self):')
+        self.assertGreater(delete_idx, 0)
+        delete_snip = pollution_src[delete_idx:delete_idx + 500]
+        self.assertIn('_persistSecuredLocks', delete_snip)
+        self.assertIn('_applySecuredZonesToPollution', director_src)
+        hydrate_idx = director_src.find('def _hydrateFromToon')
+        self.assertGreater(hydrate_idx, 0)
+        hydrate_snip = director_src[hydrate_idx:hydrate_idx + 2200]
+        self.assertIn('_applySecuredZonesToPollution', hydrate_snip)
+        self.assertIn('securedZones', hydrate_snip)
+        default_prog = self.save.defaultProgress()
+        self.assertEqual(default_prog['securedZones'], [])
+        # Older blobs without securedZones migrate from unlocks.
+        migrated = self.save.sanitizeProgress({
+            'unlockedThrough': 1,
+            'actIndex': 1,
+            'state': self.camp.STATE_ACTIVE,
+        })
+        self.assertIn(LOOPY, migrated['securedZones'])
+        self.assertNotIn(PUNCHLINE, migrated['securedZones'])
+        secured_save_src = _read(
+            'toontown/corruption/PollutionSecuredSave.py').lower()
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, secured_save_src)
         reclaim_director_src = _read(
             'toontown/reclaim/DistributedReclaimDirectorAI.py')
         self.assertIn('startStreetPackForToon', reclaim_director_src)
