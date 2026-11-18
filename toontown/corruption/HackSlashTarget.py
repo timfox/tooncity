@@ -2,7 +2,8 @@
 
 Slice 1 SoftTarget prefers objects that expose this API. MeleeCombat calls
 `applyHackSlashHit` on the client; CorruptToon bridges that to AI via
-`requestHackSlashHit` → `takeHackSlashDamage`.
+`requestHackSlashHit(damage, hitIndex)` → `takeHackSlashDamage` (+ juggle-hang
+stun on launch beats so AI chase/attack pause during hang).
 """
 
 

@@ -74,7 +74,7 @@ class JuggleCancelSlamTest(unittest.TestCase):
         self.assertLessEqual(
             self.cfg.JUGGLE_CANCEL_START_SEC + self.cfg.JUGGLE_CANCEL_WINDOW_SEC,
             mid_up + mid_hang + mid_down + 0.25)
-        self.assertIn('juggle→F slam', self.cfg.DEMO_HINT)
+        self.assertIn('juggle hang stun→F slam', self.cfg.DEMO_HINT)
         hint_l = self.cfg.DEMO_HINT.lower()
         self.assertNotIn('keyblade', hint_l)
         self.assertNotIn('kingdom hearts', hint_l)
@@ -103,6 +103,38 @@ class JuggleCancelSlamTest(unittest.TestCase):
         # Closed at/after until.
         self.assertFalse(open_fn(True, start, until, until))
         self.assertFalse(open_fn(True, start, until, until + 0.03))
+
+    def test_juggle_hang_stun_helpers(self):
+        """Server hang stun covers launch beats so cancel→slam sticks."""
+        self.assertTrue(self.cfg.JUGGLE_HANG_STUN_ENABLED)
+        self.assertGreater(self.cfg.JUGGLE_HANG_STUN_PAD_SEC, 0.0)
+        self.assertGreater(self.cfg.JUGGLE_HANG_STUN_MAX_SEC, 0.5)
+        stun_hit = self.cfg.isJuggleHangStunHit
+        stun_sec = self.cfg.juggleHangStunSec
+        stunned = self.cfg.isJuggleHangStunned
+        launch = self.cfg.LAUNCH_HIT_INDEX
+        # Opener does not stun; mid/finisher launch beats do.
+        self.assertFalse(stun_hit(0))
+        self.assertTrue(stun_hit(launch))
+        self.assertTrue(stun_hit(self.cfg.COMBO_LENGTH - 1))
+        self.assertEqual(stun_sec(0), 0.0)
+        mid = stun_sec(launch)
+        fin = stun_sec(self.cfg.COMBO_LENGTH - 1)
+        self.assertGreater(mid, 0.0)
+        self.assertGreater(fin, 0.0)
+        # Mid stun lasts through cancel window (from launch start) + hitstop.
+        cancel_end = (
+            self.cfg.JUGGLE_CANCEL_START_SEC
+            + self.cfg.JUGGLE_CANCEL_WINDOW_SEC)
+        hitstop = self.cfg.HITSTOP_SEC[launch]
+        self.assertGreaterEqual(mid, hitstop + cancel_end - 0.001)
+        self.assertLessEqual(mid, self.cfg.JUGGLE_HANG_STUN_MAX_SEC)
+        self.assertFalse(stunned(10.0, 10.0))
+        self.assertTrue(stunned(10.5, 10.0))
+        self.assertFalse(stunned(10.0, 10.5))
+        # Disabled / capped.
+        self.assertEqual(stun_sec(launch, enabled=False), 0.0)
+        self.assertLessEqual(stun_sec(launch, maxSec=0.2), 0.2)
 
 
 def main() -> int:
