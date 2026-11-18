@@ -701,45 +701,48 @@ DODGE_CANCEL_WINDOW_SEC = 0.40
 DODGE_CANCEL_BUFFER = True
 
 # Dodge-cancel cream wash flash — soft aspect2d veil the instant F/LMB cancels
-# late-dodge recovery into stretch-punch (#186 / #219) so Shift→F reads clearly.
-# SoftLock FOV / dodge-trail / hurt-stagger cream wash grammar. Deepened so
-# dodge→melee windows read juicier: brighter peak + longer mid hold. Snappier
-# than dodge-trail settle wash; cream/pastel only. Distinct from i-frame cream
-# wash deepen (#228) and combo cream edge deepen (#237). Toggle
+# late-dodge recovery into stretch-punch (#186 / #219 / #242) so Shift→F reads
+# clearly. SoftLock FOV / dodge-trail / hurt-stagger cream wash grammar.
+# Deepened past #242 so dodge→melee windows read juicier still: brighter peak +
+# longer mid hold + richer residual. Snappier than dodge-trail settle wash;
+# cream/pastel only. Distinct from i-frame cream wash deepen (#228), combo
+# cream edge deepen (#237), and hurt-stagger cream wash deepen (#247) — fires
+# on intentional Shift→F cancel, not mid-roll invuln or smack stagger. Toggle
 # DODGE_CANCEL_CREAM_WASH_ENABLED = False drops the cancel flash (+ aftershock).
 DODGE_CANCEL_CREAM_WASH_ENABLED = True
 DODGE_CANCEL_CREAM_WASH_DELAY_SEC = 0.0  # fire on cancel — no settle lag
 DODGE_CANCEL_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-DODGE_CANCEL_CREAM_WASH_PEAK = 0.14
-DODGE_CANCEL_CREAM_WASH_MID = 0.075
+DODGE_CANCEL_CREAM_WASH_PEAK = 0.15
+DODGE_CANCEL_CREAM_WASH_MID = 0.085
 DODGE_CANCEL_CREAM_WASH_IN_SEC = 0.03
-DODGE_CANCEL_CREAM_WASH_PULSE_SEC = 0.07
-DODGE_CANCEL_CREAM_WASH_HOLD_SEC = 0.04
-DODGE_CANCEL_CREAM_WASH_OUT_SEC = 0.24
+DODGE_CANCEL_CREAM_WASH_PULSE_SEC = 0.08
+DODGE_CANCEL_CREAM_WASH_HOLD_SEC = 0.055
+DODGE_CANCEL_CREAM_WASH_OUT_SEC = 0.28
 DODGE_CANCEL_CREAM_WASH_BIN = 28  # with dodge-trail wash; under soft-lock pulse
 
 # Dodge-cancel cream wash flash aftershock — residual cream flecks + soft halo
 # after the cancel flash so Shift→F still reads. Same grammar as i-frame /
-# hurt-stagger cream wash aftershock, snappier because cancel is intentional.
-# Cream/pastel only. Toggle DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED = False
-# drops aftershock only.
+# hurt-stagger cream wash aftershock; deepened past #242 (more flecks +
+# stronger halo), snappier because cancel is intentional. Cream/pastel only.
+# Toggle DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock
+# only.
 DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED = True
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.06  # after flash starts
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.05  # after flash starts
 DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.0)
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT = 4
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SIZE = 0.012
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DRIFT = 0.22
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_FALL = 0.14
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SEC = 0.20
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.70)
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT = 5
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SIZE = 0.014
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DRIFT = 0.26
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_FALL = 0.16
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SEC = 0.24
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.76)
 DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
 DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_BIN = 30  # over cancel wash veil (28)
 DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.38
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_START = 0.22
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.05
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.16
-DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.09
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.42
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_START = 0.26
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.18
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.20
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.11
 DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
@@ -1249,7 +1252,7 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  combo cream edge  |  '
     'Shift/X dodge i-frame cream wash  |  '
-    'dodge→F cream flash deepen  |  perfect dodge→F counter  |  '
+    'dodge→F cream flash deepen+  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash deepen→F/Shift  |  '
     'Tab/` soft-lock cycle cream  |  hit soft-lock aim cream deepen  |  ~melee'
 )
