@@ -87,6 +87,59 @@ ATTACK_HIT_SFX = 'phase_3.5/audio/sfx/AV_collision.ogg'
 TELEGRAPH_SFX_VOLUME = 0.55
 ATTACK_HIT_SFX_VOLUME = 0.75
 
+# Ink Overlord finale phase looks (client-readable; AI timings unchanged).
+# Phase 1 = rising magenta swell; Phase 2 = crimson unleashed fury.
+FINALE_PHASE_LOOK = {
+    1: {
+        'id': 'rising',
+        'telegraphCharge': (2.35, 0.3, 2.65, 1.0),
+        'telegraphHold': (1.65, 0.22, 2.0, 1.0),
+        'squash': (2.15, 2.15, 0.34),
+        'stretch': (0.48, 0.48, 1.95),
+        'impactScale': (1.7, 1.7, 0.48),
+        'impactColor': (2.4, 0.85, 2.55, 1.0),
+        'pulseHot': (0.85, 0.18, 1.05, 1.0),
+        'hitFlash': (1.05, 0.4, 1.15, 1.0),
+        'hitFlashPeak': 0.72,
+        'actorScale': 1.28,
+        'nameColor': (1.0, 0.55, 1.0, 1.0),
+        'pulseAmp': 0.1,
+    },
+    2: {
+        'id': 'unleashed',
+        'telegraphCharge': (2.7, 0.12, 0.28, 1.0),
+        'telegraphHold': (2.0, 0.08, 0.18, 1.0),
+        'squash': (2.55, 2.55, 0.26),
+        'stretch': (0.36, 0.36, 2.35),
+        'impactScale': (1.95, 1.95, 0.4),
+        'impactColor': (2.6, 0.55, 0.35, 1.0),
+        'pulseHot': (1.35, 0.12, 0.22, 1.0),
+        'hitFlash': (1.15, 0.18, 0.12, 1.0),
+        'hitFlashPeak': 0.9,
+        'actorScale': 1.48,
+        'nameColor': (1.0, 0.32, 0.22, 1.0),
+        'pulseAmp': 0.16,
+    },
+}
+
+# Phase-transition sting (FOV / flash / render slam).
+FINALE_STING_FOV_PUNCH = 18.0
+FINALE_STING_FOV_IN = 0.08
+FINALE_STING_FOV_OUT = 0.42
+FINALE_STING_FLASH_PEAK = 0.92
+FINALE_STING_FLASH_COLOR = (1.15, 0.2, 0.55, 1.0)
+FINALE_STING_RENDER_PEAK = (1.85, 0.35, 1.15, 1.0)
+FINALE_STING_RENDER_HOLD = (1.35, 0.45, 0.75, 1.0)
+
+
+def finalePhaseLook(phaseIndex):
+    """Return presentation dict for Ink Overlord phase, or None."""
+    try:
+        phase = int(phaseIndex)
+    except (TypeError, ValueError):
+        return None
+    return FINALE_PHASE_LOOK.get(phase)
+
 
 def clampPollution(level):
     """Clamp a pollution scalar into [0, 1]."""

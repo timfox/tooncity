@@ -122,10 +122,18 @@ class CampaignDirectorAI(DirectObject):
             'corruptHp': act.get('corruptHp'),
             'corruptName': act.get('corruptName'),
             'banner': act.get('banner'),
+            'finalePhase': 0,
+            'transitionSting': False,
         }
-        if act.get('finale') and self._finalePhase >= 1:
-            phase2 = act.get('phase2') or {}
-            params.update(phase2)
+        if act.get('finale'):
+            if self._finalePhase >= 1:
+                phase2 = act.get('phase2') or {}
+                params.update(phase2)
+                params['finalePhase'] = int(phase2.get('finalePhase', 2))
+                params['transitionSting'] = bool(
+                    phase2.get('transitionSting', True))
+            else:
+                params['finalePhase'] = int(act.get('finalePhase', 1))
         return params
 
     def _startActReclaim(self, toon, act):
@@ -157,11 +165,16 @@ class CampaignDirectorAI(DirectObject):
             packSize=params.get('packSize'),
             maxPacks=params.get('maxPacks'),
             corruptHp=params.get('corruptHp'),
-            corruptName=params.get('corruptName'))
+            corruptName=params.get('corruptName'),
+            finalePhase=params.get('finalePhase', 0),
+            transitionSting=params.get('transitionSting', False))
         banner = params.get('banner') or act.get('banner')
         self._tellToon(toon, banner)
+        phaseTag = ''
+        if params.get('finalePhase'):
+            phaseTag = ' finalePhase=%s' % params.get('finalePhase')
         return (
-            '%s Reclaim started in %s (zone %s, pollution %.2f, pack %s, hp %s). '
+            '%s Reclaim started in %s (zone %s, pollution %.2f, pack %s, hp %s)%s. '
             'Enable melee with ~hackslash 0.'
             % (
                 banner,
@@ -170,6 +183,7 @@ class CampaignDirectorAI(DirectObject):
                 params.get('seedPollution', ReclaimGlobals.RECLAIM_START_POLLUTION),
                 params.get('packSize', ReclaimGlobals.PACK_SIZE),
                 params.get('corruptHp', '?'),
+                phaseTag,
             ))
 
     def _stopActiveReclaim(self):

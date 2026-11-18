@@ -5,6 +5,7 @@ from direct.distributed import DistributedObject
 from direct.interval.IntervalGlobal import (
     Func, LerpColorScaleInterval, LerpScaleInterval, Parallel, Sequence, Wait)
 
+from toontown.campaign import CampaignGlobals
 from toontown.corruption import CorruptionGlobals
 from toontown.reclaim import ReclaimGlobals
 
@@ -22,6 +23,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.waveIndex = 0
         self.maxWaves = ReclaimGlobals.MAX_PACKS
         self.packAlive = 0
+        self.finalePhase = 0
         self._bannerNP = None
         self._subBannerNP = None
         self._hintNP = None
@@ -81,8 +83,24 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         if self.state == ReclaimGlobals.STATE_ACTIVE:
             self.__showStatusHud()
 
+    def setFinalePhase(self, phase):
+        self.finalePhase = max(0, int(phase))
+        if self.state == ReclaimGlobals.STATE_ACTIVE:
+            self.__showStatusHud()
+
     def announceReclaimStart(self):
-        self.__showBanner(ReclaimGlobals.BANNER_START, (1.0, 0.92, 0.45, 1.0))
+        if self.finalePhase >= 1:
+            title = CampaignGlobals.FINALE_PHASE_BANNER.get(
+                self.finalePhase, ReclaimGlobals.BANNER_START)
+            sub = CampaignGlobals.FINALE_PHASE_SUB.get(self.finalePhase, '')
+            color = (
+                (1.0, 0.45, 0.95, 1.0) if self.finalePhase < 2
+                else (1.0, 0.28, 0.22, 1.0))
+            self.__showBanner(title, color, hold=2.8)
+            if sub:
+                self.__showSubBanner(sub, color, hold=2.8)
+        else:
+            self.__showBanner(ReclaimGlobals.BANNER_START, (1.0, 0.92, 0.45, 1.0))
         # Discoverable play: arm melee without demo dummies when reclaim goes live.
         av = getattr(base, 'localAvatar', None)
         if av is not None and hasattr(av, 'enableHackSlashMelee'):
@@ -90,19 +108,63 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 av.enableHackSlashMelee(spawnHostiles=False)
             except Exception:
                 pass
+        if self.finalePhase >= 1:
+            try:
+                from toontown.campaign.FinalePhaseFx import ensureFinalePhaseFxClient
+                ensureFinalePhaseFxClient()
+            except Exception:
+                pass
         messenger.send('announceReclaimStart', [])
+        messenger.send('reclaimFinalePhase', [self.finalePhase])
         self.__showDemoHint()
         self.__showStatusHud()
 
+    def announceFinalePhaseTransition(self, phaseIndex):
+        """Boss flip sting — FOV / flash / ink slam via FinalePhaseFx."""
+        phase = max(1, int(phaseIndex))
+        self.finalePhase = phase
+        try:
+            from toontown.campaign.FinalePhaseFx import ensureFinalePhaseFxClient
+            ensureFinalePhaseFxClient()
+        except Exception:
+            pass
+        messenger.send('finalePhaseTransition', [phase])
+        title = CampaignGlobals.FINALE_PHASE_BANNER.get(
+            phase, 'FINALE PHASE %s' % phase)
+        color = (1.0, 0.22, 0.28, 1.0)
+        self.__showBanner(title, color, hold=3.2)
+        self.__showSubBanner(
+            CampaignGlobals.FINALE_PHASE_SUB.get(
+                phase, 'Phase transition!'),
+            color,
+            hold=3.2)
+        # Banner-only campaignPhase (sting already fired above).
+        messenger.send('campaignPhase', [max(0, phase - 1), title])
+
     def announcePackSpawn(self, count, waveIndex=1):
         wave = max(1, int(waveIndex))
-        label = ReclaimGlobals.waveLabel(wave, self.maxWaves)
-        title = ReclaimGlobals.WAVE_BANNER_FMT % (wave, self.maxWaves, label)
-        self.__showBanner(title, (0.85, 0.55, 1.0, 1.0), hold=2.0)
-        self.__showSubBanner(
-            '%s  ·  %s inbound' % (ReclaimGlobals.BANNER_PACK, int(count)),
-            (0.95, 0.8, 1.0, 1.0),
-            hold=2.0)
+        if self.finalePhase >= 1:
+            label = ReclaimGlobals.FINALE_PACK_BANNER.get(
+                self.finalePhase, ReclaimGlobals.waveLabel(wave, self.maxWaves))
+            title = ReclaimGlobals.WAVE_BANNER_FMT % (wave, self.maxWaves, label)
+            color = (
+                (1.0, 0.5, 0.95, 1.0) if self.finalePhase < 2
+                else (1.0, 0.35, 0.25, 1.0))
+            self.__showBanner(title, color, hold=2.2)
+            self.__showSubBanner(
+                '%s  ·  %s inbound' % (
+                    'Overlord pack' if self.finalePhase < 2 else 'Unleashed pack',
+                    int(count)),
+                color,
+                hold=2.2)
+        else:
+            label = ReclaimGlobals.waveLabel(wave, self.maxWaves)
+            title = ReclaimGlobals.WAVE_BANNER_FMT % (wave, self.maxWaves, label)
+            self.__showBanner(title, (0.85, 0.55, 1.0, 1.0), hold=2.0)
+            self.__showSubBanner(
+                '%s  ·  %s inbound' % (ReclaimGlobals.BANNER_PACK, int(count)),
+                (0.95, 0.8, 1.0, 1.0),
+                hold=2.0)
         self.__showStatusHud()
 
     def announceWaveCleared(self, waveIndex):
@@ -199,13 +261,20 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             self.maxWaves,
             self.pollutionHint * 100.0,
             self.packAlive)
+        if self.finalePhase >= 1:
+            text = 'Overlord P%s  |  %s' % (self.finalePhase, text)
         if self._statusNP is not None and not self._statusNP.isEmpty():
             self._statusNP.node().setText(text)
             return
         tn = TextNode('reclaim-status')
         tn.setText(text)
         tn.setAlign(TextNode.ACenter)
-        tn.setTextColor(0.95, 0.88, 1.0, 1.0)
+        statusColor = (0.95, 0.88, 1.0, 1.0)
+        if self.finalePhase >= 2:
+            statusColor = (1.0, 0.55, 0.45, 1.0)
+        elif self.finalePhase == 1:
+            statusColor = (1.0, 0.7, 1.0, 1.0)
+        tn.setTextColor(*statusColor)
         tn.setShadow(0.04, 0.04)
         tn.setShadowColor(0, 0, 0, 0.75)
         np = aspect2d.attachNewNode(tn)

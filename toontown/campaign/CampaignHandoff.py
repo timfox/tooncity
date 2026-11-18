@@ -22,25 +22,37 @@ class CampaignHandoffClient(DirectObject):
         self._bannerNP = None
         self._ival = None
         self._localReclaimCount = 0
+        self._finaleClears = 0
         self.accept('purityRestoreFx', self._onPurityRestore)
         self.accept('campaignVictory', self._onVictory)
         self.accept('campaignPhase', self._onPhase)
+        self.accept('reclaimFinalePhase', self._onReclaimFinalePhase)
 
     def destroy(self):
         self.ignoreAll()
         self._clear()
+
+    def _onReclaimFinalePhase(self, phaseIndex):
+        # Keep a client-side phase counter so purity messaging stays honest.
+        phase = int(phaseIndex)
+        if phase >= 1:
+            self._finaleClears = max(self._finaleClears, phase - 1)
 
     def _onPurityRestore(self, zoneId):
         self._localReclaimCount += 1
         mult = applyPowerBump(self._localReclaimCount)
         act, nxt = self._actsForZone(zoneId)
         if act and act.get('finale'):
-            # Phase messaging: first Silly reclaim → phase 2 tease.
-            if self._localReclaimCount > 0:
+            self._finaleClears += 1
+            if self._finaleClears <= 1:
                 phase2 = act.get('phase2') or {}
                 self._flash(
                     phase2.get('banner') or 'Finale Phase 2!',
-                    Vec4(1.0, 0.45, 0.85, 1))
+                    Vec4(1.0, 0.35, 0.55, 1))
+            else:
+                self._flash(
+                    act.get('handoff') or 'Toon City is saved!',
+                    Vec4(1.0, 0.95, 0.45, 1))
             return
         if nxt is not None:
             msg = act.get('handoff') or (
@@ -69,8 +81,13 @@ class CampaignHandoffClient(DirectObject):
             Vec4(1.0, 0.95, 0.45, 1))
 
     def _onPhase(self, phaseIndex, message):
+        # Skip duplicate flash when FinalePhaseFx / reclaim banners already
+        # own the phase-2 transition moment.
+        phase = int(phaseIndex) + 1
+        if phase >= 2:
+            return
         self._flash(
-            'PHASE %s — %s' % (int(phaseIndex) + 1, message),
+            'PHASE %s — %s' % (phase, message),
             Vec4(1.0, 0.45, 0.85, 1))
 
     def _flash(self, text, color):

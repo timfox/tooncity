@@ -43,6 +43,11 @@ DEMO_HINT = (
     'Reclaim: clear Corrupt Toons with melee (~hackslash 0)  |  '
     '~stopreclaim to end'
 )
+# Finale pack banners keep the street reading as a boss fight.
+FINALE_PACK_BANNER = {
+    1: 'Ink Overlord swell!',
+    2: 'Unleashed ink tide!',
+}
 
 # Reclaim-complete purity burst (HUD overlay + sting).
 # Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.

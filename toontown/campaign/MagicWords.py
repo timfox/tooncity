@@ -10,7 +10,8 @@ class StartCampaign(MagicWord):
     desc = 'Start or resume the multi-neighborhood reclaim campaign act.'
     advancedDesc = (
         'Uses CampaignDirector + ReclaimDirector. Loopy → Punchline → '
-        'Silly two-phase Ink Overlord finale. Pair with ~hackslash 0.')
+        'Silly two-phase Ink Overlord finale (magenta rise → crimson unleash '
+        'with FOV/flash sting). Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]

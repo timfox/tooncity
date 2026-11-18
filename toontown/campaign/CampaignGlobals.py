@@ -49,6 +49,8 @@ ACTS = (
         'banner': 'Finale Phase 1 — The Ink Overlord rises on Silly Street!',
         'handoff': 'Toon City is saved! Purity restored across every neighborhood.',
         'finale': True,
+        # Client-readable phase index (1-based) for reclaim director / telegraphs.
+        'finalePhase': 1,
         # Phase 2 overrides after the first Silly Street reclaim clears.
         'phase2': {
             'seedPollution': 0.95,
@@ -57,9 +59,21 @@ ACTS = (
             'corruptHp': 160,
             'corruptName': 'Ink Overlord Unleashed',
             'banner': 'Finale Phase 2 — Ink Overlord Unleashed! Finish it!',
+            'finalePhase': 2,
+            'transitionSting': True,
         },
     },
 )
+
+# Client presentation for Silly Street Ink Overlord phases (1 / 2).
+FINALE_PHASE_BANNER = {
+    1: 'INK OVERLORD RISES',
+    2: 'INK OVERLORD UNLEASHED',
+}
+FINALE_PHASE_SUB = {
+    1: 'Magenta ink swell — read the wind-up!',
+    2: 'Crimson ink fury — bigger telegraphs, hotter hits!',
+}
 
 STATE_IDLE = 0
 STATE_ACTIVE = 1

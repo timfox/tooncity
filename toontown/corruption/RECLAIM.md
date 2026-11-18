@@ -39,3 +39,16 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # wind-up + impact flash/SFX punch so smacks read without a combat HUD.
 # Melee (F / LMB) splat-defeats them; purity pop + pollution drop.
 ```
+
+## Ink Overlord finale phases
+
+Silly Street campaign (`~advancecampaign force` to skip ahead, then
+`~startcampaign` on zone `2100`):
+
+1. **Phase 1 — Rising**: magenta telegraph squash/stretch, larger Overlord scale,
+   HUD shows `Overlord P1`.
+2. Clear packs → purity beat → director restarts **Phase 2**.
+3. **Phase 2 — Unleashed**: crimson telegraphs, hotter hit flash, FOV + fullscreen
+   ink slam transition sting (`announceFinalePhaseTransition`).
+4. Clear again → campaign victory.
+
