@@ -1,4 +1,4 @@
-"""Campaign power bump — light melee damage scale from reclaim count.
+"""Campaign power bump + street-clear slice reward.
 
 Mutates HackSlashConfig.COMBO_DAMAGE in place from a stored baseline so
 campaign depth can ship without rewriting the combat package.
@@ -6,6 +6,10 @@ campaign depth can ship without rewriting the combat package.
 Login / hydrate re-applies via CampaignHandoff._onCampaignProgressSync
 using AI-persisted reclaimCount (PollutionManager setCampaignProgress)
 so mid-campaign relog keeps the same melee scale as an unbroken session.
+
+Street-clear rewards (jellybeans + laff toon-up, trophy-style copy) sit
+beside the power bump so reclaim payoff is thicker than COMBO_DAMAGE
+alone — Open Toontown slice grammar, not cream FX / not KH.
 """
 
 from toontown.campaign import CampaignGlobals
@@ -48,3 +52,135 @@ def resetPowerBump():
         HackSlashConfig.COMBO_DAMAGE = tuple(_BASE_DAMAGE)
     except Exception:
         pass
+
+
+def streetClearRewardEnabled():
+    """True when jellybean / laff street-clear awards are armed."""
+    return bool(getattr(
+        CampaignGlobals, 'STREET_CLEAR_REWARD_ENABLED', True))
+
+
+def streetClearJellybeans(reclaimCount=1):
+    """Jellybeans for one street clear (scales gently with reclaim depth)."""
+    base = int(getattr(CampaignGlobals, 'STREET_CLEAR_JELLYBEANS', 20) or 0)
+    bonus = int(getattr(
+        CampaignGlobals, 'STREET_CLEAR_JELLYBEANS_BONUS_PER_RECLAIM', 0) or 0)
+    cap = int(getattr(
+        CampaignGlobals, 'STREET_CLEAR_JELLYBEANS_MAX', max(base, 0)) or 0)
+    count = max(1, int(reclaimCount or 1))
+    # First clear = base; each prior clear adds bonus, capped.
+    total = base + bonus * max(0, count - 1)
+    if cap > 0:
+        total = min(cap, total)
+    return max(0, int(total))
+
+
+def streetClearLaff():
+    """Laff toon-up granted on street clear (0 disables heal)."""
+    return max(0, int(getattr(CampaignGlobals, 'STREET_CLEAR_LAFF', 0) or 0))
+
+
+def streetClearTrophyLabel(zoneId=None, streetName=None):
+    """Trophy-style label for whisper / handoff (street name filled in)."""
+    name = streetName
+    if not name:
+        name = streetNameForZone(zoneId) or 'Street'
+    fmt = getattr(
+        CampaignGlobals, 'STREET_CLEAR_TROPHY_FMT',
+        'Street Trophy: %s reclaimed!')
+    try:
+        return fmt % name
+    except Exception:
+        return 'Street Trophy: %s reclaimed!' % name
+
+
+def streetNameForZone(zoneId):
+    """Resolve a readable street name from campaign ACTS (fallback None)."""
+    if zoneId is None:
+        return None
+    try:
+        zoneId = int(zoneId)
+    except Exception:
+        return None
+    for act in getattr(CampaignGlobals, 'ACTS', ()) or ():
+        try:
+            if int(act.get('zoneId', 0) or 0) == zoneId:
+                return act.get('name') or act.get('id') or None
+        except Exception:
+            continue
+    return None
+
+
+def streetClearRewardPayload(reclaimCount=1, zoneId=None, streetName=None):
+    """Pure reward dict for tests / handoff / AI award (no toon mutation)."""
+    beans = streetClearJellybeans(reclaimCount)
+    laff = streetClearLaff()
+    trophy = streetClearTrophyLabel(zoneId=zoneId, streetName=streetName)
+    msgFmt = getattr(
+        CampaignGlobals, 'STREET_CLEAR_REWARD_MSG_FMT',
+        '%s  +%s jellybeans  +%s laff')
+    try:
+        whisper = msgFmt % (trophy, beans, laff)
+    except Exception:
+        whisper = '%s  +%s jellybeans  +%s laff' % (trophy, beans, laff)
+    handoffFmt = getattr(
+        CampaignGlobals, 'STREET_CLEAR_REWARD_HANDOFF_FMT',
+        'Street Trophy  +%s beans  +%s laff')
+    try:
+        handoff = handoffFmt % (beans, laff)
+    except Exception:
+        handoff = 'Street Trophy  +%s beans  +%s laff' % (beans, laff)
+    return {
+        'enabled': streetClearRewardEnabled(),
+        'jellybeans': beans,
+        'laff': laff,
+        'trophy': trophy,
+        'whisper': whisper,
+        'handoff': handoff,
+        'zoneId': None if zoneId is None else int(zoneId),
+        'reclaimCount': max(1, int(reclaimCount or 1)),
+    }
+
+
+def awardStreetClearReward(toon, reclaimCount=1, zoneId=None, streetName=None):
+    """Grant jellybeans + laff toon-up and whisper trophy copy.
+
+    Returns the reward payload dict, or None when disabled / no toon.
+    Tolerates missing addMoney / toonUp (headless stubs still get payload).
+    """
+    if toon is None or not streetClearRewardEnabled():
+        return None
+    payload = streetClearRewardPayload(
+        reclaimCount=reclaimCount, zoneId=zoneId, streetName=streetName)
+    beans = int(payload['jellybeans'])
+    laff = int(payload['laff'])
+    if beans > 0:
+        try:
+            if hasattr(toon, 'addMoney'):
+                toon.addMoney(beans)
+        except Exception:
+            pass
+    if laff > 0:
+        try:
+            if hasattr(toon, 'toonUp'):
+                toon.toonUp(laff)
+        except Exception:
+            pass
+    whisper = payload.get('whisper') or ''
+    if whisper:
+        try:
+            if hasattr(toon, 'd_setSystemMessage'):
+                toon.d_setSystemMessage(0, str(whisper)[:200])
+            elif hasattr(toon, 'setSystemMessage'):
+                toon.setSystemMessage(0, str(whisper)[:200])
+        except Exception:
+            pass
+    try:
+        msg = getattr(
+            CampaignGlobals, 'STREET_CLEAR_REWARD_MSG', 'streetClearReward')
+        messenger.send(  # noqa: F821
+            msg,
+            [payload.get('zoneId') or 0, beans, laff, payload.get('trophy')])
+    except Exception:
+        pass
+    return payload
