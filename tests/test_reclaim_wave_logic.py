@@ -352,10 +352,11 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertTrue(all(a == cg.ARCHETYPE_INK for a in silly_w2))
 
     def test_street_pack_scripts_lock_full_compositions(self):
-        """Lock every STREET_PACKS wave beat (#185) — not just openers."""
+        """Lock every STREET_PACKS wave beat (#185/#191) — not just openers."""
         rg, cg = self.rg, self.cg
-        ink, brute, snare = (
-            cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE, cg.ARCHETYPE_SNARE)
+        ink, brute, snare, gagster = (
+            cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE, cg.ARCHETYPE_SNARE,
+            cg.ARCHETYPE_GAGSTER)
 
         expected = {
             LOOPY: {
@@ -364,11 +365,12 @@ class ReclaimWaveLogicTest(unittest.TestCase):
                 3: [snare, ink, brute, ink],
                 4: [snare, ink, brute, snare, ink],
             },
+            # Punchline (#191): Gunk Gagster mid slots from wave 1.
             PUNCHLINE: {
-                1: [snare, ink, ink, brute],
-                2: [snare, snare, ink, brute, ink],
-                3: [snare, ink, brute, brute, ink],
-                4: [snare, snare, ink, brute, snare, ink],
+                1: [snare, gagster, ink, brute],
+                2: [snare, gagster, gagster, brute, ink],
+                3: [snare, gagster, brute, brute, ink],
+                4: [snare, gagster, gagster, brute, snare, ink],
             },
             SILLY: {
                 1: [ink],

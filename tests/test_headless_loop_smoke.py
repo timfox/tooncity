@@ -326,6 +326,28 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertEqual(cg.archetypeDefaultName(archetype_id), expected)
             self.assertIn(archetype_id, cg.ARCHETYPE_STATS)
 
+        # Gunk Gagster (#191) — distinct gag-lob puddle kit (not Smudge rename).
+        gagster = cg.ARCHETYPE_STATS[cg.ARCHETYPE_GAGSTER]
+        self.assertEqual(gagster.get('attackMove'), 'gag_lob')
+        self.assertEqual(gagster.get('name'), 'Gunk Gagster')
+        self.assertGreater(float(gagster.get('meleeRange', 0)), 6.0)
+        self.assertGreater(float(gagster.get('attackHitRange', 0)), 0.0)
+        # Teal actor tint (R low, G/B higher) — readable vs brown Brute / ink Smudge.
+        tint = gagster.get('actorTint')
+        self.assertIsInstance(tint, tuple)
+        self.assertGreaterEqual(len(tint), 3)
+        self.assertLess(float(tint[0]), float(tint[2]))
+        self.assertTrue(hasattr(cg, 'GAGSTER_TELEGRAPH_CHARGE_COLOR'))
+        self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_COLOR'))
+        self.assertTrue(hasattr(cg, 'GAGSTER_LOB_ARC_Z'))
+        ai_src = _read('toontown/corruption/DistributedCorruptToonAI.py')
+        self.assertIn('gag_lob', ai_src)
+        self.assertIn('__resolveGagsterPuddle', ai_src)
+        self.assertIn('_puddleXY', ai_src)
+        magic_src = _read('toontown/corruption/MagicWords.py')
+        self.assertIn('spawngagster', magic_src)
+        self.assertIn('ARCHETYPE_GAGSTER', magic_src)
+
         # Ink Overlord is the Silly finale boss look (phases + crown telegraph),
         # not a street ARCHETYPE_* id — still must be registered here.
         self.assertIn(1, cg.FINALE_PHASE_LOOK)
@@ -2283,9 +2305,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('C campaign', hub_tip)
         self.assertNotIn('~startcampaign', hub_tip)
 
-        # Soft-lock target cycle — Tab/` manual next/prev among sticky hostiles.
-        # Combat-feel targeting (not cream FX): SoftTargetFinder.cycle +
-        # MeleeCombatController cycle handlers.
+        # Soft-lock target cycle (#189) — Tab/` manual next/prev among sticky
+        # hostiles. Combat-feel targeting (not cream FX): SoftTargetFinder.cycle
+        # + MeleeCombatController cycle handlers.
         for target_cycle_key in (
                 'TARGET_CYCLE_ENABLED',
                 'TARGET_CYCLE_NEXT_KEY',
@@ -2296,6 +2318,19 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertIn(
                 target_cycle_key, config_names,
                 msg='HackSlashConfig missing target cycle %s' % target_cycle_key)
+        # Timing / key values (#189): enabled, Tab/`, snappy cooldown, wide FOV.
+        self.assertIs(config_assigns.get('TARGET_CYCLE_ENABLED'), True)
+        self.assertEqual(config_assigns.get('TARGET_CYCLE_NEXT_KEY'), 'tab')
+        self.assertEqual(config_assigns.get('TARGET_CYCLE_PREV_KEY'), '`')
+        cycle_cd = config_assigns.get('TARGET_CYCLE_COOLDOWN_SEC')
+        cycle_range = config_assigns.get('TARGET_CYCLE_RANGE')
+        soft_range = config_assigns.get('TARGET_RANGE')
+        self.assertIsInstance(cycle_cd, float)
+        self.assertGreater(cycle_cd, 0.0)
+        self.assertLessEqual(cycle_cd, 0.35)
+        self.assertIsInstance(cycle_range, float)
+        if isinstance(soft_range, float):
+            self.assertGreaterEqual(cycle_range, soft_range)
         soft_target_tree = _module_ast('toontown/hackslash/SoftTarget.py')
         soft_target_names = _class_and_func_names(soft_target_tree)
         for cycle_helper in ('nextCycleIndex', 'pickCycleChoice'):
@@ -2322,6 +2357,65 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('pickCycleChoice', soft_target_src)
         self.assertIn('pickCycleChoice', hack_init)
         self.assertIn('nextCycleIndex', hack_init)
+
+        # Mid-act Oswald trust fracture (#190) — Loopy clear foreshadow only.
+        acts_node = _toplevel_value(self.campaign_tree, 'ACTS')
+        acts = [_literal(elt) for elt in acts_node.elts]
+        loopy_act = next(
+            (a for a in acts if isinstance(a, dict) and a.get('id') == 'loopy'),
+            None)
+        self.assertIsNotNone(loopy_act)
+        self.assertIs(loopy_act.get('trustFracture'), True)
+        handoff = loopy_act.get('handoff') or ''
+        if isinstance(handoff, list):
+            handoff = ''.join(str(part) for part in handoff)
+        self.assertIn('rubbery beat', str(handoff).lower())
+        for fracture_key in (
+                'OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED',
+                'OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC',
+                'OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_COUNT',
+                'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC'):
+            self.assertIn(
+                fracture_key, _toplevel_assign_names(self.campaign_tree),
+                msg='CampaignGlobals missing %s' % fracture_key)
+        campaign_assigns = _assign_map(self.campaign_tree)
+        self.assertIs(
+            campaign_assigns.get('OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED'),
+            True)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('trustFracture', handoff_src)
+        self.assertIn('playOswaldTrustFractureCreamEdge', handoff_src)
+        edge_fx_names = _class_and_func_names(
+            _module_ast('toontown/campaign/ActBannerCreamEdgeFx.py'))
+        self.assertIn('playOswaldTrustFractureCreamEdge', edge_fx_names)
+        self.assertIn('clearOswaldTrustFractureCreamEdge', edge_fx_names)
+
+        # TTC polluted tunnel placemarkers (#192) — hub discoverability.
+        crumb_rel = 'toontown/safezone/CorruptStreetBreadcrumb.py'
+        _assert_module_file(crumb_rel)
+        crumb_names = _class_and_func_names(_module_ast(crumb_rel))
+        for crumb_sym in (
+                'reclaimStreetEntries',
+                'streetNeedsBreadcrumb',
+                'CorruptStreetBreadcrumb',
+                'ensureCorruptStreetBreadcrumbs',
+                'stopCorruptStreetBreadcrumbs'):
+            self.assertIn(
+                crumb_sym, crumb_names,
+                msg='CorruptStreetBreadcrumb missing %s' % crumb_sym)
+        crumb_src = _read(crumb_rel)
+        self.assertIn('Ink stains Loopy', crumb_src)
+        self.assertIn('streetNeedsBreadcrumb', crumb_src)
+        playground_src = _read('toontown/safezone/TTPlayground.py')
+        self.assertIn('ensureCorruptStreetBreadcrumbs', playground_src)
+        self.assertIn('stopCorruptStreetBreadcrumbs', playground_src)
+
+        # Perfect-dodge counter (#193) timing lock — window fits dodge beat.
+        self.assertAlmostEqual(pd_window, 0.50, places=2)
+        self.assertAlmostEqual(pd_dmg, 1.5, places=2)
+        self.assertAlmostEqual(pd_rate, 1.2, places=2)
+        if isinstance(dodge_cd, float):
+            self.assertLessEqual(pd_window, dodge_cd + 0.05)
 
 
 def main() -> int:
