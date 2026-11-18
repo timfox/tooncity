@@ -17,6 +17,7 @@ from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.IdleInkDripFx import IdleInkDrip
 from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
+from toontown.corruption.SmudgeInkSplashFx import SmudgeInkSplash
 from toontown.corruption.SmudgeInkTelegraphFx import SmudgeInkTelegraphFist
 
 
@@ -72,6 +73,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._snareTelegraphString = None
         self._bruteTelegraphSpit = None
         self._smudgeTelegraphInk = None
+        self._smudgeInkSplash = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -139,6 +141,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
+        self.__clearSmudgeInkSplash()
         self.__clearDeathPopSplat()
 
     def __buildGeom(self):
@@ -947,6 +950,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
+        self.__clearSmudgeInkSplash()
         self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
         look = deathPopLook(self.getArchetype())
@@ -958,6 +962,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             splatPos = Point3(0, 0, 0)
         self._deathPopSplat = DeathPopSplat()
         self._deathPopSplat.play(splatPos, archetype=self.getArchetype())
+        # Ink Smudge: extra cheap purple splash so swarm deaths stay scannable.
+        if self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
+            self.__playSmudgeInkSplash(splatPos, kind='death')
         if bodyPop is None:
             self.__playPurityReclaimPop()
             self.hide()
@@ -1146,6 +1153,29 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
         self._smudgeTelegraphInk = None
 
+    def __playSmudgeInkSplash(self, pos=None, kind='hit'):
+        """Purple ink splash — Ink Smudge hit / death swarm readability only."""
+        if self.getArchetype() != CorruptionGlobals.ARCHETYPE_INK:
+            return
+        self.__clearSmudgeInkSplash()
+        if pos is None:
+            try:
+                pos = self.getPos(render)
+            except Exception:
+                return
+        splash = SmudgeInkSplash()
+        self._smudgeInkSplash = splash
+        splash.play(pos, kind=kind)
+
+    def __clearSmudgeInkSplash(self):
+        splash = getattr(self, '_smudgeInkSplash', None)
+        if splash is not None:
+            try:
+                splash.clear()
+            except Exception:
+                pass
+        self._smudgeInkSplash = None
+
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""
         messenger.send('corruptToonDefeatedFx', [
@@ -1199,6 +1229,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             LerpColorScaleInterval(target, 0.14, Vec4(1, 1, 1, 1)),
         )
         self._hitIval.start()
+        # Ink Smudge: cheap purple splash so tagged Smudges read in a swarm.
+        if self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
+            self.__pauseIdleInkDrip()
+            self.__playSmudgeInkSplash(kind='hit')
+            # Brief resume so idle drips return after the splash owns the frame.
+            Sequence(Wait(0.28), Func(self.__resumeIdleInkDrip)).start()
         try:
             away = self.getPos(render) - attacker.getPos(render)
             away.setZ(0)
