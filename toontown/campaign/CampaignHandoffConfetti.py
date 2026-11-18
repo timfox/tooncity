@@ -6,7 +6,8 @@ bits, plus cream/pastel sparkle flecks layered on the hood handoff pop —
 Toontown spiritual sequel, never keyblade / KH framing.
 
 Also owns the soft cream confetti swell on campaign victory purity cheer
-("TOON CITY IS SAVED!"). That swell clears before the Oswald twist /
+("TOON CITY IS SAVED!"), with cream/pastel sparkle flecks layered on the
+swell. That swell (+ glitter) clears before the Oswald twist /
 FinalePhaseFx reveal so the bittersweet sting stays intact — not a
 triumphant second carnival after the truth lands.
 """
@@ -351,11 +352,11 @@ def clearHandoffConfetti():
 class VictoryCreamConfettiSwell(object):
     """Soft cream confetti swell on the campaign victory purity cheer.
 
-    Layers a cream flash + expanding ring + cream chips/streamers under the
-    "TOON CITY IS SAVED!" plate. Kept separate from HandoffConfettiPop so
-    act-handoff carnival bursts and victory cream do not stomp each other.
-    Cleared when the victory plate tears down — before Oswald twist /
-    FinalePhaseFx reveal — so the truth sting stays bittersweet.
+    Layers a cream flash + expanding ring + cream chips/streamers + cream
+    sparkle flecks under the "TOON CITY IS SAVED!" plate. Kept separate from
+    HandoffConfettiPop so act-handoff carnival bursts and victory cream do
+    not stomp each other. Cleared when the victory plate tears down — before
+    Oswald twist / FinalePhaseFx reveal — so the truth sting stays bittersweet.
     """
 
     def __init__(self):
@@ -411,6 +412,23 @@ class VictoryCreamConfettiSwell(object):
                 parentNP, ox, oy, oz, i, streamerCount, binSort)
             if part is not None:
                 parts.append(part)
+
+        # Cream/pastel sparkle flecks on the victory swell — not handoff pop.
+        if getattr(CampaignGlobals, 'VICTORY_CREAM_SPARKLE_ENABLED', True):
+            fleckCount = int(getattr(
+                CampaignGlobals, 'VICTORY_CREAM_SPARKLE_COUNT', 10))
+            for i in range(fleckCount):
+                part = self._spawnCreamSparkle(
+                    parentNP, ox, oy, oz, i, fleckCount, elongated=False)
+                if part is not None:
+                    parts.append(part)
+            streakCount = int(getattr(
+                CampaignGlobals, 'VICTORY_CREAM_SPARKLE_STREAK_COUNT', 5))
+            for i in range(streakCount):
+                part = self._spawnCreamSparkle(
+                    parentNP, ox, oy, oz, i, streakCount, elongated=True)
+                if part is not None:
+                    parts.append(part)
 
         if not parts:
             return None
@@ -619,6 +637,96 @@ class VictoryCreamConfettiSwell(object):
                 LerpHprInterval(
                     ribbon, sec,
                     Point3(0, 0, fan + 22 * (1 if index % 2 else -1)),
+                    blendType='easeOut'),
+            ),
+        )
+
+    def _spawnCreamSparkle(self, parentNP, ox, oy, oz, index, total,
+                           elongated=False):
+        """Cream/pastel fleck or thin streak glitter on the victory swell.
+
+        Matches hood handoff cream sparkle (#99) motion, scaled for the
+        wider victory cream confetti swell (#82) — smaller/faster than cream
+        chips, above them so glitter reads on top of the swell.
+        """
+        colors = getattr(CampaignGlobals, 'VICTORY_CREAM_SPARKLE_COLORS', ())
+        if not colors:
+            return None
+        r, g, b, a = colors[index % len(colors)]
+        if elongated:
+            size = float(getattr(
+                CampaignGlobals, 'VICTORY_CREAM_SPARKLE_STREAK_SIZE', 0.013))
+        else:
+            size = float(getattr(
+                CampaignGlobals, 'VICTORY_CREAM_SPARKLE_SIZE', 0.018))
+        drift = float(getattr(
+            CampaignGlobals, 'VICTORY_CREAM_SPARKLE_DRIFT', 0.58))
+        sec = float(getattr(
+            CampaignGlobals, 'VICTORY_CREAM_SPARKLE_SEC', 0.88))
+        binSort = int(getattr(
+            CampaignGlobals, 'VICTORY_CREAM_SPARKLE_BIN', 65))
+        # Offset flecks vs streaks so they don't stack on the same rays.
+        liftBias = 0.48 if elongated else 0.18
+        angle = (2.0 * pi * index) / float(max(1, total)) + liftBias
+        try:
+            suffix = 'streak' if elongated else 'fleck'
+            cm = CardMaker('victory-cream-sparkle-%s-%s' % (suffix, index))
+            if elongated:
+                cm.setFrame(
+                    -size * 0.32, size * 0.32,
+                    -size * 1.55, size * 1.55)
+            elif (index % 2) == 0:
+                cm.setFrame(
+                    -size * 1.15, size * 1.15,
+                    -size * 0.55, size * 0.55)
+            else:
+                cm.setFrame(
+                    -size * 0.55, size * 0.55,
+                    -size * 1.15, size * 1.15)
+            bit = parentNP.attachNewNode(cm.generate())
+            bit.setTransparency(TransparencyAttrib.MAlpha)
+            bit.setColor(r, g, b, 1)
+            bit.setColorScale(r, g, b, 0)
+            # Orbit a touch farther than cream chips so sparkle reads as glitter.
+            start = Point3(
+                ox + cos(angle) * 0.07,
+                oy,
+                oz + sin(angle) * 0.05)
+            bit.setPos(start)
+            bit.setScale(0.26)
+            bit.setR(angle * 48.0)
+            bit.setBin('fixed', binSort)
+            bit.setDepthTest(False)
+            bit.setDepthWrite(False)
+        except Exception:
+            return None
+
+        self._nodes.append(bit)
+        end = Point3(
+            start[0] + cos(angle) * drift,
+            oy,
+            start[2] + abs(sin(angle)) * drift * 0.92 + 0.06)
+        delay = 0.014 * (index % 5)
+        return Sequence(
+            Wait(delay),
+            Parallel(
+                LerpColorScaleInterval(
+                    bit, 0.07, Vec4(r, g, b, a), blendType='easeOut'),
+                # Flat squash → tall stretch sparkle pop (hose glitter).
+                LerpScaleInterval(
+                    bit, 0.07, Point3(1.7, 1, 0.38), blendType='easeOut'),
+            ),
+            LerpScaleInterval(
+                bit, 0.09, Point3(0.55, 1, 1.52), blendType='easeOut'),
+            Parallel(
+                LerpPosInterval(bit, sec, end, blendType='easeOut'),
+                LerpScaleInterval(
+                    bit, sec, Point3(0.1, 1, 0.1), blendType='easeIn'),
+                LerpColorScaleInterval(
+                    bit, sec, Vec4(r, g, b, 0), blendType='easeIn'),
+                LerpHprInterval(
+                    bit, sec,
+                    Point3(0, 0, bit.getR() + 155 + 32 * (index % 3)),
                     blendType='easeOut'),
             ),
         )
