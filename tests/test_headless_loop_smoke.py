@@ -3319,10 +3319,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('Tab/` soft-lock cycle cream', config_src)
         self.assertIn('SoftLockCycleCreamWashPulse', hack_init)
 
-        # Soft-lock hit assist — deepened one-shot yaw/aim nudge + quiet cream
-        # wash flash / aftershock on melee connect against the sticky soft-lock.
-        # Distinct from soft-lock cycle reticle cream deepen (#233) and hurt
-        # wash cream deepen (#247).
+        # Soft-lock hit assist — deepened-past one-shot yaw/aim nudge + cream
+        # wash flash / richer aftershock on melee connect against the sticky
+        # soft-lock (past #254). Distinct from soft-lock cycle reticle cream
+        # deepen (#233) and hurt wash cream deepen (#247 / #263).
         for hit_assist_key in (
                 'LOCK_HIT_ASSIST_ENABLED',
                 'LOCK_HIT_ASSIST_YAW_FRAC',
@@ -3342,13 +3342,16 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         yaw_frac = config_assigns.get('LOCK_HIT_ASSIST_YAW_FRAC')
         yaw_max = config_assigns.get('LOCK_HIT_ASSIST_YAW_MAX_DEG')
         self.assertIsInstance(yaw_frac, float)
-        self.assertGreaterEqual(yaw_frac, 0.62)
+        self.assertGreaterEqual(yaw_frac, 0.66)
         self.assertLessEqual(yaw_frac, 1.0)
         self.assertIsInstance(yaw_max, float)
-        self.assertGreaterEqual(yaw_max, 26.0)
+        self.assertGreaterEqual(yaw_max, 28.0)
         self.assertLess(yaw_max, 90.0)
         self.assertGreaterEqual(
-            config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_PEAK'), 0.085)
+            config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_PEAK'), 0.092)
+        self.assertGreaterEqual(
+            config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT'),
+            4)
         assist_cream_funcs = _class_and_func_names(config_tree)
         self.assertIn('hitAssistCreamWashPeakAtSec', assist_cream_funcs)
         self.assertIn('hitAssistCreamWashAftershockAtSec', assist_cream_funcs)
@@ -3367,7 +3370,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_assistAimOnHit', melee_src)
         self.assertIn('HitAssistCreamWashPulse', melee_src)
         self.assertIn('_playHitAssistCreamWash', melee_src)
-        self.assertIn('hit soft-lock aim cream deepen', config_src)
+        self.assertIn('hit soft-lock aim cream deepen+', config_src)
         assist_wash_rel = 'toontown/hackslash/HitAssistCreamWashFx.py'
         _assert_module_file(assist_wash_rel)
         assist_wash_names = _class_and_func_names(_module_ast(assist_wash_rel))
