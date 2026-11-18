@@ -173,8 +173,15 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # silhouette / death cream-wash grammar);
 # Smudge death layers splash with CorruptDeathPopFx for swarm readability.
 # Corrupted Oswald flashes crimson stain-lunge telegraph
-# (OswaldBetrayalTelegraphFx) — not Smudge purple fallthrough. Oswald hits /
-# deaths flash OswaldBetrayalSplashFx (crimson betrayal splash; no cream deepen).
+# (OswaldBetrayalTelegraphFx) — not Smudge purple fallthrough. Melee
+# mid-betrayal_lunge / mid-stain_burst telegraph cancels the wind-up (same
+# snare-style AI interrupt as Brute spit / Gagster lob;
+# OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT / OSWALD_STAIN_BURST_MELEE_INTERRUPT).
+# After each telegraph reads, a short dedicated counter window arms —
+# F / LMB punish opener (OSWALD_BETRAYAL_LUNGE_COUNTER_* /
+# OSWALD_STAIN_BURST_COUNTER_*; same reward path; gameplay timing only;
+# interrupt ≠ counter). Oswald hits / deaths flash OswaldBetrayalSplashFx
+# (crimson betrayal splash; no cream deepen).
 # Melee hits on Brute flash BruteSludgeSplashFx (cheap green sludge splash);
 # Brute spit land also fires BruteSpitCreamSplashFx (deepened cream splash
 # beyond #264 + thicker vertical cream drip filaments + heavier downward
@@ -422,7 +429,12 @@ consequence — not cream-only. Oswald uses a distinct betrayal attack kit
 (`betrayal_lunge` dash-then-hit, close `stain_burst` AoE, planar shove —
 not a crimson Ink Smudge smack reskin) plus client AV
 (`OswaldBetrayalTelegraphFx` / `OswaldBetrayalSplashFx` — crimson, not
-Smudge purple fallthrough). Full dialogue is out of scope here.
+Smudge purple fallthrough). Melee mid-lunge / mid-burst telegraph cancels
+the wind-up (`OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT` /
+`OSWALD_STAIN_BURST_MELEE_INTERRUPT`); after each telegraph reads, a short
+dedicated counter window arms (`OSWALD_BETRAYAL_LUNGE_COUNTER_*` /
+`OSWALD_STAIN_BURST_COUNTER_*` — same reward path as Snare / Brute spit /
+Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
 
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
    SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), and

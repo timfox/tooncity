@@ -3227,12 +3227,18 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('OVERLORD_RAIN_MELEE_INTERRUPT', cg_src)
         self.assertIn('OVERLORD_SLAM_MELEE_INTERRUPT', cg_src)
         self.assertIn('OVERLORD_INK_SURGE_MELEE_INTERRUPT', cg_src)
+        self.assertIn('OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT', cg_src)
+        self.assertIn('OSWALD_STAIN_BURST_MELEE_INTERRUPT', cg_src)
         self.assertIn('isMeleeInterruptibleTelegraph', cg_src)
         self.assertIs(self.corruption.BRUTE_SPIT_MELEE_INTERRUPT, True)
         self.assertIs(self.corruption.GAGSTER_LOB_MELEE_INTERRUPT, True)
         self.assertIs(self.corruption.OVERLORD_RAIN_MELEE_INTERRUPT, True)
         self.assertIs(self.corruption.OVERLORD_SLAM_MELEE_INTERRUPT, True)
         self.assertIs(self.corruption.OVERLORD_INK_SURGE_MELEE_INTERRUPT, True)
+        self.assertIs(
+            self.corruption.OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT, True)
+        self.assertIs(
+            self.corruption.OSWALD_STAIN_BURST_MELEE_INTERRUPT, True)
         self.assertIn('__yankTargetTowardSnare', corrupt_ai_src)
         self.assertIn('snareLashYankPos', corrupt_ai_src)
         self.assertIn('_onSnareStringSnapCounter', melee_src)
@@ -3296,6 +3302,58 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('corruptGagsterLobCounter', melee_src)
         self.assertIn('Brute spit→F counter', config_src)
         self.assertIn('Gagster lob→F counter', config_src)
+        self.assertIn('Oswald lunge→F counter', config_src)
+        self.assertIn('Oswald burst→F counter', config_src)
+        # Oswald betrayal_lunge / stain_burst dedicated counter windows.
+        for oswald_counter_key in (
+                'OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED',
+                'OSWALD_BETRAYAL_LUNGE_COUNTER_ARM_DELAY_SEC',
+                'OSWALD_BETRAYAL_LUNGE_COUNTER_WINDOW_SEC',
+                'OSWALD_BETRAYAL_LUNGE_COUNTER_RANGE',
+                'OSWALD_BETRAYAL_LUNGE_COUNTER_DAMAGE_MULT',
+                'OSWALD_BETRAYAL_LUNGE_COUNTER_RATE_MULT',
+                'OSWALD_BETRAYAL_LUNGE_COUNTER_EVENT',
+                'OSWALD_STAIN_BURST_COUNTER_ENABLED',
+                'OSWALD_STAIN_BURST_COUNTER_ARM_DELAY_SEC',
+                'OSWALD_STAIN_BURST_COUNTER_WINDOW_SEC',
+                'OSWALD_STAIN_BURST_COUNTER_RANGE',
+                'OSWALD_STAIN_BURST_COUNTER_DAMAGE_MULT',
+                'OSWALD_STAIN_BURST_COUNTER_RATE_MULT',
+                'OSWALD_STAIN_BURST_COUNTER_EVENT'):
+            self.assertIn(
+                oswald_counter_key, cg_names,
+                msg='CorruptionGlobals missing Oswald counter %s' % (
+                    oswald_counter_key,))
+        self.assertIs(
+            self.corruption.OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED, True)
+        self.assertIs(
+            self.corruption.OSWALD_STAIN_BURST_COUNTER_ENABLED, True)
+        self.assertEqual(
+            self.corruption.OSWALD_BETRAYAL_LUNGE_COUNTER_EVENT,
+            'corruptOswaldBetrayalLungeCounter')
+        self.assertEqual(
+            self.corruption.OSWALD_STAIN_BURST_COUNTER_EVENT,
+            'corruptOswaldStainBurstCounter')
+        for oswald_helper in (
+                'oswaldBetrayalLungeCounterOpenerDamage',
+                'oswaldBetrayalLungeCounterOpenerRate',
+                'isOswaldBetrayalLungeCounterWindowOpen',
+                'oswaldBetrayalLungeCounterArmAt',
+                'oswaldBetrayalLungeCounterUntil',
+                'oswaldStainBurstCounterOpenerDamage',
+                'oswaldStainBurstCounterOpenerRate',
+                'isOswaldStainBurstCounterWindowOpen',
+                'oswaldStainBurstCounterArmAt',
+                'oswaldStainBurstCounterUntil'):
+            self.assertTrue(
+                callable(getattr(self.corruption, oswald_helper, None)),
+                msg='CorruptionGlobals missing helper %s' % oswald_helper)
+        self.assertIn('__scheduleOswaldBetrayalLungeCounter', corrupt_src)
+        self.assertIn('__scheduleOswaldStainBurstCounter', corrupt_src)
+        self.assertIn('_onOswaldBetrayalLungeCounter', melee_src)
+        self.assertIn('_onOswaldStainBurstCounter', melee_src)
+        self.assertIn('corruptOswaldBetrayalLungeCounter', melee_src)
+        self.assertIn('corruptOswaldStainBurstCounter', melee_src)
         self.assertIn('Balloon Snare', magic_src)
         reclaim_md = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('string-snap counter', reclaim_md)

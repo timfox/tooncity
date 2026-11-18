@@ -174,8 +174,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         newHp = max(0, self.hp - damage)
         self.b_setHp(newHp)
         # Melee mid-telegraph punish: cancel Snare string / Brute spit /
-        # Gagster lob / Overlord rain·slam·ink_surge wind-ups so street kits
-        # and climax telegraphs feel fair to interrupt.
+        # Gagster lob / Overlord rain·slam·ink_surge / Oswald betrayal_lunge·
+        # stain_burst wind-ups so street kits, climax, and twist chase
+        # telegraphs feel fair to interrupt.
         if newHp > 0:
             self.__maybeInterruptMeleeTelegraph()
         if newHp <= 0:
@@ -183,7 +184,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         return damage
 
     def __maybeInterruptMeleeTelegraph(self):
-        """Cancel interruptible wind-ups mid-telegraph (street + Overlord)."""
+        """Cancel interruptible wind-ups mid-telegraph (street + Overlord + Oswald)."""
         if not self._attacking:
             return
         move = getattr(self, '_attackMove', 'smack') or 'smack'

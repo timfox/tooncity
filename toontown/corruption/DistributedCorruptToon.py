@@ -232,6 +232,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapCounter()
         self.__clearBruteSpitCounter()
         self.__clearGagsterLobCounter()
+        self.__clearOswaldBetrayalLungeCounter()
+        self.__clearOswaldStainBurstCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -662,14 +664,28 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         else:
             self.__clearSmudgeTelegraphInk()
         # Corrupted Oswald-only: crimson stain-lunge telegraph (not Smudge).
+        # betrayal_lunge / stain_burst also arm Snare-like dedicated
+        # counter→melee windows (thin messenger hooks; interrupt ≠ counter).
+        telegraphMove = str(getattr(self, '_telegraphMove', '') or '')
         if isOswald and not look:
             self.__playOswaldTelegraphStain()
+            if ((not telegraphMove) or telegraphMove in (
+                    'betrayal_lunge', 'smack')):
+                self.__scheduleOswaldBetrayalLungeCounter()
+                self.__clearOswaldStainBurstCounter()
+            elif telegraphMove == 'stain_burst':
+                self.__scheduleOswaldStainBurstCounter()
+                self.__clearOswaldBetrayalLungeCounter()
+            else:
+                self.__clearOswaldBetrayalLungeCounter()
+                self.__clearOswaldStainBurstCounter()
         else:
             self.__clearOswaldTelegraphStain()
+            self.__clearOswaldBetrayalLungeCounter()
+            self.__clearOswaldStainBurstCounter()
         # Sludge Brute-only: green spit-gob telegraph pop for ranged spit read.
         # Spit move also arms a Snare-like dedicated counter→melee window
         # (thin messenger hook; slam stays commit-through / no counter).
-        telegraphMove = str(getattr(self, '_telegraphMove', '') or '')
         if isBrute and not look:
             self.__playBruteTelegraphSpit()
             if telegraphMove == 'spit':
@@ -786,8 +802,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordPhaseInkRain()
         self.__clearOverlordTelegraphPunch()
         self.__clearSnareTelegraphString()
-        # Impact lands on the player — drop any pending string-snap counter.
+        # Impact lands on the player — drop any pending telegraph counters.
         self.__clearSnareStringSnapCounter()
+        self.__clearOswaldBetrayalLungeCounter()
+        self.__clearOswaldStainBurstCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
         self.__clearOswaldTelegraphStain()
@@ -1491,6 +1509,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapCounter()
         self.__clearBruteSpitCounter()
         self.__clearGagsterLobCounter()
+        self.__clearOswaldBetrayalLungeCounter()
+        self.__clearOswaldStainBurstCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -2244,6 +2264,109 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._gagsterLobCounterTask = None
+
+    def __scheduleOswaldBetrayalLungeCounter(self):
+        """After betrayal-lunge telegraph reads, arm a short punish→melee window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path (same as Snare / Brute spit / Gagster lob).
+        Gameplay timing only.
+        """
+        self.__clearOswaldBetrayalLungeCounter()
+        if not getattr(
+                CorruptionGlobals, 'OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED',
+                True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'OSWALD_BETRAYAL_LUNGE_COUNTER_ARM_DELAY_SEC',
+            0.12))
+        window = float(getattr(
+            CorruptionGlobals, 'OSWALD_BETRAYAL_LUNGE_COUNTER_WINDOW_SEC',
+            0.48))
+        event = str(getattr(
+            CorruptionGlobals, 'OSWALD_BETRAYAL_LUNGE_COUNTER_EVENT',
+            'corruptOswaldBetrayalLungeCounter'))
+
+        def _fire(task=None):
+            self._oswaldBetrayalLungeCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._oswaldBetrayalLungeCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('oswald-betrayal-lunge-counter'))
+        except Exception:
+            self._oswaldBetrayalLungeCounterTask = None
+            _fire()
+
+    def __clearOswaldBetrayalLungeCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('oswald-betrayal-lunge-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._oswaldBetrayalLungeCounterTask = None
+
+    def __scheduleOswaldStainBurstCounter(self):
+        """After stain-burst telegraph reads, arm a short punish→melee window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path. Gameplay timing only.
+        """
+        self.__clearOswaldStainBurstCounter()
+        if not getattr(
+                CorruptionGlobals, 'OSWALD_STAIN_BURST_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'OSWALD_STAIN_BURST_COUNTER_ARM_DELAY_SEC',
+            0.10))
+        window = float(getattr(
+            CorruptionGlobals, 'OSWALD_STAIN_BURST_COUNTER_WINDOW_SEC', 0.44))
+        event = str(getattr(
+            CorruptionGlobals, 'OSWALD_STAIN_BURST_COUNTER_EVENT',
+            'corruptOswaldStainBurstCounter'))
+
+        def _fire(task=None):
+            self._oswaldStainBurstCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._oswaldStainBurstCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('oswald-stain-burst-counter'))
+        except Exception:
+            self._oswaldStainBurstCounterTask = None
+            _fire()
+
+    def __clearOswaldStainBurstCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('oswald-stain-burst-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._oswaldStainBurstCounterTask = None
 
     def __consumeSnareStringCounterCreamSplash(self):
         """If string-snap counter juice is live, play cream splash and spend it.
