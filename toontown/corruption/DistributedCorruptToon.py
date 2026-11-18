@@ -11,6 +11,7 @@ from toontown.corruption import CorruptionGlobals
 from toontown.corruption.CorruptDeathPopFx import (
     DeathPopSplat, buildBodyPopInterval, deathPopLook)
 from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphString
+from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
@@ -64,6 +65,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._telegraphInkDrip = None
         self._overlordCrown = None
         self._snareTelegraphString = None
+        self._bruteTelegraphSpit = None
         self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
@@ -126,6 +128,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearSnareTelegraphString()
+        self.__clearBruteTelegraphSpit()
         self.__clearDeathPopSplat()
 
     def __buildGeom(self):
@@ -467,6 +470,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
         self.__playTelegraphInkDrip(look)
+        # Sludge Brute-only: green spit-gob telegraph pop for ranged spit read.
+        if isBrute and not look:
+            self.__playBruteTelegraphSpit()
+        else:
+            self.__clearBruteTelegraphSpit()
         # Balloon Snare-only: amber string-lash telegraph pop for zip/lash read.
         if isSnare and not look:
             self.__playSnareTelegraphString()
@@ -517,10 +525,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / crown / snare string so impact owns the frame.
+        # Clear telegraph drip / crown / snare string / spit gob so impact owns the frame.
         self.__clearTelegraphInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearSnareTelegraphString()
+        self.__clearBruteTelegraphSpit()
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
@@ -908,6 +917,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearSnareTelegraphString()
+        self.__clearBruteTelegraphSpit()
         self.__clearDeathPopSplat()
         target = self.visualRoot if self.visualRoot is not None else self
         look = deathPopLook(self.getArchetype())
@@ -1002,6 +1012,26 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._snareTelegraphString = None
+
+    def __playBruteTelegraphSpit(self):
+        """Green spit-gob telegraph pop — Sludge Brute wind-ups only."""
+        self.__clearBruteTelegraphSpit()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        spit = BruteSpitTelegraphGob()
+        self._bruteTelegraphSpit = spit
+        spit.play(pos)
+
+    def __clearBruteTelegraphSpit(self):
+        spit = getattr(self, '_bruteTelegraphSpit', None)
+        if spit is not None:
+            try:
+                spit.clear()
+            except Exception:
+                pass
+        self._bruteTelegraphSpit = None
 
     def __playPurityReclaimPop(self):
         """Local feedback that defeating this enemy reclaimed pollution."""

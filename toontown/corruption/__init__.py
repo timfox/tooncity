@@ -4,12 +4,13 @@ CorruptToons prefer ink-tinted Toon Actor / DNA silhouettes (card fallback),
 chase, and telegraph attacks: Ink Smudge purple melee wind-up, Sludge Brute
 green spit telegraph + traveling ink blob on hit, Balloon Snare amber
 string-lash + vine zip. Telegraphs play CorruptTelegraphInkFx (short
-rubber-hose ink drip / splat pop). Balloon Snare wind-ups also flash
-BalloonSnareTelegraphFx (amber rubber-hose string-lash pop). Ink Overlord
-phase telegraphs also flash OverlordTelegraphCrownFx (rubber-hose ink crown /
-silhouette). Defeat plays CorruptDeathPopFx (rubber-hose ink splat / balloon
-pop). Clearing them lowers per-zone pollution via PollutionManager; hitting
-0.0 unlocks purity restore (reclaim / campaign).
+rubber-hose ink drip / splat pop). Sludge Brute wind-ups also flash
+BruteSpitTelegraphFx (green rubber-hose spit-gob pop). Balloon Snare wind-ups
+also flash BalloonSnareTelegraphFx (amber rubber-hose string-lash pop). Ink
+Overlord phase telegraphs also flash OverlordTelegraphCrownFx (rubber-hose
+ink crown / silhouette). Defeat plays CorruptDeathPopFx (rubber-hose ink
+splat / balloon pop). Clearing them lowers per-zone pollution via
+PollutionManager; hitting 0.0 unlocks purity restore (reclaim / campaign).
 
 Pollution fog / ink haze / color grade / street-prop tint are hood-biased
 (Loopy purple ink, Punchline sludge green, Silly hot magenta) via

@@ -99,7 +99,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~spawncorrupt 1 40 1
 # or ~spawnbrute 1 40 1
 ~hackslash 0
-# Brute: green squash telegraph + ink drip + squirt SFX, then ink blob on hit.
+# Brute: green squash + spit-gob telegraph pop (BruteSpitTelegraphFx)
+# + ink drip + squirt SFX, then ink blob on hit.
 # Compare ~spawncorrupt 1   (Ink Smudge keeps purple melee telegraph + drip).
 ```
 
