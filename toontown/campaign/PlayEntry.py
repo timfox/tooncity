@@ -7,7 +7,9 @@ bind R/C to reclaim/campaign via PollutionManager.requestStreetEvent.
 On polluted ACTS street enter: brief rubber-hose ink edge vignette that
 fades as the tip bar appears. Tip bar and act-enter flash banners play a
 short rubber-hose scale pop when they land. Early/mid Oswald trusted
-reclaim-lead act banners add a soft settle bounce after that pop
+reclaim-lead act banners add a soft settle bounce after that pop.
+Punchline Place Act 2 uses a campaign-owned entry tip (Brute/Snare cues,
+trusted Oswald lead) with a slightly punchier tip hose pop + trust settle
 (FinalePhaseFx twist stays separate — no KH branding).
 """
 
@@ -122,25 +124,31 @@ class PlayEntryClient(DirectObject):
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
         face = _face()
-        # STREET_PACK tip (Loopy / Punchline / Silly explore → fight → reclaim);
-        # finale without a pack keeps the Overlord vs line.
-        pack = ReclaimGlobals.streetPack(zoneId)
-        if pack and pack.get('playEntryTip'):
-            tip = ReclaimGlobals.streetPlayEntryTip(
-                zoneId, face=face, fallbackName=name)
-        elif act and act.get('finale'):
-            tip = (
-                '%s vs the Ink Overlord on %s  |  '
-                'F fight  |  Shift dodge  |  C campaign' % (face, name))
+        tipHose = None
+        # Campaign ACTS entryTip wins (Punchline Act 2 Brute/Snare + Oswald
+        # trusted lead). Else STREET_PACK tip; finale keeps Overlord vs line.
+        if act and act.get('entryTip'):
+            tip = act['entryTip']
+            if act.get('id') == 'punchline':
+                tipHose = 'punchline'
         else:
-            tip = ReclaimGlobals.streetPlayEntryTip(
-                zoneId, face=face, fallbackName=name)
+            pack = ReclaimGlobals.streetPack(zoneId)
+            if pack and pack.get('playEntryTip'):
+                tip = ReclaimGlobals.streetPlayEntryTip(
+                    zoneId, face=face, fallbackName=name)
+            elif act and act.get('finale'):
+                tip = (
+                    '%s vs the Ink Overlord on %s  |  '
+                    'F fight  |  Shift dodge  |  C campaign' % (face, name))
+            else:
+                tip = ReclaimGlobals.streetPlayEntryTip(
+                    zoneId, face=face, fallbackName=name)
         # Ink edge vignette on polluted ACTS enter; tip fades in as it clears.
         if self._streetIsPolluted(zoneId):
-            self._playEntryVignette(zoneId, tip)
+            self._playEntryVignette(zoneId, tip, tipHose=tipHose)
         else:
             self._clearVignette()
-            self._showTip(tip)
+            self._showTip(tip, tipHose=tipHose)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
@@ -302,16 +310,16 @@ class PlayEntryClient(DirectObject):
         pm.d_requestStreetEvent(1)
         self._flashBanner('%s is calling the next act…' % _face())
 
-    def _playEntryVignette(self, zoneId, tipText):
+    def _playEntryVignette(self, zoneId, tipText, tipHose=None):
         """Brief ink edge darken that fades as the tip bar appears."""
         self._clearVignette()
         root = self._buildVignetteRoot(zoneId)
         if root is None:
-            self._showTip(tipText)
+            self._showTip(tipText, tipHose=tipHose)
             return
         self._vignetteRoot = root
         # Tip starts invisible, fades in while vignette holds/fades out.
-        self._showTip(tipText, fadeIn=True)
+        self._showTip(tipText, fadeIn=True, tipHose=tipHose)
         tipNP = self._tipNP
         inSec = float(CorruptionGlobals.ENTRY_VIGNETTE_IN_SEC)
         holdSec = float(CorruptionGlobals.ENTRY_VIGNETTE_HOLD_SEC)
@@ -333,7 +341,7 @@ class PlayEntryClient(DirectObject):
             tipParts = [
                 LerpColorScaleInterval(tipNP, tipFade, Vec4(1, 1, 1, 1)),
             ]
-            hose = self._tipHosePopInterval(tipNP)
+            hose = self._tipHosePopInterval(tipNP, tipHose=tipHose)
             if hose is not None:
                 tipParts.append(hose)
             parts.append(Sequence(
@@ -394,7 +402,7 @@ class PlayEntryClient(DirectObject):
             except Exception:
                 pass
 
-    def _showTip(self, text, fadeIn=False):
+    def _showTip(self, text, fadeIn=False, tipHose=None):
         self._clearTip()
         tn = TextNode('play-entry-tip')
         tn.setText(text)
@@ -414,10 +422,15 @@ class PlayEntryClient(DirectObject):
         # Immediate pop for clean-street / handoff tips; vignette path
         # starts the hose sequence with the tip fade instead.
         if not fadeIn:
-            self._playTipHosePop(np)
+            self._playTipHosePop(np, tipHose=tipHose)
 
-    def _tipHosePopInterval(self, tipNP):
-        """Build flat squash → tall stretch → settle Sequence (does not start)."""
+    def _tipHosePopInterval(self, tipNP, tipHose=None):
+        """Build flat squash → tall stretch → settle Sequence (does not start).
+
+        tipHose='punchline' uses Act 2 Punchline tunables + Oswald-trust
+        settle bounce (matches act-banner trust settle). Default path keeps
+        the shared PLAY_ENTRY_TIP_* hose pop.
+        """
         if tipNP is None:
             return None
         try:
@@ -426,9 +439,22 @@ class PlayEntryClient(DirectObject):
         except Exception:
             return None
         settle = float(CampaignGlobals.PLAY_ENTRY_TIP_SCALE)
-        sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH
-        tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH
-        settleSec = float(CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC)
+        if tipHose == 'punchline':
+            sx, sy, sz, squashSec = getattr(
+                CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SQUASH',
+                CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH)
+            tx, ty, tz, stretchSec = getattr(
+                CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_STRETCH',
+                CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH)
+            settleSec = float(getattr(
+                CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SETTLE_SEC',
+                CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC))
+            trustSettle = True
+        else:
+            sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH
+            tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH
+            settleSec = float(CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC)
+            trustSettle = False
         settlePt = Point3(settle, settle, settle)
         squashPt = Point3(settle * sx, settle * sy, settle * sz)
         stretchPt = Point3(settle * tx, settle * ty, settle * tz)
@@ -436,17 +462,33 @@ class PlayEntryClient(DirectObject):
             tipNP.setScale(settlePt)
         except Exception:
             return None
-        return Sequence(
+        parts = [
             LerpScaleInterval(
                 tipNP, float(squashSec), squashPt, blendType='easeOut'),
             LerpScaleInterval(
                 tipNP, float(stretchSec), stretchPt, blendType='easeOut'),
             LerpScaleInterval(
                 tipNP, settleSec, settlePt, blendType='easeIn'),
-            name='playEntryTipHosePop',
-        )
+        ]
+        if trustSettle:
+            ox, oy, oz, overSec = getattr(
+                CampaignGlobals, 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT',
+                getattr(
+                    CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT',
+                    (0.90, 1.0, 1.14, 0.07)))
+            restSec = float(getattr(
+                CampaignGlobals, 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC',
+                getattr(
+                    CampaignGlobals, 'OSWALD_TRUST_BANNER_SETTLE_REST_SEC',
+                    0.09)))
+            overPt = Point3(settle * ox, settle * oy, settle * oz)
+            parts.append(LerpScaleInterval(
+                tipNP, float(overSec), overPt, blendType='easeOut'))
+            parts.append(LerpScaleInterval(
+                tipNP, restSec, settlePt, blendType='easeIn'))
+        return Sequence(*parts, name='playEntryTipHosePop')
 
-    def _playTipHosePop(self, tipNP):
+    def _playTipHosePop(self, tipNP, tipHose=None):
         """Short rubber-hose scale pop when the street-entry tip lands."""
         if self._tipIval:
             try:
@@ -454,7 +496,7 @@ class PlayEntryClient(DirectObject):
             except Exception:
                 pass
             self._tipIval = None
-        ival = self._tipHosePopInterval(tipNP)
+        ival = self._tipHosePopInterval(tipNP, tipHose=tipHose)
         if ival is None:
             return
         self._tipIval = ival
