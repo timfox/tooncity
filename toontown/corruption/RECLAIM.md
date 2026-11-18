@@ -55,8 +55,11 @@ Sections below remain **debug / magic-word** fallbacks.
 7. Player knockout (laff ≤ 0 from CorruptToon `takeDamage`) while reclaim is
    `STATE_ACTIVE` is an authored **fail**: director
    `failStreetOnKnockout` → `announceReclaimFailed` → same contested bail-out
-   as step 6 (packs clear, street `STREET_CONTESTED`). Explore→fight→reclaim
-   therefore has a readable lose beat, not only a manual bail.
+   as step 6 (packs clear, street `STREET_CONTESTED`). PlayEntry accepts
+   `announceReclaimFailed` and clears `_reclaimLive` so same-street **R**
+   (or leave + re-enter) can retry without a hub hop; fail sub / tip cue
+   the retry. Explore→fight→reclaim therefore has a readable lose + retry
+   beat, not only a manual bail.
 
 ## Discoverable play (preferred)
 
