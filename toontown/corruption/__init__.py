@@ -35,7 +35,10 @@ Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
 pop). Sludge Brute hits and deaths also flash BruteSludgeSplashFx (cheap
 green rubber-hose sludge splash; composes with spit / death / idle looks).
 Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
-rubber-hose string-lash pop). Balloon Snare hits and deaths also flash
+rubber-hose string-lash pop) and, after the string reads, arm a short
+string-snap counter window into melee (SNARE_STRING_COUNTER_*; synchs
+with hackslash perfect-dodge counter; mid-telegraph melee interrupts
+the wind-up). Balloon Snare hits and deaths also flash
 SnareStringSnapSplashFx (cheap amber rubber-hose string-snap splash;
 composes with string / death / idle looks). Gunk Gagster wind-ups also flash
 GagsterPuddleTelegraphFx (teal bounce-pie charge + cream/ink ground puddle

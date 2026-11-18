@@ -147,6 +147,10 @@ class MeleeCombatController(DirectObject):
         self.accept(HackSlashConfig.TARGET_CYCLE_PREV_KEY, self._onCyclePrevPressed)
         self.accept('corruptToonHitPlayer', self._onCorruptHitPlayer)
         self.accept('corruptToonAttackDodged', self._onCorruptAttackDodged)
+        # Balloon Snare string telegraph → rewarded counter→melee (synergy
+        # with perfect-dodge counter; corruption owns the arm cue).
+        self.accept(
+            'corruptSnareStringSnapCounter', self._onSnareStringSnapCounter)
         self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
         # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
@@ -167,6 +171,7 @@ class MeleeCombatController(DirectObject):
         self.ignore(HackSlashConfig.TARGET_CYCLE_PREV_KEY)
         self.ignore('corruptToonHitPlayer')
         self.ignore('corruptToonAttackDodged')
+        self.ignore('corruptSnareStringSnapCounter')
         self.ignore('hackslash-hit')
         taskMgr.remove(self._taskName)  # noqa: F821
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
@@ -1013,6 +1018,31 @@ class MeleeCombatController(DirectObject):
         # Arm rewarded counter→melee so the punish beat reads after the dodge.
         self._armPerfectDodgeCounterWindow()
 
+    def _onSnareStringSnapCounter(self, corrupt=None, windowSec=None):
+        """Balloon Snare string telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook: after the amber string pops readable,
+        arm the same rewarded opener path as perfect-dodge counter so telegraph
+        punish and dodge punish rhyme. Range-gated so distant Snares don't buff.
+        """
+        if not self.enabled:
+            return
+        if corrupt is not None:
+            try:
+                from toontown.corruption import CorruptionGlobals
+                maxDist = float(getattr(
+                    CorruptionGlobals, 'SNARE_STRING_COUNTER_RANGE', 10.5))
+                cpos = corrupt.getPos(render)  # noqa: F821
+                apos = self.avatar.getPos(render)  # noqa: F821
+                dx = float(cpos.getX()) - float(apos.getX())
+                dy = float(cpos.getY()) - float(apos.getY())
+                if (dx * dx + dy * dy) > (maxDist * maxDist):
+                    return
+            except Exception:
+                # If range can't be measured, still arm — local telegraph cue.
+                pass
+        self._armPerfectDodgeCounterWindow(windowSec=windowSec)
+
     def _reportIFrameToAI(self, durationSec):
         """So CorruptToonAI can skip takeDamage during the window."""
         try:
@@ -1292,15 +1322,18 @@ class MeleeCombatController(DirectObject):
         else:
             self._dodgeAttackBuffered = False
 
-    def _armPerfectDodgeCounterWindow(self, now=None):
-        """Arm the rewarded perfect-dodge counter→melee window."""
+    def _armPerfectDodgeCounterWindow(self, now=None, windowSec=None):
+        """Arm the rewarded perfect-dodge / Snare string-snap counter→melee window."""
         if not getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_ENABLED', True):
             self._clearPerfectDodgeCounterWindow()
             return
         if now is None:
             now = globalClock.getFrameTime()  # noqa: F821
-        window = float(
-            getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_WINDOW_SEC', 0.50))
+        if windowSec is None:
+            window = float(
+                getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_WINDOW_SEC', 0.50))
+        else:
+            window = float(windowSec)
         self._perfectCounterArmed = True
         self._perfectCounterUntil = now + max(0.0, window)
         # Promote any early-dodge attack buffer into the counter punish path.
