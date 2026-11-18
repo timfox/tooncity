@@ -259,6 +259,11 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertEqual(silly['snareFraction'], 0.0)
         self.assertEqual(silly['gagsterFraction'], 0.0)
         self.assertIn('waveScripts', silly)
+        # Discoverable Silly: start Rising, HP-threshold Unleash + adds.
+        self.assertEqual(silly['finalePhase'], 1)
+        self.assertEqual(silly['overlordP2HpFrac'], rg.OVERLORD_STREET_P2_HP_FRAC)
+        self.assertEqual(silly['addWaveStart'], 1)
+        self.assertEqual(silly['addCount'], 2)
 
     def test_normalize_wave_script_tokens(self):
         rg, cg = self.rg, self.cg

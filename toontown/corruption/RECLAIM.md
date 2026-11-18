@@ -96,7 +96,10 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 - Punchline campaign ACTS `waveScripts` stay the source of truth for **C**;
   STREET_PACKS mirrors so discoverable auto-reclaim matches the second-hood beat.
 - **Silly street pack** (`silly-overlord`, zone `2100`): Overlord-only scripts
-  (solo → twin swell). Campaign finale P2 scripts swell to twin / triple Overlords.
+  (solo → twin swell). Starts Rising (`finalePhase` 1); mid-fight HP-threshold
+  (`overlordP2HpFrac`) promotes to Unleashed (slam + Smudge adds) without a
+  campaign restart. Oswald twist reveal stays campaign P2 only. Campaign
+  finale P2 scripts still swell to twin / triple Overlords on **C**.
 
 ```
 ~spawncorrupt 2 0 0   # Ink Smudge

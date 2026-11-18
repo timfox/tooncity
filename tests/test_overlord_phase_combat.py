@@ -148,6 +148,7 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         names = _class_and_func_names(tree)
         for expected in (
                 'setFinalePhase',
+                'promoteFinalePhase',
                 '_applyOverlordCombatStats',
                 '_isOverlord',
                 '__pickOverlordMove',
@@ -161,11 +162,15 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertIn("'finalePhase'", src)
         self.assertIn("'packId': 'silly-overlord'", src)
         # finalePhase key must be forwarded through streetPackParams.
-        self.assertIn("'finalePhase'", src.split('_STREET_PACK_START_KEYS')[1][:400])
-        # silly-overlord block sets finalePhase: 1 near Overlord naming.
-        silly = src.split("'packId': 'silly-overlord'", 1)[1][:900]
+        keys = src.split('_STREET_PACK_START_KEYS')[1][:700]
+        self.assertIn("'finalePhase'", keys)
+        self.assertIn("'overlordP2HpFrac'", keys)
+        # silly-overlord starts Rising; HP-threshold arms Unleash mid-fight.
+        silly = src.split("'packId': 'silly-overlord'", 1)[1][:1200]
         self.assertIn("'finalePhase': 1", silly)
         self.assertIn("'corruptName': 'Ink Overlord'", silly)
+        self.assertIn("'overlordP2HpFrac'", silly)
+        self.assertIn("'addWaveStart': 1", silly)
 
     def test_p2_rain_and_slam_widen_pressure(self):
         """Unleashed rain is wider/faster than Rising; slam is close-range only."""
