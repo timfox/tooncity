@@ -1,21 +1,24 @@
-"""Act table for the Toontown spiritual-sequel reclaim campaign.
+"""Act table for the Toon City multi-hood reclaim campaign.
 
-Combat feel borrows KH-style readability (telegraphs, lock-on, combos) —
-no keyblades. Protagonist Oswald; end-game twist: he caused the corruption.
+Story (Tim): Oswald is the trusted toon leading the reclaim — players believe
+he is the hero. Silly/finale victory copy reveals he caused the corruption.
+Gameplay feel may nod to hack-and-slash lock-on/combos and readable telegraphs;
+lore is a spiritual sequel to Toontown (no keyblades, no Kingdom Hearts story).
 """
 
 from toontown.toonbase import ToontownGlobals
 
-# Pure HQ — story hub, lightly threatened but not a reclaim act.
+# Pure HQ — Oswald's story hub, lightly threatened but not a reclaim act.
 HUB_ZONE = ToontownGlobals.ToontownCentral
 HUB_NAME = 'Toontown Central'
+PROTAGONIST = 'Oswald'
 
 # Per reclaim: multiplicative bump applied to HackSlashConfig.COMBO_DAMAGE.
 POWER_BUMP_PER_RECLAIM = 0.08
 POWER_BUMP_MAX = 0.40
 
 # Escalating reclaim acts: explore → fight → reclaim → next hood.
-# Finale = two-phase Ink Overlord; leave copy room for Oswald twist beat.
+# Finale: two-phase Ink Overlord under Oswald's lead, then twist.
 ACTS = (
     {
         'id': 'loopy',
@@ -29,8 +32,10 @@ ACTS = (
         # Pure Smudge packs — Act 1 stays the familiar melee tutorial.
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
-        'banner': 'Act 1 — Corruption stains Loopy Lane!',
-        'handoff': 'Loopy Lane is pure again! Next: Punchline Place (zone 2300).',
+        'banner': 'Act 1 — Oswald calls for help! Corruption stains Loopy Lane!',
+        'handoff': (
+            'Oswald cheers: Loopy Lane is pure again! '
+            'Next: Punchline Place (zone 2300).'),
     },
     {
         'id': 'punchline',
@@ -48,8 +53,12 @@ ACTS = (
         'snareFraction': 0.25,
         'snareWaveStart': 1,
         'snareName': 'Balloon Snare',
-        'banner': 'Act 2 — Punchline Place is drowning in sludge!',
-        'handoff': 'Punchline Place laughs clean! Finale awaits on Silly Street (zone 2100).',
+        'banner': (
+            'Act 2 — Oswald leads the reclaim — '
+            'Punchline Place is drowning in sludge!'),
+        'handoff': (
+            'Oswald points ahead: Punchline laughs clean! '
+            'Finale awaits on Silly Street (zone 2100).'),
     },
     {
         'id': 'finale',
@@ -63,9 +72,13 @@ ACTS = (
         # Boss fight stays Overlord-only (no Brute / Snare mix).
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
-        'banner': 'Finale Phase 1 — The Ink Overlord rises on Silly Street!',
-        # Victory copy stays purity-first; Oswald twist lands via FINALE_TWIST_TEASE.
-        'handoff': 'Toon City is saved! Purity restored across every neighborhood.',
+        'banner': (
+            'Finale Phase 1 — Oswald stands with you against '
+            'the Ink Overlord on Silly Street!'),
+        # Twist: trusted Oswald was the source of the neighborhood pollution.
+        'handoff': (
+            'Victory…? Oswald smiles too wide. '
+            'The ink corrupting Toon City was his all along.'),
         'finale': True,
         # Client-readable phase index (1-based) for reclaim director / telegraphs.
         'finalePhase': 1,
@@ -76,7 +89,9 @@ ACTS = (
             'maxPacks': 3,
             'corruptHp': 160,
             'corruptName': 'Ink Overlord Unleashed',
-            'banner': 'Finale Phase 2 — Ink Overlord Unleashed! Finish it!',
+            'banner': (
+                'Finale Phase 2 — Ink Overlord Unleashed! '
+                'Oswald urges you to finish it!'),
             'finalePhase': 2,
             'transitionSting': True,
             'bruteFraction': 0.0,
@@ -87,21 +102,24 @@ ACTS = (
 
 # Client presentation for Silly Street Ink Overlord phases (1 / 2).
 FINALE_PHASE_BANNER = {
-    1: 'INK OVERLORD RISES',
+    1: 'OSWALD vs THE OVERLORD',
     2: 'INK OVERLORD UNLEASHED',
 }
+# Keep P1/P2 telegraph distinctions from Overlord phase telegraphs (#31).
 FINALE_PHASE_SUB = {
-    1: 'Magenta swell — tall rubber wind-up + rise SFX!',
-    2: 'Crimson fury — wider squash, hotter slam + phase-2 sting!',
+    1: 'Oswald stands with you — magenta swell, tall rubber wind-up + rise SFX!',
+    2: (
+        "Oswald's cheer rings hollow — crimson fury, "
+        'wider squash, hotter slam + phase-2 sting!'),
 }
 # Compact HUD phase labels (status strip + telegraph cue).
 FINALE_PHASE_HUD = {
     1: 'OVERLORD · P1 RISE',
     2: 'OVERLORD · P2 UNLEASHED',
 }
-# Soft twist tease after P2 clear — room for Oswald-caused-it beat (no full dialogue).
-FINALE_TWIST_TEASE = '…but who stained the ink first?'
-FINALE_TWIST_TEASE_COLOR = (0.85, 0.75, 1.0, 1.0)
+# Explicit Oswald twist after P2 clear (shown after purity victory flash).
+FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
+FINALE_TWIST_TEASE_COLOR = (1.0, 0.55, 0.35, 1.0)
 
 STATE_IDLE = 0
 STATE_ACTIVE = 1

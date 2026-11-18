@@ -76,17 +76,38 @@ class CampaignHandoffClient(DirectObject):
         return None, None
 
     def _onVictory(self, reclaimCount=0):
-        # Purity first; soft Oswald-twist tease keeps room for later dialogue.
-        self._flash(
-            'CAMPAIGN VICTORY!  Toon City is pure',
-            Vec4(1.0, 0.95, 0.45, 1))
+        # Purity flash, then Oswald twist (FINALE_TWIST_TEASE) after hold.
+        purity = Vec4(1.0, 0.95, 0.45, 1)
         tease = getattr(CampaignGlobals, 'FINALE_TWIST_TEASE', '')
-        if tease:
-            self._flash(
-                tease,
-                Vec4(*getattr(
-                    CampaignGlobals, 'FINALE_TWIST_TEASE_COLOR',
-                    (0.85, 0.75, 1.0, 1.0))))
+        teaseColor = Vec4(*getattr(
+            CampaignGlobals, 'FINALE_TWIST_TEASE_COLOR',
+            (1.0, 0.55, 0.35, 1.0)))
+        if not tease:
+            self._flash('CAMPAIGN VICTORY!  Toon City is pure', purity)
+            return
+        self._clear()
+        tn = TextNode('campaign-handoff')
+        tn.setText('CAMPAIGN VICTORY!  Toon City is pure')
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(purity[0], purity[1], purity[2], 1)
+        tn.setShadow(0.05, 0.05)
+        tn.setShadowColor(0, 0, 0, 0.75)
+        np = aspect2d.attachNewNode(tn)  # noqa: F821
+        np.setScale(0.065)
+        np.setPos(0, 0, 0.55)
+        np.setColorScale(1, 1, 1, 0)
+        self._bannerNP = np
+
+        def _showTwist():
+            self._flash(tease, teaseColor)
+
+        self._ival = Sequence(
+            LerpColorScaleInterval(np, 0.2, Vec4(1, 1, 1, 1)),
+            Wait(2.6),
+            LerpColorScaleInterval(np, 0.35, Vec4(1, 1, 1, 0)),
+            Func(_showTwist),
+        )
+        self._ival.start()
 
     def _onPhase(self, phaseIndex, message):
         # Skip duplicate flash when FinalePhaseFx / reclaim banners already

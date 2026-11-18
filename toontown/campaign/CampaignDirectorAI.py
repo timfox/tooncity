@@ -28,8 +28,8 @@ class CampaignDirectorAI(DirectObject):
     def statusText(self):
         if self.state == CampaignGlobals.STATE_VICTORY:
             return (
-                'Campaign VICTORY — Toon City purity restored! '
-                'Reclaims: %s. ~startcampaign to replay.'
+                'Campaign VICTORY — purity restored, but Oswald caused '
+                'the corruption! Reclaims: %s. ~startcampaign to replay.'
                 % self.reclaimCount)
         act = CampaignGlobals.ACTS[min(
             self.actIndex, len(CampaignGlobals.ACTS) - 1)]
