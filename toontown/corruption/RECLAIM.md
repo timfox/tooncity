@@ -456,6 +456,10 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    Unleashed only. Melee mid-rain / mid-slam telegraph cancels the wind-up
    (same snare-style AI interrupt as Brute spit / Gagster lob;
    `OVERLORD_RAIN_MELEE_INTERRUPT` / `OVERLORD_SLAM_MELEE_INTERRUPT`).
+   After each telegraph reads, a short dedicated counter window arms by
+   move id — F / LMB punish opener (`OVERLORD_RAIN_COUNTER_*` /
+   `OVERLORD_SLAM_COUNTER_*`; same reward path as Snare / Brute spit /
+   Oswald; gameplay timing only; interrupt ≠ counter).
 2. Clear packs → purity beat → director restarts **Phase 2**.
 3. **Phase 2 — Unleashed**: crimson telegraphs (wider squash / taller stretch) +
    phase-two SFX, hotter crown flash, denser ink rain on rain telegraphs,
@@ -472,7 +476,9 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    **Smudge adds** on wave 2+ (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
    Melee mid-telegraph also cancels **ink_surge** wind-up
    (`OVERLORD_INK_SURGE_MELEE_INTERRUPT`) — climax punish parity with
-   rain/slam; dedicated Overlord counter windows stay a follow-up.
+   rain/slam. Dedicated counter windows also arm for rain / slam /
+   ink_surge (`OVERLORD_RAIN_COUNTER_*` / `OVERLORD_SLAM_COUNTER_*` /
+   `OVERLORD_INK_SURGE_COUNTER_*` — same reward path; interrupt ≠ counter).
 4. Clear again → campaign victory + soft twist tease
    (`CampaignGlobals.FINALE_TWIST_TEASE`) → delayed **Corrupted Oswald**
    chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client) →

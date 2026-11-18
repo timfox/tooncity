@@ -130,13 +130,16 @@ class MeleeInterruptOverlordTest(unittest.TestCase):
         self.assertTrue(fn(self.cg.ARCHETYPE_BRUTE, 'spit'))
         self.assertTrue(fn(self.cg.ARCHETYPE_GAGSTER, 'gag_lob'))
         self.assertTrue(fn(self.cg.ARCHETYPE_SNARE, 'string_lash'))
-        # Dedicated Overlord counters are not this PR — interrupt only.
-        self.assertFalse(
+        # Dedicated Overlord counters (separate deepen) stay move-gated.
+        # Full counter wiring is covered by test_overlord_counter_windows.py.
+        self.assertTrue(
             self.cg.isDedicatedTelegraphCounterMove(ink, 'rain'))
-        self.assertFalse(
+        self.assertTrue(
             self.cg.isDedicatedTelegraphCounterMove(ink, 'slam'))
-        self.assertFalse(
+        self.assertTrue(
             self.cg.isDedicatedTelegraphCounterMove(ink, 'ink_surge'))
+        self.assertFalse(
+            self.cg.isDedicatedTelegraphCounterMove(ink, 'ink_dash'))
 
     def test_helper_respects_disable_flags(self):
         fn = self.cg.isMeleeInterruptibleTelegraph

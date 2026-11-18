@@ -175,6 +175,14 @@ class MeleeCombatController(DirectObject):
         self.accept(
             'corruptOswaldStainBurstCounter',
             self._onOswaldStainBurstCounter)
+        # Overlord rain / slam / ink_surge → same path by move id.
+        self.accept(
+            'corruptOverlordRainCounter', self._onOverlordRainCounter)
+        self.accept(
+            'corruptOverlordSlamCounter', self._onOverlordSlamCounter)
+        self.accept(
+            'corruptOverlordInkSurgeCounter',
+            self._onOverlordInkSurgeCounter)
         self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
         # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
@@ -200,6 +208,9 @@ class MeleeCombatController(DirectObject):
         self.ignore('corruptGagsterLobCounter')
         self.ignore('corruptOswaldBetrayalLungeCounter')
         self.ignore('corruptOswaldStainBurstCounter')
+        self.ignore('corruptOverlordRainCounter')
+        self.ignore('corruptOverlordSlamCounter')
+        self.ignore('corruptOverlordInkSurgeCounter')
         self.ignore('hackslash-hit')
         taskMgr.remove(self._taskName)  # noqa: F821
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
@@ -1269,9 +1280,39 @@ class MeleeCombatController(DirectObject):
             corrupt, windowSec,
             rangeAttr='OSWALD_STAIN_BURST_COUNTER_RANGE', defaultRange=7.0)
 
+    def _onOverlordRainCounter(self, corrupt=None, windowSec=None):
+        """Overlord rain telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook (Snare-like). Climax punish parity
+        with street kits after move-id telegraph. Range-gated to rain band.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='OVERLORD_RAIN_COUNTER_RANGE', defaultRange=15.0)
+
+    def _onOverlordSlamCounter(self, corrupt=None, windowSec=None):
+        """Overlord slam telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook (Snare-like). Close-range slam punish.
+        Range-gated so distant Overlord slam doesn't buff.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='OVERLORD_SLAM_COUNTER_RANGE', defaultRange=8.5)
+
+    def _onOverlordInkSurgeCounter(self, corrupt=None, windowSec=None):
+        """Overlord ink_surge telegraph → rewarded counter→melee window.
+
+        Thin corruption→hackslash hook (Snare-like). Mid-range surge punish.
+        Range-gated so out-of-surge Overlord doesn't buff.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='OVERLORD_INK_SURGE_COUNTER_RANGE', defaultRange=10.0)
+
     def _armTelegraphCounterWindow(self, corrupt=None, windowSec=None,
                                    rangeAttr=None, defaultRange=10.5):
-        """Shared range-gated arm for Snare / Brute / Gagster / Oswald counters."""
+        """Shared range-gated arm for Snare / Brute / Gagster / Oswald / Overlord counters."""
         if not self.enabled:
             return
         if corrupt is not None and rangeAttr:
