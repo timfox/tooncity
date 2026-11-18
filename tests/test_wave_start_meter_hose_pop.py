@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for wave-start purity meter hose pop.
+"""Behavioral headless tests for wave-start purity meter hose pop cream.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-WAVE_START_METER_POP tunables, rubber-hose (non-KH) copy, and AST hooks on
-PurityMeterHud + reclaim director announcePackSpawn.
+deepened WAVE_START_METER_POP / CREAM tunables, rubber-hose (non-KH) copy,
+and AST hooks on PurityMeterHud + reclaim director announcePackSpawn.
+Distinct from rim-flash cream deepen (#234), wave-clear sparkle (#229),
+and purity-complete hose settle (#225).
 
 Run from repo root:
   python3 tests/test_wave_start_meter_hose_pop.py
@@ -85,21 +87,27 @@ class WaveStartMeterHosePopTest(unittest.TestCase):
     def test_wave_start_meter_pop_tunables_enabled(self):
         rg = self.rg
         self.assertIs(rg.WAVE_START_METER_POP_ENABLED, True)
-        self.assertGreater(float(rg.WAVE_START_METER_POP_SETTLE_SEC), 0.0)
-        self.assertGreater(float(rg.WAVE_START_METER_RIM_SEC), 0.0)
+        self.assertIs(rg.WAVE_START_METER_CREAM_ENABLED, True)
+        self.assertGreater(float(rg.WAVE_START_METER_POP_SETTLE_SEC), 0.10)
+        self.assertGreaterEqual(float(rg.WAVE_START_METER_RIM_SEC), 0.26)
         squash = rg.WAVE_START_METER_POP_SQUASH
         stretch = rg.WAVE_START_METER_POP_STRETCH
         self.assertEqual(len(squash), 4)
         self.assertEqual(len(stretch), 4)
         # Hose squash flattens Z; stretch overshoots Z — classic rubber-hose.
-        self.assertLess(float(squash[2]), 1.0)
-        self.assertGreater(float(stretch[2]), 1.0)
+        self.assertLess(float(squash[2]), 0.60)  # deepened flat squash
+        self.assertGreater(float(stretch[2]), 1.30)  # deepened tall stretch
+        # Cream flecks / halo deepen (rising begin juice, not warn rim cream).
+        self.assertGreaterEqual(int(rg.WAVE_START_METER_CREAM_COUNT), 6)
+        self.assertGreater(float(rg.WAVE_START_METER_CREAM_RISE), 0.0)
+        self.assertTrue(rg.WAVE_START_METER_CREAM_HALO_ENABLED)
 
     def test_rim_accent_is_sunny_not_warn_or_secured_green(self):
         rg = self.rg
         start = rg.WAVE_START_METER_RIM_COLOR
         warn = rg.PURITY_PRESSURE_RIM_WARN_COLOR
         lock = rg.SECURED_LOCK_RIM_COLOR
+        cream = rg.WAVE_START_METER_CREAM_COLOR
         self.assertNotEqual(tuple(start), tuple(warn))
         self.assertNotEqual(tuple(start), tuple(lock))
         # Sunny cream: R and G high, B lower — not warm-orange warn (R>>G)
@@ -107,15 +115,21 @@ class WaveStartMeterHosePopTest(unittest.TestCase):
         self.assertGreater(float(start[0]), 0.9)
         self.assertGreater(float(start[1]), 0.9)
         self.assertLess(float(start[2]), float(start[1]))
+        self.assertGreaterEqual(float(start[3]), 0.85)  # creamier rim alpha
         self.assertGreater(float(warn[0]), float(warn[1]))  # warm warn
         self.assertGreater(float(lock[1]), float(lock[0]))  # green lock
+        # Rising begin flecks stay sunny (high G), not warm warn cream.
+        self.assertGreater(float(cream[1]), 0.95)
+        self.assertNotEqual(
+            tuple(cream), tuple(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR))
 
     def test_no_kh_branding_in_wave_start_tunables(self):
         banned = ('keyblade', 'kingdom hearts', 'sora', 'heartless', 'kh ')
         blob = ' '.join([
             str(self.rg.WAVE_START_METER_POP_ENABLED),
             str(self.rg.WAVE_START_METER_RIM_COLOR),
-            'wave start meter hose pop sunny cream',
+            str(self.rg.WAVE_START_METER_CREAM_COLOR),
+            'wave start meter hose pop sunny cream deepen',
         ]).lower()
         for term in banned:
             self.assertNotIn(term, blob)
@@ -124,18 +138,26 @@ class WaveStartMeterHosePopTest(unittest.TestCase):
         tree = _module_ast('toontown/reclaim/PurityMeterHud.py')
         methods = _class_method_names(tree, 'PurityMeterHud')
         self.assertIn('popWaveStart', methods)
+        self.assertIn('_buildWaveStartCreamJuice', methods)
+        self.assertIn('_spawnWaveStartCreamFlecks', methods)
+        self.assertIn('_spawnWaveStartCreamHalo', methods)
         self.assertIn('_resetRootScale', methods)
         self.assertIn('warnPressure', methods)
         self.assertIn('confirmSecured', methods)
         src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('WAVE_START_METER_POP', src)
+        self.assertIn('WAVE_START_METER_CREAM', src)
         self.assertIn('reclaimPurityMeterWaveStartHose', src)
-        # Wave-start hose stays distinct from secured soft scale / warn flash.
+        self.assertIn('reclaimPurityMeterWaveStartCream', src)
+        # Wave-start hose stays distinct from secured / warn / clear / settle.
         pop_snip = src.split('def popWaveStart')[1].split('def warnPressure')[0]
         self.assertNotIn('SECURED_LOCK_RIM_COLOR', pop_snip)
         self.assertNotIn('PURITY_PRESSURE_RIM_WARN_COLOR', pop_snip)
+        self.assertNotIn('WAVE_CLEAR_CREAM_SPARKLE', pop_snip)
+        self.assertNotIn('PURITY_COMPLETE_METER_SETTLE', pop_snip)
         self.assertIn('WAVE_START_METER_POP_SQUASH', pop_snip)
         self.assertIn('WAVE_START_METER_POP_STRETCH', pop_snip)
+        self.assertIn('_buildWaveStartCreamJuice', pop_snip)
 
     def test_director_announce_pack_spawn_calls_pop_wave_start(self):
         tree = _module_ast('toontown/reclaim/DistributedReclaimDirector.py')

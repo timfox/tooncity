@@ -10,9 +10,11 @@ shimmer flecks along the filled bar, then a delayed cream aftershock
 cheer cream aftershock — then a soft cream wash pulse (CheerCreamWashPulse /
 WaveClearCreamWashPulse vocabulary).
 
-Wave start (pack spawn): brief sunny cream rim + whole-meter squash→stretch
-hose-pop so wave begin reads clearly — distinct from mid-wave rim flash
-(#213) and secured-lock green hold (#209).
+Wave start (pack spawn): deepened sunny cream rim + whole-meter
+squash→stretch hose-pop with rising cream flecks / soft halo so wave begin
+reads juicier — distinct from mid-wave warm rim-flash cream (#213 / #234),
+wave-clear mid-screen sparkle (#229), purity-complete hose settle (#225),
+and secured-lock green hold (#209).
 
 Purity complete (after celebration settles): soft tall stretch → longer settle
 on the full meter so the finish reads clearly — not wave-start squash→stretch
@@ -22,7 +24,7 @@ Mid-wave purity pressure (director tip): deepened warm triple-pulse contested
 rim flash + local cream flecks / soft halo when purity stalls or ink pressure
 rises — rubber-hose urgency after re-creep #194 so danger reads juicier
 (distinct from secured-lock #209, wave-clear sparkle #229, complete hose
-settle #225).
+settle #225, wave-start sunny hose cream).
 Full reclaim secured lock: brief cream/green rim confirm + soft meter hose-pop
 that purity is locked (pairs with SecuredLockSparkleFx flecks / pitch sting).
 """
@@ -216,10 +218,12 @@ class PurityMeterHud(object):
             self._popTick()
 
     def popWaveStart(self):
-        """Brief sunny cream rim + whole-meter hose pop when a wave starts.
+        """Deepened sunny cream rim + whole-meter hose pop when a wave starts.
 
-        Squash→stretch→settle on the meter root so pack-wave begin reads
-        clearly — not mid-wave rim-only danger flash (#213) and not
+        Squash→stretch→settle on the meter root with rising cream flecks /
+        soft halo so pack-wave begin reads juicier — not mid-wave warm
+        rim-flash cream warn (#213 / #234), not wave-clear mid-screen
+        sparkle (#229), not purity-complete hose settle (#225), and not
         secured-lock green hold + soft uniform scale (#209).
         """
         if not getattr(ReclaimGlobals, 'WAVE_START_METER_POP_ENABLED', True):
@@ -229,9 +233,9 @@ class PurityMeterHud(object):
         self._clearPressureWarn()
         rimColor = getattr(
             ReclaimGlobals, 'WAVE_START_METER_RIM_COLOR',
-            (1.0, 0.94, 0.55, 0.78))
+            (1.0, 0.96, 0.62, 0.88))
         rimSec = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_RIM_SEC', 0.22))
+            ReclaimGlobals, 'WAVE_START_METER_RIM_SEC', 0.28))
         if self._rimNP is not None and not self._rimNP.isEmpty():
             try:
                 self._rimNP.setColor(*rimColor)
@@ -240,12 +244,12 @@ class PurityMeterHud(object):
 
         sqx, sqy, sqz, squashSec = getattr(
             ReclaimGlobals, 'WAVE_START_METER_POP_SQUASH',
-            (0.88, 1.0, 0.62, 0.05))
+            (0.82, 1.0, 0.52, 0.05))
         stx, sty, stz, stretchSec = getattr(
             ReclaimGlobals, 'WAVE_START_METER_POP_STRETCH',
-            (1.10, 1.0, 1.28, 0.07))
+            (1.14, 1.0, 1.38, 0.08))
         settleSec = float(getattr(
-            ReclaimGlobals, 'WAVE_START_METER_POP_SETTLE_SEC', 0.10))
+            ReclaimGlobals, 'WAVE_START_METER_POP_SETTLE_SEC', 0.12))
         try:
             baseScale = self._root.getScale()
             try:
@@ -272,6 +276,7 @@ class PurityMeterHud(object):
                 LerpScaleInterval(
                     self._root, max(0.01, settleSec), settle,
                     blendType='easeIn'),
+                name='reclaimPurityMeterWaveStartHoseCore',
             )
         except Exception:
             return
@@ -280,13 +285,173 @@ class PurityMeterHud(object):
             + max(0.01, float(stretchSec))
             + max(0.01, settleSec))
         holdAfter = max(0.01, rimSec - hoseDur)
+        creamPart = self._buildWaveStartCreamJuice()
+        if creamPart is not None:
+            juice = Parallel(
+                hose,
+                creamPart,
+                name='reclaimPurityMeterWaveStartJuice',
+            )
+        else:
+            juice = hose
         self._warnIval = Sequence(
-            hose,
+            juice,
             Wait(holdAfter),
             Func(self._onPressureWarnDone),
             name='reclaimPurityMeterWaveStartHose',
         )
         self._warnIval.start()
+
+    def _buildWaveStartCreamJuice(self):
+        """Sunny rising cream flecks + soft halo layered on wave-start hose."""
+        if not getattr(
+                ReclaimGlobals, 'WAVE_START_METER_CREAM_ENABLED', True):
+            return None
+        if self._root is None or self._root.isEmpty():
+            return None
+        self._clearWarnCream()
+
+        parts = []
+        haloPart = self._spawnWaveStartCreamHalo()
+        if haloPart is not None:
+            parts.append(haloPart)
+        fleckParts = self._spawnWaveStartCreamFlecks()
+        if fleckParts:
+            parts.extend(fleckParts)
+        if not parts:
+            return None
+        return Parallel(*parts, name='reclaimPurityMeterWaveStartCream')
+
+    def _spawnWaveStartCreamHalo(self):
+        """Soft sunny cream halo that blooms with the wave-start hose pop."""
+        if not getattr(
+                ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_ENABLED', True):
+            return None
+        if self._root is None or self._root.isEmpty():
+            return None
+        half = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_HALF', 0.078))
+        start = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_START', 0.40))
+        peak = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_PEAK', 1.32))
+        sec = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_SEC', 0.26))
+        peakA = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_PEAK_ALPHA', 0.16))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_HALO_COLOR',
+            (1.0, 0.97, 0.78, 1.0))
+        binSort = int(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_BIN', 48))
+        try:
+            cm = CardMaker('reclaim-purity-meter-wave-start-halo')
+            cm.setFrame(-half, half, -half * 0.55, half * 0.55)
+            halo = self._root.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, 0)
+            halo.setPos(0, 0, 0)
+            halo.setScale(start)
+            halo.setBin('fixed', binSort)
+            halo.setDepthTest(False)
+            halo.setDepthWrite(False)
+        except Exception:
+            return None
+        self._warnCreamHaloNP = halo
+        return Sequence(
+            Parallel(
+                LerpScaleInterval(
+                    halo, max(0.01, sec * 0.45), peak, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.35),
+                    Vec4(r, g, b, peakA), blendType='easeOut'),
+            ),
+            Parallel(
+                LerpScaleInterval(
+                    halo, max(0.01, sec * 0.55), peak * 1.06,
+                    blendType='easeIn'),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.55),
+                    Vec4(r, g, b, 0.0), blendType='easeIn'),
+            ),
+            name='reclaimPurityMeterWaveStartHalo',
+        )
+
+    def _spawnWaveStartCreamFlecks(self):
+        """Sunny cream chips that rise off the meter during wave-start hose."""
+        count = int(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_COUNT', 6))
+        if count <= 0 or self._root is None or self._root.isEmpty():
+            return []
+        halfW = float(ReclaimGlobals.PURITY_METER_WIDTH) * 0.5
+        halfH = float(ReclaimGlobals.PURITY_METER_HEIGHT) * 0.5
+        size = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_SIZE', 0.013))
+        rise = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_RISE', 0.12))
+        spread = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_SPREAD', 0.22))
+        sec = float(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_SEC', 0.30))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_COLOR',
+            (1.0, 0.98, 0.72, 0.94))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_END_COLOR',
+            (1.0, 0.94, 0.55, 0.0))
+        fleckBin = int(getattr(
+            ReclaimGlobals, 'WAVE_START_METER_CREAM_BIN', 48))
+
+        parts = []
+        for i in range(count):
+            try:
+                cm = CardMaker('reclaim-purity-meter-wave-start-cream-%s' % i)
+                # Alternate chip / streak so the sunny begin cream pops.
+                if i % 2:
+                    cm.setFrame(
+                        -size * 0.35, size * 0.35, -size * 1.25, size * 1.25)
+                else:
+                    cm.setFrame(-size, size, -size * 0.35, size * 0.35)
+                fleck = self._root.attachNewNode(cm.generate())
+                fleck.setTransparency(TransparencyAttrib.MAlpha)
+                fleck.setColor(r, g, b, 1)
+                fleck.setColorScale(r, g, b, 0)
+                # Fan along the bar top — rising begin pop, not radial warn burst.
+                t = (float(i) / max(1.0, float(count - 1))) - 0.5
+                start = Point3(t * halfW * 1.6, 0, halfH * 0.4)
+                fleck.setPos(start)
+                fleck.setScale(0.40 + 0.12 * (i % 3))
+                fleck.setBin('fixed', fleckBin + (i % 2))
+                fleck.setDepthTest(False)
+                fleck.setDepthWrite(False)
+            except Exception:
+                continue
+
+            end = Point3(
+                start[0] + t * spread * 0.35,
+                0,
+                start[2] + rise * (0.75 + 0.08 * (i % 3)))
+            peak = 1.20 + 0.10 * (i % 2)
+            parts.append(Sequence(
+                Parallel(
+                    LerpColorScaleInterval(
+                        fleck, 0.04, Vec4(r, g, b, a), blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec * 0.28), peak, blendType='easeOut'),
+                ),
+                Parallel(
+                    LerpPosInterval(
+                        fleck, max(0.01, sec * 0.72), end, blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec * 0.72), 0.05, blendType='easeIn'),
+                    LerpColorScaleInterval(
+                        fleck, max(0.01, sec * 0.72),
+                        Vec4(er, eg, eb, ea), blendType='easeIn'),
+                ),
+            ))
+            self._warnCreamNPs.append(fleck)
+        return parts
 
     def warnPressure(self):
         """Deepened warm triple-pulse contested rim flash + cream flecks.
