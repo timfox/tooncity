@@ -1521,6 +1521,235 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('ComboCounterCreamWashPulse', hit_juice_src)
         self.assertIn('ComboCounterCreamWashPulse', hack_init)
 
+        # (#148 / #152 were prior headless smoke through #143 / #147 — no new juice.)
+
+        # Finale reveal cream wash (#149) — soft wash after finale cream edge.
+        finale_wash_rel = 'toontown/campaign/FinaleRevealCreamWashFx.py'
+        _assert_module_file(finale_wash_rel)
+        finale_wash_names = _class_and_func_names(_module_ast(finale_wash_rel))
+        self.assertIn('FinaleRevealCreamWashPulse', finale_wash_names)
+        self.assertIn('playFinaleRevealCreamWash', finale_wash_names)
+        self.assertIn('clearFinaleRevealCreamWash', finale_wash_names)
+        finale_wash_methods = _class_method_names(
+            _module_ast(finale_wash_rel), 'FinaleRevealCreamWashPulse')
+        self.assertIn('play', finale_wash_methods)
+        self.assertIn('clear', finale_wash_methods)
+        for finale_wash_key in (
+                'FINALE_REVEAL_CREAM_WASH_ENABLED',
+                'FINALE_REVEAL_CREAM_WASH_DELAY_SEC',
+                'FINALE_REVEAL_CREAM_WASH_COLOR',
+                'FINALE_REVEAL_CREAM_WASH_PEAK',
+                'FINALE_REVEAL_CREAM_WASH_MID',
+                'FINALE_REVEAL_CREAM_WASH_BIN'):
+            self.assertIn(
+                finale_wash_key, campaign_names,
+                msg='CampaignGlobals missing %s' % finale_wash_key)
+        finale_phase_src = _read('toontown/campaign/FinalePhaseFx.py')
+        self.assertIn('playFinaleRevealCreamWash', finale_phase_src)
+
+        # Air-juggle cream wash (#150) — soft wash after hang cream aftershock.
+        juggle_wash_rel = 'toontown/hackslash/CreamHangCreamWashFx.py'
+        _assert_module_file(juggle_wash_rel)
+        juggle_wash_names = _class_and_func_names(_module_ast(juggle_wash_rel))
+        self.assertIn('CreamHangCreamWashPulse', juggle_wash_names)
+        juggle_wash_methods = _class_method_names(
+            _module_ast(juggle_wash_rel), 'CreamHangCreamWashPulse')
+        self.assertIn('play', juggle_wash_methods)
+        self.assertIn('clear', juggle_wash_methods)
+        for juggle_wash_key in (
+                'LAUNCH_HANG_CREAM_WASH_ENABLED',
+                'LAUNCH_HANG_CREAM_WASH_DELAY_SEC',
+                'LAUNCH_HANG_CREAM_WASH_COLOR',
+                'LAUNCH_HANG_CREAM_WASH_PEAK',
+                'LAUNCH_HANG_CREAM_WASH_MID',
+                'LAUNCH_HANG_CREAM_WASH_BIN'):
+            self.assertIn(
+                juggle_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % juggle_wash_key)
+        hang_sparkle_src = _read('toontown/hackslash/CreamHangSparkleFx.py')
+        self.assertIn('CreamHangCreamWashPulse', hang_sparkle_src)
+        self.assertIn('CreamHangCreamWashPulse', hack_init)
+
+        # Purity-fill cream wash (#151) — soft wash after fill cream aftershock.
+        purity_fill_wash_rel = 'toontown/reclaim/PurityFillCreamWashFx.py'
+        _assert_module_file(purity_fill_wash_rel)
+        purity_fill_wash_names = _class_and_func_names(
+            _module_ast(purity_fill_wash_rel))
+        self.assertIn('PurityFillCreamWashPulse', purity_fill_wash_names)
+        purity_fill_wash_methods = _class_method_names(
+            _module_ast(purity_fill_wash_rel), 'PurityFillCreamWashPulse')
+        self.assertIn('play', purity_fill_wash_methods)
+        self.assertIn('clear', purity_fill_wash_methods)
+        for purity_fill_wash_key in (
+                'PURITY_METER_FILL_CREAM_WASH_ENABLED',
+                'PURITY_METER_FILL_CREAM_WASH_DELAY_SEC',
+                'PURITY_METER_FILL_CREAM_WASH_COLOR',
+                'PURITY_METER_FILL_CREAM_WASH_PEAK',
+                'PURITY_METER_FILL_CREAM_WASH_MID',
+                'PURITY_METER_FILL_CREAM_WASH_BIN'):
+            self.assertIn(
+                purity_fill_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % purity_fill_wash_key)
+        purity_hud_src = _read('toontown/reclaim/PurityMeterHud.py')
+        self.assertIn('PurityFillCreamWashPulse', purity_hud_src)
+
+        # Silhouette cream wash (#153) — soft wash against corrupt ink silhouette.
+        silh_wash_rel = 'toontown/corruption/CorruptSilhouetteCreamWashFx.py'
+        _assert_module_file(silh_wash_rel)
+        silh_wash_names = _class_and_func_names(_module_ast(silh_wash_rel))
+        self.assertIn('SilhouetteCreamWashPulse', silh_wash_names)
+        self.assertIn('silhouetteCreamWashLook', silh_wash_names)
+        silh_wash_methods = _class_method_names(
+            _module_ast(silh_wash_rel), 'SilhouetteCreamWashPulse')
+        self.assertIn('start', silh_wash_methods)
+        self.assertIn('pause', silh_wash_methods)
+        self.assertIn('resume', silh_wash_methods)
+        self.assertIn('clear', silh_wash_methods)
+        self.assertTrue(
+            hasattr(cg, 'SILHOUETTE_CREAM_WASH_LOOK'),
+            msg='CorruptionGlobals missing SILHOUETTE_CREAM_WASH_LOOK')
+        self.assertEqual(
+            cg.SILHOUETTE_CREAM_WASH_LOOK.get('id'), 'silhouette-cream-wash')
+        self.assertTrue(
+            hasattr(cg, 'SILHOUETTE_CREAM_WASH_ENABLED'),
+            msg='CorruptionGlobals missing SILHOUETTE_CREAM_WASH_ENABLED')
+        for silh_wash_key in (
+                'SILHOUETTE_CREAM_WASH_ENABLED',
+                'SILHOUETTE_CREAM_WASH_DELAY_SEC',
+                'SILHOUETTE_CREAM_WASH_COLOR',
+                'SILHOUETTE_CREAM_WASH_PEAK',
+                'SILHOUETTE_CREAM_WASH_MID',
+                'SILHOUETTE_CREAM_WASH_BIN'):
+            self.assertTrue(
+                hasattr(cg, silh_wash_key),
+                msg='CorruptionGlobals missing %s' % silh_wash_key)
+        self.assertIn('SilhouetteCreamWashPulse', corrupt_src)
+        self.assertIn('__startSilhouetteCreamWash', corrupt_src)
+
+        # Act-banner cream wash (#154) — soft wash after act-enter cream edge.
+        act_wash_rel = 'toontown/campaign/ActBannerCreamWashFx.py'
+        _assert_module_file(act_wash_rel)
+        act_wash_names = _class_and_func_names(_module_ast(act_wash_rel))
+        self.assertIn('ActBannerCreamWashPulse', act_wash_names)
+        self.assertIn('playActBannerCreamWash', act_wash_names)
+        self.assertIn('clearActBannerCreamWash', act_wash_names)
+        act_wash_methods = _class_method_names(
+            _module_ast(act_wash_rel), 'ActBannerCreamWashPulse')
+        self.assertIn('play', act_wash_methods)
+        self.assertIn('clear', act_wash_methods)
+        for act_wash_key in (
+                'PLAY_ENTRY_BANNER_CREAM_WASH_ENABLED',
+                'PLAY_ENTRY_BANNER_CREAM_WASH_DELAY_SEC',
+                'PLAY_ENTRY_BANNER_CREAM_WASH_COLOR',
+                'PLAY_ENTRY_BANNER_CREAM_WASH_PEAK',
+                'PLAY_ENTRY_BANNER_CREAM_WASH_MID',
+                'PLAY_ENTRY_BANNER_CREAM_WASH_BIN'):
+            self.assertIn(
+                act_wash_key, campaign_names,
+                msg='CampaignGlobals missing %s' % act_wash_key)
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn('playActBannerCreamWash', play_src)
+
+        # Soft-lock reticle cream wash (#155) — soft wash after cream pulse ring.
+        reticle_wash_rel = 'toontown/hackslash/SoftLockCreamWashFx.py'
+        _assert_module_file(reticle_wash_rel)
+        reticle_wash_names = _class_and_func_names(_module_ast(reticle_wash_rel))
+        self.assertIn('SoftLockCreamWashPulse', reticle_wash_names)
+        reticle_wash_methods = _class_method_names(
+            _module_ast(reticle_wash_rel), 'SoftLockCreamWashPulse')
+        self.assertIn('play', reticle_wash_methods)
+        self.assertIn('clear', reticle_wash_methods)
+        for reticle_wash_key in (
+                'SOFT_LOCK_CREAM_WASH_ENABLED',
+                'SOFT_LOCK_CREAM_WASH_DELAY_SEC',
+                'SOFT_LOCK_CREAM_WASH_COLOR',
+                'SOFT_LOCK_CREAM_WASH_PEAK',
+                'SOFT_LOCK_CREAM_WASH_MID',
+                'SOFT_LOCK_CREAM_WASH_BIN'):
+            self.assertIn(
+                reticle_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % reticle_wash_key)
+        reticle_src = _read('toontown/hackslash/SoftLockReticleFx.py')
+        self.assertIn('SoftLockCreamWashPulse', reticle_src)
+        self.assertIn('SoftLockCreamWashPulse', hack_init)
+
+        # Wave-edge cream wash (#156) — soft wash after wave-edge cream sparkle.
+        wave_edge_wash_rel = 'toontown/reclaim/WaveEdgeCreamWashFx.py'
+        _assert_module_file(wave_edge_wash_rel)
+        wave_edge_wash_names = _class_and_func_names(
+            _module_ast(wave_edge_wash_rel))
+        self.assertIn('WaveEdgeCreamWashPulse', wave_edge_wash_names)
+        wave_edge_wash_methods = _class_method_names(
+            _module_ast(wave_edge_wash_rel), 'WaveEdgeCreamWashPulse')
+        self.assertIn('play', wave_edge_wash_methods)
+        self.assertIn('clear', wave_edge_wash_methods)
+        for wave_edge_wash_key in (
+                'WAVE_ANNOUNCE_CREAM_EDGE_WASH_ENABLED',
+                'WAVE_ANNOUNCE_CREAM_EDGE_WASH_DELAY_SEC',
+                'WAVE_ANNOUNCE_CREAM_EDGE_WASH_COLOR',
+                'WAVE_ANNOUNCE_CREAM_EDGE_WASH_PEAK',
+                'WAVE_ANNOUNCE_CREAM_EDGE_WASH_MID',
+                'WAVE_ANNOUNCE_CREAM_EDGE_WASH_BIN'):
+            self.assertIn(
+                wave_edge_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % wave_edge_wash_key)
+        wave_burst_src = _read('toontown/reclaim/WaveCreamBurstFx.py')
+        self.assertIn('WaveEdgeCreamWashPulse', wave_burst_src)
+
+        # Telegraph cream wash (#157) — soft wash after telegraph cream sparkle.
+        tel_wash_rel = 'toontown/corruption/CorruptTelegraphCreamWashFx.py'
+        _assert_module_file(tel_wash_rel)
+        tel_wash_names = _class_and_func_names(_module_ast(tel_wash_rel))
+        self.assertIn('TelegraphCreamWashPulse', tel_wash_names)
+        self.assertIn('telegraphCreamWashLook', tel_wash_names)
+        tel_wash_methods = _class_method_names(
+            _module_ast(tel_wash_rel), 'TelegraphCreamWashPulse')
+        self.assertIn('play', tel_wash_methods)
+        self.assertIn('clear', tel_wash_methods)
+        self.assertTrue(
+            hasattr(cg, 'TELEGRAPH_CREAM_WASH_LOOK'),
+            msg='CorruptionGlobals missing TELEGRAPH_CREAM_WASH_LOOK')
+        self.assertEqual(
+            cg.TELEGRAPH_CREAM_WASH_LOOK.get('id'), 'telegraph-cream-wash')
+        self.assertTrue(
+            hasattr(cg, 'TELEGRAPH_CREAM_WASH_ENABLED'),
+            msg='CorruptionGlobals missing TELEGRAPH_CREAM_WASH_ENABLED')
+        for tel_wash_key in (
+                'TELEGRAPH_CREAM_WASH_ENABLED',
+                'TELEGRAPH_CREAM_WASH_DELAY_SEC',
+                'TELEGRAPH_CREAM_WASH_COLOR',
+                'TELEGRAPH_CREAM_WASH_PEAK',
+                'TELEGRAPH_CREAM_WASH_MID',
+                'TELEGRAPH_CREAM_WASH_BIN'):
+            self.assertTrue(
+                hasattr(cg, tel_wash_key),
+                msg='CorruptionGlobals missing %s' % tel_wash_key)
+        self.assertIn('TelegraphCreamWashPulse', corrupt_src)
+        self.assertIn('__playTelegraphCreamWash', corrupt_src)
+
+        # Punchline tip cream wash (#158) — soft wash after Punchline tip hose pop.
+        tip_wash_rel = 'toontown/campaign/PunchlineTipCreamWashFx.py'
+        _assert_module_file(tip_wash_rel)
+        tip_wash_names = _class_and_func_names(_module_ast(tip_wash_rel))
+        self.assertIn('PunchlineTipCreamWashPulse', tip_wash_names)
+        self.assertIn('playPunchlineTipCreamWash', tip_wash_names)
+        self.assertIn('clearPunchlineTipCreamWash', tip_wash_names)
+        tip_wash_methods = _class_method_names(
+            _module_ast(tip_wash_rel), 'PunchlineTipCreamWashPulse')
+        self.assertIn('play', tip_wash_methods)
+        self.assertIn('clear', tip_wash_methods)
+        for tip_wash_key in (
+                'PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED',
+                'PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC',
+                'PUNCHLINE_ACT_TIP_CREAM_WASH_COLOR',
+                'PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK',
+                'PUNCHLINE_ACT_TIP_CREAM_WASH_MID',
+                'PUNCHLINE_ACT_TIP_CREAM_WASH_BIN'):
+            self.assertIn(
+                tip_wash_key, campaign_names,
+                msg='CampaignGlobals missing %s' % tip_wash_key)
+        self.assertIn('playPunchlineTipCreamWash', play_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
