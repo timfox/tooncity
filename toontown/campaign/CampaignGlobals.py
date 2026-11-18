@@ -31,9 +31,14 @@ ACTS = (
         'maxPacks': 3,
         'corruptHp': 30,
         'corruptName': 'Ink Smudge',
-        # Pure Smudge packs — Act 1 stays the familiar melee tutorial.
+        # Fraction fallback; waveScripts own Act 1 beats (Smudge → Brute → Snare).
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
+        'waveScripts': (
+            ('ink', 'ink', 'ink'),
+            ('ink', 'ink', 'brute'),
+            ('snare', 'ink', 'brute'),
+        ),
         'banner': 'Act 1 — Oswald calls for help! Corruption stains Loopy Lane!',
         # Client celebration copy (title / Oswald tip / next-street cue).
         'handoffTitle': 'LOOPY LANE IS PURE!',
@@ -59,6 +64,13 @@ ACTS = (
         'snareFraction': 0.25,
         'snareWaveStart': 1,
         'snareName': 'Balloon Snare',
+        # Scripted sludge beats (Snare-front → swarm → Brute pair → elite).
+        'waveScripts': (
+            ('snare', 'ink', 'ink', 'brute'),
+            ('snare', 'snare', 'ink', 'brute', 'ink'),
+            ('snare', 'ink', 'brute', 'brute', 'ink'),
+            ('snare', 'snare', 'ink', 'brute', 'snare', 'ink'),
+        ),
         'banner': (
             'Act 2 — Oswald leads the reclaim — '
             'Punchline Place is drowning in sludge!'),
@@ -87,6 +99,11 @@ ACTS = (
         # Boss fight stays Overlord-only (no Brute / Snare mix).
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
+        # P1: solo Overlord → twin swell (matches Silly STREET_PACKS).
+        'waveScripts': (
+            ('ink',),
+            ('ink', 'ink'),
+        ),
         'banner': (
             'Finale Phase 1 — Oswald stands with you against '
             'the Ink Overlord on Silly Street!'),
@@ -120,6 +137,12 @@ ACTS = (
             'transitionSting': True,
             'bruteFraction': 0.0,
             'snareFraction': 0.0,
+            # Unleashed Overlord swells — still Overlord-only (ink tokens).
+            'waveScripts': (
+                ('ink', 'ink'),
+                ('ink', 'ink'),
+                ('ink', 'ink', 'ink'),
+            ),
         },
     },
 )

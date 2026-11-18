@@ -39,6 +39,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._snareName = None
         self._snareFraction = None
         self._snareWaveStart = None
+        self._waveScripts = None
         self.finalePhase = 0
         self._transitionSting = False
 
@@ -103,11 +104,13 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
               corruptHp=None, corruptName=None,
               bruteFraction=None, bruteWaveStart=None, bruteName=None,
               snareFraction=None, snareWaveStart=None, snareName=None,
+              waveScripts=None,
               finalePhase=0, transitionSting=False):
         """Seed pollution and spawn the first escalating corrupt wave.
 
         Optional overrides support multi-act campaign difficulty,
-        Sludge Brute / Balloon Snare mix ratios, and Ink Overlord finale.
+        Sludge Brute / Balloon Snare mix ratios, per-wave scripts, and
+        Ink Overlord finale.
         """
         self.reclaimZoneId = int(zoneId)
         self._anchorPos = (
@@ -132,6 +135,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             None if snareFraction is None else float(snareFraction))
         self._snareWaveStart = (
             None if snareWaveStart is None else int(snareWaveStart))
+        self._waveScripts = waveScripts
         self._transitionSting = bool(transitionSting)
         self._clearPack(delete=True)
         self._packsSpawned = 0
@@ -171,6 +175,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self.b_setWaveIndex(0)
         self.b_setFinalePhase(0)
         self._transitionSting = False
+        self._waveScripts = None
         self.b_setState(ReclaimGlobals.STATE_IDLE)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
 
@@ -285,7 +290,9 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
     def _spawnPack(self):
         wave = self._packsSpawned + 1
-        count = ReclaimGlobals.wavePackSize(self._packSize, wave)
+        waveScript = ReclaimGlobals.resolveWaveScript(self._waveScripts, wave)
+        count = ReclaimGlobals.wavePackSize(
+            self._packSize, wave, waveScript=waveScript)
         self._packsSpawned = wave
         self.b_setWaveIndex(wave)
         self.b_setMaxWaves(self._maxPacks)
@@ -302,7 +309,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
                 bruteFraction=self._bruteFraction,
                 bruteWaveStart=self._bruteWaveStart,
                 snareFraction=self._snareFraction,
-                snareWaveStart=self._snareWaveStart)
+                snareWaveStart=self._snareWaveStart,
+                waveScript=waveScript)
             if archetype == CorruptionGlobals.ARCHETYPE_BRUTE:
                 bruteCount += 1
             elif archetype == CorruptionGlobals.ARCHETYPE_SNARE:

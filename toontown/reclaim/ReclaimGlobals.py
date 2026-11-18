@@ -67,11 +67,30 @@ _STREET_PACK_START_KEYS = (
     'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
     'bruteFraction', 'bruteWaveStart', 'bruteName',
     'snareFraction', 'snareWaveStart', 'snareName',
+    'waveScripts',
 )
+# Optional per-wave archetype scripts (tokens or ints). When present for a
+# wave, composition + pack size follow the script; otherwise fractions +
+# WAVE_SIZE_BONUS keep the legacy escalate path. Tokens are Toontown-tone
+# aliases for Ink Smudge / Sludge Brute / Balloon Snare — no KH branding.
+WAVE_SCRIPT_TOKENS = {
+    'ink': 0,
+    'smudge': 0,
+    'ink_smudge': 0,
+    'ink-smudge': 0,
+    'brute': 1,
+    'sludge': 1,
+    'sludge_brute': 1,
+    'sludge-brute': 1,
+    'snare': 2,
+    'balloon': 2,
+    'balloon_snare': 2,
+    'balloon-snare': 2,
+}
 STREET_PACKS = {
     # Act 1 — Loopy Lane ink street (first hood / melee tutorial).
-    # Smudge-first; Brutes (+ light Snares) from wave 2 — mirrors default
-    # reclaim mix so auto / R / ~startreclaim match the familiar Loopy beat.
+    # Scripted beats: Smudge tutorial → Brute intro → Snare joins → mixed.
+    # Fraction fields remain as fallback when a wave has no script.
     ToontownGlobals.LoopyLane: {
         'packId': 'loopy-smudge',
         'name': 'Loopy Lane',
@@ -87,6 +106,13 @@ STREET_PACKS = {
         'snareFraction': 0.22,
         'snareWaveStart': 2,
         'snareName': 'Balloon Snare',
+        # Per-wave scripts (Smudge tutorial → Brute → Snare → mixed elite).
+        'waveScripts': (
+            ('ink', 'ink', 'ink'),
+            ('ink', 'ink', 'brute'),
+            ('snare', 'ink', 'brute', 'ink'),
+            ('snare', 'ink', 'brute', 'snare', 'ink'),
+        ),
         'bannerStart': 'OSWALD: RECLAIM LOOPY LANE!',
         'bannerStartSub': (
             'Explore the inky street — then stretch-punch '
@@ -108,6 +134,7 @@ STREET_PACKS = {
         'statusLabel': 'INK',
     },
     # Act 2 — Punchline Place sludge street (second hood).
+    # Scripted beats: Snare-front opener → Snare swarm → Brute pair → elite.
     ToontownGlobals.PunchlinePlace: {
         'packId': 'punchline-sludge',
         'name': 'Punchline Place',
@@ -122,6 +149,12 @@ STREET_PACKS = {
         'snareFraction': 0.25,
         'snareWaveStart': 1,
         'snareName': 'Balloon Snare',
+        'waveScripts': (
+            ('snare', 'ink', 'ink', 'brute'),
+            ('snare', 'snare', 'ink', 'brute', 'ink'),
+            ('snare', 'ink', 'brute', 'brute', 'ink'),
+            ('snare', 'snare', 'ink', 'brute', 'snare', 'ink'),
+        ),
         'bannerStart': 'OSWALD: RECLAIM PUNCHLINE PLACE!',
         'bannerStartSub': (
             'Explore the sludge street — then stretch-punch '
@@ -144,7 +177,7 @@ STREET_PACKS = {
         'statusLabel': 'SLUDGE',
     },
     # Act 3 — Silly Street Ink Overlord finale (third hood).
-    # Mirrors ACTS finale P1 spawn mix for auto / R / ~startreclaim.
+    # Scripted Overlord beats only (no Brute / Snare) — twin swell on wave 2.
     # Oswald stays the trusted lead; twist is campaign P2 only.
     ToontownGlobals.SillyStreet: {
         'packId': 'silly-overlord',
@@ -157,6 +190,10 @@ STREET_PACKS = {
         # Boss street — Overlord only (no Brute / Snare mix).
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
+        'waveScripts': (
+            ('ink',),
+            ('ink', 'ink'),
+        ),
         'bannerStart': 'OSWALD: RECLAIM SILLY STREET!',
         'bannerStartSub': (
             'Explore the magenta ink — then stretch-punch '
@@ -801,9 +838,9 @@ def streetPackId(zoneId):
 def streetPackParams(zoneId):
     """Kwargs for DistributedReclaimDirectorAI.start() from STREET_PACKS.
 
-    Loopy returns Smudge-first with Brutes from wave 2. Punchline returns
-    Brute + Snare mix from wave 1. Silly returns Ink Overlord-only finale
-    spawn (no Brute / Snare). Empty dict → caller keeps module defaults.
+    Loopy / Punchline / Silly return scripted waveScripts (Smudge tutorial,
+    Snare-front sludge, Overlord swell) plus fraction fallbacks. Empty dict
+    → caller keeps module defaults.
     """
     pack = streetPack(zoneId)
     if not pack:
@@ -813,6 +850,62 @@ def streetPackParams(zoneId):
         if key in pack:
             out[key] = pack[key]
     return out
+
+
+def normalizeWaveScriptToken(token):
+    """Map a waveScripts entry to ARCHETYPE_INK / BRUTE / SNARE.
+
+    Accepts ints, numeric strings, or Toontown-tone aliases
+    (ink/smudge, brute/sludge, snare/balloon). Unknown → Ink Smudge.
+    """
+    from toontown.corruption import CorruptionGlobals
+    if token is None:
+        return CorruptionGlobals.ARCHETYPE_INK
+    if isinstance(token, bool):
+        return CorruptionGlobals.ARCHETYPE_INK
+    if isinstance(token, int):
+        return CorruptionGlobals.normalizeArchetype(token)
+    text = str(token).strip().lower().replace(' ', '_')
+    if not text:
+        return CorruptionGlobals.ARCHETYPE_INK
+    if text.isdigit() or (text.startswith('-') and text[1:].isdigit()):
+        return CorruptionGlobals.normalizeArchetype(int(text))
+    mapped = WAVE_SCRIPT_TOKENS.get(text)
+    if mapped is not None:
+        return CorruptionGlobals.normalizeArchetype(mapped)
+    return CorruptionGlobals.ARCHETYPE_INK
+
+
+def resolveWaveScript(waveScripts, waveIndex):
+    """Return normalized archetype list for a wave, or None.
+
+    Supports a 1-based dict ({1: (...), 2: (...)}) or a sequence where
+    index 0 is wave 1. Empty / missing waves fall back to fraction mix.
+    """
+    if not waveScripts:
+        return None
+    wave = max(1, int(waveIndex))
+    raw = None
+    if isinstance(waveScripts, dict):
+        raw = waveScripts.get(wave)
+        if raw is None:
+            raw = waveScripts.get(str(wave))
+    else:
+        try:
+            length = len(waveScripts)
+        except TypeError:
+            return None
+        if wave > length:
+            return None
+        raw = waveScripts[wave - 1]
+    if raw is None:
+        return None
+    if isinstance(raw, (str, bytes)) or not hasattr(raw, '__iter__'):
+        raw = (raw,)
+    script = [normalizeWaveScriptToken(token) for token in raw]
+    if not script:
+        return None
+    return script
 
 
 def streetBannerStart(zoneId, finalePhase=0):
@@ -986,8 +1079,14 @@ def waveClearedOswaldTip(waveIndex, zoneId=None):
     return 'Wave %s down — next surge incoming' % wave
 
 
-def wavePackSize(baseSize, waveIndex):
-    """Escalate pack count each wave without exploding spawn count."""
+def wavePackSize(baseSize, waveIndex, waveScript=None):
+    """Escalate pack count each wave without exploding spawn count.
+
+    When waveScript is set, the script owns pack size for that beat so
+    Loopy / Punchline / Silly compositions stay intentional.
+    """
+    if waveScript:
+        return max(1, len(waveScript))
     base = max(1, int(baseSize))
     wave = max(1, int(waveIndex))
     bonus = min(WAVE_MAX_EXTRA, (wave - 1) * WAVE_SIZE_BONUS)
@@ -1006,18 +1105,25 @@ def waveCorruptHp(baseHp, waveIndex):
 
 def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
                       bruteWaveStart=None, snareFraction=None,
-                      snareWaveStart=None):
+                      snareWaveStart=None, waveScript=None):
     """Choose Smudge (0), Brute (1), or Balloon Snare (2) for one pack slot.
 
-    Keeps wave-1 / zero-fraction packs as pure Ink Smudge so Loopy demos
-    and early reclaim stay familiar. Brutes take rear slots; Snares take
-    front slots so zip-lash reads before tank spit.
+    Prefer an explicit waveScript slot when present. Otherwise keep wave-1 /
+    zero-fraction packs as pure Ink Smudge so Loopy demos stay familiar.
+    Brutes take rear slots; Snares take front slots so zip-lash reads
+    before tank spit.
     """
     from toontown.corruption import CorruptionGlobals
     wave = max(1, int(waveIndex))
     count = max(0, int(packCount))
     if count <= 0:
         return CorruptionGlobals.ARCHETYPE_INK
+
+    slot = int(slotIndex)
+    if waveScript:
+        if 0 <= slot < len(waveScript):
+            return CorruptionGlobals.normalizeArchetype(waveScript[slot])
+        # Slot past a short script: fall through to fraction fill.
 
     bruteStart = (
         BRUTE_WAVE_START if bruteWaveStart is None else int(bruteWaveStart))
@@ -1046,7 +1152,6 @@ def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
             bruteSlots -= 1
             overflow -= 1
 
-    slot = int(slotIndex)
     if bruteSlots and slot >= (count - bruteSlots):
         return CorruptionGlobals.ARCHETYPE_BRUTE
     if snareSlots and slot < snareSlots:

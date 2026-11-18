@@ -223,8 +223,19 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         helper_names = _class_and_func_names(self.reclaim_tree)
         for helper in (
                 'streetPack', 'streetPackId', 'streetPackParams',
-                'streetPlayEntryTip'):
+                'streetPlayEntryTip', 'resolveWaveScript',
+                'normalizeWaveScriptToken', 'pickPackArchetype'):
             self.assertIn(helper, helper_names)
+
+        # Scripted reclaim waves — each hood pack declares waveScripts.
+        for zone, pack in resolved.items():
+            scripts = pack.get('waveScripts')
+            self.assertTrue(
+                scripts,
+                msg='zone %s STREET_PACKS missing waveScripts' % zone)
+            self.assertGreaterEqual(
+                len(scripts), 1,
+                msg='zone %s waveScripts empty' % zone)
 
     def test_campaign_acts_and_play_entry(self):
         acts_node = _toplevel_value(self.campaign_tree, 'ACTS')
@@ -250,6 +261,13 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertTrue(acts[2].get('finale'))
         self.assertEqual(acts[2].get('corruptName'), 'Ink Overlord')
         self.assertIn('phase2', acts[2])
+        # Campaign acts carry per-wave scripts (Loopy ramp / Punchline sludge /
+        # Silly Overlord swell + P2 unleashed scripts).
+        for act in acts:
+            self.assertTrue(
+                act.get('waveScripts'),
+                msg='ACTS %s missing waveScripts' % act.get('id'))
+        self.assertTrue(acts[2]['phase2'].get('waveScripts'))
 
         play_names = _class_and_func_names(self.play_entry_tree)
         self.assertIn('PlayEntryClient', play_names)

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for reclaim wave pick / HP / size math.
+"""Behavioral headless tests for reclaim wave pick / HP / size / scripts.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-wavePackSize, waveCorruptHp, pickPackArchetype slot rules, and STREET_PACKS
-mix params used by DistributedReclaimDirectorAI._spawnPack.
+wavePackSize, waveCorruptHp, pickPackArchetype slot rules, waveScripts
+resolution, and STREET_PACKS mix params used by
+DistributedReclaimDirectorAI._spawnPack.
 
 Run from repo root:
   python3 tests/test_reclaim_wave_logic.py
@@ -72,7 +73,7 @@ def _load_panda_free_reclaim():
 
 
 class ReclaimWaveLogicTest(unittest.TestCase):
-    """Table-driven wave size / HP / archetype pick coverage."""
+    """Table-driven wave size / HP / archetype pick / script coverage."""
 
     @classmethod
     def setUpClass(cls):
@@ -234,18 +235,104 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertEqual(loopy['corruptHp'], 30)
         self.assertEqual(loopy['bruteWaveStart'], 2)
         self.assertEqual(loopy['snareWaveStart'], 2)
+        self.assertIn('waveScripts', loopy)
 
         punch = rg.streetPackParams(PUNCHLINE)
         self.assertEqual(punch['packSize'], 4)
         self.assertEqual(punch['corruptHp'], 40)
         self.assertEqual(punch['bruteWaveStart'], 1)
         self.assertEqual(punch['snareWaveStart'], 1)
+        self.assertIn('waveScripts', punch)
 
         silly = rg.streetPackParams(SILLY)
         self.assertEqual(silly['packSize'], 1)
         self.assertEqual(silly['corruptHp'], 90)
         self.assertEqual(silly['bruteFraction'], 0.0)
         self.assertEqual(silly['snareFraction'], 0.0)
+        self.assertIn('waveScripts', silly)
+
+    def test_normalize_wave_script_tokens(self):
+        rg, cg = self.rg, self.cg
+        self.assertEqual(rg.normalizeWaveScriptToken('ink'), cg.ARCHETYPE_INK)
+        self.assertEqual(rg.normalizeWaveScriptToken('smudge'), cg.ARCHETYPE_INK)
+        self.assertEqual(rg.normalizeWaveScriptToken('brute'), cg.ARCHETYPE_BRUTE)
+        self.assertEqual(rg.normalizeWaveScriptToken('sludge'), cg.ARCHETYPE_BRUTE)
+        self.assertEqual(rg.normalizeWaveScriptToken('snare'), cg.ARCHETYPE_SNARE)
+        self.assertEqual(rg.normalizeWaveScriptToken('balloon'), cg.ARCHETYPE_SNARE)
+        self.assertEqual(rg.normalizeWaveScriptToken(1), cg.ARCHETYPE_BRUTE)
+        self.assertEqual(rg.normalizeWaveScriptToken('2'), cg.ARCHETYPE_SNARE)
+        self.assertEqual(rg.normalizeWaveScriptToken('nope'), cg.ARCHETYPE_INK)
+
+    def test_resolve_wave_script_sequence_and_dict(self):
+        rg, cg = self.rg, self.cg
+        scripts = (
+            ('ink', 'ink'),
+            ('snare', 'brute'),
+        )
+        self.assertEqual(
+            rg.resolveWaveScript(scripts, 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveWaveScript(scripts, 2),
+            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_BRUTE])
+        self.assertIsNone(rg.resolveWaveScript(scripts, 3))
+        self.assertIsNone(rg.resolveWaveScript(None, 1))
+
+        keyed = {1: ('brute',), '2': ('snare', 'ink')}
+        self.assertEqual(
+            rg.resolveWaveScript(keyed, 1), [cg.ARCHETYPE_BRUTE])
+        self.assertEqual(
+            rg.resolveWaveScript(keyed, 2),
+            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK])
+
+    def test_wave_pack_size_honors_script(self):
+        rg = self.rg
+        script = rg.resolveWaveScript((('ink', 'brute', 'snare'),), 1)
+        self.assertEqual(rg.wavePackSize(3, 1, waveScript=script), 3)
+        # Without script, legacy bonus still grows pack size.
+        self.assertEqual(rg.wavePackSize(3, 1), 3)
+        self.assertEqual(rg.wavePackSize(3, 2), 4)
+
+    def test_pick_pack_archetype_prefers_script(self):
+        rg, cg = self.rg, self.cg
+        script = [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE]
+        self.assertEqual(
+            rg.pickPackArchetype(1, 0, 3, waveScript=script),
+            cg.ARCHETYPE_SNARE)
+        self.assertEqual(
+            rg.pickPackArchetype(1, 1, 3, waveScript=script),
+            cg.ARCHETYPE_INK)
+        self.assertEqual(
+            rg.pickPackArchetype(1, 2, 3, waveScript=script),
+            cg.ARCHETYPE_BRUTE)
+        # No script → Loopy-style wave-1 pure Smudge.
+        self.assertEqual(
+            rg.pickPackArchetype(1, 0, 3, bruteFraction=0.34, bruteWaveStart=2),
+            cg.ARCHETYPE_INK)
+
+    def test_street_pack_scripts_feel_distinct(self):
+        rg, cg = self.rg, self.cg
+        loopy = rg.STREET_PACKS[LOOPY]['waveScripts']
+        punch = rg.STREET_PACKS[PUNCHLINE]['waveScripts']
+        silly = rg.STREET_PACKS[SILLY]['waveScripts']
+
+        loopy_w1 = rg.resolveWaveScript(loopy, 1)
+        punch_w1 = rg.resolveWaveScript(punch, 1)
+        silly_w1 = rg.resolveWaveScript(silly, 1)
+
+        self.assertEqual(loopy_w1, [cg.ARCHETYPE_INK] * 3)
+        self.assertEqual(punch_w1[0], cg.ARCHETYPE_SNARE)
+        self.assertEqual(punch_w1[-1], cg.ARCHETYPE_BRUTE)
+        self.assertEqual(silly_w1, [cg.ARCHETYPE_INK])
+
+        # Loopy introduces Brute on wave 2; Punchline already mixed on wave 1.
+        loopy_w2 = rg.resolveWaveScript(loopy, 2)
+        self.assertIn(cg.ARCHETYPE_BRUTE, loopy_w2)
+        self.assertNotEqual(loopy_w1, punch_w1)
+
+        silly_w2 = rg.resolveWaveScript(silly, 2)
+        self.assertEqual(silly_w2, [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertTrue(all(a == cg.ARCHETYPE_INK for a in silly_w2))
 
 
 if __name__ == '__main__':
