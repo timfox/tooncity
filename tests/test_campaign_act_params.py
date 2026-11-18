@@ -621,23 +621,25 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('cream aftershock', magic_l)
 
     def test_betrayal_banner_cream_hose_settle_tunables(self):
-        """#212 / #235 deepen — betrayal banner gets juicier cream hose + rebound."""
+        """#212 / #235 / #260 deepen — betrayal banner juicier cream hose past #260."""
         camp = self.camp
         self.assertTrue(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED)
         over = camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT
         self.assertEqual(len(over), 4)
-        self.assertGreaterEqual(float(over[0]), 1.14)
-        self.assertGreaterEqual(float(over[2]), 1.22)
-        self.assertGreaterEqual(float(over[3]), 0.09)
+        self.assertGreaterEqual(float(over[0]), 1.16)
+        self.assertGreaterEqual(float(over[2]), 1.26)
+        self.assertGreaterEqual(float(over[3]), 0.10)
         self.assertGreaterEqual(
-            float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC), 0.14)
+            float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC), 0.15)
         rebound = camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND
         self.assertEqual(len(rebound), 4)
-        self.assertGreater(float(rebound[3]), 0.0)
-        self.assertGreater(
+        self.assertGreaterEqual(float(rebound[0]), 1.05)
+        self.assertGreaterEqual(float(rebound[2]), 1.09)
+        self.assertGreaterEqual(float(rebound[3]), 0.055)
+        self.assertGreaterEqual(
             float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND_REST_SEC),
-            0.0)
-        # Distinct from Punchline tip rebound (#256) and Silly tip (#232).
+            0.08)
+        # Distinct from Punchline tip rebound (#256/#284) and Silly tip.
         self.assertNotEqual(
             tuple(over),
             tuple(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT))
@@ -656,11 +658,12 @@ class CampaignActParamsTest(unittest.TestCase):
             'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT', handoff_src)
         self.assertIn(
             'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND', handoff_src)
+        self.assertIn('past #260', handoff_src)
         magic_l = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'MagicWords.py'
         ).read_text(encoding='utf-8').lower()
-        self.assertIn('deepened cream hose', magic_l)
+        self.assertIn('cream hose settle past #260', magic_l)
         self.assertIn('micro rebound', magic_l)
         self.assertIn('betrayal handoff banner', magic_l)
 
