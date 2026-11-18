@@ -419,7 +419,7 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertIn('self._waveScripts = waveScripts', src)
 
     def test_street_pack_elite_modifiers_and_ambush_beats(self):
-        """Loopy / Punchline last waves carry real elite + ambush tables."""
+        """Street packs carry real elite + earlier-wave / Silly ambush tables."""
         rg, cg = self.rg, self.cg
         for zone in (LOOPY, PUNCHLINE):
             pack = rg.STREET_PACKS[zone]
@@ -427,13 +427,25 @@ class ReclaimWaveLogicTest(unittest.TestCase):
             self.assertIn('ambushBeats', pack)
             mods = rg.resolveWaveModifiers(pack['waveModifiers'], 4)
             self.assertTrue(rg.waveIsElite(mods))
-            ambush = rg.resolveAmbushBeat(pack['ambushBeats'], 3)
-            self.assertTrue(ambush)
-            self.assertTrue(all(
-                a in (
-                    cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE,
-                    cg.ARCHETYPE_SNARE, cg.ARCHETYPE_GAGSTER)
-                for a in ambush))
+            # Earlier waves + post-3 all resolve real ambush compositions.
+            for cleared in (1, 2, 3):
+                ambush = rg.resolveAmbushBeat(pack['ambushBeats'], cleared)
+                self.assertTrue(
+                    ambush,
+                    msg='%s missing ambush after wave %s' % (zone, cleared))
+                self.assertTrue(all(
+                    a in (
+                        cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE,
+                        cg.ARCHETYPE_SNARE, cg.ARCHETYPE_GAGSTER)
+                    for a in ambush))
+        silly = rg.STREET_PACKS[SILLY]
+        self.assertIn('waveModifiers', silly)
+        self.assertIn('ambushBeats', silly)
+        self.assertTrue(
+            rg.waveIsElite(rg.resolveWaveModifiers(silly['waveModifiers'], 2)))
+        silly_ambush = rg.resolveAmbushBeat(silly['ambushBeats'], 1)
+        self.assertEqual(
+            silly_ambush, [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
         params = rg.streetPackParams(LOOPY)
         self.assertEqual(
             params['waveModifiers'],
@@ -441,6 +453,13 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertEqual(
             params['ambushBeats'],
             rg.STREET_PACKS[LOOPY]['ambushBeats'])
+        silly_params = rg.streetPackParams(SILLY)
+        self.assertEqual(
+            silly_params['waveModifiers'],
+            rg.STREET_PACKS[SILLY]['waveModifiers'])
+        self.assertEqual(
+            silly_params['ambushBeats'],
+            rg.STREET_PACKS[SILLY]['ambushBeats'])
 
 
 if __name__ == '__main__':

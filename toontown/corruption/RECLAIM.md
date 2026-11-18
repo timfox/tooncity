@@ -103,26 +103,28 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 - **Loopy street pack** (`ReclaimGlobals.STREET_PACKS` / `loopy-smudge`, zone `2200`):
   scripted Smudge tutorial → Brute intro → Snare joins → mixed elite
   (seed 0.55, maxPacks 4). Wave 4 carries real elite HP/damage modifiers;
-  after wave 3 a Snare ambush beat fills the between-wave pause. PlayEntry
-  tip reads explore → fight → reclaim; warm ink-yellow start banner.
+  between-wave ambush beats after waves 1–3 (Smudge → Snare tease → Snare)
+  fill the blank pauses before the next scripted pack. PlayEntry tip reads
+  explore → fight → reclaim; warm ink-yellow start banner.
 - Loopy campaign **C** mirrors that ramp across 3 waves (`ACTS` `waveScripts`);
   fraction fields stay `0` as fallback only.
 - **Punchline street pack** (`punchline-sludge`, zone `2300`):
   scripted Snare-front + Gunk Gagster lob → Gagster swarm → Brute pair → elite
-  (seed 0.70, maxPacks 4). Wave 4 elite HP/damage modifiers + Gagster/Snare
-  ambush after wave 3 (not composition-only). Gunk Gagster is a real fourth
-  archetype (teal gag-lob puddle trap), not a Smudge rename. Combat role AI
-  preserves that mix after spawn (Snare flanks, Gagster kites the lob ring,
-  Brute holds/plants for spit) instead of every unit nearest-chasing into
-  one scrum. PlayEntry tip reads explore → fight → reclaim; start banner is
-  gag-green.
+  (seed 0.70, maxPacks 4). Wave 4 elite HP/damage modifiers + between-wave
+  ambushes after waves 1–3 (Gagster → Snare → Gagster/Snare) — not
+  composition-only. Gunk Gagster is a real fourth archetype (teal gag-lob
+  puddle trap), not a Smudge rename. Combat role AI preserves that mix after
+  spawn (Snare flanks, Gagster kites the lob ring, Brute holds/plants for spit)
+  instead of every unit nearest-chasing into one scrum. PlayEntry tip reads
+  explore → fight → reclaim; start banner is gag-green.
 - Punchline campaign ACTS `waveScripts` stay the source of truth for **C**;
   STREET_PACKS mirrors so discoverable auto-reclaim matches the second-hood beat.
 - **Silly street pack** (`silly-overlord`, zone `2100`): Overlord-only scripts
   (solo → twin swell). Starts Rising (`finalePhase` 1); mid-fight HP-threshold
   (`overlordP2HpFrac`) promotes to Unleashed (slam + Smudge adds) without a
-  campaign restart. Oswald twist reveal stays campaign P2 only. Campaign
-  finale P2 scripts still swell to twin / triple Overlords on **C**.
+  campaign restart. Between-swell pressure: Smudge ambush after wave 1 + elite
+  HP/damage on the twin swell (wave 2). Oswald twist reveal stays campaign P2
+  only. Campaign finale P2 scripts still swell to twin / triple Overlords on **C**.
 
 ```
 ~spawncorrupt 2 0 0   # Ink Smudge
