@@ -4,8 +4,10 @@ CardMaker bar + Oswald-flavored label — rubber-hose Toontown tone, no
 Kingdom Hearts / keyblade branding. Driven by DistributedReclaimDirector.
 
 On purity advances: short squash→stretch→settle fill pop, matching pct tick,
-sunny cream flecks at the fill tip, and StreetSparkle/EntryCream-style cream
-shimmer flecks along the filled bar.
+sunny cream flecks at the fill tip, StreetSparkle/EntryCream-style cream
+shimmer flecks along the filled bar, then a delayed cream aftershock
+(softer flecks settling downward + soft halo) — same residual grammar as
+cheer cream aftershock.
 """
 
 from math import cos, pi, sin
@@ -53,6 +55,8 @@ class PurityMeterHud(object):
         self._fleckNPs = []
         self._shimmerIval = None
         self._shimmerNPs = []
+        self._shimmerPlayIval = None
+        self._haloNP = None
         self._lastPopPurity = None
 
     def isShown(self):
@@ -200,7 +204,7 @@ class PurityMeterHud(object):
         return self._pctPopIval is not None and self._pctPopIval.isPlaying()
 
     def _popTick(self):
-        """Hose fill pop + pct tick + tip flecks + cream shimmer along fill."""
+        """Hose fill pop + pct tick + tip flecks + cream shimmer + aftershock."""
         if self._fillNP is None or self._fillNP.isEmpty():
             return
         if (self._lastPopPurity is not None
@@ -330,7 +334,7 @@ class PurityMeterHud(object):
         self._fleckIval.start()
 
     def _spawnFillShimmerFlecks(self):
-        """Cream shimmer flecks along the filled bar (StreetSparkle / EntryCream)."""
+        """Cream shimmer along fill + delayed cream aftershock residual."""
         self._clearFillShimmer()
         if not getattr(ReclaimGlobals, 'PURITY_METER_FILL_SHIMMER_ENABLED', True):
             return
@@ -418,12 +422,180 @@ class PurityMeterHud(object):
 
         if not parts:
             return
-        self._shimmerIval = Sequence(
-            Parallel(*parts, name='reclaimPurityMeterFillShimmer'),
-            Func(self._clearFillShimmer),
-            name='reclaimPurityMeterFillShimmerSeq',
-        )
+
+        # Shimmer Parallel starts immediately; aftershock rides beside it.
+        shimmerIval = Parallel(*parts, name='reclaimPurityMeterFillShimmer')
+        self._shimmerPlayIval = shimmerIval
+        try:
+            shimmerIval.start()
+        except Exception:
+            self._clearFillShimmer()
+            return
+
+        aftershock = self._buildFillAftershock(halfW, fillW)
+        if aftershock is not None:
+            self._shimmerIval = Sequence(
+                Parallel(
+                    Wait(sec + 0.04),
+                    aftershock,
+                ),
+                Func(self._clearFillShimmer),
+                name='reclaimPurityMeterFillShimmerSeq',
+            )
+        else:
+            self._shimmerIval = Sequence(
+                Wait(sec + 0.04),
+                Func(self._clearFillShimmer),
+                name='reclaimPurityMeterFillShimmerSeq',
+            )
         self._shimmerIval.start()
+
+    def _buildFillAftershock(self, halfW, fillW):
+        """Delayed soft cream flecks (+ optional halo) after fill shimmer."""
+        if not getattr(ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_ENABLED', True):
+            return None
+        if self._root is None or self._root.isEmpty():
+            return None
+        delay = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_DELAY_SEC', 0.18))
+        parts = []
+
+        # Soft cream halo centered on the filled span midpoint.
+        midX = -halfW + fillW * 0.5
+        if getattr(ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_HALO_ENABLED', True):
+            halo = self._spawnFillAftershockHalo(midX)
+            if halo is not None:
+                parts.append(halo)
+
+        count = int(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_COUNT', 4))
+        sec = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_SEC', 0.32))
+        for i in range(count):
+            part = self._spawnFillAftershockFleck(halfW, fillW, i, count, sec)
+            if part is not None:
+                parts.append(part)
+
+        if not parts:
+            return None
+        return Sequence(
+            Wait(max(0.0, delay)),
+            Parallel(*parts),
+        )
+
+    def _spawnFillAftershockHalo(self, midX):
+        half = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_HALO_HALF', 0.055))
+        startScale = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_HALO_START', 0.35))
+        peakScale = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_HALO_PEAK', 1.35))
+        sec = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_HALO_SEC', 0.26))
+        peakA = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_HALO_PEAK_ALPHA', 0.16))
+        r, g, b, _a = getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_HALO_COLOR',
+            (1.0, 0.97, 0.82, 1.0))
+        binSort = int(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_BIN', 50))
+        try:
+            cm = CardMaker('reclaim-purity-meter-fill-aftershock-halo')
+            cm.setFrame(-half, half, -half * 0.55, half * 0.55)
+            halo = self._root.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, peakA)
+            halo.setPos(midX, 0, 0)
+            halo.setScale(startScale)
+            halo.setBin('fixed', binSort)
+            halo.setDepthTest(False)
+            halo.setDepthWrite(False)
+        except Exception:
+            return None
+        self._haloNP = halo
+        return Parallel(
+            LerpScaleInterval(
+                halo, max(0.01, sec), peakScale, blendType='easeOut'),
+            Sequence(
+                Wait(max(0.0, sec * 0.2)),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.8), Vec4(r, g, b, 0),
+                    blendType='easeIn'),
+            ),
+        )
+
+    def _spawnFillAftershockFleck(self, halfW, fillW, index, total, sec):
+        """Softer cream chip that settles downward along the filled span."""
+        count = max(1, int(total))
+        size = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_SIZE', 0.009))
+        drift = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_DRIFT', 0.045))
+        fall = float(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_FALL', 0.04))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_COLOR',
+            (1.0, 0.97, 0.78, 0.82))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_END_COLOR',
+            (1.0, 0.93, 0.58, 0.0))
+        binSort = int(getattr(
+            ReclaimGlobals, 'PURITY_METER_FILL_AFTERSHOCK_BIN', 50))
+        # Spread residual flecks along the filled span (left → tip).
+        t = float(index) / float(max(1, count - 1))
+        angle = (2.0 * pi * index) / float(count) + 0.35
+        try:
+            cm = CardMaker('reclaim-purity-meter-fill-aftershock-%s' % index)
+            # Alternate chip / cross — quieter residual of the shimmer glitter.
+            if (index % 3) == 0:
+                cm.setFrame(
+                    -size * 0.35, size * 0.35, -size * 1.20, size * 1.20)
+            elif (index % 3) == 1:
+                cm.setFrame(
+                    -size * 1.20, size * 1.20, -size * 0.35, size * 0.35)
+            else:
+                cm.setFrame(-size, size, -size * 0.85, size * 0.85)
+            fleck = self._root.attachNewNode(cm.generate())
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, 0)
+            startX = -halfW + t * fillW + cos(angle) * 0.006
+            startZ = 0.008 * (index % 3)
+            fleck.setPos(startX, 0, startZ)
+            fleck.setScale(0.28 + 0.08 * (index % 3))
+            fleck.setBin('fixed', binSort + 1 + (index % 2))
+            fleck.setDepthTest(False)
+            fleck.setDepthWrite(False)
+        except Exception:
+            return None
+
+        # Settle downward — residual cream, not the shimmer's outward rise.
+        end = Point3(
+            startX + cos(angle) * drift * 0.55,
+            0,
+            startZ - fall - 0.01 * (index % 3))
+        peak = 1.05 + 0.08 * (index % 2)
+        self._shimmerNPs.append(fleck)
+        stagger = 0.018 * (index % 3)
+        return Sequence(
+            Wait(stagger),
+            Parallel(
+                LerpColorScaleInterval(
+                    fleck, 0.05, Vec4(r, g, b, a), blendType='easeOut'),
+                LerpScaleInterval(
+                    fleck, max(0.01, sec * 0.28), peak, blendType='easeOut'),
+            ),
+            Parallel(
+                LerpPosInterval(
+                    fleck, max(0.01, sec * 0.72), end, blendType='easeIn'),
+                LerpScaleInterval(
+                    fleck, max(0.01, sec * 0.72), 0.05, blendType='easeIn'),
+                LerpColorScaleInterval(
+                    fleck, max(0.01, sec * 0.72), Vec4(er, eg, eb, ea),
+                    blendType='easeIn'),
+            ),
+        )
 
     def _onPopDone(self):
         self._popIval = None
@@ -473,12 +645,26 @@ class PurityMeterHud(object):
         self._fleckNPs = []
 
     def _clearFillShimmer(self):
+        """Stop fill shimmer/aftershock and remove every cream fill node."""
         if self._shimmerIval is not None:
             try:
                 self._shimmerIval.pause()
             except Exception:
                 pass
             self._shimmerIval = None
+        if self._shimmerPlayIval is not None:
+            try:
+                self._shimmerPlayIval.pause()
+            except Exception:
+                pass
+            self._shimmerPlayIval = None
+        if self._haloNP is not None:
+            try:
+                if not self._haloNP.isEmpty():
+                    self._haloNP.removeNode()
+            except Exception:
+                pass
+            self._haloNP = None
         for np in self._shimmerNPs:
             if np is not None and not np.isEmpty():
                 try:

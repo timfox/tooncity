@@ -290,6 +290,28 @@ PURITY_METER_FILL_SHIMMER_COLOR = (1.0, 0.98, 0.72, 0.92)
 PURITY_METER_FILL_SHIMMER_END_COLOR = (1.0, 0.94, 0.55, 0.0)
 # Above meter fill (45) / tip flecks (48); below street sparkle (50).
 PURITY_METER_FILL_SHIMMER_BIN = 49
+# Delayed cream aftershock after purity fill cream shimmer (PurityMeterHud).
+# Residual soft flecks settle downward along the filled span + optional soft
+# cream halo — same residual grammar as cheer cream aftershock (#118). Quieter
+# / smaller than mid-screen cheer aftershock. Cream/pastel only.
+PURITY_METER_FILL_AFTERSHOCK_ENABLED = True
+PURITY_METER_FILL_AFTERSHOCK_DELAY_SEC = 0.18
+PURITY_METER_FILL_AFTERSHOCK_COUNT = 4
+PURITY_METER_FILL_AFTERSHOCK_SIZE = 0.009
+PURITY_METER_FILL_AFTERSHOCK_DRIFT = 0.045
+PURITY_METER_FILL_AFTERSHOCK_FALL = 0.04
+PURITY_METER_FILL_AFTERSHOCK_SEC = 0.32
+PURITY_METER_FILL_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.82)
+PURITY_METER_FILL_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+# Above fill shimmer (49); below street sparkle (50).
+PURITY_METER_FILL_AFTERSHOCK_BIN = 50
+PURITY_METER_FILL_AFTERSHOCK_HALO_ENABLED = True
+PURITY_METER_FILL_AFTERSHOCK_HALO_HALF = 0.055
+PURITY_METER_FILL_AFTERSHOCK_HALO_START = 0.35
+PURITY_METER_FILL_AFTERSHOCK_HALO_PEAK = 1.35
+PURITY_METER_FILL_AFTERSHOCK_HALO_SEC = 0.26
+PURITY_METER_FILL_AFTERSHOCK_HALO_PEAK_ALPHA = 0.16
+PURITY_METER_FILL_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.
