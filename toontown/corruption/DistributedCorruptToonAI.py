@@ -62,6 +62,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         # Absolute frame-time until which chase/attack stay paused (juggle hang).
         self._juggleHangStunUntil = 0.0
         self._puddleLinger = None
+        self._rainLinger = None
         self.finalePhase = 0
         self.setFinalePhase(finalePhase)
 
@@ -118,7 +119,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'slamTelegraphDelay', 'slamCooldown', 'slamMeleeRange',
                 'surgeMaxRange', 'surgeDash', 'surgeStop', 'surgeHitRange',
                 'surgeNearMissRange', 'surgeDamage', 'surgeTelegraphDelay',
-                'surgeCooldown'):
+                'surgeCooldown',
+                'rainLingerSec', 'rainLingerTickSec', 'rainLingerTickDamage',
+                'rainLingerSlowFactor'):
             if key in combat:
                 merged[key] = combat[key]
         self._stats = merged
@@ -148,6 +151,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._puddleXY = None
         self._spitAimXY = None
         self.__clearBruteSpitProjectile()
+        # Keep any already-landed rain linger — phase flip does not erase
+        # arena sludge (parity with Gagster land linger across interrupts).
         try:
             taskMgr.remove(self.uniqueName('corrupt-attack'))
         except Exception:
@@ -969,7 +974,16 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             pass
 
     def __resolveOverlordRain(self):
-        """Ink-rain AoE — damage every in-zone toon inside the puddle radius."""
+        """Ink-rain AoE — damage every in-zone toon inside the puddle radius.
+
+        After the land tick, arm a short lingering sludge hazard at the
+        boss XY (Gagster-like DoT / slow) so climax rain owns arena space.
+        """
+        try:
+            ox = float(self.getX())
+            oy = float(self.getY())
+        except Exception:
+            ox = oy = None
         hitRange, nearMiss = self.__hitRangesForMove('rain')
         dmg = self.__damageForMove('rain')
         now = globalClock.getFrameTime()  # noqa: F821
@@ -992,7 +1006,94 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.sendUpdate('announceAttackHit', [])
         elif anyDodge:
             self.sendUpdate('announceAttackDodged', [])
+        # Arm linger sludge after rain resolve — arena trap vs one-shot.
+        if ox is not None and oy is not None:
+            self.__armOverlordRainLinger(ox, oy, hitRange)
         return Task.done
+
+    def __armOverlordRainLinger(self, ox, oy, hitRange=None):
+        """Leave a short-lived sludge hazard at the rain puddle XY."""
+        self.__clearOverlordRainLinger()
+        if not getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_ENABLED', True):
+            return
+        lingerSec = float(self._stats.get(
+            'rainLingerSec',
+            getattr(CorruptionGlobals, 'OVERLORD_RAIN_LINGER_SEC', 3.0)))
+        tickSec = float(self._stats.get(
+            'rainLingerTickSec',
+            getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_TICK_SEC', 0.5)))
+        if lingerSec <= 0.0 or tickSec <= 0.0:
+            return
+        if hitRange is None:
+            hitRange, _near = self.__hitRangesForMove('rain')
+        radius = float(hitRange or getattr(
+            CorruptionGlobals, 'OVERLORD_RAIN_LINGER_RADIUS', 9.5))
+        tickDmg = CorruptionGlobals.overlordRainLingerTickDamage(self._stats)
+        slowFactor = float(self._stats.get(
+            'rainLingerSlowFactor',
+            getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_SLOW_FACTOR', 0.5)))
+        now = globalClock.getFrameTime()  # noqa: F821
+        self._rainLinger = {
+            'xy': (float(ox), float(oy)),
+            'until': CorruptionGlobals.overlordRainLingerUntil(
+                now, lingerSec),
+            'radius': radius,
+            'tickDamage': tickDmg,
+            'slowFactor': slowFactor,
+            'tickSec': max(0.1, tickSec),
+        }
+        taskMgr.doMethodLater(
+            self._rainLinger['tickSec'],
+            self.__tickOverlordRainLinger,
+            self.uniqueName('overlord-rain-linger'))
+
+    def __tickOverlordRainLinger(self, task):
+        """Periodic DoT + slow stamp while toons stand in rain linger sludge."""
+        linger = getattr(self, '_rainLinger', None)
+        if linger is None or self.isDeleted():
+            self._rainLinger = None
+            return Task.done
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now >= float(linger['until']):
+            self._rainLinger = None
+            return Task.done
+        ox, oy = linger['xy']
+        radius = float(linger['radius'])
+        dmg = int(linger['tickDamage'])
+        slowFactor = float(linger['slowFactor'])
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - ox
+                dy = float(target.getY()) - oy
+            except Exception:
+                continue
+            if not CorruptionGlobals.isInsideOverlordRainLinger(
+                    dx, dy, radius):
+                continue
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            if now < iframeUntil:
+                continue
+            if not self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='overlord rain linger'):
+                continue
+            # AI-side slow stamp (mirrors Gagster linger authority).
+            # Client DistributedCorruptToon applies walk-slow while overlapping.
+            target.hackSlashOverlordRainSludgeUntil = (
+                CorruptionGlobals.overlordRainSlowUntil(now))
+            target.hackSlashOverlordRainSludgeSlow = slowFactor
+        # No announceAttackHit — land already fired impact AV; ticks are quiet.
+        return Task.again
+
+    def __clearOverlordRainLinger(self):
+        self._rainLinger = None
+        try:
+            taskMgr.remove(self.uniqueName('overlord-rain-linger'))
+        except Exception:
+            pass
 
     def __resolveOverlordInkSurge(self):
         """P2 mid-range ink surge — planar rush, then landing AoE.
@@ -1373,6 +1474,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     def delete(self):
         self.__clearGagsterPuddleLinger()
+        self.__clearOverlordRainLinger()
         self.__clearBruteSpitProjectile()
         taskMgr.remove(self.uniqueName('corrupt-ai'))
         taskMgr.remove(self.uniqueName('corrupt-attack'))
