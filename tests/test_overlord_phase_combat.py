@@ -145,6 +145,49 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertIn("'finalePhase': 1", silly)
         self.assertIn("'corruptName': 'Ink Overlord'", silly)
 
+    def test_p2_rain_and_slam_widen_pressure(self):
+        """Unleashed rain is wider/faster than Rising; slam is close-range only."""
+        p1 = self.cg.overlordPhaseCombat(1)
+        p2 = self.cg.overlordPhaseCombat(2)
+        self.assertGreater(p2['attackHitRange'], p1['attackHitRange'])
+        self.assertGreater(p2['attackNearMissRange'], p1['attackNearMissRange'])
+        self.assertGreater(p2['meleeRange'], p1['meleeRange'])
+        # Slam kit is close pressure between rain volleys — shorter than rain.
+        self.assertLess(p2['slamHitRange'], p2['attackHitRange'])
+        self.assertLess(p2['slamMeleeRange'], p2['meleeRange'])
+        self.assertLess(p2['slamTelegraphDelay'], p2['telegraphDelay'])
+        self.assertLess(p2['slamCooldown'], p2['attackCooldown'])
+        self.assertGreater(p2['slamDamage'], 0)
+
+    def test_p2_add_constants_are_smudge_pressure(self):
+        """P2 adds are Ink Smudge trash mobs — not a fourth archetype."""
+        self.assertEqual(self.cg.OVERLORD_P2_ADD_WAVE_START, 2)
+        self.assertEqual(self.cg.OVERLORD_P2_ADD_COUNT, 2)
+        self.assertEqual(self.cg.OVERLORD_P2_ADD_HP, 25)
+        self.assertEqual(self.cg.OVERLORD_P2_ADD_NAME, 'Ink Smudge')
+        self.assertGreater(self.cg.OVERLORD_P2_ADD_SPACING, 0)
+        self.assertGreater(self.cg.OVERLORD_P2_ADD_FORWARD, 0)
+
+    def test_spawnoverlord_magic_word_defaults_p1(self):
+        """~spawnoverlord shortcut arms Rising rain unless finalePhase passed."""
+        src = _read('toontown/corruption/MagicWords.py')
+        self.assertIn('spawnoverlord', src)
+        self.assertIn('finalePhase', src)
+        # Default arg for the shortcut is P1 rising rain.
+        self.assertIn("('finalePhase', int, False, 1)", src)
+        self.assertIn('overlordPhaseCombat(finalePhase)', src)
+
+    def test_reclaim_director_gates_adds_on_p2(self):
+        """Adds only fire while Unleashed (finalePhase >= 2) on wave 2+."""
+        src = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')
+        self.assertIn('def _spawnOverlordAdds', src)
+        # Hard gate — street Silly / campaign P1 must not drip Smudge adds.
+        adds_idx = src.find('def _spawnOverlordAdds')
+        self.assertGreater(adds_idx, 0)
+        snip = src[adds_idx:adds_idx + 900]
+        self.assertIn('finalePhase) < 2', snip)
+        self.assertIn('overlordP2AddCount', snip)
+
 
 if __name__ == '__main__':
     # Keep CorruptionGlobals import path stable when run as a script.

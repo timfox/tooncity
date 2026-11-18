@@ -84,7 +84,7 @@ def _load_panda_free_campaign_and_reclaim():
     assert camp_spec.loader is not None
     sys.modules['toontown.campaign.CampaignGlobals'] = camp
     camp_spec.loader.exec_module(camp)
-    return camp, rg
+    return camp, rg, cg
 
 
 def resolve_act_params(act, finale_phase=0):
@@ -127,7 +127,7 @@ class CampaignActParamsTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.camp, cls.rg = _load_panda_free_campaign_and_reclaim()
+        cls.camp, cls.rg, cls.cg = _load_panda_free_campaign_and_reclaim()
         cls.acts_by_id = {a['id']: a for a in cls.camp.ACTS}
 
     def test_acts_cover_three_hoods(self):
@@ -248,6 +248,66 @@ class CampaignActParamsTest(unittest.TestCase):
             self.assertEqual(
                 finale_p1[key], silly_pack[key],
                 msg='finale P1 %s vs silly STREET_PACKS' % key)
+
+    def test_act_wave_scripts_resolve_through_p2(self):
+        """Campaign ACTS scripts (#185) resolve to distinct hood beats + P2 swell."""
+        rg, cg, camp = self.rg, self.cg, self.camp
+        loopy = camp.ACTS[0]
+        punch = camp.ACTS[1]
+        finale = camp.ACTS[2]
+
+        self.assertEqual(
+            rg.resolveWaveScript(loopy['waveScripts'], 1),
+            [cg.ARCHETYPE_INK] * 3)
+        self.assertEqual(
+            rg.resolveWaveScript(loopy['waveScripts'], 2),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE])
+        self.assertEqual(
+            rg.resolveWaveScript(loopy['waveScripts'], 3),
+            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE])
+
+        self.assertEqual(
+            rg.resolveWaveScript(punch['waveScripts'], 1)[0],
+            cg.ARCHETYPE_SNARE)
+        self.assertEqual(
+            rg.resolveWaveScript(punch['waveScripts'], 1)[-1],
+            cg.ARCHETYPE_BRUTE)
+
+        p1 = resolve_act_params(finale, finale_phase=0)
+        self.assertEqual(
+            rg.resolveWaveScript(p1['waveScripts'], 1), [cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveWaveScript(p1['waveScripts'], 2),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+
+        p2 = resolve_act_params(finale, finale_phase=1)
+        self.assertEqual(p2['finalePhase'], 2)
+        self.assertEqual(
+            rg.resolveWaveScript(p2['waveScripts'], 1),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        self.assertEqual(
+            rg.resolveWaveScript(p2['waveScripts'], 3),
+            [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
+        # P2 add kwargs stay on the merge for Unleashed Smudge pressure (#187).
+        self.assertEqual(p2.get('addWaveStart'), 2)
+        self.assertEqual(p2.get('addCount'), 2)
+        self.assertEqual(p2.get('addName'), 'Ink Smudge')
+
+    def test_hub_tip_discoverability_copy(self):
+        """Hub tip (#184) points at Loopy + C campaign without magic words."""
+        camp = self.camp
+        tip = camp.hubPlayEntryTip()
+        self.assertIn('Oswald', tip)
+        self.assertIn('Loopy Lane', tip)
+        self.assertIn('C campaign', tip)
+        self.assertNotIn('~startcampaign', tip)
+        self.assertNotIn('2200', tip)
+        # Soft next-street cue after handoff.
+        next_tip = camp.hubPlayEntryTip(nextStreet='Punchline Place')
+        self.assertIn('Punchline Place', next_tip)
+        hint = camp.handoffTravelHint({'name': 'Silly Street'})
+        self.assertIn('Silly Street', hint)
+        self.assertNotIn('~startcampaign', hint)
 
     def test_act_param_keys_present_for_director(self):
         for act_id, act in self.acts_by_id.items():
