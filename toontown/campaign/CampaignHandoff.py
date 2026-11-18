@@ -21,9 +21,10 @@ and a delayed soft cream wash pulse with a residual cream aftershock
 (flecks + soft halo); it clears before the Oswald twist / FinalePhaseFx
 reveal so the bittersweet sting stays intact. When Silly finale betrayal
 reveal fires (oswaldRevealBanner), a dedicated betrayal handoff plate
-hose-pops the twist copy — complements almost-confess tip (#207) — and a
-short victory/confetti sting (VictoryTwistConfettiSting) lands the hollow
-cheer that Oswald caused the corruption.
+hose-pops the twist copy with a brief cream hose settle so the twist
+lands juicier — complements almost-confess tip (#207) — and a short
+victory/confetti sting (VictoryTwistConfettiSting) lands the hollow cheer
+that Oswald caused the corruption.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -551,7 +552,8 @@ class CampaignHandoffClient(DirectObject):
         Early/mid Oswald trusted reclaim-lead clears append a soft
         overshoot → rest settle bounce after the hose pop. Trust fracture
         holds the settle a rubbery beat longer (mid-act unease). Betrayal
-        handoff holds even longer so the twist title lands hard.
+        handoff holds even longer so the twist title lands hard, then a
+        brief cream hose settle so the twist plate reads juicier.
         """
         settle = float(settleScale)
         sx, sy, sz, squashSec = getattr(
@@ -604,6 +606,33 @@ class CampaignHandoffClient(DirectObject):
                 titleNP, float(overSec), overPt, blendType='easeOut'))
             parts.append(LerpScaleInterval(
                 titleNP, restSec, settlePt, blendType='easeIn'))
+        # Cream hose settle after betrayal settle — juicier twist land
+        # (tip cream hose twin; distinct from Punchline #227 / Silly #232).
+        if betrayalHandoff and bool(getattr(
+                CampaignGlobals, 'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_ENABLED',
+                True)):
+            creamOver = getattr(
+                CampaignGlobals, 'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT',
+                None)
+            cx = cy = cz = creamOverSec = None
+            if creamOver:
+                try:
+                    cx, cy, cz, creamOverSec = creamOver
+                    creamOverSec = float(creamOverSec)
+                except Exception:
+                    creamOverSec = None
+            if creamOverSec is not None and creamOverSec > 0.0:
+                creamRestSec = float(getattr(
+                    CampaignGlobals,
+                    'FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC', 0.13))
+                creamOverPt = Point3(
+                    settle * float(cx), settle * float(cy), settle * float(cz))
+                parts.append(LerpScaleInterval(
+                    titleNP, max(0.01, creamOverSec), creamOverPt,
+                    blendType='easeOut'))
+                parts.append(LerpScaleInterval(
+                    titleNP, max(0.01, creamRestSec), settlePt,
+                    blendType='easeIn'))
         return Sequence(*parts, name='campaignHandoffTitleHosePop')
 
     def _trustSubHosePopInterval(self, subNP, settleScale):
