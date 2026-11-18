@@ -14,9 +14,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     """Hostile corrupt toon: chase, telegraphed smack, defeat → pollution reclaim.
 
     Ink Overlord (finalePhase 1/2) uses phase combat instead of Smudge chase:
-    P1 ink-rain AoE, P2 enrage rain + close slam. Street archetypes use role
-    AI (Gagster kite, Brute hold, Snare flank) so wave-script pack intent
-    survives after combat starts — not all nearest-chase.
+    P1 ink-rain AoE, P2 enrage rain + mid ink_surge + close slam. Street
+    archetypes use role AI (Gagster kite, Brute hold, Snare flank) so
+    wave-script pack intent survives after combat starts — not all
+    nearest-chase.
 
     Sludge Brute fires a traveling spit projectile (trail + land splash) from
     hold range, with a close slam secondary — not an instant long-range smack.
@@ -114,7 +115,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         merged['moveMode'] = str(combat.get('moveMode', 'rain'))
         for key in (
                 'slamHitRange', 'slamNearMissRange', 'slamDamage',
-                'slamTelegraphDelay', 'slamCooldown', 'slamMeleeRange'):
+                'slamTelegraphDelay', 'slamCooldown', 'slamMeleeRange',
+                'surgeMaxRange', 'surgeDash', 'surgeStop', 'surgeHitRange',
+                'surgeNearMissRange', 'surgeDamage', 'surgeTelegraphDelay',
+                'surgeCooldown'):
             if key in combat:
                 merged[key] = combat[key]
         self._stats = merged
@@ -126,8 +130,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         """Mid-fight Overlord phase promote (street HP-threshold Unleash).
 
         Applies P2 combat stats and cancels an in-flight telegraph so the
-        next wind-up uses rain/slam enrage. Client AV reads phase from the
-        reclaim director — no DC finalePhase field required.
+        next wind-up uses rain/surge/slam enrage. Client AV reads phase from
+        the reclaim director — no DC finalePhase field required.
         """
         newPhase = CorruptionGlobals.normalizeFinalePhase(phase)
         if newPhase < 1 or newPhase <= int(self.finalePhase):
@@ -500,21 +504,22 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.uniqueName('corrupt-attack'))
 
     def __pickOverlordMove(self, target):
-        """P1 always rains; P2 slams in close range else rains."""
+        """P1 always rains; P2 picks slam / ink_surge / rain by range."""
         mode = str(self._stats.get('moveMode', 'rain'))
         if mode != 'enrage':
             return 'rain'
         dist = self.__planarDist(target)
-        slamRange = float(self._stats.get(
-            'slamMeleeRange', self._stats.get('slamHitRange', 5.2)))
-        if dist <= slamRange:
-            return 'slam'
-        return 'rain'
+        return CorruptionGlobals.overlordPickEnrageMove(dist, self._stats)
 
     def __telegraphDelayForMove(self, move):
         if move == 'slam':
             return float(self._stats.get(
                 'slamTelegraphDelay',
+                self._stats.get(
+                    'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
+        if move == 'ink_surge':
+            return float(self._stats.get(
+                'surgeTelegraphDelay',
                 self._stats.get(
                     'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
         if move == 'stain_burst':
@@ -536,6 +541,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'slamCooldown',
                 self._stats.get(
                     'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
+        if move == 'ink_surge':
+            return float(self._stats.get(
+                'surgeCooldown',
+                self._stats.get(
+                    'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
         if move == 'stain_burst':
             return float(self._stats.get(
                 'burstCooldown',
@@ -555,6 +565,17 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'slamHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
             near = float(self._stats.get(
                 'slamNearMissRange', CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+            return hit, near
+        if move == 'ink_surge':
+            hit = float(self._stats.get(
+                'surgeHitRange',
+                self._stats.get(
+                    'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE)))
+            near = float(self._stats.get(
+                'surgeNearMissRange',
+                self._stats.get(
+                    'attackNearMissRange',
+                    CorruptionGlobals.ATTACK_NEAR_MISS_RANGE)))
             return hit, near
         if move == 'stain_burst':
             hit = float(self._stats.get(
@@ -603,6 +624,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return int(self._stats.get(
                 'slamDamage',
                 self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
+        if move == 'ink_surge':
+            return int(self._stats.get(
+                'surgeDamage',
+                self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
         if move == 'stain_burst':
             return int(self._stats.get(
                 'burstDamage',
@@ -632,6 +657,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
         if self._isOverlord() and move == 'rain' and self._stats.get('aoe'):
             return self.__resolveOverlordRain()
+        if self._isOverlord() and move == 'ink_surge':
+            return self.__resolveOverlordInkSurge()
         if move == 'gag_lob':
             return self.__resolveGagsterPuddle()
         if move == 'spit':
@@ -960,6 +987,79 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         elif anyDodge:
             self.sendUpdate('announceAttackDodged', [])
         return Task.done
+
+    def __resolveOverlordInkSurge(self):
+        """P2 mid-range ink surge — planar rush, then landing AoE.
+
+        Third Unleashed note between close slam and far rain (gap scan #8).
+        Boss closes a mid gap on resolve, then hits every toon inside the
+        surge radius at the new position — distinct from stationary rain
+        and face-hug slam. Falls back to rain when surge is disabled.
+        Damage routes through ``__damageToonAndCheckReclaimKo`` only.
+        """
+        if not getattr(CorruptionGlobals, 'OVERLORD_INK_SURGE_ENABLED', True):
+            return self.__resolveOverlordRain()
+        target = self.air.doId2do.get(self._targetId)
+        if target is not None and isinstance(target, DistributedToonAI):
+            if (getattr(target, 'zoneId', None) == self.zoneId
+                    and getattr(target, 'hp', 1) > 0):
+                self.__surgeOverlordTowardTarget(target)
+        try:
+            ox = float(self.getX())
+            oy = float(self.getY())
+        except Exception:
+            return Task.done
+        hitRange, nearMiss = self.__hitRangesForMove('ink_surge')
+        dmg = self.__damageForMove('ink_surge')
+        now = globalClock.getFrameTime()  # noqa: F821
+        anyHit = False
+        anyDodge = False
+        for toon in self.__iterZoneToons():
+            try:
+                dx = float(toon.getX()) - ox
+                dy = float(toon.getY()) - oy
+            except Exception:
+                continue
+            dist = math.sqrt(dx * dx + dy * dy)
+            iframeUntil = float(
+                getattr(toon, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            iframes = now < iframeUntil
+            if iframes and dist <= max(hitRange, nearMiss):
+                anyDodge = True
+                continue
+            if dist > hitRange:
+                continue
+            if self.__damageToonAndCheckReclaimKo(
+                    toon, dmg, context='ink_surge'):
+                anyHit = True
+        if anyHit:
+            self.sendUpdate('announceAttackHit', [])
+        elif anyDodge:
+            self.sendUpdate('announceAttackDodged', [])
+        return Task.done
+
+    def __surgeOverlordTowardTarget(self, target):
+        """Planar surge step for ink_surge — longer boss rush than Smudge dash."""
+        if target is None:
+            return
+        try:
+            sx = float(self.getX())
+            sy = float(self.getY())
+            sz = float(self.getZ())
+            tx = float(target.getX())
+            ty = float(target.getY())
+        except Exception:
+            return
+        dash = CorruptionGlobals.overlordSurgeDashDist(self._stats)
+        stop = CorruptionGlobals.overlordSurgeStop(self._stats)
+        nx, ny = CorruptionGlobals.overlordSurgePos(
+            sx, sy, tx, ty, dash=dash, stop=stop)
+        if abs(nx - sx) < 1e-6 and abs(ny - sy) < 1e-6:
+            return
+        heading = -math.degrees(math.atan2(tx - sx, ty - sy))
+        self.setPos(nx, ny, sz)
+        self.setH(heading)
+        self.sendUpdate('setXYZH', [nx, ny, sz, heading])
 
     def __resolveOswaldBetrayalLunge(self):
         """False-friend rush: dash toward the toon, then single-target hit + shove.

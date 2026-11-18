@@ -153,8 +153,31 @@ class OverlordPhaseCombatTests(unittest.TestCase):
                 '_isOverlord',
                 '__pickOverlordMove',
                 '__resolveOverlordRain',
+                '__resolveOverlordInkSurge',
+                '__surgeOverlordTowardTarget',
                 '__resolveSingleTargetHit'):
             self.assertIn(expected, names, msg='missing %s' % expected)
+        src = _read('toontown/corruption/DistributedCorruptToonAI.py')
+        pick = src[src.find('def __pickOverlordMove'):]
+        pick_end = pick.find('\n    def ', 1)
+        pick_body = pick if pick_end < 0 else pick[:pick_end]
+        self.assertIn('overlordPickEnrageMove', pick_body)
+        resolve = src[src.find('def __resolveAttack'):]
+        resolve_end = resolve.find('\n    def ', 1)
+        resolve_body = resolve if resolve_end < 0 else resolve[:resolve_end]
+        self.assertIn("move == 'ink_surge'", resolve_body)
+        self.assertIn('__resolveOverlordInkSurge', resolve_body)
+        surge = src[src.find('def __resolveOverlordInkSurge'):]
+        surge_end = surge.find('\n    def ', 1)
+        surge_body = surge if surge_end < 0 else surge[:surge_end]
+        self.assertIn('__damageToonAndCheckReclaimKo', surge_body)
+        self.assertIn("context='ink_surge'", surge_body)
+        self.assertNotIn('target.takeDamage(', surge_body)
+        self.assertIn('__surgeOverlordTowardTarget', surge_body)
+        # No KH branding in the new surge path.
+        blob = (pick_body + resolve_body + surge_body).lower()
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
+            self.assertNotIn(banned, blob)
 
     def test_silly_street_pack_finale_phase(self):
         """Street reclaim on Silly still arms P1 Overlord AI (AST — no Panda)."""
@@ -185,6 +208,46 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertLess(p2['slamTelegraphDelay'], p2['telegraphDelay'])
         self.assertLess(p2['slamCooldown'], p2['attackCooldown'])
         self.assertGreater(p2['slamDamage'], 0)
+
+    def test_p2_ink_surge_third_pressure_note(self):
+        """Unleashed mid-range ink_surge sits between slam and rain."""
+        self.assertTrue(self.cg.OVERLORD_INK_SURGE_ENABLED)
+        p1 = self.cg.overlordPhaseCombat(1)
+        p2 = self.cg.overlordPhaseCombat(2)
+        self.assertNotIn('surgeMaxRange', p1)
+        self.assertIn('surgeMaxRange', p2)
+        self.assertIn('surgeDash', p2)
+        self.assertIn('surgeHitRange', p2)
+        self.assertIn('surgeDamage', p2)
+        # Banding: slam < surgeMax < rain engage / hit.
+        self.assertLess(p2['slamMeleeRange'], p2['surgeMaxRange'])
+        self.assertLess(p2['surgeMaxRange'], p2['meleeRange'])
+        self.assertLess(p2['slamHitRange'], p2['surgeHitRange'])
+        self.assertLess(p2['surgeHitRange'], p2['attackHitRange'])
+        self.assertLess(p2['surgeTelegraphDelay'], p2['telegraphDelay'])
+        self.assertGreater(p2['surgeTelegraphDelay'], p2['slamTelegraphDelay'])
+        self.assertLess(p2['surgeCooldown'], p2['attackCooldown'])
+        self.assertGreater(p2['surgeDash'], self.cg.INK_DASH_DIST)
+        # Pure helper picker — three-note Unleashed kit.
+        slam_edge = self.cg.overlordSlamMeleeRange(p2)
+        surge_edge = self.cg.overlordSurgeMaxRange(p2)
+        self.assertEqual(
+            self.cg.overlordPickEnrageMove(slam_edge, p2), 'slam')
+        self.assertEqual(
+            self.cg.overlordPickEnrageMove(slam_edge + 0.1, p2), 'ink_surge')
+        self.assertEqual(
+            self.cg.overlordPickEnrageMove(surge_edge, p2), 'ink_surge')
+        self.assertEqual(
+            self.cg.overlordPickEnrageMove(surge_edge + 0.1, p2), 'rain')
+        # Surge math — advances but never overshoots past stop.
+        nx, ny = self.cg.overlordSurgePos(
+            0.0, 0.0, 10.0, 0.0, dash=4.6, stop=1.1)
+        self.assertAlmostEqual(ny, 0.0, places=5)
+        self.assertAlmostEqual(nx, 4.6, places=5)
+        nx2, ny2 = self.cg.overlordSurgePos(
+            0.0, 0.0, 0.5, 0.0, dash=4.6, stop=1.1)
+        self.assertAlmostEqual(nx2, 0.0, places=5)
+        self.assertAlmostEqual(ny2, 0.0, places=5)
 
     def test_p2_add_constants_are_smudge_pressure(self):
         """P2 adds are Ink Smudge trash mobs — not a fourth archetype."""
