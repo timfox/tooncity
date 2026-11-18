@@ -839,6 +839,9 @@ SNARE_TELEGRAPH_STRING_LOOK = {
 # Per-archetype palette so Smudge (purple), Brute (green), Snare (amber) read.
 # Cream fleck burst (DEATH_CREAM_FLECK_*) layers sunny purity chips on top via
 # CorruptDeathCreamFleckFx — not ink. Toggle DEATH_CREAM_FLECK_ENABLED.
+# Soft cream wash (DEATH_CREAM_WASH_*) pulses after the fleck burst via
+# CorruptDeathCreamWashFx — reclaim purity-wash grammar. Toggle
+# DEATH_CREAM_WASH_ENABLED.
 DEATH_POP_SFX_VOLUME = 0.78
 DEATH_POP_LOOK = {
     ARCHETYPE_INK: {
@@ -948,6 +951,21 @@ DEATH_CREAM_FLECK_LOOK = {
     'fleckEndColors': DEATH_CREAM_FLECK_END_COLORS,
     'binSort': DEATH_CREAM_FLECK_BIN,
 }
+
+# Defeat cream wash pulse — soft aspect2d veil after DEATH_CREAM_FLECK_* burst
+# (client only). Matches reclaim PurityCompleteCreamWashFx /
+# EntryCreamWashPulseFx two-beat grammar; quieter than street purity payoff.
+# DEATH_CREAM_WASH_ENABLED = False drops wash only.
+DEATH_CREAM_WASH_ENABLED = True
+DEATH_CREAM_WASH_DELAY_SEC = 0.20  # after fleck burst start
+DEATH_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+DEATH_CREAM_WASH_PEAK = 0.14
+DEATH_CREAM_WASH_MID = 0.08
+DEATH_CREAM_WASH_IN_SEC = 0.06
+DEATH_CREAM_WASH_PULSE_SEC = 0.10
+DEATH_CREAM_WASH_HOLD_SEC = 0.08
+DEATH_CREAM_WASH_OUT_SEC = 0.42
+DEATH_CREAM_WASH_BIN = 38  # under flecks (47); soft veil
 
 # Overlord telegraph ink crown / silhouette flash — short rubber-hose juice
 # above the boss on announceAttackTelegraph when a finale phase look is active.
