@@ -197,6 +197,7 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
                 'chaseEnabled',
                 'chaseDelaySec',
                 'chaseHp',
+                'resolveChaseSpawnHp',
                 'chaseAttackMove',
                 'chaseCombatDefeated'):
             self.assertIn(required, names)

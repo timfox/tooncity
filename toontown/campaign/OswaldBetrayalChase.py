@@ -51,6 +51,32 @@ def chaseHp():
         CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD)
 
 
+def resolveChaseSpawnHp(remaining=None, maxHp=None):
+    """Return (maxHp, currentHp) for a Corrupted Oswald chase spawn.
+
+    ``remaining`` None / ≤0 means full HP (fresh fight or unset persist).
+    A positive mid-chase value is clamped to ``1..maxHp`` so resume / relog
+    never full-heals a damaged wash fight and never spawns already-KO'd.
+    Panda-free — headless tests can exercise without Distributed AI.
+    """
+    if maxHp is None:
+        maxHp = chaseHp()
+    try:
+        maxHp = int(maxHp)
+    except (TypeError, ValueError):
+        maxHp = 0
+    maxHp = max(1, maxHp)
+    if remaining is None:
+        return maxHp, maxHp
+    try:
+        rem = int(remaining)
+    except (TypeError, ValueError):
+        rem = 0
+    if rem <= 0:
+        return maxHp, maxHp
+    return maxHp, max(1, min(rem, maxHp))
+
+
 def chaseAttackMove():
     """Primary betrayal kit move from ARCHETYPE_CORRUPT_OSWALD stats."""
     stats = CorruptionGlobals.archetypeStats(
@@ -125,12 +151,15 @@ def epilogueCue():
         'Replay from Toon Central hub — C on Loopy Lane to start over'))
 
 
-def spawnCorruptOswald(air, toon, zoneId=None, forward=None):
+def spawnCorruptOswald(air, toon, zoneId=None, forward=None, hp=None):
     """Spawn one fightable Corrupted Oswald near `toon`. Returns AI or None.
 
     Archetype stats already carry the betrayal attack kit
     (``betrayal_lunge`` / ``stain_burst``); this hook only fields HP/name/
     pose so the chase fights like the twist, not a smack reskin.
+
+    ``hp`` is optional remaining mid-chase HP from CampaignProgressSave —
+    resume / relog must not full-heal a damaged Corrupted Oswald.
     """
     if air is None or toon is None:
         return None
@@ -146,12 +175,12 @@ def spawnCorruptOswald(air, toon, zoneId=None, forward=None):
 
     archetype = CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD
     name = chaseName()
-    hp = chaseHp()
+    maxHp, currentHp = resolveChaseSpawnHp(remaining=hp, maxHp=chaseHp())
     # Pin kit identity at spawn so a future HP override cannot drop the move.
     _kitMove = chaseAttackMove()
     corrupt = DistributedCorruptToonAI(
-        air, name=name, maxHp=hp, archetype=archetype, finalePhase=0)
-    corrupt.hp = corrupt.maxHp
+        air, name=name, maxHp=maxHp, archetype=archetype, finalePhase=0)
+    corrupt.hp = int(currentHp)
     if _kitMove and hasattr(corrupt, '_stats'):
         try:
             corrupt._stats = dict(corrupt._stats)
