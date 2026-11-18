@@ -1033,6 +1033,168 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         purity_src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('PURITY_METER_FILL_AFTERSHOCK_ENABLED', purity_src)
 
+        # Handoff cream edge (#124) — cream frame on carnival confetti handoff.
+        act_edge_names = _class_and_func_names(_module_ast(act_edge_rel))
+        self.assertIn('playHandoffCreamEdge', act_edge_names)
+        self.assertIn('clearHandoffCreamEdge', act_edge_names)
+        for handoff_edge_key in (
+                'HANDOFF_CREAM_EDGE_ENABLED',
+                'HANDOFF_CREAM_EDGE_COLOR',
+                'HANDOFF_CREAM_EDGE_PEAK',
+                'HANDOFF_CREAM_EDGE_FLECK_COUNT',
+                'HANDOFF_CREAM_EDGE_BIN',
+                'HANDOFF_CREAM_EDGE_SPARKLE_ENABLED'):
+            self.assertIn(
+                handoff_edge_key, campaign_names,
+                msg='CampaignGlobals missing %s' % handoff_edge_key)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('playHandoffCreamEdge', handoff_src)
+        self.assertIn('confetti=True', handoff_src)
+
+        # Idle cream drip sparkle (#125) — twinkle flecks on idle cream drip.
+        idle_sparkle_rel = 'toontown/corruption/IdleCreamDripSparkleFx.py'
+        _assert_module_file(idle_sparkle_rel)
+        idle_sparkle_names = _class_and_func_names(_module_ast(idle_sparkle_rel))
+        self.assertIn('IdleCreamDripSparkles', idle_sparkle_names)
+        self.assertIn('idleCreamDripSparkleLook', idle_sparkle_names)
+        idle_sparkle_methods = _class_method_names(
+            _module_ast(idle_sparkle_rel), 'IdleCreamDripSparkles')
+        self.assertIn('start', idle_sparkle_methods)
+        self.assertIn('_spawnFleck', idle_sparkle_methods)
+        self.assertIn('_emitBurst', idle_sparkle_methods)
+        self.assertTrue(
+            hasattr(cg, 'IDLE_CREAM_DRIP_SPARKLE_LOOK'),
+            msg='CorruptionGlobals missing IDLE_CREAM_DRIP_SPARKLE_LOOK')
+        self.assertEqual(
+            cg.IDLE_CREAM_DRIP_SPARKLE_LOOK.get('id'), 'idle-cream-drip-sparkle')
+        self.assertTrue(
+            hasattr(cg, 'IDLE_CREAM_DRIP_SPARKLE_ENABLED'),
+            msg='CorruptionGlobals missing IDLE_CREAM_DRIP_SPARKLE_ENABLED')
+        self.assertIn('IdleCreamDripSparkles', corrupt_src)
+        self.assertIn('__startIdleCreamDripSparkle', corrupt_src)
+
+        # Dodge trail cream aftershock (#126) — delayed residual after sparkle drip.
+        dodge_trail_methods = _class_method_names(
+            _module_ast('toontown/hackslash/DodgeTrailFx.py'), 'DodgeTrailFx')
+        self.assertIn('_buildCreamAftershock', dodge_trail_methods)
+        self.assertIn('_spawnCreamAftershockHalo', dodge_trail_methods)
+        self.assertIn('_spawnCreamAftershockFleck', dodge_trail_methods)
+        for dodge_as_key in (
+                'DODGE_TRAIL_CREAM_AFTERSHOCK_ENABLED',
+                'DODGE_TRAIL_CREAM_AFTERSHOCK_DELAY_SEC',
+                'DODGE_TRAIL_CREAM_AFTERSHOCK_COUNT',
+                'DODGE_TRAIL_CREAM_AFTERSHOCK_COLOR',
+                'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                dodge_as_key, config_names,
+                msg='HackSlashConfig missing dodge aftershock %s' % dodge_as_key)
+        dodge_trail_src = _read('toontown/hackslash/DodgeTrailFx.py')
+        self.assertIn('DODGE_TRAIL_CREAM_AFTERSHOCK_ENABLED', dodge_trail_src)
+
+        # Wave-clear cream aftershock (#127) — delayed residual after shimmer hang.
+        wave_shimmer_methods = _class_method_names(
+            _module_ast(shimmer_rel), 'WaveClearCreamShimmerFxClient')
+        self.assertIn('_buildAftershock', wave_shimmer_methods)
+        self.assertIn('_spawnAftershockHalo', wave_shimmer_methods)
+        self.assertIn('_spawnAftershockFleck', wave_shimmer_methods)
+        for wave_as_key in (
+                'WAVE_CLEAR_CREAM_AFTERSHOCK_ENABLED',
+                'WAVE_CLEAR_CREAM_AFTERSHOCK_DELAY_SEC',
+                'WAVE_CLEAR_CREAM_AFTERSHOCK_COUNT',
+                'WAVE_CLEAR_CREAM_AFTERSHOCK_COLOR',
+                'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                wave_as_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % wave_as_key)
+        wave_shimmer_src = _read(shimmer_rel)
+        self.assertIn('WAVE_CLEAR_CREAM_AFTERSHOCK_ENABLED', wave_shimmer_src)
+
+        # (#128 was prior headless smoke through #123 — no new juice symbols.)
+
+        # Victory cream edge (#129) — cream frame on victory confetti/sparkle swell.
+        act_edge_names = _class_and_func_names(_module_ast(act_edge_rel))
+        self.assertIn('playVictoryCreamEdge', act_edge_names)
+        self.assertIn('clearVictoryCreamEdge', act_edge_names)
+        for victory_edge_key in (
+                'VICTORY_CREAM_EDGE_ENABLED',
+                'VICTORY_CREAM_EDGE_COLOR',
+                'VICTORY_CREAM_EDGE_PEAK',
+                'VICTORY_CREAM_EDGE_FLECK_COUNT',
+                'VICTORY_CREAM_EDGE_BIN',
+                'VICTORY_CREAM_EDGE_SPARKLE_ENABLED'):
+            self.assertIn(
+                victory_edge_key, campaign_names,
+                msg='CampaignGlobals missing %s' % victory_edge_key)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('playVictoryCreamEdge', handoff_src)
+        self.assertIn('creamSwell=True', handoff_src)
+
+        # Perfect-dodge cream wash (#130) — soft wash after perfect-dodge aftershock.
+        pd_wash_rel = 'toontown/hackslash/PerfectDodgeCreamWashFx.py'
+        _assert_module_file(pd_wash_rel)
+        pd_wash_names = _class_and_func_names(_module_ast(pd_wash_rel))
+        self.assertIn('PerfectDodgeCreamWashPulse', pd_wash_names)
+        pd_wash_methods = _class_method_names(
+            _module_ast(pd_wash_rel), 'PerfectDodgeCreamWashPulse')
+        self.assertIn('play', pd_wash_methods)
+        self.assertIn('clear', pd_wash_methods)
+        for pd_wash_key in (
+                'PERFECT_DODGE_CREAM_WASH_ENABLED',
+                'PERFECT_DODGE_CREAM_WASH_DELAY_SEC',
+                'PERFECT_DODGE_CREAM_WASH_COLOR',
+                'PERFECT_DODGE_CREAM_WASH_PEAK',
+                'PERFECT_DODGE_CREAM_WASH_MID',
+                'PERFECT_DODGE_CREAM_WASH_BIN'):
+            self.assertIn(
+                pd_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % pd_wash_key)
+        dodge_perfect_src = _read('toontown/hackslash/DodgePerfectFx.py')
+        self.assertIn('PerfectDodgeCreamWashPulse', dodge_perfect_src)
+        self.assertIn('PerfectDodgeCreamWashPulse', hack_init)
+
+        # Silhouette cream sparkle (#131) — rising flecks on silhouette cream rim.
+        silh_sparkle_rel = 'toontown/corruption/CorruptSilhouetteCreamSparkleFx.py'
+        _assert_module_file(silh_sparkle_rel)
+        silh_sparkle_names = _class_and_func_names(_module_ast(silh_sparkle_rel))
+        self.assertIn('SilhouetteCreamSparkles', silh_sparkle_names)
+        self.assertIn('silhouetteCreamSparkleLook', silh_sparkle_names)
+        silh_sparkle_methods = _class_method_names(
+            _module_ast(silh_sparkle_rel), 'SilhouetteCreamSparkles')
+        self.assertIn('start', silh_sparkle_methods)
+        self.assertIn('_spawnFleck', silh_sparkle_methods)
+        self.assertIn('_emitBurst', silh_sparkle_methods)
+        self.assertTrue(
+            hasattr(cg, 'SILHOUETTE_CREAM_SPARKLE_LOOK'),
+            msg='CorruptionGlobals missing SILHOUETTE_CREAM_SPARKLE_LOOK')
+        self.assertEqual(
+            cg.SILHOUETTE_CREAM_SPARKLE_LOOK.get('id'), 'silhouette-cream-sparkle')
+        self.assertTrue(
+            hasattr(cg, 'SILHOUETTE_CREAM_SPARKLE_ENABLED'),
+            msg='CorruptionGlobals missing SILHOUETTE_CREAM_SPARKLE_ENABLED')
+        self.assertIn('SilhouetteCreamSparkles', corrupt_src)
+        self.assertIn('__startSilhouetteCreamSparkle', corrupt_src)
+
+        # Entry cream wash aftershock (#132) — delayed residual after entry wash.
+        entry_wash_methods = _class_method_names(
+            _module_ast(entry_wash_rel), 'EntryCreamWashPulseFxClient')
+        self.assertIn('_buildAftershock', entry_wash_methods)
+        self.assertIn('_spawnAftershockHalo', entry_wash_methods)
+        self.assertIn('_spawnAftershockFleck', entry_wash_methods)
+        for entry_as_key in (
+                'ENTRY_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'ENTRY_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                'ENTRY_CREAM_WASH_AFTERSHOCK_COUNT',
+                'ENTRY_CREAM_WASH_AFTERSHOCK_COLOR',
+                'ENTRY_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'ENTRY_CREAM_WASH_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                entry_as_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % entry_as_key)
+        entry_wash_src = _read(entry_wash_rel)
+        self.assertIn('ENTRY_CREAM_WASH_AFTERSHOCK_ENABLED', entry_wash_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
