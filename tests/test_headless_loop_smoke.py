@@ -3579,7 +3579,11 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertGreaterEqual(twist_count, 13)
         twist_pop = campaign_assigns.get('VICTORY_TWIST_CONFETTI_POP')
         if isinstance(twist_pop, float):
-            self.assertGreater(twist_pop, 1.65)
+            self.assertGreaterEqual(twist_pop, 1.84)
+        twist_after = campaign_assigns.get(
+            'VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT')
+        if isinstance(twist_after, int):
+            self.assertGreaterEqual(twist_after, 8)
         self.assertIn('playVictoryTwistConfettiSting', handoff_src)
         self.assertIn('clearVictoryTwistConfettiSting', handoff_src)
         finale_fx_src = _read('toontown/campaign/FinalePhaseFx.py')
@@ -3589,7 +3593,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('micro rebound', camp_magic_l)
         self.assertIn(
             'deepened victory/confetti twist cream sting', camp_magic_l)
-        self.assertIn('micro cream pop', camp_magic_l)
+        self.assertIn('past #265', camp_magic_l)
+        self.assertIn('taller micro cream pop', camp_magic_l)
         betrayal_cue = campaign_assigns.get('FINALE_BETRAYAL_HANDOFF_CUE') or ''
         if isinstance(betrayal_cue, list):
             betrayal_cue = ''.join(str(part) for part in betrayal_cue)
