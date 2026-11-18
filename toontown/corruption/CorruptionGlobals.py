@@ -2182,7 +2182,7 @@ GAGSTER_LOB_MELEE_INTERRUPT = True
 # Overlord climax telegraphs (rain / slam / ink_surge) — same mid-telegraph
 # melee cancel as street kits so boss punish skill matches Punchline packs.
 # Smudge ink_dash/splat stay commit-through (follow-up). Dedicated Overlord
-# counter windows by move id are a separate deepen. No cream / no KH.
+# counter windows by move id are below (interrupt ≠ counter). No cream / no KH.
 OVERLORD_RAIN_MELEE_INTERRUPT = True
 OVERLORD_SLAM_MELEE_INTERRUPT = True
 OVERLORD_INK_SURGE_MELEE_INTERRUPT = True
@@ -2245,6 +2245,46 @@ OSWALD_STAIN_BURST_COUNTER_RANGE = 7.0
 OSWALD_STAIN_BURST_COUNTER_DAMAGE_MULT = 1.5
 OSWALD_STAIN_BURST_COUNTER_RATE_MULT = 1.2
 OSWALD_STAIN_BURST_COUNTER_EVENT = 'corruptOswaldStainBurstCounter'
+
+# Ink Overlord rain telegraph → dedicated counter window (Snare-like).
+# After the magenta rain / danger-ring telegraph reads, arm a short
+# punish→melee window by move id. Distinct from mid-rain interrupt cancel.
+# Fits inside the shorter P2 rain telegraphDelay. No cream / no KH.
+OVERLORD_RAIN_COUNTER_ENABLED = True
+OVERLORD_RAIN_COUNTER_ARM_DELAY_SEC = 0.22
+OVERLORD_RAIN_COUNTER_WINDOW_SEC = 0.55
+# Planar range — rain puddle near-miss + slack so a readable Overlord can
+# be punished from the mid-range rain band.
+OVERLORD_RAIN_COUNTER_RANGE = 15.0
+OVERLORD_RAIN_COUNTER_DAMAGE_MULT = 1.5
+OVERLORD_RAIN_COUNTER_RATE_MULT = 1.2
+OVERLORD_RAIN_COUNTER_EVENT = 'corruptOverlordRainCounter'
+
+# Ink Overlord slam telegraph → dedicated counter window (Snare-like).
+# After the close slam danger-ring telegraph reads, arm a short
+# punish→melee window. Distinct from mid-slam interrupt cancel. Fits inside
+# the shorter P2 slamTelegraphDelay. No cream / no KH.
+OVERLORD_SLAM_COUNTER_ENABLED = True
+OVERLORD_SLAM_COUNTER_ARM_DELAY_SEC = 0.12
+OVERLORD_SLAM_COUNTER_WINDOW_SEC = 0.42
+# Planar range — slam near-miss + slack for a readable close-range punish.
+OVERLORD_SLAM_COUNTER_RANGE = 8.5
+OVERLORD_SLAM_COUNTER_DAMAGE_MULT = 1.5
+OVERLORD_SLAM_COUNTER_RATE_MULT = 1.2
+OVERLORD_SLAM_COUNTER_EVENT = 'corruptOverlordSlamCounter'
+
+# Ink Overlord ink_surge telegraph → dedicated counter window (Snare-like).
+# After the mid surge danger-ring telegraph reads, arm a short
+# punish→melee window. Distinct from mid-surge interrupt cancel. Fits inside
+# surgeTelegraphDelay. No cream / no KH.
+OVERLORD_INK_SURGE_COUNTER_ENABLED = True
+OVERLORD_INK_SURGE_COUNTER_ARM_DELAY_SEC = 0.14
+OVERLORD_INK_SURGE_COUNTER_WINDOW_SEC = 0.48
+# Planar range — surge near-miss + slack for a readable mid-range punish.
+OVERLORD_INK_SURGE_COUNTER_RANGE = 10.0
+OVERLORD_INK_SURGE_COUNTER_DAMAGE_MULT = 1.5
+OVERLORD_INK_SURGE_COUNTER_RATE_MULT = 1.2
+OVERLORD_INK_SURGE_COUNTER_EVENT = 'corruptOverlordInkSurgeCounter'
 
 
 def isMeleeInterruptibleTelegraph(archetype, move):
@@ -2325,6 +2365,9 @@ def isDedicatedTelegraphCounterMove(archetype, move):
     Brute: spit only (slam stays commit-through, no counter).
     Gagster: gag_lob only.
     Oswald: betrayal_lunge / stain_burst when the matching COUNTER_ENABLED flag.
+    Overlord (ARCHETYPE_INK + rain/slam/ink_surge): when the matching
+    OVERLORD_*_COUNTER_ENABLED flag is on — climax punish parity with street
+    kits after move-id telegraph + melee interrupt. Smudge ink_dash/splat: False.
     Interrupt cancel (isMeleeInterruptibleTelegraph) is separate.
     """
     aid = normalizeArchetype(archetype)
@@ -2340,6 +2383,15 @@ def isDedicatedTelegraphCounterMove(archetype, move):
             return bool(OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED)
         if moveName == 'stain_burst':
             return bool(OSWALD_STAIN_BURST_COUNTER_ENABLED)
+    # Overlord moves are unique strings on ARCHETYPE_INK (finalePhase >= 1);
+    # Smudge never telegraphs rain / slam / ink_surge.
+    if aid == ARCHETYPE_INK:
+        if moveName == 'rain':
+            return bool(OVERLORD_RAIN_COUNTER_ENABLED)
+        if moveName == 'slam':
+            return bool(OVERLORD_SLAM_COUNTER_ENABLED)
+        if moveName == 'ink_surge':
+            return bool(OVERLORD_INK_SURGE_COUNTER_ENABLED)
     return False
 
 
@@ -2472,6 +2524,105 @@ def oswaldStainBurstCounterUntil(armedAt, window=None):
     """Absolute expiry for a stain-burst counter window armed at armedAt."""
     if window is None:
         window = OSWALD_STAIN_BURST_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def overlordRainCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after an Overlord rain counter."""
+    if mult is None:
+        mult = OVERLORD_RAIN_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def overlordRainCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after an Overlord rain counter."""
+    if mult is None:
+        mult = OVERLORD_RAIN_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isOverlordRainCounterWindowOpen(armed, until, now):
+    """True while an Overlord rain counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def overlordRainCounterArmAt(now, delay=None):
+    """Absolute time when the rain counter should arm after telegraph."""
+    if delay is None:
+        delay = OVERLORD_RAIN_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def overlordRainCounterUntil(armedAt, window=None):
+    """Absolute expiry for a rain counter window armed at armedAt."""
+    if window is None:
+        window = OVERLORD_RAIN_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def overlordSlamCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after an Overlord slam counter."""
+    if mult is None:
+        mult = OVERLORD_SLAM_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def overlordSlamCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after an Overlord slam counter."""
+    if mult is None:
+        mult = OVERLORD_SLAM_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isOverlordSlamCounterWindowOpen(armed, until, now):
+    """True while an Overlord slam counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def overlordSlamCounterArmAt(now, delay=None):
+    """Absolute time when the slam counter should arm after telegraph."""
+    if delay is None:
+        delay = OVERLORD_SLAM_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def overlordSlamCounterUntil(armedAt, window=None):
+    """Absolute expiry for a slam counter window armed at armedAt."""
+    if window is None:
+        window = OVERLORD_SLAM_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def overlordInkSurgeCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after an Overlord ink_surge counter."""
+    if mult is None:
+        mult = OVERLORD_INK_SURGE_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def overlordInkSurgeCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after an Overlord ink_surge counter."""
+    if mult is None:
+        mult = OVERLORD_INK_SURGE_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isOverlordInkSurgeCounterWindowOpen(armed, until, now):
+    """True while an Overlord ink_surge counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def overlordInkSurgeCounterArmAt(now, delay=None):
+    """Absolute time when the ink_surge counter should arm after telegraph."""
+    if delay is None:
+        delay = OVERLORD_INK_SURGE_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def overlordInkSurgeCounterUntil(armedAt, window=None):
+    """Absolute expiry for an ink_surge counter window armed at armedAt."""
+    if window is None:
+        window = OVERLORD_INK_SURGE_COUNTER_WINDOW_SEC
     return float(armedAt) + max(0.0, float(window))
 
 

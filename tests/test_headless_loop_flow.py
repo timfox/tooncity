@@ -777,11 +777,15 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(cg.isMeleeInterruptibleTelegraph(
             cg.ARCHETYPE_CORRUPT_OSWALD, 'stain_burst'))
         self.assertIn('__maybeInterruptMeleeTelegraph', corrupt_ai)
-        # Dedicated counter windows (beyond interrupt) for spit / lob / Oswald.
+        # Dedicated counter windows (beyond interrupt) for spit / lob /
+        # Oswald / Overlord rain·slam·ink_surge.
         self.assertTrue(cg.BRUTE_SPIT_COUNTER_ENABLED)
         self.assertTrue(cg.GAGSTER_LOB_COUNTER_ENABLED)
         self.assertTrue(cg.OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED)
         self.assertTrue(cg.OSWALD_STAIN_BURST_COUNTER_ENABLED)
+        self.assertTrue(cg.OVERLORD_RAIN_COUNTER_ENABLED)
+        self.assertTrue(cg.OVERLORD_SLAM_COUNTER_ENABLED)
+        self.assertTrue(cg.OVERLORD_INK_SURGE_COUNTER_ENABLED)
         self.assertTrue(cg.isDedicatedTelegraphCounterMove(
             cg.ARCHETYPE_BRUTE, 'spit'))
         self.assertFalse(cg.isDedicatedTelegraphCounterMove(
@@ -792,16 +796,30 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             cg.ARCHETYPE_CORRUPT_OSWALD, 'betrayal_lunge'))
         self.assertTrue(cg.isDedicatedTelegraphCounterMove(
             cg.ARCHETYPE_CORRUPT_OSWALD, 'stain_burst'))
+        self.assertTrue(cg.isDedicatedTelegraphCounterMove(
+            cg.ARCHETYPE_INK, 'rain'))
+        self.assertTrue(cg.isDedicatedTelegraphCounterMove(
+            cg.ARCHETYPE_INK, 'slam'))
+        self.assertTrue(cg.isDedicatedTelegraphCounterMove(
+            cg.ARCHETYPE_INK, 'ink_surge'))
+        self.assertFalse(cg.isDedicatedTelegraphCounterMove(
+            cg.ARCHETYPE_INK, 'ink_dash'))
         corrupt_client = _read('toontown/corruption/DistributedCorruptToon.py')
         melee_src = _read('toontown/hackslash/MeleeCombat.py')
         self.assertIn('__scheduleBruteSpitCounter', corrupt_client)
         self.assertIn('__scheduleGagsterLobCounter', corrupt_client)
         self.assertIn('__scheduleOswaldBetrayalLungeCounter', corrupt_client)
         self.assertIn('__scheduleOswaldStainBurstCounter', corrupt_client)
+        self.assertIn('__scheduleOverlordRainCounter', corrupt_client)
+        self.assertIn('__scheduleOverlordSlamCounter', corrupt_client)
+        self.assertIn('__scheduleOverlordInkSurgeCounter', corrupt_client)
         self.assertIn('_onBruteSpitCounter', melee_src)
         self.assertIn('_onGagsterLobCounter', melee_src)
         self.assertIn('_onOswaldBetrayalLungeCounter', melee_src)
         self.assertIn('_onOswaldStainBurstCounter', melee_src)
+        self.assertIn('_onOverlordRainCounter', melee_src)
+        self.assertIn('_onOverlordSlamCounter', melee_src)
+        self.assertIn('_onOverlordInkSurgeCounter', melee_src)
 
         # Player KO during reclaim is an authored fail (#323/#324) + retry clear.
         rg = self.rg

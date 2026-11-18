@@ -85,12 +85,17 @@ crown always (OverlordTelegraphCrownFx); ink rain shower
 denser radial cream phase flecks + juicier impact punch bloom with wider
 cream aftershock; move-scaled footprint + phase-timed AV squash/stretch
 hold for fair punish windows) on all three — distinct from Brute spit cream
-drip / Snare whip / Smudge hose / Gunk puddle bloom #299. Ink Overlord
-hits and deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
-rubber-hose ink splash; phase-retinted; composes with crown / rain / death /
-idle looks — not street Smudge purple); Overlord hits also pulse
-OverlordHitCreamWashFx (soft cream wash — cream/pastel contrast against
-magenta ink; telegraph / silhouette / death cream-wash grammar). Defeat plays CorruptDeathPopFx
+drip / Snare whip / Smudge hose / Gunk puddle bloom #299. After each
+Overlord telegraph reads, a short dedicated counter window arms by move
+id into melee (OVERLORD_RAIN_COUNTER_* / OVERLORD_SLAM_COUNTER_* /
+OVERLORD_INK_SURGE_COUNTER_*; synchs with hackslash perfect-dodge counter;
+mid-telegraph melee interrupts the wind-up — interrupt ≠ counter). Ink
+Overlord hits and deaths also flash OverlordMagentaInkSplashFx (cheap
+magenta/crimson rubber-hose ink splash; phase-retinted; composes with crown
+/ rain / death / idle looks — not street Smudge purple); Overlord hits also
+pulse OverlordHitCreamWashFx (soft cream wash — cream/pastel contrast
+against magenta ink; telegraph / silhouette / death cream-wash grammar).
+Defeat plays CorruptDeathPopFx
 (rubber-hose ink splat / balloon pop) layered with
 CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
 not ink), CorruptDeathCreamSparkleFx (sunny cream / pastel sparkle flecks

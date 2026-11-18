@@ -234,6 +234,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearGagsterLobCounter()
         self.__clearOswaldBetrayalLungeCounter()
         self.__clearOswaldStainBurstCounter()
+        self.__clearOverlordRainCounter()
+        self.__clearOverlordSlamCounter()
+        self.__clearOverlordInkSurgeCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -716,6 +719,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__clearGagsterLobCounter()
         # Overlord-only: crown always; rain shower only on rain; danger-ring
         # warn on rain / slam / ink_surge with move-scaled footprint.
+        # rain / slam / ink_surge also arm Snare-like dedicated
+        # counter→melee windows by move id (thin messenger hooks;
+        # interrupt ≠ counter).
         if look and phase >= 1:
             overlordMove = (
                 CorruptionGlobals.normalizeOverlordTelegraphMove(
@@ -738,10 +744,29 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                  CorruptionGlobals.overlordTelegraphMoveHudCue(
                      overlordMove, phase, look),
                  look.get('hudColor', (1.0, 0.55, 1.0, 1.0))])
+            if overlordMove == 'rain':
+                self.__scheduleOverlordRainCounter()
+                self.__clearOverlordSlamCounter()
+                self.__clearOverlordInkSurgeCounter()
+            elif overlordMove == 'slam':
+                self.__scheduleOverlordSlamCounter()
+                self.__clearOverlordRainCounter()
+                self.__clearOverlordInkSurgeCounter()
+            elif overlordMove == 'ink_surge':
+                self.__scheduleOverlordInkSurgeCounter()
+                self.__clearOverlordRainCounter()
+                self.__clearOverlordSlamCounter()
+            else:
+                self.__clearOverlordRainCounter()
+                self.__clearOverlordSlamCounter()
+                self.__clearOverlordInkSurgeCounter()
         else:
             self.__clearOverlordTelegraphCrown()
             self.__clearOverlordPhaseInkRain()
             self.__clearOverlordTelegraphPunch()
+            self.__clearOverlordRainCounter()
+            self.__clearOverlordSlamCounter()
+            self.__clearOverlordInkSurgeCounter()
         # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
         # wind-up reads clearly before announceAttackHit's slam lands.
         # Overlord uses phase-aware timings so stretch lingers until impact.
@@ -806,6 +831,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSnareStringSnapCounter()
         self.__clearOswaldBetrayalLungeCounter()
         self.__clearOswaldStainBurstCounter()
+        self.__clearOverlordRainCounter()
+        self.__clearOverlordSlamCounter()
+        self.__clearOverlordInkSurgeCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
         self.__clearOswaldTelegraphStain()
@@ -1511,6 +1539,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearGagsterLobCounter()
         self.__clearOswaldBetrayalLungeCounter()
         self.__clearOswaldStainBurstCounter()
+        self.__clearOverlordRainCounter()
+        self.__clearOverlordSlamCounter()
+        self.__clearOverlordInkSurgeCounter()
         self.__clearBruteTelegraphSpit()
         self.__clearBruteSludgeSplash()
         self.__clearBruteSpitCreamSplash()
@@ -2367,6 +2398,154 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._oswaldStainBurstCounterTask = None
+
+    def __scheduleOverlordRainCounter(self):
+        """After rain telegraph reads, arm a short punish→melee counter window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path (same as Snare / Oswald). Gameplay timing only.
+        """
+        self.__clearOverlordRainCounter()
+        if not getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'OVERLORD_RAIN_COUNTER_ARM_DELAY_SEC', 0.22))
+        window = float(getattr(
+            CorruptionGlobals, 'OVERLORD_RAIN_COUNTER_WINDOW_SEC', 0.55))
+        event = str(getattr(
+            CorruptionGlobals, 'OVERLORD_RAIN_COUNTER_EVENT',
+            'corruptOverlordRainCounter'))
+
+        def _fire(task=None):
+            self._overlordRainCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._overlordRainCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('overlord-rain-counter'))
+        except Exception:
+            self._overlordRainCounterTask = None
+            _fire()
+
+    def __clearOverlordRainCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('overlord-rain-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._overlordRainCounterTask = None
+
+    def __scheduleOverlordSlamCounter(self):
+        """After slam telegraph reads, arm a short punish→melee counter window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path. Gameplay timing only.
+        """
+        self.__clearOverlordSlamCounter()
+        if not getattr(
+                CorruptionGlobals, 'OVERLORD_SLAM_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'OVERLORD_SLAM_COUNTER_ARM_DELAY_SEC', 0.12))
+        window = float(getattr(
+            CorruptionGlobals, 'OVERLORD_SLAM_COUNTER_WINDOW_SEC', 0.42))
+        event = str(getattr(
+            CorruptionGlobals, 'OVERLORD_SLAM_COUNTER_EVENT',
+            'corruptOverlordSlamCounter'))
+
+        def _fire(task=None):
+            self._overlordSlamCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._overlordSlamCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('overlord-slam-counter'))
+        except Exception:
+            self._overlordSlamCounterTask = None
+            _fire()
+
+    def __clearOverlordSlamCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('overlord-slam-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._overlordSlamCounterTask = None
+
+    def __scheduleOverlordInkSurgeCounter(self):
+        """After ink_surge telegraph reads, arm a short punish→melee window.
+
+        Thin client cue — MeleeCombat listens and reuses the perfect-dodge
+        counter opener path. Gameplay timing only.
+        """
+        self.__clearOverlordInkSurgeCounter()
+        if not getattr(
+                CorruptionGlobals, 'OVERLORD_INK_SURGE_COUNTER_ENABLED', True):
+            return
+        delay = float(getattr(
+            CorruptionGlobals, 'OVERLORD_INK_SURGE_COUNTER_ARM_DELAY_SEC',
+            0.14))
+        window = float(getattr(
+            CorruptionGlobals, 'OVERLORD_INK_SURGE_COUNTER_WINDOW_SEC', 0.48))
+        event = str(getattr(
+            CorruptionGlobals, 'OVERLORD_INK_SURGE_COUNTER_EVENT',
+            'corruptOverlordInkSurgeCounter'))
+
+        def _fire(task=None):
+            self._overlordInkSurgeCounterTask = None
+            try:
+                messenger.send(event, [self, window])  # noqa: F821
+            except Exception:
+                pass
+            return Task.done
+
+        if delay <= 0.0:
+            _fire()
+            return
+        try:
+            self._overlordInkSurgeCounterTask = taskMgr.doMethodLater(  # noqa: F821
+                delay, _fire, self.uniqueName('overlord-ink-surge-counter'))
+        except Exception:
+            self._overlordInkSurgeCounterTask = None
+            _fire()
+
+    def __clearOverlordInkSurgeCounter(self):
+        taskName = None
+        try:
+            taskName = self.uniqueName('overlord-ink-surge-counter')
+        except Exception:
+            taskName = None
+        if taskName:
+            try:
+                taskMgr.remove(taskName)  # noqa: F821
+            except Exception:
+                pass
+        self._overlordInkSurgeCounterTask = None
 
     def __consumeSnareStringCounterCreamSplash(self):
         """If string-snap counter juice is live, play cream splash and spend it.

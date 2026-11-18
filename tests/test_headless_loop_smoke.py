@@ -3354,6 +3354,77 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_onOswaldStainBurstCounter', melee_src)
         self.assertIn('corruptOswaldBetrayalLungeCounter', melee_src)
         self.assertIn('corruptOswaldStainBurstCounter', melee_src)
+        # Overlord rain / slam / ink_surge dedicated counter windows.
+        for overlord_counter_key in (
+                'OVERLORD_RAIN_COUNTER_ENABLED',
+                'OVERLORD_RAIN_COUNTER_ARM_DELAY_SEC',
+                'OVERLORD_RAIN_COUNTER_WINDOW_SEC',
+                'OVERLORD_RAIN_COUNTER_RANGE',
+                'OVERLORD_RAIN_COUNTER_DAMAGE_MULT',
+                'OVERLORD_RAIN_COUNTER_RATE_MULT',
+                'OVERLORD_RAIN_COUNTER_EVENT',
+                'OVERLORD_SLAM_COUNTER_ENABLED',
+                'OVERLORD_SLAM_COUNTER_ARM_DELAY_SEC',
+                'OVERLORD_SLAM_COUNTER_WINDOW_SEC',
+                'OVERLORD_SLAM_COUNTER_RANGE',
+                'OVERLORD_SLAM_COUNTER_DAMAGE_MULT',
+                'OVERLORD_SLAM_COUNTER_RATE_MULT',
+                'OVERLORD_SLAM_COUNTER_EVENT',
+                'OVERLORD_INK_SURGE_COUNTER_ENABLED',
+                'OVERLORD_INK_SURGE_COUNTER_ARM_DELAY_SEC',
+                'OVERLORD_INK_SURGE_COUNTER_WINDOW_SEC',
+                'OVERLORD_INK_SURGE_COUNTER_RANGE',
+                'OVERLORD_INK_SURGE_COUNTER_DAMAGE_MULT',
+                'OVERLORD_INK_SURGE_COUNTER_RATE_MULT',
+                'OVERLORD_INK_SURGE_COUNTER_EVENT'):
+            self.assertIn(
+                overlord_counter_key, cg_names,
+                msg='CorruptionGlobals missing Overlord counter %s' % (
+                    overlord_counter_key,))
+        self.assertIs(self.corruption.OVERLORD_RAIN_COUNTER_ENABLED, True)
+        self.assertIs(self.corruption.OVERLORD_SLAM_COUNTER_ENABLED, True)
+        self.assertIs(
+            self.corruption.OVERLORD_INK_SURGE_COUNTER_ENABLED, True)
+        self.assertEqual(
+            self.corruption.OVERLORD_RAIN_COUNTER_EVENT,
+            'corruptOverlordRainCounter')
+        self.assertEqual(
+            self.corruption.OVERLORD_SLAM_COUNTER_EVENT,
+            'corruptOverlordSlamCounter')
+        self.assertEqual(
+            self.corruption.OVERLORD_INK_SURGE_COUNTER_EVENT,
+            'corruptOverlordInkSurgeCounter')
+        for overlord_helper in (
+                'overlordRainCounterOpenerDamage',
+                'overlordRainCounterOpenerRate',
+                'isOverlordRainCounterWindowOpen',
+                'overlordRainCounterArmAt',
+                'overlordRainCounterUntil',
+                'overlordSlamCounterOpenerDamage',
+                'overlordSlamCounterOpenerRate',
+                'isOverlordSlamCounterWindowOpen',
+                'overlordSlamCounterArmAt',
+                'overlordSlamCounterUntil',
+                'overlordInkSurgeCounterOpenerDamage',
+                'overlordInkSurgeCounterOpenerRate',
+                'isOverlordInkSurgeCounterWindowOpen',
+                'overlordInkSurgeCounterArmAt',
+                'overlordInkSurgeCounterUntil'):
+            self.assertTrue(
+                callable(getattr(self.corruption, overlord_helper, None)),
+                msg='CorruptionGlobals missing helper %s' % overlord_helper)
+        self.assertIn('__scheduleOverlordRainCounter', corrupt_src)
+        self.assertIn('__scheduleOverlordSlamCounter', corrupt_src)
+        self.assertIn('__scheduleOverlordInkSurgeCounter', corrupt_src)
+        self.assertIn('_onOverlordRainCounter', melee_src)
+        self.assertIn('_onOverlordSlamCounter', melee_src)
+        self.assertIn('_onOverlordInkSurgeCounter', melee_src)
+        self.assertIn('corruptOverlordRainCounter', melee_src)
+        self.assertIn('corruptOverlordSlamCounter', melee_src)
+        self.assertIn('corruptOverlordInkSurgeCounter', melee_src)
+        self.assertIn('Overlord rain→F counter', config_src)
+        self.assertIn('Overlord slam→F counter', config_src)
+        self.assertIn('Overlord surge→F counter', config_src)
         self.assertIn('Balloon Snare', magic_src)
         reclaim_md = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('string-snap counter', reclaim_md)
@@ -3366,6 +3437,12 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SnareStringCounterCreamSplashFx', corr_init)
         self.assertIn('BRUTE_SPIT_COUNTER_', corr_init)
         self.assertIn('GAGSTER_LOB_COUNTER_', corr_init)
+        self.assertIn('OVERLORD_RAIN_COUNTER_', corr_init)
+        self.assertIn('OVERLORD_SLAM_COUNTER_', corr_init)
+        self.assertIn('OVERLORD_INK_SURGE_COUNTER_', corr_init)
+        self.assertIn('overlord_rain_counter_', reclaim_md.lower())
+        self.assertIn('overlord_slam_counter_', reclaim_md.lower())
+        self.assertIn('overlord_ink_surge_counter_', reclaim_md.lower())
 
         # Air-juggle → slam cancel window — mid-juggle hang cancel into
         # finisher slam (aerial control; builds on dodge-cancel grammar).
