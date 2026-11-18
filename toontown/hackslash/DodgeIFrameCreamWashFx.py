@@ -1,17 +1,19 @@
 """Rubber-hose cream wash pulse after dodge i-frame cream/ink pulse.
 
 Fullscreen soft cream veil that settles *after* DodgeTrailFx i-frame
-cream/ink pulse (#66 / #166 / #228) — SoftLockFovCreamWashPulse (#160) /
-SoftLockCreamWashPulse (#155) / DodgeTrailCreamWashPulse (#139) overlay
-grammar as a brief i-frame settle beat so invuln windows read clearly.
-Deepened past #228 so dodge invuln reads juicier still: brighter peak /
-longer mid hold, plus a richer residual cream wash aftershock (more flecks
-+ stronger halo). Soft under / at most equal to trail wash (#139); cream /
-pastel only (not ink). Distinct from hurt-stagger cream wash deepen
-(#247 / #263) — mid-roll invuln, not smack lockout — and from dodge-cancel
-cream flash (#242 / #257). Wired from DodgeTrailFx._spawnPulse on the
-first pulse of a dodge so wash follows a real pulse. Client only.
-Toontown spiritual sequel — no keyblades / no KH branding.
+cream/ink pulse (#66 / #166 / #228 / #272) — SoftLockFovCreamWashPulse
+(#160) / SoftLockCreamWashPulse (#155) / DodgeTrailCreamWashPulse (#139)
+overlay grammar as a brief i-frame settle beat so invuln windows read
+clearly. Deepened past #272 so dodge invuln reads juicier still: brighter
+peak / longer mid hold, plus a richer residual cream wash aftershock
+(more flecks + stronger halo). Soft under / at most equal to trail wash
+(#139); cream / pastel only (not ink). Distinct from hurt-stagger cream
+wash deepen (#247 / #263 / #287) — mid-roll invuln, not smack lockout —
+from dodge-cancel cream flash (#242 / #257 / #281), combo cream edge
+deepen (#237 / #267 / #291), and aim-nudge cream deepen (#254). Wired
+from DodgeTrailFx._spawnPulse on the first pulse of a dodge so wash
+follows a real pulse. Client only. Toontown spiritual sequel — no keyblades /
+no KH branding.
 """
 
 from math import cos, pi
@@ -62,17 +64,17 @@ class DodgeIFrameCreamWashPulse(object):
             r, g, b = 1.0, 0.97, 0.82
 
         peak = float(getattr(
-            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_PEAK', 0.098))
+            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_PEAK', 0.10))
         mid = float(getattr(
-            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_MID', 0.065))
+            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_MID', 0.074))
         inSec = float(getattr(
             HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_IN_SEC', 0.05))
         pulseSec = float(getattr(
-            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_PULSE_SEC', 0.10))
+            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_PULSE_SEC', 0.12))
         holdSec = float(getattr(
-            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC', 0.10))
+            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_HOLD_SEC', 0.12))
         outSec = float(getattr(
-            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_OUT_SEC', 0.36))
+            HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_OUT_SEC', 0.42))
         binSort = int(getattr(
             HackSlashConfig, 'DODGE_TRAIL_PULSE_CREAM_WASH_BIN', 27))
         if delay is None:
@@ -97,7 +99,7 @@ class DodgeIFrameCreamWashPulse(object):
             return None
 
         # Delayed two-beat after first i-frame pulse: bright → settle → fade.
-        # Deepened-past peak + mid hold so invuln still reads juicier mid-roll.
+        # Deepened-past-#272 peak + mid hold so invuln still reads juicier.
         washVeil = Sequence(
             LerpColorScaleInterval(
                 wash, max(0.01, inSec), Vec4(r, g, b, peak),
@@ -150,7 +152,7 @@ class DodgeIFrameCreamWashPulse(object):
             return None
         delay = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.10))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.08))
         parts = []
 
         if getattr(
@@ -162,10 +164,10 @@ class DodgeIFrameCreamWashPulse(object):
 
         count = int(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT', 4))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COUNT', 5))
         sec = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SEC', 0.28))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SEC', 0.32))
         for i in range(count):
             part = self._spawnAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -182,19 +184,19 @@ class DodgeIFrameCreamWashPulse(object):
     def _spawnAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.38))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_HALF', 0.42))
         startScale = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_START', 0.20))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_START', 0.24))
         peakScale = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 1.10))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK', 1.25))
         sec = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.22))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_SEC', 0.26))
         peakA = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.09))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA', 0.12))
         r, g, b, _a = getattr(
             HackSlashConfig,
             'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_HALO_COLOR',
@@ -235,17 +237,17 @@ class DodgeIFrameCreamWashPulse(object):
         count = max(1, int(total))
         size = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SIZE', 0.013))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_SIZE', 0.015))
         drift = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DRIFT', 0.22))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_DRIFT', 0.26))
         fall = float(getattr(
             HackSlashConfig,
-            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_FALL', 0.18))
+            'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_FALL', 0.20))
         r, g, b, a = getattr(
             HackSlashConfig,
             'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_COLOR',
-            (1.0, 0.97, 0.78, 0.72))
+            (1.0, 0.97, 0.78, 0.78))
         er, eg, eb, ea = getattr(
             HackSlashConfig,
             'DODGE_TRAIL_PULSE_CREAM_WASH_AFTERSHOCK_END_COLOR',
