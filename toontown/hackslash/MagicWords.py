@@ -21,8 +21,9 @@ class ToggleHackSlash(MagicWord):
         'reticle hose pop + cream pulse ring + brief FOV punch on '
         'acquire/snap, and an on-screen punch counter that ticks on hits with a '
         'rubber-hose pop + cream sparkle then fades when the string breaks '
-        '(finisher also cream-slam-flashes + FOV-punches; mid/finisher air '
-        'juggle hangs with cream sparkle at apex). '
+        '(finisher also cream-slam-flashes + cream sparkle hang after the '
+        'slam, then FOV-punches; mid/finisher air juggle hangs with cream '
+        'sparkle at apex). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
