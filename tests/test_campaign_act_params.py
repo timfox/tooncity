@@ -348,12 +348,18 @@ class CampaignActParamsTest(unittest.TestCase):
         punch_tip = punch.get('entryTip') or ''
         self.assertIn('rubbery again', punch_handoff.lower())
         self.assertIn('half-beat', punch_cue.lower())
+        self.assertIn('half-beat late', punch_cue.lower())
         self.assertIn('half-beat off', punch_tip.lower())
         self.assertIn('Silly Street', punch_handoff)
+        # Combat cues stay on Punchline tip (Gagster / Brute / Snare / reclaim).
+        tip_l = punch_tip.lower()
+        self.assertIn('gunk gagster', tip_l)
+        self.assertIn('reclaim', tip_l)
+        self.assertIn('shift dodge', tip_l)
         # Foreshadow only — no Silly twist spoilers on mid-act beat.
         for banned in (
                 'keyblade', 'kingdom hearts', 'betrayed', 'villain',
-                'caused the corruption', 'his all along'):
+                'caused the corruption', 'his all along', 'sora'):
             for blob in (
                     handoff, next_cue, punch_handoff, punch_cue, punch_tip):
                 self.assertNotIn(banned, blob.lower())
@@ -363,12 +369,49 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertGreater(camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC, 0.0)
         self.assertGreater(camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_FLECK_COUNT, 0)
         self.assertGreater(camp.OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC, 0.0)
+        # Fracture settle rest is a rubbery beat (not a snap).
+        self.assertGreaterEqual(
+            camp.OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC, 0.10)
         # Fracture edge is cooler/longer-hold than sunny handoff edge.
         sunny_hold = float(getattr(
             camp, 'HANDOFF_CREAM_EDGE_HOLD_SEC', 0.0) or 0.0)
         if sunny_hold > 0.0:
             self.assertGreaterEqual(
                 camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC, sunny_hold)
+
+    def test_punchline_tip_uses_fracture_settle(self):
+        """#198 — Punchline tipHose reads trustFracture settle when armed."""
+        play_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'PlayEntry.py'
+        ).read_text(encoding='utf-8')
+        tip_idx = play_src.find('def _tipHosePopInterval')
+        self.assertGreater(tip_idx, 0)
+        punch_idx = play_src.find("tipHose == 'punchline'", tip_idx)
+        silly_idx = play_src.find("tipHose == 'silly'", tip_idx)
+        else_idx = play_src.find('else:', silly_idx if silly_idx > 0 else tip_idx)
+        self.assertGreater(punch_idx, 0)
+        self.assertGreater(silly_idx, punch_idx)
+        punch_snip = play_src[punch_idx:silly_idx]
+        self.assertIn("act.get('id') == 'punchline'", punch_snip)
+        self.assertIn("punchAct.get('trustFracture')", punch_snip)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', punch_snip)
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC', punch_snip)
+        # Silly tip stays sunny trust settle — not fracture attrs.
+        silly_snip = play_src[silly_idx:else_idx if else_idx > silly_idx else silly_idx + 900]
+        self.assertIn('SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT', silly_snip)
+        self.assertNotIn(
+            'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', silly_snip)
+        magic_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8')
+        magic_l = magic_src.lower()
+        self.assertIn('tip unease', magic_l)
+        self.assertIn('punchline', magic_l)
+        # Advanced desc explicitly rejects KH props (word appears only as ban).
+        self.assertIn('no keyblades', magic_l)
+        self.assertNotIn('kingdom hearts', magic_l)
 
     def test_act_param_keys_present_for_director(self):
         for act_id, act in self.acts_by_id.items():

@@ -95,6 +95,20 @@ class PollutionRecreepTest(unittest.TestCase):
         self.assertFalse(cg.streetAllowsRecreep(cg.STREET_SECURED))
         self.assertFalse(cg.streetAllowsRecreep(cg.STREET_RECLAIMING))
         self.assertTrue(cg.streetAllowsRecreep(cg.STREET_CONTESTED))
+        # Non-status junk never opens re-creep.
+        self.assertFalse(cg.streetAllowsRecreep(None))
+        self.assertFalse(cg.streetAllowsRecreep('contested'))
+
+    def test_recreep_tunable_lock(self):
+        """#194 value lock — slow rubber-hose seep, not full blackout."""
+        cg = self.cg
+        self.assertIs(cg.POLLUTION_RECREEP_ENABLED, True)
+        self.assertAlmostEqual(cg.POLLUTION_RECREEP_TICK_SEC, 2.5, places=2)
+        self.assertAlmostEqual(cg.POLLUTION_RECREEP_PER_TICK, 0.04, places=3)
+        self.assertAlmostEqual(cg.POLLUTION_RECREEP_CAP, 0.85, places=2)
+        # Cap leaves reclaim headroom (below full pollution).
+        self.assertLess(cg.POLLUTION_RECREEP_CAP, 1.0)
+        self.assertGreater(cg.POLLUTION_RECREEP_TICK_SEC, 1.0)
 
     def test_pure_streets_stay_pure(self):
         cg = self.cg
@@ -112,6 +126,8 @@ class PollutionRecreepTest(unittest.TestCase):
         self.assertGreater(nxt, start)
         self.assertAlmostEqual(
             nxt, start + cg.POLLUTION_RECREEP_PER_TICK, places=5)
+        # Exact one-tick residual (#194) — 0.40 → 0.44 at shipped per-tick.
+        self.assertAlmostEqual(cg.pollutionRecreepStep(0.40), 0.44, places=5)
 
         # Cap holds — no overshoot past POLLUTION_RECREEP_CAP.
         near = cg.POLLUTION_RECREEP_CAP - 0.01
@@ -125,6 +141,15 @@ class PollutionRecreepTest(unittest.TestCase):
         self.assertAlmostEqual(
             cg.pollutionRecreepStep(0.2, perTick=0.1, cap=0.25),
             0.25, places=5)
+
+        # Multi-tick seep stays monotonic and capped.
+        level = 0.50
+        for _ in range(20):
+            nxt = cg.pollutionRecreepStep(level)
+            self.assertGreaterEqual(nxt, level)
+            self.assertLessEqual(nxt, cg.POLLUTION_RECREEP_CAP)
+            level = nxt
+        self.assertAlmostEqual(level, cg.POLLUTION_RECREEP_CAP, places=5)
 
     def test_zero_step_is_noop(self):
         cg = self.cg
