@@ -1,14 +1,20 @@
 """Rubber-hose soft-lock reticle pop for hackslash melee.
 
 World-space cream brackets over the sticky soft-lock target. On acquire/snap,
-plays a short squash → stretch → settle hose pop plus cream/ink accent flecks
-and a brief FOV punch. Toontown spiritual-sequel tone only — no keyblades /
-no KH branding.
+plays a short squash → stretch → settle hose pop plus cream/ink accent flecks,
+an expanding cream pulse ring, and a brief FOV punch. Toontown spiritual-sequel
+tone only — no keyblades / no KH branding.
 """
 
-from panda3d.core import CardMaker, Point3, TransparencyAttrib
+from panda3d.core import CardMaker, Point3, TransparencyAttrib, Vec4
 
-from direct.interval.IntervalGlobal import Func, Sequence
+from direct.interval.IntervalGlobal import (
+    Func,
+    LerpColorScaleInterval,
+    LerpScaleInterval,
+    Parallel,
+    Sequence,
+)
 from direct.interval.LerpInterval import LerpFunc
 
 from . import HackSlashConfig
@@ -16,7 +22,7 @@ from . import HitJuice
 
 
 class SoftLockReticleFx(object):
-    """Owns the soft-lock reticle node, snap pop, accents, and FOV punch."""
+    """Owns the soft-lock reticle node, snap pop, accents, pulse ring, FOV."""
 
     def __init__(self, avatar, hitStop=None, beforeFov=None, fovBusy=None):
         self.avatar = avatar
@@ -31,16 +37,19 @@ class SoftLockReticleFx(object):
         self._popIval = None
         self._accentIval = None
         self._accentNodes = []
+        self._pulseIval = None
+        self._pulseNP = None
         self._fovIval = None
         self._baseFov = None
         self._pendingFov = False
 
     def clear(self):
-        """Stop juice and remove reticle + accents."""
+        """Stop juice and remove reticle + accents + pulse ring."""
         self._pendingFov = False
         self.restoreFov()
         self._clearPop()
         self._clearAccents()
+        self._clearPulseRing()
         self._target = None
         if self._root is not None:
             try:
@@ -56,6 +65,7 @@ class SoftLockReticleFx(object):
         self.restoreFov()
         self._clearPop()
         self._clearAccents()
+        self._clearPulseRing()
         self._target = None
         if self._root is not None:
             try:
@@ -88,11 +98,12 @@ class SoftLockReticleFx(object):
         self._followTarget()
 
     def playSnapPop(self):
-        """Brief rubber-hose scale pop + cream/ink accent flecks at the reticle."""
+        """Hose pop + cream accents + cream pulse ring + FOV punch on snap."""
         if self._root is None:
             return
         self._clearPop()
         self._clearAccents()
+        self._clearPulseRing()
         settle = float(HackSlashConfig.SOFT_LOCK_RETICLE_SETTLE_SCALE)
         self._popIval = HitJuice.playSoftLockReticlePop(
             self._root, settle,
@@ -101,7 +112,7 @@ class SoftLockReticleFx(object):
             origin = self._root.getPos(render)  # noqa: F821
             parent = render  # noqa: F821
         except Exception:
-            # Still request FOV even if accents can't place.
+            # Still request FOV even if accents / pulse can't place.
             self._requestFovPunch()
             return
         accentIval, nodes = HitJuice.spawnSoftLockAccents(
@@ -109,7 +120,73 @@ class SoftLockReticleFx(object):
             name=self.avatar.uniqueName('hackslashSoftLockAccents'))
         self._accentIval = accentIval
         self._accentNodes = nodes
+        # Cream/pastel pulse ring — sibling of accents so hose scale doesn't
+        # swallow the expand; layers with FOV punch (#74).
+        self._playPulseRing(origin, parent)
         self._requestFovPunch()
+
+    def _playPulseRing(self, origin, parent):
+        """Expanding pastel cream ring at the reticle on acquire/snap."""
+        if not getattr(HackSlashConfig, 'SOFT_LOCK_PULSE_RING_ENABLED', True):
+            return
+        half = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_HALF)
+        start = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_START)
+        peak = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_PEAK)
+        sec = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_SEC)
+        peakA = float(HackSlashConfig.SOFT_LOCK_PULSE_RING_PEAK_ALPHA)
+        r, g, b, a = HackSlashConfig.SOFT_LOCK_PULSE_RING_COLOR
+        er, eg, eb, ea = HackSlashConfig.SOFT_LOCK_PULSE_RING_END
+        binSort = int(HackSlashConfig.SOFT_LOCK_PULSE_RING_BIN)
+        if half <= 0.0 or sec <= 0.0 or peakA <= 0.0:
+            return
+        try:
+            cm = CardMaker('hackslash-softlock-pulse-ring')
+            cm.setFrame(-half, half, -half, half)
+            ring = parent.attachNewNode(cm.generate())
+            ring.setTransparency(TransparencyAttrib.MAlpha)
+            ring.setColor(r, g, b, 1)
+            ring.setColorScale(r, g, b, min(a, peakA))
+            ring.setPos(origin)
+            ring.setScale(start)
+            ring.setBin('transparent', binSort)
+            ring.setDepthWrite(False)
+            ring.setBillboardPointEye()
+            self._pulseNP = ring
+        except Exception:
+            self._pulseNP = None
+            return
+        self._pulseIval = Sequence(
+            Parallel(
+                LerpScaleInterval(
+                    ring, max(0.01, sec), peak, blendType='easeOut'),
+                Sequence(
+                    LerpColorScaleInterval(
+                        ring, max(0.01, sec * 0.3),
+                        Vec4(r, g, b, peakA), blendType='easeOut'),
+                    LerpColorScaleInterval(
+                        ring, max(0.01, sec * 0.7),
+                        Vec4(er, eg, eb, ea), blendType='easeIn'),
+                ),
+            ),
+            Func(self._clearPulseRing),
+            name=self.avatar.uniqueName('hackslashSoftLockPulseRing'),
+        )
+        self._pulseIval.start()
+
+    def _clearPulseRing(self):
+        if self._pulseIval is not None:
+            try:
+                self._pulseIval.pause()
+            except Exception:
+                pass
+            self._pulseIval = None
+        np = self._pulseNP
+        self._pulseNP = None
+        try:
+            if np is not None and not np.isEmpty():
+                np.removeNode()
+        except Exception:
+            pass
 
     def cancelPendingFov(self):
         """Drop a deferred soft-lock FOV punch (e.g. finisher took the lens)."""
