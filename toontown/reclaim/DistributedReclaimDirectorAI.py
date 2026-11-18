@@ -164,6 +164,9 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         if pollutionMgr is not None:
             pollutionMgr.setPollution(
                 self.reclaimZoneId, self._seedPollution)
+            # Pause incomplete-reclaim re-creep while packs are live.
+            if hasattr(pollutionMgr, 'markStreetReclaiming'):
+                pollutionMgr.markStreetReclaiming(self.reclaimZoneId)
 
         self.b_setFinalePhase(finalePhase or 0)
         self.b_setMaxWaves(self._maxPacks)
@@ -184,6 +187,10 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         return True
 
     def stop(self):
+        # Bail-out while ACTIVE leaves the street contested so residual ink
+        # can slowly re-creep. COMPLETE → IDLE keeps the secured mark.
+        wasActive = self.state == ReclaimGlobals.STATE_ACTIVE
+        contestedZoneId = self.reclaimZoneId
         self.ignore('pollutionReclaimed')
         self._cancelWaveDelay()
         if self._tickName is not None:
@@ -201,6 +208,11 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._addName = None
         self.b_setState(ReclaimGlobals.STATE_IDLE)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
+        if wasActive:
+            pollutionMgr = getattr(self.air, 'pollutionManager', None)
+            if pollutionMgr is not None and hasattr(
+                    pollutionMgr, 'markStreetContested'):
+                pollutionMgr.markStreetContested(contestedZoneId)
 
     def delete(self):
         self.stop()
@@ -254,6 +266,10 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self.b_setPackAlive(0)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
         self.b_setState(ReclaimGlobals.STATE_COMPLETE)
+        pollutionMgr = getattr(self.air, 'pollutionManager', None)
+        if pollutionMgr is not None and hasattr(
+                pollutionMgr, 'markStreetSecured'):
+            pollutionMgr.markStreetSecured(self.reclaimZoneId)
         self.sendUpdate('announceReclaimComplete', [])
         # Minimal progression stub for slice 4 campaign hooks.
         messenger.send('neighborhoodReclaimed', [self.reclaimZoneId])

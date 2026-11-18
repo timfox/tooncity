@@ -152,6 +152,30 @@ POLLUTION_FOG_SNAP_DELTA = 0.02
 POLLUTION_HAZE_ALPHA_MAX = 0.30
 POLLUTION_HAZE_BIN = 25
 
+# Incomplete-reclaim re-creep: neighborhoods fight back if a street reclaim is
+# left unfinished. Secured / pure streets stay pure; contested streets slowly
+# re-ink toward POLLUTION_RECREEP_CAP (not full black — leave room to reclaim).
+# POLLUTION_RECREEP_ENABLED = False freezes auto re-ink only.
+# Street status is AI bookkeeping (PollutionManagerAI); client presentation
+# still follows setZonePollution / fog ramp / street audio.
+STREET_SECURED = 0       # fully reclaimed / never stained — no auto re-ink
+STREET_RECLAIMING = 1    # active reclaim — pause re-creep while packs fight
+STREET_CONTESTED = 2     # unfinished reclaim — slow rubber-hose re-ink
+STREET_STATUS_NAMES = {
+    STREET_SECURED: 'secured',
+    STREET_RECLAIMING: 'reclaiming',
+    STREET_CONTESTED: 'contested',
+}
+POLLUTION_RECREEP_ENABLED = True
+POLLUTION_RECREEP_TICK_SEC = 2.5
+POLLUTION_RECREEP_PER_TICK = 0.04
+POLLUTION_RECREEP_CAP = 0.85
+# One-shot rubber-hose whisper when ink first seeps after a bail-out.
+POLLUTION_RECREEP_MSG = (
+    "Whoa — that ink's creeping back! Finish the reclaim before this "
+    'street goes goopy again!'
+)
+
 # Purity-complete fog cream dissolve — sunny cream/pastel lift of street fog
 # when purityRestoreFx fires. Matches POLLUTION_FOG_CLEAR_SEC density ramp
 # (#38) + StreetSparkle chip/fleck patterns. Not ink; no KH branding.
@@ -1844,6 +1868,45 @@ def pollutionFogRampDuration(fromLevel, toLevel):
     # Scale mid-step ramps by delta so a 0.15 defeat isn't sluggish.
     span = max(0.15, abs(b - a))
     return float(POLLUTION_FOG_RAMP_SEC) * min(1.0, span / 0.25)
+
+
+def streetStatusName(status):
+    """Human label for STREET_* bookkeeping ids."""
+    try:
+        key = int(status)
+    except (TypeError, ValueError):
+        return STREET_STATUS_NAMES[STREET_SECURED]
+    return STREET_STATUS_NAMES.get(key, STREET_STATUS_NAMES[STREET_SECURED])
+
+
+def streetAllowsRecreep(status):
+    """True only for contested (incomplete-reclaim) streets."""
+    try:
+        return int(status) == STREET_CONTESTED
+    except (TypeError, ValueError):
+        return False
+
+
+def pollutionRecreepStep(level, perTick=None, cap=None):
+    """Next pollution after one incomplete-reclaim re-creep tick.
+
+    Pure streets stay pure (no stain from zero). Contested residual ink
+    creeps toward ``cap`` (default POLLUTION_RECREEP_CAP) by ``perTick``.
+    """
+    current = clampPollution(level)
+    if current <= POLLUTION_PURE:
+        return POLLUTION_PURE
+    step = (
+        float(POLLUTION_RECREEP_PER_TICK)
+        if perTick is None else float(perTick))
+    if step <= 0.0:
+        return current
+    limit = (
+        float(POLLUTION_RECREEP_CAP) if cap is None else float(cap))
+    limit = clampPollution(limit)
+    if current >= limit:
+        return current
+    return clampPollution(min(limit, current + step))
 
 
 def hoodFogColor(zoneId, level):
