@@ -2251,11 +2251,16 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'SILLY_ACT_TIP_CREAM_WASH_COLOR',
                 'SILLY_ACT_TIP_CREAM_WASH_PEAK',
                 'SILLY_ACT_TIP_CREAM_WASH_MID',
-                'SILLY_ACT_TIP_CREAM_WASH_BIN'):
+                'SILLY_ACT_TIP_CREAM_WASH_BIN',
+                'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED',
+                'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT',
+                'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC'):
             self.assertIn(
                 silly_tip_wash_key, campaign_names,
                 msg='CampaignGlobals missing %s' % silly_tip_wash_key)
         self.assertIn('playSillyTipCreamWash', play_src)
+        self.assertIn('SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT', play_src)
+        self.assertIn('creamHoseSettle', play_src)
 
         # FOV purity burst cream wash (#164) — soft wash after purity FOV punch.
         purity_fov_wash_rel = 'toontown/reclaim/PurityFovCreamWashFx.py'

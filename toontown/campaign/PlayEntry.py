@@ -19,10 +19,12 @@ rubber-hose and clear, and a delayed soft cream wash pulse (act-banner /
 trust wash twin).
 Silly Street Act 3 uses a campaign-owned entry tip (Ink Overlord cues,
 cheer-feels-wrong foreshadow) with a slightly heavier tip hose pop +
-fracture trust settle and a delayed soft cream wash pulse; a mid-act
-approach tip then almost-confesses an uneasy half-truth before the
-finale reveal (Punchline tip / act-banner wash twin; FinalePhaseFx twist
-stays separate — no KH branding).
+fracture trust settle, a juicier cream hose settle so the trust-fracture
+/ almost-confess tip lands rubber-hose and clear (distinct from Punchline
+#227), and a delayed soft cream wash pulse; a mid-act approach tip then
+almost-confesses an uneasy half-truth before the finale reveal (Punchline
+tip / act-banner wash twin; FinalePhaseFx betrayal banner stays separate
+— no KH branding).
 """
 
 from panda3d.core import (
@@ -334,7 +336,8 @@ class PlayEntryClient(DirectObject):
         tip = act.get('approachTip')
         if not tip:
             return task.done
-        # Reuse Silly tipHose — entryTipUnease keeps fracture settle.
+        # Reuse Silly tipHose — entryTipUnease keeps fracture settle +
+        # cream hose settle so the almost-confess tip lands juicier.
         self._showTip(tip, tipHose='silly')
         return task.done
 
@@ -586,8 +589,10 @@ class PlayEntryClient(DirectObject):
         tipHose='silly' uses Act 3 Silly Overlord tunables + trust settle;
         when the finale act carries entryTipUnease, settle holds the longer
         fracture beat (entry foreshadow + mid-act almost-confess approach
-        tip — no twist spoil). Default path keeps the shared
-        PLAY_ENTRY_TIP_* hose pop.
+        tip — no twist spoil), then a juicier cream hose settle so the
+        trust-fracture tip lands rubber-hose and clear (distinct from
+        Punchline #227). Default path keeps the shared PLAY_ENTRY_TIP_*
+        hose pop.
         """
         if tipNP is None:
             return None
@@ -600,6 +605,8 @@ class PlayEntryClient(DirectObject):
         trustOvershootAttr = None
         trustRestAttr = None
         creamHoseSettle = False
+        creamHoseOvershootAttr = None
+        creamHoseRestAttr = None
         if tipHose == 'punchline':
             sx, sy, sz, squashSec = getattr(
                 CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SQUASH',
@@ -627,6 +634,11 @@ class PlayEntryClient(DirectObject):
             creamHoseSettle = bool(getattr(
                 CampaignGlobals,
                 'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', True))
+            if creamHoseSettle:
+                creamHoseOvershootAttr = (
+                    'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT')
+                creamHoseRestAttr = (
+                    'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC')
         elif tipHose == 'silly':
             sx, sy, sz, squashSec = getattr(
                 CampaignGlobals, 'SILLY_ACT_TIP_POP_SQUASH',
@@ -651,6 +663,15 @@ class PlayEntryClient(DirectObject):
             else:
                 trustOvershootAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
                 trustRestAttr = 'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'
+            # Juicier cream hose settle after fracture bounce (#207 path).
+            creamHoseSettle = bool(getattr(
+                CampaignGlobals,
+                'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', True))
+            if creamHoseSettle:
+                creamHoseOvershootAttr = (
+                    'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT')
+                creamHoseRestAttr = (
+                    'SILLY_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC')
         else:
             sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH
             tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH
@@ -687,10 +708,9 @@ class PlayEntryClient(DirectObject):
                 tipNP, float(overSec), overPt, blendType='easeOut'))
             parts.append(LerpScaleInterval(
                 tipNP, restSec, settlePt, blendType='easeIn'))
-        if creamHoseSettle:
+        if creamHoseSettle and creamHoseOvershootAttr:
             creamOver = getattr(
-                CampaignGlobals,
-                'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT', None)
+                CampaignGlobals, creamHoseOvershootAttr, None)
             cx = cy = cz = creamOverSec = None
             if creamOver:
                 try:
@@ -700,8 +720,7 @@ class PlayEntryClient(DirectObject):
                     creamOverSec = None
             if creamOverSec is not None and creamOverSec > 0.0:
                 creamRestSec = float(getattr(
-                    CampaignGlobals,
-                    'PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC', 0.09))
+                    CampaignGlobals, creamHoseRestAttr, 0.09))
                 creamOverPt = Point3(
                     settle * float(cx), settle * float(cy), settle * float(cz))
                 parts.append(LerpScaleInterval(
@@ -735,8 +754,9 @@ class PlayEntryClient(DirectObject):
 
         Punchline Act 2 tipHose appends a brief cream hose settle after the
         trust/fracture bounce, then arms a delayed soft cream wash pulse.
-        Silly Act 3 tipHose also arms the cream wash (act-banner / trust
-        wash twin) under the tip bar.
+        Silly Act 3 tipHose appends a juicier cream hose settle after the
+        fracture bounce (almost-confess / trust-fracture tip), then arms
+        the cream wash (act-banner / trust wash twin) under the tip bar.
         """
         if self._tipIval:
             try:
