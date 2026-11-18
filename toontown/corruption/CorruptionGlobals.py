@@ -3313,6 +3313,70 @@ def overlordPickEnrageMove(dist, stats=None):
     return 'rain'
 
 
+# Overlord telegraph move ids (announceAttackTelegraph string). Client AV
+# branches rain shower vs close slam warn vs mid surge warn — fair punish
+# read as kits deepen. Street attackMove strings normalize to '' here.
+# No cream deepen / no KH branding.
+OVERLORD_TELEGRAPH_MOVES = frozenset(('rain', 'slam', 'ink_surge'))
+OVERLORD_TELEGRAPH_MOVE_HUD = {
+    'rain': 'RAIN',
+    'slam': 'SLAM',
+    'ink_surge': 'SURGE',
+}
+
+
+def normalizeOverlordTelegraphMove(moveId):
+    """Return ``rain`` / ``slam`` / ``ink_surge``, or '' for non-Overlord moves."""
+    move = str(moveId or '').strip().lower()
+    if move in OVERLORD_TELEGRAPH_MOVES:
+        return move
+    return ''
+
+
+def overlordTelegraphShowsInkRain(moveId):
+    """Ink-rain shower is rain-only — slam/surge keep crown + danger ring."""
+    return normalizeOverlordTelegraphMove(moveId) == 'rain'
+
+
+def overlordTelegraphShowsPunchWarn(moveId):
+    """Danger-ring warn for all three Overlord notes (distinct radii)."""
+    return bool(normalizeOverlordTelegraphMove(moveId))
+
+
+def overlordTelegraphMoveHitRange(moveId, phase=1, combat=None):
+    """Warn-ring hit range for the telegraphed Overlord move.
+
+    Rain uses rain AoE ``attackHitRange``; slam / ink_surge use their
+    own hit bands so the danger footprint matches the resolve.
+    """
+    move = normalizeOverlordTelegraphMove(moveId) or 'rain'
+    table = combat if combat is not None else overlordPhaseCombat(phase)
+    table = table or {}
+    if move == 'slam':
+        return max(0.5, float(table.get(
+            'slamHitRange', table.get('attackHitRange', 5.5))))
+    if move == 'ink_surge':
+        return max(0.5, float(table.get(
+            'surgeHitRange', table.get('attackHitRange', 7.5))))
+    return max(0.5, float(table.get('attackHitRange', 9.5)))
+
+
+def overlordTelegraphMoveHudCue(moveId, phase=1, finaleLook=None):
+    """Phase HUD chip text that names the incoming Overlord move."""
+    move = normalizeOverlordTelegraphMove(moveId) or 'rain'
+    label = OVERLORD_TELEGRAPH_MOVE_HUD.get(move, move.upper())
+    base = ''
+    if finaleLook:
+        base = str(finaleLook.get('hudCue', '') or '').strip()
+    try:
+        phaseIndex = max(1, int(phase))
+    except (TypeError, ValueError):
+        phaseIndex = 1
+    if base:
+        return '%s · %s' % (base, label)
+    return 'OVERLORD P%s · %s' % (phaseIndex, label)
+
+
 def overlordSurgePos(sx, sy, tx, ty, dash=None, stop=None):
     """Planar Overlord position after mid-range ink surge toward (tx, ty).
 

@@ -3300,7 +3300,8 @@ dclass DistributedCorruptToon : DistributedNode {
   setArchetype(uint8) required broadcast ram;
   announceDefeat() broadcast;
   // Wind-up cue before AI resolves modest toon damage.
-  announceAttackTelegraph() broadcast;
+  // moveId: Overlord rain / slam / ink_surge (street kits pass their attackMove).
+  announceAttackTelegraph(string) broadcast;
   announceAttackHit() broadcast;
   // Telegraph resolved into dodge i-frames / near-miss — client sparkle juice.
   announceAttackDodged() broadcast;

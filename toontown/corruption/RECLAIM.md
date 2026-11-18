@@ -400,13 +400,15 @@ consequence — not cream-only. Oswald uses a distinct betrayal attack kit
 not a crimson Ink Smudge smack reskin). Full dialogue is out of scope here.
 
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
-   SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), ink rain /
-   ink fall shower (`OverlordPhaseInkRainFx`), deepened cream danger-ring
-   warn beyond #255 + denser radial cream phase flecks + juicier impact
+   SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), and
+   **move-id telegraph** (`announceAttackTelegraph(string)`): rain plays ink
+   rain / ink fall (`OverlordPhaseInkRainFx`) + wide danger ring with deepened
+   cream warn beyond #255 + denser radial cream phase flecks + juicier impact
    punch bloom with wider cream aftershock (`OverlordTelegraphPunchFx`;
    stretch hold tracks telegraphDelay — distinct from Brute spit cream drip
-   / Snare whip / Smudge hose / Gunk puddle bloom),
-   HUD `OVERLORD · P1 RISE`, wind-up chip `P1 MAGENTA SWELL`.
+   / Snare whip / Smudge hose / Gunk puddle bloom); slam skips rain and uses
+   a close slam danger ring (footprint scales to the move hit band). HUD chip
+   names the move (`… · RAIN` / `… · SLAM`); wind-up chip `P1 MAGENTA SWELL`.
    **AI**: slower chase + mid-range **ink-rain AoE** plus close-range **slam**
    when the player is already in the ink (`OVERLORD_PHASE_COMBAT[1]` two-note
    Rising kit — second pressure beyond rain-only before Unleash) matching the
@@ -414,12 +416,14 @@ not a crimson Ink Smudge smack reskin). Full dialogue is out of scope here.
    Unleashed only.
 2. Clear packs → purity beat → director restarts **Phase 2**.
 3. **Phase 2 — Unleashed**: crimson telegraphs (wider squash / taller stretch) +
-   phase-two SFX, hotter crown flash, denser ink rain, snappier cream
-   danger-ring / impact punch (juicier cream rim + denser flecks + wider
-   aftershock beyond #255),
+   phase-two SFX, hotter crown flash, denser ink rain on rain telegraphs,
+   snappier cream danger-ring / impact punch (juicier cream rim + denser
+   flecks + wider aftershock beyond #255), and the same **move-id telegraph**
+   branches — rain (wide ring + shower), slam (close ring, no rain),
+   **ink_surge** (mid surge ring, no rain shower; HUD `… · SURGE`),
    hotter hit flash, FOV + fullscreen ink slam transition sting
-   (`announceFinalePhaseTransition`), HUD `OVERLORD · P2 UNLEASHED`, wind-up
-   chip `P2 CRIMSON FURY`.
+   (`announceFinalePhaseTransition`), HUD `OVERLORD · P2 UNLEASHED` + move,
+   wind-up chip `P2 CRIMSON FURY`.
    **AI**: enrage chase + wider/faster rain AoE, mid-range **ink_surge**
    (planar rush then landing AoE — third Unleashed note beyond rain/slam),
    close-range **slam** when the player is already in the ink, plus

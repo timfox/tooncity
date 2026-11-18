@@ -74,6 +74,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._hitIval = None
         self._pulseIval = None
         self._telegraphIval = None
+        self._telegraphMove = ''
         self._attackHitIval = None
         self._attackFlashNP = None
         self._attackFlashIval = None
@@ -552,8 +553,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         look, phase = self.__finalePhaseLook()
         return bool(look) and int(phase) >= 1
 
-    def announceAttackTelegraph(self):
-        """Strong wind-up: charged squash, ink/spit/lash/lob flare — dodgeable."""
+    def announceAttackTelegraph(self, moveId=''):
+        """Strong wind-up: charged squash, ink/spit/lash/lob flare — dodgeable.
+
+        ``moveId`` carries the AI attack move so Overlord AV can read rain vs
+        slam vs ink_surge distinctly (street kits pass their attackMove).
+        """
         if self._telegraphIval is not None:
             self._telegraphIval.finish()
         if self._attackHitIval is not None:
@@ -561,6 +566,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self._attackHitIval = None
         if self._pulseIval is not None:
             self._pulseIval.pause()
+        self._telegraphMove = str(moveId or '')
         target = self.visualRoot if self.visualRoot is not None else self
         look, phase = self.__finalePhaseLook()
         isBrute = self.__isBruteSpit()
@@ -645,15 +651,29 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__playGagsterTelegraphPuddle()
         else:
             self.__clearGagsterTelegraphPuddle()
-        # Overlord-only: ink crown + ink rain + danger-ring warn for phase read.
+        # Overlord-only: crown always; rain shower only on rain; danger-ring
+        # warn on rain / slam / ink_surge with move-scaled footprint.
         if look and phase >= 1:
+            overlordMove = (
+                CorruptionGlobals.normalizeOverlordTelegraphMove(
+                    getattr(self, '_telegraphMove', ''))
+                or 'rain')
             self.__playOverlordTelegraphCrown(look, phase)
-            self.__playOverlordPhaseInkRain(look, phase)
-            self.__playOverlordTelegraphPunchWarn(look, phase)
-            # Phase HUD cue so P1 magenta vs P2 crimson reads mid-wind-up.
+            if CorruptionGlobals.overlordTelegraphShowsInkRain(overlordMove):
+                self.__playOverlordPhaseInkRain(look, phase)
+            else:
+                self.__clearOverlordPhaseInkRain()
+            if CorruptionGlobals.overlordTelegraphShowsPunchWarn(overlordMove):
+                self.__playOverlordTelegraphPunchWarn(
+                    look, phase, moveId=overlordMove)
+            else:
+                self.__clearOverlordTelegraphPunch()
+            # Phase + move HUD cue so rain / slam / surge read mid-wind-up.
             messenger.send(  # noqa: F821
                 'finaleTelegraphCue',
-                [phase, look.get('hudCue', 'OVERLORD P%s' % phase),
+                [phase,
+                 CorruptionGlobals.overlordTelegraphMoveHudCue(
+                     overlordMove, phase, look),
                  look.get('hudColor', (1.0, 0.55, 1.0, 1.0))])
         else:
             self.__clearOverlordTelegraphCrown()
@@ -1902,7 +1922,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
         self._overlordInkRain = None
 
-    def __playOverlordTelegraphPunchWarn(self, finaleLook=None, phase=1):
+    def __playOverlordTelegraphPunchWarn(
+            self, finaleLook=None, phase=1, moveId=''):
         """Ground danger-ring warn — Overlord phase telegraphs only."""
         self.__clearOverlordTelegraphPunch()
         try:
@@ -1911,9 +1932,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             return
         punch = OverlordTelegraphPunch()
         self._overlordTelegraphPunch = punch
-        punch.playWarn(pos, finaleLook=finaleLook, phase=phase)
+        punch.playWarn(
+            pos, finaleLook=finaleLook, phase=phase, moveId=moveId)
 
-    def __playOverlordTelegraphPunchImpact(self, finaleLook=None, phase=1):
+    def __playOverlordTelegraphPunchImpact(
+            self, finaleLook=None, phase=1, moveId=''):
         """Ground impact punch bloom — Overlord attack hit only."""
         self.__clearOverlordTelegraphPunch()
         try:
@@ -1922,7 +1945,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             return
         punch = OverlordTelegraphPunch()
         self._overlordTelegraphPunch = punch
-        punch.playImpact(pos, finaleLook=finaleLook, phase=phase)
+        if not moveId:
+            moveId = getattr(self, '_telegraphMove', '') or ''
+        punch.playImpact(
+            pos, finaleLook=finaleLook, phase=phase, moveId=moveId)
 
     def __clearOverlordTelegraphPunch(self):
         punch = getattr(self, '_overlordTelegraphPunch', None)
