@@ -497,6 +497,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_CHEER_TIP)
         self.assertIn('clean', camp.OSWALD_PRESENCE_CHEER_TIP.lower())
         self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')
+        self.assertEqual(
+            camp.OSWALD_PRESENCE_CHEERED_MSG, 'oswaldPresenceCheered')
+        self.assertEqual(
+            camp.OSWALD_PRESENCE_CHEERED_SYNC_MSG, 'oswaldCheeredSync')
         presence_accepts = _accept_events(
             _module_ast(presence_rel), 'OswaldPresenceClient')
         self.assertIn('npcCheerStub', presence_accepts)
@@ -514,33 +518,52 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             _module_ast(presence_rel), 'OswaldPresenceClient')
         for method in (
                 '_onOswaldPresenceMet', '_onOswaldMetSync',
-                '_requestPersistMet', '_meetOswald'):
+                '_requestPersistMet', '_meetOswald',
+                '_onOswaldPresenceCheered', '_onOswaldCheeredSync',
+                '_requestPersistCheered'):
             self.assertIn(
                 method, presence_methods,
                 msg='OswaldPresenceClient missing %s' % method)
         self.assertIn('firstMeetTip', presence_names)
         self.assertIn('metMsgName', presence_names)
+        self.assertIn('cheeredMsgName', presence_names)
+        self.assertIn('cheeredSyncMsgName', presence_names)
         self.assertIn('d_requestOswaldMet', presence_src)
+        self.assertIn('d_requestOswaldCheered', presence_src)
         self.assertIn('OSWALD_PRESENCE_FIRST_MEET_TIP', presence_src)
         default_progress = self.save.defaultProgress()
         self.assertIn('oswaldMet', default_progress)
         self.assertEqual(default_progress['oswaldMet'], 0)
+        self.assertIn('oswaldCheered', default_progress)
+        self.assertEqual(default_progress['oswaldCheered'], 0)
+        # #368 securedZones stay on the progress blob beside cheer latch.
+        self.assertIn('securedZones', default_progress)
         self.assertEqual(
             self.save.sanitizeProgress({'oswaldMet': 9})['oswaldMet'], 1)
+        self.assertEqual(
+            self.save.sanitizeProgress(
+                {'oswaldCheered': 9})['oswaldCheered'], 1)
         mirror_met = self.save.clientMirrorFromProgress({
             'unlockedThrough': 0,
             'state': camp.STATE_IDLE,
             'oswaldMet': 1,
+            'oswaldCheered': 1,
         })
         self.assertEqual(mirror_met['oswaldMet'], 1)
+        self.assertEqual(mirror_met['oswaldCheered'], 1)
         dc = _read('etc/toon.dc')
         pollution_block = dc.split('dclass PollutionManager')[1].split(
             'dclass ')[0]
         self.assertIn('requestOswaldMet() airecv clsend', pollution_block)
         self.assertIn('setOswaldMet(uint8)', pollution_block)
+        self.assertIn(
+            'requestOswaldCheered() airecv clsend', pollution_block)
+        self.assertIn('setOswaldCheered(uint8)', pollution_block)
         camp_ai = _read('toontown/campaign/CampaignDirectorAI.py')
         self.assertIn('def markOswaldMet', camp_ai)
         self.assertIn('def _pushOswaldMetToClient', camp_ai)
+        self.assertIn('def markOswaldCheered', camp_ai)
+        self.assertIn('def _pushOswaldCheeredToClient', camp_ai)
         cheer_src = _read('toontown/reclaim/ReclaimCheer.py')
         self.assertIn('_nudgeOswald', cheer_src)
         self.assertIn('ensureOswaldPresenceClient', cheer_src)

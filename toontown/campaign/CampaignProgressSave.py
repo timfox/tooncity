@@ -55,6 +55,9 @@ def defaultProgress():
         # 1 after first E-talk meet with trusted Oswald (first-meet tip).
         # Durable trust beat — survives relog; not wiped on campaign replay.
         'oswaldMet': 0,
+        # 1 after first reclaim cheer from trusted Oswald (cheer-on-clear).
+        # Durable trust beat — survives relog; not wiped on campaign replay.
+        'oswaldCheered': 0,
         # Finished-reclaim street zoneIds purity-locked for this avatar.
         # Mirrors PollutionManagerAI._purityLocked so AI restart + relog
         # can re-seal cleared streets while unlocks still say cleared.
@@ -96,6 +99,7 @@ def sanitizeProgress(raw, numActs=None):
     if chaseCleared or state != int(CampaignGlobals.STATE_VICTORY):
         chaseHp = 0
     oswaldMet = _int('oswaldMet', 0, 0, 1)
+    oswaldCheered = _int('oswaldCheered', 0, 0, 1)
     # Explicit list wins when present (contested replay may drop a zone
     # while unlockedThrough still says the act was cleared). Older blobs
     # without the key migrate from unlocks / victory so AI restart still
@@ -133,6 +137,7 @@ def sanitizeProgress(raw, numActs=None):
         'chaseCleared': chaseCleared,
         'chaseHp': chaseHp,
         'oswaldMet': oswaldMet,
+        'oswaldCheered': oswaldCheered,
         'securedZones': sorted(securedZones),
     }
 
@@ -148,6 +153,9 @@ def snapshotFromDirector(director):
     oswaldMet = getattr(director, 'oswaldMet', None)
     if oswaldMet is None:
         oswaldMet = getattr(director, '_oswaldMet', 0)
+    oswaldCheered = getattr(director, 'oswaldCheered', None)
+    if oswaldCheered is None:
+        oswaldCheered = getattr(director, '_oswaldCheered', 0)
     securedZones = getattr(director, 'securedZones', None)
     if securedZones is None:
         securedZones = getattr(director, '_securedZones', [])
@@ -160,6 +168,7 @@ def snapshotFromDirector(director):
         'chaseCleared': chaseCleared,
         'chaseHp': chaseHp,
         'oswaldMet': oswaldMet,
+        'oswaldCheered': oswaldCheered,
         'securedZones': list(securedZones or []),
     })
 
@@ -175,6 +184,7 @@ def applyProgressToDirector(director, progress):
     director.chaseCleared = int(blob.get('chaseCleared', 0) or 0)
     director.chaseHp = int(blob.get('chaseHp', 0) or 0)
     director.oswaldMet = int(blob.get('oswaldMet', 0) or 0)
+    director.oswaldCheered = int(blob.get('oswaldCheered', 0) or 0)
     director.securedZones = list(blob.get('securedZones') or [])
     return blob
 
@@ -293,6 +303,7 @@ def clientMirrorFromProgress(progress):
     actIndex = int(blob.get('actIndex', 0) or 0)
     reclaimCount = int(blob.get('reclaimCount', 0) or 0)
     oswaldMet = int(blob.get('oswaldMet', 0) or 0)
+    oswaldCheered = int(blob.get('oswaldCheered', 0) or 0)
     securedZones = list(blob.get('securedZones') or [])
     victory = state == int(CampaignGlobals.STATE_VICTORY)
     # Twist already landed once STATE_VICTORY — hide trusted Oswald whether
@@ -305,6 +316,7 @@ def clientMirrorFromProgress(progress):
         'chaseCleared': chaseCleared,
         'reclaimCount': reclaimCount,
         'oswaldMet': oswaldMet,
+        'oswaldCheered': oswaldCheered,
         'securedZones': securedZones,
         'victoryEpilogue': victory,
         'betrayed': betrayed,

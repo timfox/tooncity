@@ -3294,6 +3294,10 @@ dclass PollutionManager : DistributedObject {
   // persists oswaldMet and mirrors back so relog skips the once-ever tip.
   requestOswaldMet() airecv clsend;
   setOswaldMet(uint8);
+  // First trusted Oswald reclaim cheer (cheer-on-clear). Client reports; AI
+  // persists oswaldCheered and mirrors back so relog keeps the trust latch.
+  requestOswaldCheered() airecv clsend;
+  setOswaldCheered(uint8);
   // Finale reclaim complete — live campaignVictory messenger for real clients
   // (PlayEntry / OswaldPresence / chase tip / FinalePhaseFx / Handoff).
   // reclaimCount uint8; AI-local messenger alone never crosses processes.
