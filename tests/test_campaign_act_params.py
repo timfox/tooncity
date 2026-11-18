@@ -481,6 +481,16 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('betrayalHandoff', handoff_src)
         self.assertIn('FINALE_BETRAYAL_SETTLE_OVERSHOOT', handoff_src)
         self.assertIn('playFinaleRevealCreamEdge', handoff_src)
+        self.assertIn('playVictoryTwistConfettiSting', handoff_src)
+        self.assertIn('clearVictoryTwistConfettiSting', handoff_src)
+        self.assertTrue(getattr(camp, 'VICTORY_TWIST_CONFETTI_ENABLED', False))
+        self.assertGreater(camp.VICTORY_TWIST_CONFETTI_COUNT, 0)
+        sting_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'VictoryTwistConfettiSting.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('VictoryTwistConfettiSting', sting_src)
+        self.assertIn('caused the corruption', sting_src.lower())
         finale_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'FinalePhaseFx.py'
@@ -493,6 +503,7 @@ class CampaignActParamsTest(unittest.TestCase):
         ).read_text(encoding='utf-8')
         magic_l = magic_src.lower()
         self.assertIn('betrayal handoff', magic_l)
+        self.assertIn('confetti twist sting', magic_l)
         self.assertIn('no keyblades', magic_l)
 
     def test_act_param_keys_present_for_director(self):
