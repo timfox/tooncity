@@ -28,6 +28,9 @@ Sections below remain **debug / magic-word** fallbacks.
    On full purity, fog **cream-dissolves** (`PollutionFogCreamDissolveFx` /
    `FOG_CREAM_DISSOLVE_*`): ink fog palette shifts sunny cream while density
    clears, plus a soft cream veil + rising flecks (StreetSparkle chip family).
+   Hood street-prop tint **cream-fades** (`PollutionHoodTintCreamFadeFx` /
+   `HOOD_TINT_CREAM_FADE_*`): geom colorScale lifts sunny cream/pastel over the
+   same clear window instead of snapping clear (composes under fog dissolve).
    Street music crossfades via `PollutionStreetAudio`: polluted → darker
    `encntr_general_bg` bed; purity clear → bright hood bed + cheer/sting (#21)
    plus a short faded-in rubber-hose birds ambient return (`SZ_TC_bird*`).

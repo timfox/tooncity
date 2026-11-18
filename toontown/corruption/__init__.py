@@ -35,8 +35,10 @@ CorruptionGlobals bias tables and PollutionPropTint on street geom. Fog
 density and haze opacity ramp with zone corruption (lerp as reclaim rises or
 clears). On street purity complete, PollutionFogCreamDissolveFx cream-tints
 the clearing fog/haze and layers a soft cream veil + rising flecks (matches
-density clear ramp + StreetSparkle chip patterns). Street music crossfades to
-a darker encounter bed while polluted and back to the hood bed on purity
-restore (PollutionStreetAudio; pairs with reclaim cheer/sting), plus a short
-rubber-hose birds ambient bed fade-in.
+density clear ramp + StreetSparkle chip patterns), and
+PollutionHoodTintCreamFadeFx cream-fades hood prop tint toward sunny cream
+instead of snapping clear (HOOD_TINT_CREAM_FADE_*; same clear window). Street
+music crossfades to a darker encounter bed while polluted and back to the
+hood bed on purity restore (PollutionStreetAudio; pairs with reclaim
+cheer/sting), plus a short rubber-hose birds ambient bed fade-in.
 """

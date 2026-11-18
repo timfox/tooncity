@@ -161,6 +161,32 @@ FOG_CREAM_DISSOLVE_FLECK_COLORS = (
     (0.98, 0.94, 0.88, 0.88),  # warm parchment
 )
 
+# Purity-complete hood corruption tint cream fade — PollutionPropTint geom
+# colorScale lifts sunny cream/pastel when purityRestoreFx fires (hood tint
+# #13). Matches FOG_CREAM_DISSOLVE_* timing / cream palette (#100). Not ink;
+# no KH branding. HOOD_TINT_CREAM_FADE_ENABLED = False snaps clear like before.
+HOOD_TINT_CREAM_FADE_ENABLED = True
+HOOD_TINT_CREAM_FADE_SEC = POLLUTION_FOG_CLEAR_SEC
+HOOD_TINT_CREAM_FADE_COLOR = FOG_CREAM_DISSOLVE_COLOR  # sunny cream geom lift
+HOOD_TINT_CREAM_FADE_HAZE_PEAK = 0.12  # soft veil under fog dissolve (26)
+HOOD_TINT_CREAM_FADE_BIN = 27  # above fog dissolve (26), below street wash (28)
+HOOD_TINT_CREAM_FADE_ORIGIN = (0.0, 0.0, -0.18)
+HOOD_TINT_CREAM_FADE_SHIMMER_IN_SEC = 0.07
+HOOD_TINT_CREAM_FADE_SHIMMER_HOLD_SEC = 0.18
+HOOD_TINT_CREAM_FADE_SHIMMER_OUT_SEC = 0.55
+HOOD_TINT_CREAM_FADE_FLECK_COUNT = 8
+HOOD_TINT_CREAM_FADE_FLECK_SIZE = 0.018
+HOOD_TINT_CREAM_FADE_FLECK_RISE = 0.55
+HOOD_TINT_CREAM_FADE_FLECK_SPREAD = 1.10
+HOOD_TINT_CREAM_FADE_FLECK_SEC = 0.58
+HOOD_TINT_CREAM_FADE_FLECK_COLOR = (1.0, 0.98, 0.78, 0.88)
+HOOD_TINT_CREAM_FADE_FLECK_END_COLOR = (1.0, 0.95, 0.62, 0.0)
+HOOD_TINT_CREAM_FADE_FLECK_COLORS = (
+    (1.0, 0.97, 0.82, 0.90),  # sunny cream
+    (1.0, 0.94, 0.70, 0.86),  # butter pastel
+    (1.0, 0.90, 0.80, 0.84),  # soft peach
+)
+
 # Street-entry rubber-hose ink vignette (PlayEntry on polluted ACTS streets).
 # Edge darken flashes in, then fades as the tip bar appears — not a KH sting.
 ENTRY_VIGNETTE_IN_SEC = 0.10
@@ -1187,6 +1213,29 @@ def hoodPropTint(zoneId, level):
         1.0 - (1.0 - target[0]) * dens,
         1.0 - (1.0 - target[1]) * dens,
         1.0 - (1.0 - target[2]) * dens,
+    )
+
+
+def hoodPropTintCreamFadeColor(zoneId, level, creamBlend, inkRgb=None):
+    """Hood prop-tint RGB mixed toward sunny cream during purity fade.
+
+    creamBlend 0 = hood ink prop tint (or inkRgb capture); 1 =
+    HOOD_TINT_CREAM_FADE_COLOR. Density / inkRgb still set how corrupted the
+    geom reads; this only shifts the palette as street purity completes.
+    """
+    if inkRgb is None:
+        ink = hoodPropTint(zoneId, level)
+    else:
+        ink = (
+            float(inkRgb[0]), float(inkRgb[1]), float(inkRgb[2]))
+    blend = max(0.0, min(1.0, float(creamBlend)))
+    if blend <= 0.0:
+        return ink
+    cream = HOOD_TINT_CREAM_FADE_COLOR
+    return (
+        ink[0] + (float(cream[0]) - ink[0]) * blend,
+        ink[1] + (float(cream[1]) - ink[1]) * blend,
+        ink[2] + (float(cream[2]) - ink[2]) * blend,
     )
 
 
