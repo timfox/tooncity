@@ -5,6 +5,7 @@ from panda3d.core import CardMaker, Fog, TransparencyAttrib, Vec4
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption import PollutionFogCreamDissolveFx
+from toontown.corruption import PollutionHoodTintCreamFadeFx
 from toontown.corruption import PollutionPropTint
 from toontown.corruption import PollutionStreetAudio
 
@@ -16,7 +17,8 @@ class PollutionManager(DistributedObject.DistributedObject):
     presented pollution level that lerps toward the zone's true corruption so
     reclaim packs visibly thicken/clear the street atmosphere. On purity
     complete, fog cream-dissolves (sunny pastel tint + flecks) via
-    PollutionFogCreamDissolveFx while the density clear ramp still runs.
+    PollutionFogCreamDissolveFx and hood prop tint cream-fades via
+    PollutionHoodTintCreamFadeFx while the density clear ramp still runs.
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManager')
@@ -36,6 +38,7 @@ class PollutionManager(DistributedObject.DistributedObject):
         self._streetAudio = None
         self._creamDissolve = None
         self._creamDissolveBlend = 0.0
+        self._hoodTintCreamFade = None
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
@@ -52,11 +55,19 @@ class PollutionManager(DistributedObject.DistributedObject):
         self._creamDissolve = (
             PollutionFogCreamDissolveFx.PollutionFogCreamDissolveFx(self))
         self._creamDissolve.start()
+        # Purity-complete cream fade of hood prop tint (listens to purityRestoreFx).
+        self._hoodTintCreamFade = (
+            PollutionHoodTintCreamFadeFx.PollutionHoodTintCreamFadeFx(
+                self._propTint))
+        self._hoodTintCreamFade.start()
 
     def disable(self):
         self.ignoreAll()
         self.__finishRamp()
         self.__clearPresentation()
+        if self._hoodTintCreamFade is not None:
+            self._hoodTintCreamFade.stop()
+            self._hoodTintCreamFade = None
         if self._creamDissolve is not None:
             self._creamDissolve.stop()
             self._creamDissolve = None
@@ -74,6 +85,9 @@ class PollutionManager(DistributedObject.DistributedObject):
     def delete(self):
         self.__finishRamp()
         self.__clearPresentation()
+        if self._hoodTintCreamFade is not None:
+            self._hoodTintCreamFade.stop()
+            self._hoodTintCreamFade = None
         if self._creamDissolve is not None:
             self._creamDissolve.stop()
             self._creamDissolve = None
