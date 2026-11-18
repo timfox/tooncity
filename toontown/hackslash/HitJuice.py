@@ -6,8 +6,9 @@ Combo finishers use playFinisherSlam for a heavier rubber-hose slam beat.
 Launcher hang uses buildLaunchHangInterval + spawnCreamHangSparkles for a
 readable airborne float with cream sparkle before fall (spawnHangSparks stays
 as the cream-disabled fallback).
-Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks for a brief
-rubber-hose number pop (and tiny ink flecks) on each connect.
+Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks +
+spawnComboCreamSparkles for a brief rubber-hose number pop with ink flecks
+and cream sparkle on each connect.
 Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
 cream/ink hose pop when soft-lock acquires or snaps a corrupt target.
 Hit connect uses spawnHitSparkFlecks for short cream/ink fleck sparkles that
@@ -530,6 +531,107 @@ def clearComboInkFlecks(nodes):
                 np.removeNode()
         except Exception:
             pass
+
+
+def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkles'):
+    """aspect2d cream flecks + thin streaks near the combo counter tick.
+
+    Layers with playComboCounterPop + spawnComboInkFlecks — warm cream glitter,
+    not KH sparkles. Returns (Parallel|None, nodes). Caller owns cleanup.
+    """
+    if origin is None or not getattr(
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_ENABLED', True):
+        return None, []
+
+    creamCount = int(HackSlashConfig.COMBO_COUNTER_CREAM_COUNT)
+    streakCount = int(HackSlashConfig.COMBO_COUNTER_CREAM_STREAK_COUNT)
+    if creamCount + streakCount <= 0:
+        return None, []
+
+    parentNP = parent
+    if parentNP is None:
+        try:
+            parentNP = aspect2d  # noqa: F821
+        except Exception:
+            return None, []
+
+    size = float(HackSlashConfig.COMBO_COUNTER_CREAM_SIZE)
+    streakSize = float(HackSlashConfig.COMBO_COUNTER_CREAM_STREAK_SIZE)
+    drift = float(HackSlashConfig.COMBO_COUNTER_CREAM_DRIFT)
+    sec = float(HackSlashConfig.COMBO_COUNTER_CREAM_SEC)
+    binSort = int(HackSlashConfig.COMBO_COUNTER_CREAM_BIN)
+    ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+
+    nodes = []
+    parts = []
+
+    def _spawn(index, total, color, endColor, liftBias, nameSuffix, cardSize,
+               elongated=False):
+        if total <= 0:
+            return
+        r, g, b, a = color
+        er, eg, eb, ea = endColor
+        angle = (2.0 * pi * index) / float(max(1, total)) + liftBias
+        try:
+            cm = CardMaker('%s-%s-%s' % (name, nameSuffix, index))
+            if elongated:
+                cm.setFrame(
+                    -cardSize * 0.35, cardSize * 0.35,
+                    -cardSize * 1.6, cardSize * 1.6)
+            else:
+                cm.setFrame(-cardSize, cardSize, -cardSize, cardSize)
+            fleck = parentNP.attachNewNode(cm.generate())
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, a)
+            # Orbit a bit farther than ink flecks so cream reads as sparkle.
+            start = Point3(
+                ox + cos(angle) * 0.045,
+                oy,
+                oz + sin(angle) * 0.03 + 0.03)
+            fleck.setPos(start)
+            fleck.setScale(0.6 + 0.1 * (index % 3))
+            if elongated:
+                fleck.setR(angle * 57.3)
+            fleck.setBin('fixed', binSort)
+            fleck.setDepthWrite(False)
+        except Exception:
+            return
+        end = Point3(
+            start[0] + cos(angle) * drift,
+            oy,
+            start[2] + abs(sin(angle)) * drift + 0.05)
+        parts.append(Parallel(
+            LerpPosInterval(fleck, sec, end, blendType='easeOut'),
+            LerpScaleInterval(fleck, sec, 0.04, blendType='easeIn'),
+            LerpColorScaleInterval(
+                fleck, sec, Vec4(er, eg, eb, ea), blendType='easeIn'),
+        ))
+        nodes.append(fleck)
+
+    for i in range(creamCount):
+        _spawn(
+            i, creamCount,
+            HackSlashConfig.COMBO_COUNTER_CREAM_COLOR,
+            HackSlashConfig.COMBO_COUNTER_CREAM_END,
+            0.35, 'cream', size)
+    for i in range(streakCount):
+        _spawn(
+            i, streakCount,
+            HackSlashConfig.COMBO_COUNTER_CREAM_STREAK_COLOR,
+            HackSlashConfig.COMBO_COUNTER_CREAM_STREAK_END,
+            0.9, 'streak', streakSize, elongated=True)
+
+    if not parts:
+        return None, []
+    ival = Parallel(*parts, name=name)
+    ival.start()
+    return ival, nodes
+
+
+def clearComboCreamSparkles(nodes):
+    """Remove cream-sparkle CardMaker nodes from a combo counter tick."""
+    clearComboInkFlecks(nodes)
 
 
 def playSoftLockReticlePop(node, settleScale, name='hackslashSoftLockReticlePop'):

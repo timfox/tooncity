@@ -120,6 +120,20 @@ COMBO_COUNTER_FLECK_DRIFT = 0.11
 COMBO_COUNTER_FLECK_SEC = 0.2
 COMBO_COUNTER_FLECK_COLOR = (0.18, 0.06, 0.22, 0.9)
 COMBO_COUNTER_FLECK_END_COLOR = (0.35, 0.12, 0.4, 0.0)
+# Cream sparkle layer on the same tick/pop — composes with hose pop + ink flecks.
+# Warm cream glitter (aspect2d), not KH sparkles / no keyblade branding.
+COMBO_COUNTER_CREAM_ENABLED = True
+COMBO_COUNTER_CREAM_COUNT = 3
+COMBO_COUNTER_CREAM_STREAK_COUNT = 2
+COMBO_COUNTER_CREAM_SIZE = 0.014
+COMBO_COUNTER_CREAM_STREAK_SIZE = 0.01
+COMBO_COUNTER_CREAM_DRIFT = 0.13
+COMBO_COUNTER_CREAM_SEC = 0.18
+COMBO_COUNTER_CREAM_COLOR = (1.0, 0.96, 0.72, 0.95)
+COMBO_COUNTER_CREAM_END = (1.0, 0.92, 0.55, 0.0)
+COMBO_COUNTER_CREAM_STREAK_COLOR = (1.0, 0.98, 0.82, 0.9)
+COMBO_COUNTER_CREAM_STREAK_END = (1.0, 0.9, 0.5, 0.0)
+COMBO_COUNTER_CREAM_BIN = 57
 
 # Mid/finisher launcher juice (upward juggle feel on the target).
 LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more
