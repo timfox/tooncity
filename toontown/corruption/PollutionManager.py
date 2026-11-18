@@ -41,6 +41,8 @@ class PollutionManager(DistributedObject.DistributedObject):
         self.campaignReclaimCount = 0
         # First trusted Oswald meet (sibling thin push; not in 4-arg progress).
         self.campaignOswaldMet = 0
+        # First trusted Oswald reclaim cheer (sibling thin push).
+        self.campaignOswaldCheered = 0
         self._fog = None
         self._hazeNP = None
         self._activeZoneId = None
@@ -173,6 +175,10 @@ class PollutionManager(DistributedObject.DistributedObject):
         """Report first trusted Oswald E-talk meet for AI persist."""
         self.sendUpdate('requestOswaldMet', [])
 
+    def d_requestOswaldCheered(self):
+        """Report first trusted Oswald reclaim cheer for AI persist."""
+        self.sendUpdate('requestOswaldCheered', [])
+
     def setCampaignProgress(self, unlockedThrough, state, chaseCleared,
                             reclaimCount=0):
         """Mirror AI CampaignProgressSave so hub tip + power match relog."""
@@ -211,6 +217,21 @@ class PollutionManager(DistributedObject.DistributedObject):
             messenger.send(msg, [self.campaignOswaldMet])  # noqa: F821
         except Exception:
             self.notify.debug('oswaldMetSync messenger failed')
+
+    def setOswaldCheered(self, cheered=0):
+        """Mirror AI-persisted first Oswald cheer so cheer-on-clear survives relog."""
+        self.campaignOswaldCheered = 1 if int(cheered) else 0
+        try:
+            from toontown.campaign import CampaignGlobals
+            msg = getattr(
+                CampaignGlobals, 'OSWALD_PRESENCE_CHEERED_SYNC_MSG',
+                'oswaldCheeredSync')
+        except Exception:
+            msg = 'oswaldCheeredSync'
+        try:
+            messenger.send(msg, [self.campaignOswaldCheered])  # noqa: F821
+        except Exception:
+            self.notify.debug('oswaldCheeredSync messenger failed')
 
     def announceCampaignVictory(self, reclaimCount=0):
         """Live finale reclaim complete — rebroadcast campaignVictory locally.

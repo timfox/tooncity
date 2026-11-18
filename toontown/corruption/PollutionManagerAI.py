@@ -403,13 +403,26 @@ class PollutionManagerAI(DistributedObjectAI):
         except Exception:
             self.notify.warning('requestOswaldMet failed')
 
+    def requestOswaldCheered(self):
+        """Client first reclaim cheer: latch + persist oswaldCheered, mirror back."""
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        if toon is None:
+            return
+        try:
+            from toontown.campaign.CampaignDirectorAI import getCampaignDirector
+            getCampaignDirector(self.air).markOswaldCheered(toon)
+        except Exception:
+            self.notify.warning('requestOswaldCheered failed')
+
     def pushCampaignProgressToAvatar(self, toon, hydrate=False):
         """Thin per-avatar status push for PlayEntry / OswaldPresence / power.
 
         Hydrate reads CampaignProgressSave so relog clients see AI-persisted
         STATE_VICTORY / unlockedThrough / chaseCleared / reclaimCount without
         pressing C/R. reclaimCount rehydrates CampaignPower melee bump.
-        Also mirrors oswaldMet via sibling setOswaldMet (keeps 4-arg progress).
+        Also mirrors oswaldMet / oswaldCheered via sibling DC (keeps 4-arg
+        progress).
         """
         if toon is None:
             return False
@@ -421,6 +434,7 @@ class PollutionManagerAI(DistributedObjectAI):
         chaseCleared = 0
         reclaimCount = 0
         oswaldMet = 0
+        oswaldCheered = 0
         try:
             from toontown.campaign import CampaignProgressSave
             from toontown.campaign.CampaignDirectorAI import getCampaignDirector
@@ -436,6 +450,7 @@ class PollutionManagerAI(DistributedObjectAI):
             # uint8 DC field — clamp; power bump already caps at POWER_BUMP_MAX.
             reclaimCount = max(0, min(255, int(blob.get('reclaimCount', 0) or 0)))
             oswaldMet = 1 if int(blob.get('oswaldMet', 0) or 0) else 0
+            oswaldCheered = 1 if int(blob.get('oswaldCheered', 0) or 0) else 0
         except Exception:
             self.notify.warning('pushCampaignProgressToAvatar failed')
             return False
@@ -447,12 +462,17 @@ class PollutionManagerAI(DistributedObjectAI):
         except Exception:
             self.notify.debug('setCampaignProgress send failed av=%s' % avId)
             return False
-        # Sibling thin push — first-meet tip latch without widening progress DC.
+        # Sibling thin pushes — trust latches without widening progress DC.
         try:
             self.sendUpdateToAvatarId(
                 int(avId), 'setOswaldMet', [oswaldMet])
         except Exception:
             self.notify.debug('setOswaldMet send failed av=%s' % avId)
+        try:
+            self.sendUpdateToAvatarId(
+                int(avId), 'setOswaldCheered', [oswaldCheered])
+        except Exception:
+            self.notify.debug('setOswaldCheered send failed av=%s' % avId)
         return True
 
     def pushOswaldMetToAvatar(self, toon, met=0):
@@ -467,6 +487,21 @@ class PollutionManagerAI(DistributedObjectAI):
             self.sendUpdateToAvatarId(int(avId), 'setOswaldMet', [flag])
         except Exception:
             self.notify.debug('setOswaldMet send failed av=%s' % avId)
+            return False
+        return True
+
+    def pushOswaldCheeredToAvatar(self, toon, cheered=0):
+        """Thin per-avatar setOswaldCheered push (cheer / hydrate / persist)."""
+        if toon is None:
+            return False
+        avId = getattr(toon, 'doId', None)
+        if avId is None:
+            return False
+        flag = 1 if int(cheered) else 0
+        try:
+            self.sendUpdateToAvatarId(int(avId), 'setOswaldCheered', [flag])
+        except Exception:
+            self.notify.debug('setOswaldCheered send failed av=%s' % avId)
             return False
         return True
 

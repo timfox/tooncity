@@ -156,6 +156,10 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertEqual(len(hub_pos), 4)
         self.assertTrue(all(isinstance(v, (int, float)) for v in hub_pos))
         self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')
+        self.assertEqual(
+            camp.OSWALD_PRESENCE_CHEERED_MSG, 'oswaldPresenceCheered')
+        self.assertEqual(
+            camp.OSWALD_PRESENCE_CHEERED_SYNC_MSG, 'oswaldCheeredSync')
         self.assertEqual(camp.OSWALD_PRESENCE_MET_MSG, 'oswaldPresenceMet')
         self.assertEqual(camp.OSWALD_PRESENCE_MET_SYNC_MSG, 'oswaldMetSync')
         blob = ' '.join([
@@ -227,6 +231,9 @@ class OswaldPresenceTests(unittest.TestCase):
                 '_onOswaldPresenceMet',
                 '_onOswaldMetSync',
                 '_requestPersistMet',
+                '_onOswaldPresenceCheered',
+                '_onOswaldCheeredSync',
+                '_requestPersistCheered',
                 '_playGreetWave',
                 '_playCheerBounce',
                 '_onReclaimCheer',
@@ -240,9 +247,12 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('oswaldpresencemet', src_l)
         self.assertIn('oswaldmetsync', src_l)
         self.assertIn('oswaldpresencecheered', src_l)
+        self.assertIn('oswaldcheeredsync', src_l)
         self.assertIn('_oswaldmet', src_l)
+        self.assertIn('_oswaldcheered', src_l)
         self.assertIn('firstmeettip', src_l)
         self.assertIn('d_requestoswaldmet', src_l)
+        self.assertIn('d_requestoswaldcheered', src_l)
         self.assertIn('localavatarzonechange', src_l)
         self.assertIn('oswaldrevealbanner', src_l)
         self.assertIn('oswaldbetrayalchase', src_l)

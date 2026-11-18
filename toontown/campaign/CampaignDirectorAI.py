@@ -51,6 +51,9 @@ class CampaignDirectorAI(DirectObject):
         # 1 after first trusted Oswald E-talk meet (first-meet tip persist).
         # Durable across relog; not wiped on campaign replay.
         self.oswaldMet = 0
+        # 1 after first reclaim cheer from trusted Oswald (cheer-on-clear).
+        # Durable across relog; not wiped on campaign replay.
+        self.oswaldCheered = 0
         # Finished-reclaim street zoneIds (mirrors PollutionManagerAI locks).
         self.securedZones = []
         self._lastToonId = None
@@ -173,6 +176,28 @@ class CampaignDirectorAI(DirectObject):
         self._pushOswaldMetToClient(toon)
         return True
 
+    def markOswaldCheered(self, toon=None):
+        """Latch + persist first trusted Oswald reclaim cheer (cheer-on-clear).
+
+        Idempotent: already-cheered stays 1. Survives relog via
+        CampaignProgressSave; not cleared on campaign replay wipe (trust beat
+        is character knowledge on the meet→cheer→twist ladder).
+        """
+        if toon is not None:
+            self._lastToonId = getattr(toon, 'doId', self._lastToonId)
+            if hasattr(self, '_hydrateFromToon'):
+                try:
+                    self._hydrateFromToon(toon)
+                except Exception:
+                    pass
+        if int(getattr(self, 'oswaldCheered', 0) or 0):
+            self._pushOswaldCheeredToClient(toon)
+            return True
+        self.oswaldCheered = 1
+        self._persistForToon(toon)
+        self._pushOswaldCheeredToClient(toon)
+        return True
+
     def _pushOswaldMetToClient(self, toon):
         """Thin PollutionManager setOswaldMet push (login / meet)."""
         if toon is None:
@@ -193,6 +218,27 @@ class CampaignDirectorAI(DirectObject):
         except Exception:
             return False
 
+    def _pushOswaldCheeredToClient(self, toon):
+        """Thin PollutionManager setOswaldCheered push (login / cheer)."""
+        if toon is None:
+            avId = self._lastToonId
+            if avId is None:
+                return False
+            toon = self.air.doId2do.get(int(avId))
+        if toon is None:
+            return False
+        pollutionMgr = getattr(self.air, 'pollutionManager', None)
+        if pollutionMgr is None:
+            return False
+        push = getattr(pollutionMgr, 'pushOswaldCheeredToAvatar', None)
+        if not callable(push):
+            return False
+        try:
+            return bool(push(
+                toon, int(getattr(self, 'oswaldCheered', 0) or 0)))
+        except Exception:
+            return False
+
     def _pushProgressToClient(self, toon):
         """Thin PollutionManager status push (login / hydrate / persist)."""
         if toon is None:
@@ -210,8 +256,10 @@ class CampaignDirectorAI(DirectObject):
         except Exception:
             self.notify.debug('campaign progress client push failed')
             ok = False
-        # First-meet latch is a sibling thin push (keeps 4-arg progress DC).
+        # First-meet / first-cheer latches are sibling thin pushes
+        # (keeps 4-arg progress DC).
         self._pushOswaldMetToClient(toon)
+        self._pushOswaldCheeredToClient(toon)
         return ok
 
     def _pushVictoryToClient(self, toon, reclaimCount=None):

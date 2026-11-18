@@ -95,6 +95,18 @@ def metSyncMsgName():
         'oswaldMetSync'))
 
 
+def cheeredMsgName():
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_CHEERED_MSG',
+        'oswaldPresenceCheered'))
+
+
+def cheeredSyncMsgName():
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_CHEERED_SYNC_MSG',
+        'oswaldCheeredSync'))
+
+
 def interactPromptTip():
     return str(getattr(
         CampaignGlobals, 'OSWALD_PRESENCE_INTERACT_PROMPT',
@@ -198,8 +210,9 @@ class OswaldPresenceClient(DirectObject):
     AI-free stub: place a rubber-hose silhouette at the authored TTC plaza
     stand (streets: near local toon), arm E-talk when approached, greet once
     per zone visit (first-ever meet uses the once-ever first-meet tip and
-    persists ``oswaldMet``), cheer on street-clear purity messengers, clear
-    after betrayal messengers / persisted victory sync.
+    persists ``oswaldMet``), cheer on street-clear purity messengers (first
+    cheer latches + persists ``oswaldCheered``), clear after betrayal
+    messengers / persisted victory sync.
     """
 
     def __init__(self):
@@ -218,6 +231,8 @@ class OswaldPresenceClient(DirectObject):
         self._greetedZone = None
         # Durable first-meet latch (also hydrated from AI oswaldMet sync).
         self._oswaldMet = False
+        # Durable first-cheer latch (also hydrated from AI oswaldCheered sync).
+        self._oswaldCheered = False
         self._betrayed = False
         self._markerPos = None
         self._inRange = False
@@ -236,6 +251,9 @@ class OswaldPresenceClient(DirectObject):
         # First-meet tip + persist — orphan send wired here (not PlayEntry).
         self.accept(metMsgName(), self._onOswaldPresenceMet)
         self.accept(metSyncMsgName(), self._onOswaldMetSync)
+        # First reclaim cheer latch + persist — orphan send wired here.
+        self.accept(cheeredMsgName(), self._onOswaldPresenceCheered)
+        self.accept(cheeredSyncMsgName(), self._onOswaldCheeredSync)
         # Login mirror — AI-persisted STATE_VICTORY must hide trusted Oswald
         # after relog (session-only `_betrayed` is not enough).
         syncMsg = getattr(
@@ -259,6 +277,7 @@ class OswaldPresenceClient(DirectObject):
         self._zoneId = None
         self._greetedZone = None
         self._oswaldMet = False
+        self._oswaldCheered = False
         self._betrayed = False
 
     def _bootZone(self, task):
@@ -679,6 +698,34 @@ class OswaldPresenceClient(DirectObject):
             except Exception:
                 pass
 
+    def _onOswaldPresenceCheered(self, zoneId=0, label=''):
+        """Accept reclaim-cheer messenger — latch + AI-persist oswaldCheered once.
+
+        Live tip stays owned by ``playReclaimCheer``; this path retains the
+        cheer-on-clear beat past session bounce (trust→twist ladder).
+        """
+        if self._oswaldCheered:
+            return
+        self._oswaldCheered = True
+        self._requestPersistCheered()
+
+    def _onOswaldCheeredSync(self, cheered=0):
+        """Hydrate durable first-cheer latch from AI setOswaldCheered (relog)."""
+        if int(cheered):
+            self._oswaldCheered = True
+
+    def _requestPersistCheered(self):
+        """Ask AI to persist oswaldCheered so cheer-on-clear survives bounce."""
+        try:
+            pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
+        except Exception:
+            pm = None
+        if pm is not None and hasattr(pm, 'd_requestOswaldCheered'):
+            try:
+                pm.d_requestOswaldCheered()
+            except Exception:
+                pass
+
     def _cheerDebounce(self, minGap=0.4):
         try:
             now = globalClock.getFrameTime()  # noqa: F821
@@ -700,7 +747,12 @@ class OswaldPresenceClient(DirectObject):
         self.playReclaimCheer(zoneId=zoneId, showTip=True)
 
     def playReclaimCheer(self, zoneId=None, showTip=True):
-        """Public cheer beat for ReclaimCheer / director thin wire."""
+        """Public cheer beat for ReclaimCheer / director thin wire.
+
+        Always body-bounces on clear. Tip uses the live cheer copy; fires
+        ``oswaldPresenceCheered`` so the accept path can persist
+        ``oswaldCheered`` beyond session bounce.
+        """
         if self._betrayed or self._bodyNP is None:
             return False
         self._playCheerBounce()
@@ -708,7 +760,7 @@ class OswaldPresenceClient(DirectObject):
             self._showGreetTip(cheerTip())
         try:
             messenger.send(  # noqa: F821
-                'oswaldPresenceCheered', [
+                cheeredMsgName(), [
                     int(zoneId if zoneId is not None else (self._zoneId or 0)),
                     presenceLabel()])
         except Exception:

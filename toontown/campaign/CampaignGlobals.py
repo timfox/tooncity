@@ -1068,11 +1068,18 @@ OSWALD_PRESENCE_FIRST_MEET_TIP = (
 OSWALD_PRESENCE_CHEER_TIP = (
     'Oswald cheers — "Street\'s clean! On to the next!"  |  '
     'Hop the tunnel  |  C campaign')
+# First reclaim cheer latches CampaignProgressSave.oswaldCheered (survives
+# relog). Live street clears still tip + cheer every time via CHEER_TIP;
+# the latch keeps cheer-on-clear on the trust→twist ladder past bounce.
 OSWALD_PRESENCE_INTERACT_PROMPT = 'E — Talk to Oswald'
 OSWALD_PRESENCE_INTERACT_EVENT = 'oswaldPresenceInteract'
 OSWALD_PRESENCE_MET_MSG = 'oswaldPresenceMet'
 OSWALD_PRESENCE_MET_SYNC_MSG = 'oswaldMetSync'
+# ReclaimCheer / purity backup → body cheer (input).
 OSWALD_PRESENCE_CHEER_MSG = 'oswaldPresenceCheer'
+# After playReclaimCheer fires (output) — accept → tip latch + persist.
+OSWALD_PRESENCE_CHEERED_MSG = 'oswaldPresenceCheered'
+OSWALD_PRESENCE_CHEERED_SYNC_MSG = 'oswaldCheeredSync'
 # Authored TTC plaza lead stand (x, y, z, h) — near HQ plaza approach,
 # not spawn-relative to the local toon. Streets keep near-avatar offset.
 OSWALD_PRESENCE_HUB_POS = (-48.0, 28.0, -0.55, -100.0)
