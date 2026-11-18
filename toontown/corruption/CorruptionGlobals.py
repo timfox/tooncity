@@ -186,6 +186,37 @@ _DEFAULT_HOOD_BIAS = HOOD_POLLUTION_BIAS[2200]
 # Ink Smudge = purple melee; Sludge Brute = green spit; Balloon Snare = amber lash.
 TELEGRAPH_CHARGE_COLOR = (2.15, 0.25, 2.4, 1.0)
 TELEGRAPH_HOLD_COLOR = (1.55, 0.2, 1.85, 1.0)
+
+# Ink Smudge telegraph ink-fist pop — short rubber-hose purple melee charge on
+# announceAttackTelegraph (client only). Distinct from shared TELEGRAPH_INK_DRIP_*
+# drips and from Brute spit / Snare string silhouettes: punch-fist ink blob.
+SMUDGE_TELEGRAPH_INK_LOOK = {
+    'id': 'purple-ink-fist',
+    'lift': 2.2,
+    'scale': 1.0,
+    'peakAlpha': 0.96,
+    'fadeInSec': 0.04,
+    'holdSec': 0.15,
+    'fadeOutSec': 0.22,
+    'squash': (1.75, 1.0, 0.38),
+    'stretch': (0.7, 1.0, 1.85),
+    'squashSec': 0.05,
+    'stretchSec': 0.11,
+    'settleSec': 0.13,
+    'wobbleDeg': 14.0,
+    'fistHalf': 0.36,
+    'rimScale': 1.32,
+    'hotHalf': 0.13,
+    'fistColor': (0.55, 0.18, 0.95, 1.0),
+    'rimColor': (1.15, 0.45, 1.55, 1.0),
+    'flashColor': (1.35, 0.45, 1.7, 1.0),
+    'smearCount': 4,
+    'smearHalf': 0.11,
+    'smearSec': 0.28,
+    'smearSpread': 0.95,
+    'smearColor': (0.75, 0.28, 1.15, 0.9),
+    'binSort': 42,
+}
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
 ATTACK_HIT_FLASH_PEAK = 0.55
 ATTACK_HIT_FLASH_IN = 0.04

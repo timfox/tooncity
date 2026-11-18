@@ -89,8 +89,18 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # when available), else improved card limbs. Chase AI unchanged; telegraph
 # wind-up plays a short ink drip / splat pop (CorruptTelegraphInkFx) plus
 # squash/SFX so wind-ups read without a combat HUD; impact flash on hit.
+# Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray); purity pop + pollution drop.
+```
+
+## Ink Smudge telegraph demo
+
+```
+~spawncorrupt 2 0 0
+~hackslash 0
+# Smudge: purple squash + ink-fist telegraph pop (SmudgeInkTelegraphFx)
+# + ink drip + pie whoosh SFX, then impact flash on hit.
 ```
 
 ## Sludge Brute spit demo
@@ -101,7 +111,7 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~hackslash 0
 # Brute: green squash + spit-gob telegraph pop (BruteSpitTelegraphFx)
 # + ink drip + squirt SFX, then ink blob on hit.
-# Compare ~spawncorrupt 1   (Ink Smudge keeps purple melee telegraph + drip).
+# Compare ~spawncorrupt 1   (Ink Smudge: purple ink-fist telegraph + drip).
 ```
 
 ## Balloon Snare string-lash demo

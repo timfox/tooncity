@@ -81,7 +81,7 @@ class SpawnCorrupt(MagicWord):
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
         'Client prefers DNA/Actor ink silhouette, else card limbs. '
-        'Ink Smudge: purple melee telegraph + ink drip splat + impact. '
+        'Ink Smudge: purple ink-fist telegraph pop + ink drip splat + impact. '
         'Sludge Brute (archetype=1): green spit-gob telegraph pop + '
         'squirt SFX + ink blob. '
         'Balloon Snare (archetype=2): amber string-lash telegraph pop + '
