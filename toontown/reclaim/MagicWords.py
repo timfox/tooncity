@@ -28,9 +28,9 @@ class StartReclaim(MagicWord):
         'street entry cream wash gets a delayed cream aftershock. Purity meter '
         'fill shimmer gets a '
         'delayed cream aftershock. Wave-clear cream shimmer hang gets a '
-        'delayed cream aftershock. Wave announce plates get a cream edge '
-        'pulse with cream sparkle flecks. Pair with ~hackslash 0 for melee '
-        'without demo dummies.')
+        'delayed cream aftershock + soft cream wash pulse. Wave announce '
+        'plates get a cream edge pulse with cream sparkle flecks. Pair with '
+        '~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]
