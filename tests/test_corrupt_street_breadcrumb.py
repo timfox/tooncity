@@ -3,9 +3,9 @@
 
 Loads pure helpers from CorruptStreetBreadcrumb via AST extraction (no
 Panda3D). Covers streetNeedsBreadcrumb pollution/seed rules used by hub
-discoverability (#192), placemarker notice-pulse timing (#211), the
-distinct tunnel-mouth crumb-trail pulse (#216), and playground pollution
-fog edge breath.
+discoverability (#192), placemarker notice-pulse timing (#211), cream
+deepen mid-settle + local halo on that pulse, the distinct tunnel-mouth
+crumb-trail pulse (#216), and playground pollution fog edge breath.
 
 Run from repo root:
   python3 tests/test_corrupt_street_breadcrumb.py
@@ -31,6 +31,9 @@ def _extract_pure_helpers():
     # Pulse helpers close over module constants — bind them.
     const_names = {
         '_PULSE_PEAK', '_PULSE_HALF_SEC', '_PULSE_BEATS', '_PULSE_GAP_SEC',
+        '_PULSE_HIGHLIGHT', '_PULSE_CREAM_MID', '_PULSE_CREAM_MID_SEC',
+        '_PULSE_HALO_PEAK', '_PULSE_HALO_MID', '_PULSE_HALO_SCALE_PEAK',
+        '_PULSE_HALO_HALF_W', '_PULSE_HALO_HALF_H',
         '_MARKER_SCALE',
         '_CRUMB_PULSE_PEAK', '_CRUMB_PULSE_HALF_SEC', '_CRUMB_PULSE_GAP_SEC',
         '_CRUMB_STAGGER_SEC', '_CRUMB_COUNT', '_CRUMB_SCALE',
@@ -47,6 +50,7 @@ def _extract_pure_helpers():
         elif isinstance(node, ast.FunctionDef) and node.name in (
                 'streetNeedsBreadcrumb',
                 'placemarkerPulseParams',
+                'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
                 'playgroundFogEdgePulseParams'):
             keep.append(node)
@@ -58,6 +62,12 @@ def _extract_pure_helpers():
             isinstance(n, ast.FunctionDef) and n.name == 'placemarkerPulseParams'
             for n in keep):
         raise AssertionError('placemarkerPulseParams not found in %s' % BREADCRUMB_REL)
+    if not any(
+            isinstance(n, ast.FunctionDef)
+            and n.name == 'placemarkerPulseCreamParams'
+            for n in keep):
+        raise AssertionError(
+            'placemarkerPulseCreamParams not found in %s' % BREADCRUMB_REL)
     if not any(
             isinstance(n, ast.FunctionDef)
             and n.name == 'streetBreadcrumbPulseParams'
@@ -73,13 +83,14 @@ def _extract_pure_helpers():
     mod = ast.Module(body=keep, type_ignores=[])
     ast.fix_missing_locations(mod)
     ns = {
-        # Vec4-like stand-in so _FOG_REST/_FOG_PEAK assignments work headless.
+        # Vec4-like stand-in so cream/fog Vec4 assignments work headless.
         'Vec4': lambda *args: tuple(args),
     }
     exec(compile(mod, BREADCRUMB_REL, 'exec'), ns)  # noqa: S102 — test harness
     return (
         ns['streetNeedsBreadcrumb'],
         ns['placemarkerPulseParams'],
+        ns['placemarkerPulseCreamParams'],
         ns['streetBreadcrumbPulseParams'],
         ns['playgroundFogEdgePulseParams'],
     )
@@ -92,9 +103,10 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
     def setUpClass(cls):
         # Store on the class dict under a private name so Python does not
         # bind the helper as an instance method (which would shift args).
-        needs, pulse, crumb_pulse, fog_pulse = _extract_pure_helpers()
+        needs, pulse, cream, crumb_pulse, fog_pulse = _extract_pure_helpers()
         cls._needs = staticmethod(needs)
         cls._pulse = staticmethod(pulse)
+        cls._cream = staticmethod(cream)
         cls._crumb_pulse = staticmethod(crumb_pulse)
         cls._fog_pulse = staticmethod(fog_pulse)
         cls.src = (REPO_ROOT / BREADCRUMB_REL).read_text(encoding='utf-8')
@@ -126,6 +138,7 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'reclaimStreetEntries',
                 'streetNeedsBreadcrumb',
                 'placemarkerPulseParams',
+                'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
                 'playgroundFogEdgePulseParams',
                 'CorruptStreetBreadcrumb',
@@ -148,6 +161,18 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 '_PULSE_HIGHLIGHT',
                 '_PULSE_GAP_SEC'):
             self.assertIn(needle, self.src, msg='missing pulse cue %s' % needle)
+        # Cream deepen on placemarker pulse (juicier mid-settle + local halo).
+        for needle in (
+                'placemarkerPulseCreamParams',
+                '_attachPulseCreamHalo',
+                '_buildPulseCreamHaloIval',
+                '_PULSE_CREAM_MID',
+                '_PULSE_CREAM_MID_SEC',
+                '_PULSE_HALO_PEAK',
+                'corruptStreetPlacemarkerCreamHalo',
+                'fullscreenWash'):
+            self.assertIn(
+                needle, self.src, msg='missing pulse cream deepen %s' % needle)
         # Distinct tunnel-mouth crumb trail pulse (not placemarker #211).
         for needle in (
                 '_attachCrumbTrail',
@@ -193,6 +218,39 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         self.assertGreaterEqual(params['gapSec'], 2.0)
         self.assertLessEqual(params['gapSec'], 8.0)
         self.assertGreater(params['baseScale'], 0.5)
+
+    def test_placemarker_pulse_cream_deepen_params(self):
+        cream = self._cream()
+        # Juicier cream mid-settle + local halo — not a fullscreen wash.
+        self.assertFalse(cream['fullscreenWash'])
+        self.assertGreater(cream['creamMidSec'], 0.04)
+        self.assertLessEqual(cream['creamMidSec'], 0.20)
+        hi = cream['highlight']
+        mid = cream['creamMid']
+        self.assertEqual(len(hi), 4)
+        self.assertEqual(len(mid), 4)
+        # Sunny cream peak is warm (high R/G, softer B) and opaque.
+        self.assertGreaterEqual(hi[0], 0.95)
+        self.assertGreaterEqual(hi[1], 0.88)
+        self.assertLess(hi[2], hi[1])
+        self.assertAlmostEqual(hi[3], 1.0, places=2)
+        # Mid settle is softer / creamier than the punchy peak.
+        self.assertGreater(mid[1], hi[1] - 0.02)
+        self.assertGreater(mid[2], hi[2])
+        self.assertGreater(cream['haloPeakAlpha'], cream['haloMidAlpha'])
+        self.assertGreater(cream['haloPeakAlpha'], 0.20)
+        self.assertLess(cream['haloPeakAlpha'], 0.55)
+        self.assertGreater(cream['haloMidAlpha'], 0.05)
+        self.assertLess(cream['haloMidAlpha'], cream['haloPeakAlpha'])
+        self.assertGreater(cream['haloScalePeak'], 1.1)
+        self.assertLess(cream['haloScalePeak'], 1.6)
+        self.assertGreater(cream['haloHalfW'], 1.5)
+        self.assertGreater(cream['haloHalfH'], 0.3)
+        # Distinct from placemarker scale-pulse dict (#211 base).
+        pulse = self._pulse()
+        self.assertNotIn('highlight', pulse)
+        self.assertNotIn('haloPeakAlpha', pulse)
+        self.assertNotIn('fullscreenWash', pulse)
 
     def test_street_breadcrumb_pulse_params_distinct(self):
         placemarker = self._pulse()

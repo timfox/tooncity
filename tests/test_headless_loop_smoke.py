@@ -3114,6 +3114,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'reclaimStreetEntries',
                 'streetNeedsBreadcrumb',
                 'placemarkerPulseParams',
+                'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
                 'playgroundFogEdgePulseParams',
                 'CorruptStreetBreadcrumb',
@@ -3128,6 +3129,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         # Brief pulse / cream highlight so reclaim tunnels catch the eye.
         self.assertIn('_startPulseLoop', crumb_src)
         self.assertIn('_PULSE_HIGHLIGHT', crumb_src)
+        # Cream deepen on placemarker pulse (local halo, not birds wash).
+        self.assertIn('_PULSE_CREAM_MID', crumb_src)
+        self.assertIn('_attachPulseCreamHalo', crumb_src)
+        self.assertIn('corruptStreetPlacemarkerCreamHalo', crumb_src)
         # Distinct tunnel-mouth crumb trail pulse (playground-side cue).
         self.assertIn('_startCrumbPulseLoop', crumb_src)
         self.assertIn('_CRUMB_PULSE_GAP_SEC', crumb_src)
