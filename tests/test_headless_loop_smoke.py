@@ -354,11 +354,34 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('DodgePerfectFx', melee_src)
         self.assertIn('self._dodgePerfect', melee_src)
 
+        # Melee hit cream spark aftershock (#96) — delayed residual on HitSparkFx.
+        _assert_module_file('toontown/hackslash/HitSparkFx.py')
+        hit_spark_tree = _module_ast('toontown/hackslash/HitSparkFx.py')
+        hit_spark_names = _class_and_func_names(hit_spark_tree)
+        self.assertIn('HitSparkFx', hit_spark_names)
+        hit_spark_methods = _class_method_names(hit_spark_tree, 'HitSparkFx')
+        self.assertIn('play', hit_spark_methods)
+        self.assertIn('_buildAftershock', hit_spark_methods)
+        self.assertIn('_spawnAftershockHalo', hit_spark_methods)
+        self.assertIn('_spawnAftershockSpark', hit_spark_methods)
+        for tunable in (
+                'HIT_SPARK_CREAM_AFTERSHOCK_ENABLED',
+                'HIT_SPARK_CREAM_AFTERSHOCK_DELAY_SEC',
+                'HIT_SPARK_CREAM_AFTERSHOCK_COUNT',
+                'HIT_SPARK_CREAM_AFTERSHOCK_COLOR',
+                'HIT_SPARK_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'HIT_SPARK_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                tunable, config_names,
+                msg='HackSlashConfig missing hit-spark aftershock %s' % tunable)
+        self.assertIn('HitSparkFx', melee_src)
+        self.assertIn('self._hitSpark', melee_src)
+
         # Re-exports keep client import paths stable.
         hack_init = _read('toontown/hackslash/__init__.py')
         for symbol in (
                 'HitStopFx', 'SoftLockReticleFx', 'DodgeTrailFx',
-                'DodgePerfectFx'):
+                'DodgePerfectFx', 'HitSparkFx'):
             self.assertIn(symbol, hack_init)
 
         # --- reclaim: street wash + wave-clear cream burst + purity shimmer ---
@@ -402,6 +425,29 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 shimmer_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % shimmer_key)
 
+        # Wave-clear cream shimmer hang (#93) — delayed residual after burst.
+        shimmer_rel = 'toontown/reclaim/WaveClearCreamShimmerFx.py'
+        _assert_module_file(shimmer_rel)
+        wave_shimmer_names = _class_and_func_names(_module_ast(shimmer_rel))
+        self.assertIn('WaveClearCreamShimmerFxClient', wave_shimmer_names)
+        self.assertIn('ensureWaveClearCreamShimmerFxClient', wave_shimmer_names)
+        wave_shimmer_methods = _class_method_names(
+            _module_ast(shimmer_rel), 'WaveClearCreamShimmerFxClient')
+        self.assertIn('_spawnShimmer', wave_shimmer_methods)
+        self.assertIn('_spawnFlecks', wave_shimmer_methods)
+        for shimmer_hang_key in (
+                'WAVE_CLEAR_CREAM_SHIMMER_ENABLED',
+                'WAVE_CLEAR_CREAM_SHIMMER_DELAY_SEC',
+                'WAVE_CLEAR_CREAM_SHIMMER_COLOR',
+                'WAVE_CLEAR_CREAM_SHIMMER_BIN',
+                'WAVE_CLEAR_CREAM_SHIMMER_FLECK_COUNT',
+                'WAVE_CLEAR_CREAM_SHIMMER_FLECK_COLOR'):
+            self.assertIn(
+                shimmer_hang_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % shimmer_hang_key)
+        director_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
+        self.assertIn('ensureWaveClearCreamShimmerFxClient', director_src)
+
         # --- corruption: idle ink drip + overlord phase ink rain + magenta splash ---
         _assert_module_file('toontown/corruption/IdleInkDripFx.py')
         idle_names = _class_and_func_names(
@@ -444,6 +490,28 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('OverlordMagentaInkSplash', corrupt_src)
         self.assertIn('__playOverlordMagentaInkSplash', corrupt_src)
 
+        # Corrupt death cream flecks (#94) — cream/pastel layer on death pop.
+        fleck_rel = 'toontown/corruption/CorruptDeathCreamFleckFx.py'
+        _assert_module_file(fleck_rel)
+        fleck_names = _class_and_func_names(_module_ast(fleck_rel))
+        self.assertIn('DeathCreamFleckBurst', fleck_names)
+        self.assertIn('deathCreamFleckLook', fleck_names)
+        fleck_methods = _class_method_names(
+            _module_ast(fleck_rel), 'DeathCreamFleckBurst')
+        self.assertIn('play', fleck_methods)
+        self.assertIn('_spawnFleck', fleck_methods)
+        self.assertTrue(
+            hasattr(cg, 'DEATH_CREAM_FLECK_LOOK'),
+            msg='CorruptionGlobals missing DEATH_CREAM_FLECK_LOOK')
+        self.assertEqual(
+            cg.DEATH_CREAM_FLECK_LOOK.get('id'), 'death-cream-fleck')
+        self.assertTrue(
+            hasattr(cg, 'DEATH_CREAM_FLECK_ENABLED'),
+            msg='CorruptionGlobals missing DEATH_CREAM_FLECK_ENABLED')
+        death_pop_src = _read('toontown/corruption/CorruptDeathPopFx.py')
+        self.assertIn('DeathCreamFleckBurst', death_pop_src)
+        self.assertIn('CorruptDeathCreamFleckFx', death_pop_src)
+
         # --- campaign: Punchline Act 2 tip hose pop (#91) ---
         campaign_names = _toplevel_assign_names(self.campaign_tree)
         for tip_key in (
@@ -468,6 +536,24 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('PUNCHLINE_ACT_TIP_POP_SQUASH', play_src)
         self.assertIn('_tipHosePopInterval', play_src)
         self.assertIn('playEntryTipHosePop', play_src)
+
+        # Silly Act 3 tip hose pop (#95) — Oswald trusted lead + Ink Overlord.
+        for silly_tip_key in (
+                'SILLY_ACT_TIP_POP_SQUASH',
+                'SILLY_ACT_TIP_POP_STRETCH',
+                'SILLY_ACT_TIP_POP_SETTLE_SEC',
+                'SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT',
+                'SILLY_ACT_TIP_TRUST_SETTLE_REST_SEC'):
+            self.assertIn(
+                silly_tip_key, campaign_names,
+                msg='CampaignGlobals missing %s' % silly_tip_key)
+        finale = next(a for a in acts if a.get('id') == 'finale')
+        finale_tip = finale.get('entryTip') or ''
+        self.assertIn('Oswald', finale_tip)
+        self.assertIn('Ink Overlord', finale_tip)
+        self.assertIn('Silly Street', finale_tip)
+        self.assertIn('SILLY_ACT_TIP_POP_SQUASH', play_src)
+        self.assertIn('SILLY_ACT_TIP_TRUST_SETTLE_OVERSHOOT', play_src)
 
 
 def main() -> int:
