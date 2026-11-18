@@ -83,6 +83,8 @@ class MeleeCombatController(DirectObject):
         self._comboIval = None
         self._comboFleckIval = None
         self._comboFleckNodes = []
+        self._comboCreamIval = None
+        self._comboCreamNodes = []
         self.targetFinder = SoftTargetFinder(avatar)
         self._hintNP = None
         self._lockHintNP = None
@@ -543,6 +545,12 @@ class MeleeCombatController(DirectObject):
                 name=self.avatar.uniqueName('hackslashComboFlecks'))
             self._comboFleckIval = fleckIval
             self._comboFleckNodes = flecks
+            # Cream sparkle layers with hose pop + ink flecks on the same tick.
+            creamIval, creamNodes = HitJuice.spawnComboCreamSparkles(
+                fleckOrigin, parent=parent,
+                name=self.avatar.uniqueName('hackslashComboCream'))
+            self._comboCreamIval = creamIval
+            self._comboCreamNodes = creamNodes
 
     def _fadeComboCounter(self):
         if self._comboNP is None or self._comboNP.isEmpty():
@@ -573,6 +581,14 @@ class MeleeCombatController(DirectObject):
             self._comboFleckIval = None
         HitJuice.clearComboInkFlecks(self._comboFleckNodes)
         self._comboFleckNodes = []
+        if self._comboCreamIval is not None:
+            try:
+                self._comboCreamIval.pause()
+            except Exception:
+                pass
+            self._comboCreamIval = None
+        HitJuice.clearComboCreamSparkles(self._comboCreamNodes)
+        self._comboCreamNodes = []
 
     def _clearComboCounter(self):
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
