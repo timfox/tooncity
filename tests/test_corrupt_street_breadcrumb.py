@@ -5,7 +5,9 @@ Loads pure helpers from CorruptStreetBreadcrumb via AST extraction (no
 Panda3D). Covers streetNeedsBreadcrumb pollution/seed rules used by hub
 discoverability (#192), placemarker notice-pulse timing (#211), cream
 deepen mid-settle + local halo on that pulse, the distinct tunnel-mouth
-crumb-trail pulse (#216), and playground pollution fog edge breath.
+crumb-trail pulse (#216), playground pollution fog edge breath (#221),
+and fog-edge cream deepen (cream mid-settle + rim, distinct from #230 /
+#226).
 
 Run from repo root:
   python3 tests/test_corrupt_street_breadcrumb.py
@@ -39,6 +41,9 @@ def _extract_pure_helpers():
         '_CRUMB_STAGGER_SEC', '_CRUMB_COUNT', '_CRUMB_SCALE',
         '_FOG_PULSE_HALF_SEC', '_FOG_PULSE_GAP_SEC', '_FOG_REST', '_FOG_PEAK',
         '_FOG_BILLOW', '_FOG_SCALE',
+        '_FOG_CREAM_MID', '_FOG_CREAM_MID_SEC',
+        '_FOG_CREAM_RIM_PEAK', '_FOG_CREAM_RIM_MID',
+        '_FOG_CREAM_RIM_SCALE_PEAK', '_FOG_CREAM_RIM_HALF_W', '_FOG_CREAM_RIM_HALF_H',
     }
     keep = []
     for node in tree.body:
@@ -52,7 +57,8 @@ def _extract_pure_helpers():
                 'placemarkerPulseParams',
                 'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
-                'playgroundFogEdgePulseParams'):
+                'playgroundFogEdgePulseParams',
+                'playgroundFogEdgeCreamParams'):
             keep.append(node)
     if not any(
             isinstance(n, ast.FunctionDef) and n.name == 'streetNeedsBreadcrumb'
@@ -80,6 +86,12 @@ def _extract_pure_helpers():
             for n in keep):
         raise AssertionError(
             'playgroundFogEdgePulseParams not found in %s' % BREADCRUMB_REL)
+    if not any(
+            isinstance(n, ast.FunctionDef)
+            and n.name == 'playgroundFogEdgeCreamParams'
+            for n in keep):
+        raise AssertionError(
+            'playgroundFogEdgeCreamParams not found in %s' % BREADCRUMB_REL)
     mod = ast.Module(body=keep, type_ignores=[])
     ast.fix_missing_locations(mod)
     ns = {
@@ -93,6 +105,7 @@ def _extract_pure_helpers():
         ns['placemarkerPulseCreamParams'],
         ns['streetBreadcrumbPulseParams'],
         ns['playgroundFogEdgePulseParams'],
+        ns['playgroundFogEdgeCreamParams'],
     )
 
 
@@ -103,12 +116,14 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
     def setUpClass(cls):
         # Store on the class dict under a private name so Python does not
         # bind the helper as an instance method (which would shift args).
-        needs, pulse, cream, crumb_pulse, fog_pulse = _extract_pure_helpers()
+        (needs, pulse, cream, crumb_pulse,
+         fog_pulse, fog_cream) = _extract_pure_helpers()
         cls._needs = staticmethod(needs)
         cls._pulse = staticmethod(pulse)
         cls._cream = staticmethod(cream)
         cls._crumb_pulse = staticmethod(crumb_pulse)
         cls._fog_pulse = staticmethod(fog_pulse)
+        cls._fog_cream = staticmethod(fog_cream)
         cls.src = (REPO_ROOT / BREADCRUMB_REL).read_text(encoding='utf-8')
         cls.tree = ast.parse(cls.src, filename=BREADCRUMB_REL)
 
@@ -141,6 +156,7 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
                 'playgroundFogEdgePulseParams',
+                'playgroundFogEdgeCreamParams',
                 'CorruptStreetBreadcrumb',
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
@@ -192,6 +208,18 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'playgroundPollutionFogEdge',
                 'CardMaker'):
             self.assertIn(needle, self.src, msg='missing fog edge %s' % needle)
+        # Fog edge cream deepen (cream mid-settle + rim; not #230 / #226).
+        for needle in (
+                'playgroundFogEdgeCreamParams',
+                '_attachFogCreamRim',
+                '_buildFogCreamRimIval',
+                '_FOG_CREAM_MID',
+                '_FOG_CREAM_MID_SEC',
+                '_FOG_CREAM_RIM_PEAK',
+                'playgroundPollutionFogCreamRim',
+                'localRim'):
+            self.assertIn(
+                needle, self.src, msg='missing fog cream deepen %s' % needle)
         # Birds-return cream wash when hub pollution clears (#231).
         for needle in (
                 '_cueBirdsReturnCreamWash',
@@ -295,6 +323,40 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         self.assertNotIn('peak', fog)
         self.assertNotIn('staggerSec', fog)
         self.assertNotIn('beats', fog)
+
+    def test_playground_fog_edge_cream_deepen_params(self):
+        cream = self._fog_cream()
+        placemarker_cream = self._cream()
+        fog = self._fog_pulse()
+        # Tunnel-lip cream rim + mid-settle — not fullscreen / placemarker halo.
+        self.assertTrue(cream['localRim'])
+        self.assertFalse(cream['fullscreenWash'])
+        self.assertFalse(cream['placemarkerHalo'])
+        self.assertGreater(cream['creamMidSec'], 0.08)
+        self.assertLessEqual(cream['creamMidSec'], 0.25)
+        # Fog cream mid is slower than placemarker cream mid (#230).
+        self.assertGreater(cream['creamMidSec'], placemarker_cream['creamMidSec'])
+        mid = cream['creamMid']
+        self.assertEqual(len(mid), 4)
+        # Cream-ink mid sits between rest and peak alphas on the fog veil.
+        self.assertGreater(cream['creamMidAlpha'], fog['restAlpha'])
+        self.assertLess(cream['creamMidAlpha'], fog['peakAlpha'])
+        self.assertGreater(cream['rimPeakAlpha'], cream['rimMidAlpha'])
+        self.assertGreater(cream['rimPeakAlpha'], 0.18)
+        self.assertLess(cream['rimPeakAlpha'], 0.50)
+        self.assertGreater(cream['rimMidAlpha'], 0.05)
+        self.assertLess(cream['rimMidAlpha'], cream['rimPeakAlpha'])
+        self.assertGreater(cream['rimScalePeak'], 1.05)
+        self.assertLess(cream['rimScalePeak'], 1.35)
+        # Gentler bloom than placemarker halo scale peak (#230).
+        self.assertLess(cream['rimScalePeak'], placemarker_cream['haloScalePeak'])
+        self.assertGreater(cream['rimHalfW'], fog.get('baseScale', 0.5) + 2.0)
+        self.assertGreater(cream['rimHalfH'], 0.5)
+        # Distinct from placemarker cream deepen dict keys.
+        self.assertNotIn('haloPeakAlpha', cream)
+        self.assertNotIn('highlight', cream)
+        self.assertNotIn('rimPeakAlpha', placemarker_cream)
+        self.assertNotIn('localRim', placemarker_cream)
 
     def test_tt_playground_wires_breadcrumbs(self):
         playground = (

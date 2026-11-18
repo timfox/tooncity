@@ -11,9 +11,11 @@ from the birds-return fullscreen cream wash (#226). Separately, a short
 ink crumb trail at the tunnel mouth pulses on a faster stagger so
 polluted streets read clearer from the playground side without relying
 on the overhead placemarker alone. A soft pollution fog edge veil also
-breathes at the playground-side tunnel lip so corruption presence reads
-before you enter a reclaim street — distinct from both placemarker
-(#211) and crumb (#216) scale pulses.
+breathes at the playground-side tunnel lip (#221), deepened with a
+juicier cream mid-settle + soft cream rim bloom so polluted borders
+read punchier — distinct from placemarker/crumb scale pulses, tunnel
+placemarker cream deepen (#230), and birds-return fullscreen wash
+(#226).
 
 When a polluted reclaim tunnel clears (or purityRestoreFx fires while
 the hub is live), a brief birds-return cream wash pulses so the
@@ -89,20 +91,33 @@ _CRUMB_SHADOW = Vec4(1.0, 0.92, 0.72, 0.75)
 _CRUMB_HIGHLIGHT = Vec4(1.0, 0.84, 0.48, 1.0)
 _CRUMB_REST = Vec4(1.0, 1.0, 1.0, 1.0)
 
-# Playground-edge pollution fog breath — opacity/billow, not scale+cream.
-# Slower / softer than placemarker (#211) and crumb (#216) so corruption
-# presence reads at the tunnel lip before you hop a reclaim street.
+# Playground-edge pollution fog breath — opacity/billow (not placemarker
+# scale snap). Slower / softer than #211 / #216 so corruption presence
+# reads at the tunnel lip. Cream deepen: ink peak → cream mid settle +
+# soft cream rim bloom (not placemarker halo #230; not birds wash #226).
 _FOG_NAME = 'playgroundPollutionFogEdge'
 _FOG_Y = -0.55
 _FOG_Z = 0.42
 _FOG_HALF_W = 3.2
 _FOG_HALF_H = 0.95
 _FOG_SCALE = 1.0
-_FOG_BILLOW = 1.10
-_FOG_PULSE_HALF_SEC = 0.44
+_FOG_BILLOW = 1.12  # slightly juicier billow on cream deepen
+_FOG_PULSE_HALF_SEC = 0.46
 _FOG_PULSE_GAP_SEC = 6.2
 _FOG_REST = Vec4(0.16, 0.10, 0.20, 0.16)
-_FOG_PEAK = Vec4(0.12, 0.06, 0.16, 0.36)
+_FOG_PEAK = Vec4(0.14, 0.08, 0.17, 0.40)  # slightly warmer / juicier ink peak
+_FOG_CREAM_MID = Vec4(0.62, 0.48, 0.34, 0.28)  # cream-ink settle before rest
+_FOG_CREAM_MID_SEC = 0.14  # slower than placemarker mid (#230) — fog is soft
+# Soft cream rim under the ink fog during the edge breath.
+_FOG_CREAM_RIM_NAME = 'playgroundPollutionFogCreamRim'
+_FOG_CREAM_RIM_HALF_W = 3.45  # peeks past ink fog as a sunny rim
+_FOG_CREAM_RIM_HALF_H = 1.08
+_FOG_CREAM_RIM_Y_OFF = 0.04
+_FOG_CREAM_RIM_Z_OFF = -0.04
+_FOG_CREAM_RIM_SCALE_PEAK = 1.16  # gentler than placemarker halo 1.32
+_FOG_CREAM_RIM_PEAK = Vec4(1.0, 0.97, 0.82, 0.30)  # sunny cream rim peek
+_FOG_CREAM_RIM_MID = Vec4(1.0, 0.94, 0.74, 0.14)
+_FOG_CREAM_RIM_REST = Vec4(1.0, 0.97, 0.82, 0.0)
 
 # Short rubber-hose signpost copy (world placemarker — keep punchy).
 _STREET_COPY = {
@@ -239,8 +254,8 @@ def playgroundFogEdgePulseParams():
 
     Distinct from placemarkerPulseParams (#211) and
     streetBreadcrumbPulseParams (#216): slower gap, opacity+billow (no
-    cream scale snap) so corruption presence reads at the tunnel lip
-    before reclaim entry. Headless-safe — no Panda geom.
+    placemarker cream scale snap) so corruption presence reads at the
+    tunnel lip before reclaim entry. Headless-safe — no Panda geom.
     """
     return {
         'halfSec': float(_FOG_PULSE_HALF_SEC),
@@ -249,6 +264,33 @@ def playgroundFogEdgePulseParams():
         'peakAlpha': float(_FOG_PEAK[3]),
         'billow': float(_FOG_BILLOW),
         'baseScale': float(_FOG_SCALE),
+    }
+
+
+def playgroundFogEdgeCreamParams():
+    """Pure cream-deepen params for playground pollution fog edge breath.
+
+    Juicier cream mid-settle on the ink fog veil + soft cream rim bloom
+    at the tunnel lip (#221 deepen). Distinct from placemarkerPulseCream
+    Params (#230 local text halo) and BirdsReturnCreamWashFx fullscreen
+    wash (#226). Headless-safe — no Panda geom.
+    """
+    mid = _FOG_CREAM_MID
+    rimPeak = _FOG_CREAM_RIM_PEAK
+    rimMid = _FOG_CREAM_RIM_MID
+    return {
+        'creamMid': (float(mid[0]), float(mid[1]), float(mid[2]), float(mid[3])),
+        'creamMidSec': float(_FOG_CREAM_MID_SEC),
+        'creamMidAlpha': float(mid[3]),
+        'rimPeakAlpha': float(rimPeak[3]),
+        'rimMidAlpha': float(rimMid[3]),
+        'rimScalePeak': float(_FOG_CREAM_RIM_SCALE_PEAK),
+        'rimHalfW': float(_FOG_CREAM_RIM_HALF_W),
+        'rimHalfH': float(_FOG_CREAM_RIM_HALF_H),
+        # Tunnel-lip world-space cream rim — not placemarker halo / wash.
+        'localRim': True,
+        'fullscreenWash': False,
+        'placemarkerHalo': False,
     }
 
 
@@ -272,6 +314,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._pulseHalos = {}  # zoneId -> NodePath (cream deepen halo)
         self._crumbTrails = {}  # zoneId -> [NodePath, ...]
         self._fogEdges = {}  # zoneId -> NodePath
+        self._fogCreamRims = {}  # zoneId -> NodePath (fog edge cream rim)
         self._popIvals = {}
         self._pulseIvals = {}
         self._crumbPulseIvals = {}
@@ -469,7 +512,8 @@ class CorruptStreetBreadcrumb(DirectObject):
         halo = self._attachPulseCreamHalo(link, zoneId)
         crumbs = self._attachCrumbTrail(link, zoneId)
         fog = self._attachFogEdge(link, zoneId)
-        self._playPop(zoneId, np, crumbs, fog, halo=halo)
+        rim = self._attachFogCreamRim(link, zoneId)
+        self._playPop(zoneId, np, crumbs, fog, halo=halo, rim=rim)
         self.notify.debug(
             'placemarker on tunnel → %s (%s)' % (streetName, zoneId))
 
@@ -542,6 +586,42 @@ class CorruptStreetBreadcrumb(DirectObject):
             self._fogEdges[zoneId] = fog
         return fog
 
+    def _attachFogCreamRim(self, link, zoneId):
+        """Soft cream rim under ink fog — deepen #221 fog edge cream cue."""
+        zoneId = int(zoneId)
+        old = self._fogCreamRims.pop(zoneId, None)
+        if old is not None:
+            try:
+                old.removeNode()
+            except Exception:
+                pass
+        leftover = link.find('**/%s' % _FOG_CREAM_RIM_NAME)
+        if not leftover.isEmpty():
+            leftover.removeNode()
+        rim = None
+        try:
+            cm = CardMaker(_FOG_CREAM_RIM_NAME)
+            cm.setFrame(
+                -_FOG_CREAM_RIM_HALF_W, _FOG_CREAM_RIM_HALF_W,
+                0.0, _FOG_CREAM_RIM_HALF_H * 2.0)
+            rim = link.attachNewNode(cm.generate())
+            rim.setName(_FOG_CREAM_RIM_NAME)
+            rim.setTransparency(TransparencyAttrib.MAlpha)
+            # Sit just behind / under the ink fog so cream peeks as a rim.
+            rim.setPos(0, _FOG_Y + _FOG_CREAM_RIM_Y_OFF, _FOG_Z + _FOG_CREAM_RIM_Z_OFF)
+            rim.setScale(1.0)
+            rim.setColorScale(_FOG_CREAM_RIM_REST)
+            rim.setDepthWrite(0)
+            rim.setBin('fixed', 36)  # under ink fog (37)
+            rim.setBillboardPointEye()
+        except Exception:
+            self.notify.debug(
+                'fog cream rim unavailable for zone %s' % zoneId)
+            rim = None
+        if rim is not None:
+            self._fogCreamRims[zoneId] = rim
+        return rim
+
     def _attachCrumbTrail(self, link, zoneId):
         """Ink crumb dots at the tunnel mouth — playground-side breadcrumb."""
         zoneId = int(zoneId)
@@ -584,7 +664,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         self._crumbTrails[zoneId] = crumbs
         return crumbs
 
-    def _playPop(self, zoneId, np, crumbs=None, fog=None, halo=None):
+    def _playPop(self, zoneId, np, crumbs=None, fog=None, halo=None, rim=None):
         self._stopPulse(zoneId)
         self._stopCrumbPulse(zoneId)
         self._stopFogPulse(zoneId)
@@ -596,6 +676,8 @@ class CorruptStreetBreadcrumb(DirectObject):
                 pass
         if halo is None:
             halo = self._pulseHalos.get(int(zoneId))
+        if rim is None:
+            rim = self._fogCreamRims.get(int(zoneId))
         baseScale = _MARKER_SCALE
         ival = Sequence(
             LerpScaleInterval(
@@ -610,10 +692,10 @@ class CorruptStreetBreadcrumb(DirectObject):
                 np, _POP_SETTLE_SEC * 0.30,
                 baseScale,
                 startScale=baseScale * _POP_STRETCH),
-            # Placemarker cream deepen (#211+) + crumb + fog-edge pulses.
+            # Placemarker cream deepen (#211+) + crumb + fog-edge cream pulses.
             Func(self._startPulseLoop, zoneId, np, halo),
             Func(self._startCrumbPulseLoop, zoneId, crumbs or ()),
-            Func(self._startFogPulseLoop, zoneId, fog),
+            Func(self._startFogPulseLoop, zoneId, fog, rim),
         )
         self._popIvals[zoneId] = ival
         try:
@@ -622,7 +704,7 @@ class CorruptStreetBreadcrumb(DirectObject):
             np.setScale(baseScale)
             self._startPulseLoop(zoneId, np, halo)
             self._startCrumbPulseLoop(zoneId, crumbs or ())
-            self._startFogPulseLoop(zoneId, fog)
+            self._startFogPulseLoop(zoneId, fog, rim)
 
     def _buildNoticePulseIval(self, np, halo=None):
         """One brief rubber-hose scale + deepened cream highlight pulse."""
@@ -837,38 +919,78 @@ class CorruptStreetBreadcrumb(DirectObject):
                 except Exception:
                     pass
 
-    def _buildFogPulseIval(self, fog):
-        """One soft opacity + billow breath on the playground fog edge."""
+    def _buildFogPulseIval(self, fog, rim=None):
+        """One soft opacity + billow breath with cream mid-settle / rim."""
         half = max(0.05, float(_FOG_PULSE_HALF_SEC))
+        midSec = max(0.04, float(_FOG_CREAM_MID_SEC))
         baseScale = float(_FOG_SCALE)
         peakScale = baseScale * float(_FOG_BILLOW)
-        return Parallel(
+        # Billow out on peak; settle through cream mid window then rest.
+        billowOut = half
+        billowIn = half + midSec
+        parts = [
             Sequence(
                 LerpColorScaleInterval(
                     fog, half, _FOG_PEAK, startColorScale=_FOG_REST,
                     blendType='easeInOut'),
                 LerpColorScaleInterval(
-                    fog, half, _FOG_REST, startColorScale=_FOG_PEAK,
+                    fog, midSec, _FOG_CREAM_MID, startColorScale=_FOG_PEAK,
+                    blendType='easeInOut'),
+                LerpColorScaleInterval(
+                    fog, half, _FOG_REST, startColorScale=_FOG_CREAM_MID,
                     blendType='easeInOut'),
             ),
             Sequence(
                 LerpScaleInterval(
-                    fog, half, peakScale, startScale=baseScale,
+                    fog, billowOut, peakScale, startScale=baseScale,
                     blendType='easeInOut'),
                 LerpScaleInterval(
-                    fog, half, baseScale, startScale=peakScale,
+                    fog, billowIn, baseScale, startScale=peakScale,
                     blendType='easeInOut'),
+            ),
+        ]
+        if rim is not None:
+            parts.append(self._buildFogCreamRimIval(rim, half, midSec))
+        return Parallel(*parts)
+
+    def _buildFogCreamRimIval(self, rim, half, midSec):
+        """Tunnel-lip cream rim bloom — peak → mid → fade (not #230/#226)."""
+        peakScale = float(_FOG_CREAM_RIM_SCALE_PEAK)
+        return Parallel(
+            Sequence(
+                LerpColorScaleInterval(
+                    rim, half, _FOG_CREAM_RIM_PEAK,
+                    startColorScale=_FOG_CREAM_RIM_REST, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    rim, midSec, _FOG_CREAM_RIM_MID,
+                    startColorScale=_FOG_CREAM_RIM_PEAK, blendType='easeInOut'),
+                LerpColorScaleInterval(
+                    rim, half, _FOG_CREAM_RIM_REST,
+                    startColorScale=_FOG_CREAM_RIM_MID, blendType='easeIn'),
+            ),
+            Sequence(
+                LerpScaleInterval(
+                    rim, half, peakScale, startScale=1.0,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    rim, half + midSec, 1.0, startScale=peakScale,
+                    blendType='easeIn'),
             ),
         )
 
-    def _startFogPulseLoop(self, zoneId, fog=None):
-        """Slow fog-edge breath — distinct from placemarker + crumb pulses."""
+    def _startFogPulseLoop(self, zoneId, fog=None, rim=None):
+        """Slow fog-edge cream breath — distinct from placemarker + crumb."""
         zoneId = int(zoneId)
         fog = self._fogEdges.get(zoneId) if fog is None else fog
         # Prefer the live fog edge for this zone (Func may pass a snapshot).
         live = self._fogEdges.get(zoneId)
         if live is not None:
             fog = live
+        if rim is None:
+            rim = self._fogCreamRims.get(zoneId)
+        liveRim = self._fogCreamRims.get(zoneId)
+        if liveRim is not None:
+            rim = liveRim
         if not self._active or fog is None:
             return
         try:
@@ -882,8 +1004,14 @@ class CorruptStreetBreadcrumb(DirectObject):
             fog.setScale(_FOG_SCALE)
         except Exception:
             pass
+        if rim is not None:
+            try:
+                rim.setColorScale(_FOG_CREAM_RIM_REST)
+                rim.setScale(1.0)
+            except Exception:
+                pass
         gap = max(0.8, float(_FOG_PULSE_GAP_SEC))
-        loop = Sequence(self._buildFogPulseIval(fog), Wait(gap))
+        loop = Sequence(self._buildFogPulseIval(fog, rim), Wait(gap))
         self._fogPulseIvals[zoneId] = loop
         try:
             loop.loop()
@@ -894,6 +1022,12 @@ class CorruptStreetBreadcrumb(DirectObject):
                 fog.setScale(_FOG_SCALE)
             except Exception:
                 pass
+            if rim is not None:
+                try:
+                    rim.setColorScale(_FOG_CREAM_RIM_REST)
+                    rim.setScale(1.0)
+                except Exception:
+                    pass
 
     def _stopFogPulse(self, zoneId):
         zoneId = int(zoneId)
@@ -906,6 +1040,13 @@ class CorruptStreetBreadcrumb(DirectObject):
                     ival.pause()
                 except Exception:
                     pass
+        rim = self._fogCreamRims.get(zoneId)
+        if rim is not None:
+            try:
+                rim.setColorScale(_FOG_CREAM_RIM_REST)
+                rim.setScale(1.0)
+            except Exception:
+                pass
 
     def _removeMarker(self, zoneId):
         zoneId = int(zoneId)
@@ -928,6 +1069,12 @@ class CorruptStreetBreadcrumb(DirectObject):
         if fog is not None:
             try:
                 fog.removeNode()
+            except Exception:
+                pass
+        rim = self._fogCreamRims.pop(zoneId, None)
+        if rim is not None:
+            try:
+                rim.removeNode()
             except Exception:
                 pass
         trail = self._crumbTrails.pop(zoneId, None)
