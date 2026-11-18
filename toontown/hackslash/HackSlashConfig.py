@@ -24,8 +24,11 @@ COMBO_ANIMS = ('swing', 'throw', 'sound')
 COMBO_PLAY_RATES = (1.85, 2.1, 1.25)
 COMBO_DAMAGE = (8, 12, 28)
 
-# Hitstop (global brief pause) on connect — longer on finisher.
-HITSTOP_SEC = (0.045, 0.055, 0.11)
+# Hitstop / freeze on connect — pauses juice + anims so the impact silhouette
+# sticks before launch / hop / FOV punch. Longer on finisher. Client juice only.
+HITSTOP_ENABLED = True
+HITSTOP_SEC = (0.05, 0.065, 0.12)
+HITSTOP_FREEZE_ANIMS = True
 
 # Camera FOV punch on finisher (degrees added, then restored).
 # Slightly hotter than mid-combo so the stretch-punch slam reads.
