@@ -419,49 +419,51 @@ COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 # Combo-counter cream edge pop — local cream border strips framing the punch
 # counter when it ticks so the string reads clearly (KH-feel HUD readability,
 # Toontown cream only). Act-banner / wave-announce cream edge grammar, snappier
-# because ticks fire often. Deepened past #237 (#224 deepen): juicier still
-# peak/hold/scale/thickness + richer local cream edge aftershock so combo hits
-# read juicier — distinct from soft-lock cycle reticle cream deepen (#233) and
-# dodge i-frame cream wash deepen (#228). Soft under counter TextNode (bin 55).
+# because ticks fire often. Deepened past #267 (#237 / #224 deepen): juicier
+# still peak/hold/scale/thickness + richer local cream edge aftershock so
+# combo hits read juicier — distinct from hurt-stagger cream wash deepen
+# (#287), dodge-cancel cream flash (#281), i-frame cream wash (#228 / #272),
+# and aim-nudge cream deepen (#254). Soft under counter TextNode (bin 55).
 # Toggle COMBO_COUNTER_CREAM_EDGE_ENABLED = False drops the edge pop
 # (+ edge aftershock).
 COMBO_COUNTER_CREAM_EDGE_ENABLED = True
 COMBO_COUNTER_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)  # sunny cream
-COMBO_COUNTER_CREAM_EDGE = 0.028  # strip thickness in aspect2d units
+COMBO_COUNTER_CREAM_EDGE = 0.032  # strip thickness in aspect2d units
 COMBO_COUNTER_CREAM_EDGE_HALF_W = 0.22  # local frame half-width around text
 COMBO_COUNTER_CREAM_EDGE_HALF_H = 0.08  # local frame half-height around text
-COMBO_COUNTER_CREAM_EDGE_PEAK = 0.78
-COMBO_COUNTER_CREAM_EDGE_PULSE = 0.50  # mid-beat alpha after peak
+COMBO_COUNTER_CREAM_EDGE_PEAK = 0.84
+COMBO_COUNTER_CREAM_EDGE_PULSE = 0.58  # mid-beat alpha after peak
 COMBO_COUNTER_CREAM_EDGE_IN_SEC = 0.04
-COMBO_COUNTER_CREAM_EDGE_HOLD_SEC = 0.055
-COMBO_COUNTER_CREAM_EDGE_PULSE_SEC = 0.09
-COMBO_COUNTER_CREAM_EDGE_OUT_SEC = 0.20
-COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK = 1.36  # soft outward pop on the frame
+COMBO_COUNTER_CREAM_EDGE_HOLD_SEC = 0.07
+COMBO_COUNTER_CREAM_EDGE_PULSE_SEC = 0.10
+COMBO_COUNTER_CREAM_EDGE_OUT_SEC = 0.22
+COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK = 1.44  # soft outward pop on the frame
 COMBO_COUNTER_CREAM_EDGE_BIN = 54  # under counter TextNode (55) / flecks (56+)
 
 # Combo-counter cream edge aftershock — residual cream flecks + soft halo
-# local to the punch-counter frame after the deepened-past-#237 edge pop so
+# local to the punch-counter frame after the deepened-past-#267 edge pop so
 # ticks still read juicier. Same residual grammar as combo cream wash
 # aftershock / i-frame cream wash aftershock, quieter + tighter (ticks fire
 # often; stays on the HUD frame — not a fullscreen wash). Distinct from
-# soft-lock cycle cream wash (#233) and i-frame wash deepen (#228). Toggle
+# hurt wash (#287), dodge-cancel flash (#281), i-frame wash (#228 / #272),
+# and aim-nudge cream (#254). Toggle
 # COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED = False drops aftershock only.
 COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_ENABLED = True
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC = 0.07  # after edge start; mid-pop
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT = 4
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SIZE = 0.012
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DRIFT = 0.13
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_FALL = 0.11
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SEC = 0.26
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.78)
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC = 0.06  # after edge start; mid-pop
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT = 5
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SIZE = 0.013
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DRIFT = 0.14
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_FALL = 0.12
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SEC = 0.28
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.84)
 COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
 COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_BIN = 53  # under edge strips (54)
 COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_ENABLED = True
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_HALF = 0.17
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_HALF = 0.18
 COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_START = 0.35
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK = 1.25
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_SEC = 0.22
-COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK_ALPHA = 0.18
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK = 1.35
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_SEC = 0.24
+COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK_ALPHA = 0.22
 COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
