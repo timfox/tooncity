@@ -40,6 +40,40 @@ CORRUPT_ACTOR_SCALE = 1.08
 CORRUPT_FOG_COLOR = (0.18, 0.12, 0.22)
 CORRUPT_FOG_EXP_MAX = 0.012
 
+# Per-street ambient corruption look (branch zone ids).
+# fog: RGB base; fogExpScale: density multiplier vs CORRUPT_FOG_EXP_MAX
+# gradeDrop: how hard render RGB falls with pollution (higher = darker channel)
+# propTint: multiply applied to street geom under pollutionPropTint
+# Default / Loopy = purple ink wash.
+HOOD_POLLUTION_BIAS = {
+    # Loopy Lane — classic purple ink fog.
+    2200: {
+        'id': 'loopy',
+        'fog': (0.18, 0.12, 0.22),
+        'fogExpScale': 1.0,
+        'gradeDrop': (0.42, 0.50, 0.28),
+        'propTint': (0.72, 0.62, 0.85),
+    },
+    # Punchline Place — swampy sludge / gag-gunk green-brown.
+    2300: {
+        'id': 'punchline',
+        'fog': (0.16, 0.20, 0.10),
+        'fogExpScale': 1.12,
+        'gradeDrop': (0.38, 0.28, 0.48),
+        'propTint': (0.78, 0.82, 0.58),
+    },
+    # Silly Street — hot magenta / black-ink finale bias.
+    2100: {
+        'id': 'silly',
+        'fog': (0.24, 0.06, 0.18),
+        'fogExpScale': 1.22,
+        'gradeDrop': (0.30, 0.55, 0.35),
+        'propTint': (0.88, 0.55, 0.78),
+    },
+}
+
+_DEFAULT_HOOD_BIAS = HOOD_POLLUTION_BIAS[2200]
+
 
 def clampPollution(level):
     """Clamp a pollution scalar into [0, 1]."""
@@ -62,3 +96,65 @@ def pollutionToNet(level):
 def pollutionFromNet(netValue):
     """Decode DC uint16/1000 into 0..1 pollution."""
     return clampPollution(float(netValue) / float(POLLUTION_SCALE))
+
+
+def branchZoneForPollution(zoneId):
+    """Map any street/interior zone to its branch (street) id for bias lookup."""
+    try:
+        z = int(zoneId)
+    except (TypeError, ValueError):
+        return 2200
+    branch = z - (z % 100)
+    if z % 1000 >= 500:
+        branch -= 500
+    return branch
+
+
+def hoodPollutionBias(zoneId):
+    """Return fog/grade/prop bias dict for a zone (falls back to Loopy)."""
+    return HOOD_POLLUTION_BIAS.get(branchZoneForPollution(zoneId), _DEFAULT_HOOD_BIAS)
+
+
+def hoodFogColor(zoneId, level):
+    """Fog RGB scaled by pollution level for this hood."""
+    bias = hoodPollutionBias(zoneId)
+    fog = bias['fog']
+    lvl = clampPollution(level)
+    return (
+        fog[0] * (0.7 + 0.3 * lvl),
+        fog[1] * (0.75 + 0.25 * lvl),
+        fog[2],
+    )
+
+
+def hoodFogExpDensity(zoneId, level):
+    """Exponential fog density for this hood at pollution level."""
+    bias = hoodPollutionBias(zoneId)
+    return CORRUPT_FOG_EXP_MAX * float(bias.get('fogExpScale', 1.0)) * clampPollution(level)
+
+
+def hoodColorGrade(zoneId, level):
+    """Render color-scale RGB (alpha 1) for hood-specific sickly grade."""
+    bias = hoodPollutionBias(zoneId)
+    drop = bias['gradeDrop']
+    lvl = clampPollution(level)
+    return (
+        1.0 - (drop[0] * lvl),
+        1.0 - (drop[1] * lvl),
+        1.0 - (drop[2] * lvl),
+    )
+
+
+def hoodPropTint(zoneId, level):
+    """Street-geom multiply RGB for pollutionPropTint (1,1,1 when pure)."""
+    lvl = clampPollution(level)
+    if lvl <= POLLUTION_PURE:
+        return (1.0, 1.0, 1.0)
+    bias = hoodPollutionBias(zoneId)
+    target = bias['propTint']
+    # Lerp white → hood prop tint by pollution.
+    return (
+        1.0 - (1.0 - target[0]) * lvl,
+        1.0 - (1.0 - target[1]) * lvl,
+        1.0 - (1.0 - target[2]) * lvl,
+    )

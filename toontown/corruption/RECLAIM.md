@@ -9,12 +9,16 @@
    `requestHackSlashHit` → AI `takeHackSlashDamage`.
 4. Defeats lower pollution via `PollutionManagerAI.onCorruptToonDefeated`.
    HUD shows wave / corruption % / pack remaining; scene tint + fog react to pollution.
+   Fog / color grade / street-prop tint are **hood-specific** (Loopy purple ink,
+   Punchline sludge green-brown, Silly hot magenta) via `HOOD_POLLUTION_BIAS`
+   and `PollutionPropTint` (geom colorScale — does not stomp reclaim render bloom).
 5. At `0.0`, director announces reclaim complete and client plays a stronger purity
    restore moment (banner + bloom + sting/NPC cheer messenger hooks).
 
 ## Demo
 
 Preferred street: Toontown Central Loopy Lane (`2200`).
+Compare ambient corruption on Punchline (`2300`) and Silly (`2100`) with `~pollute`.
 
 ```
 ~startreclaim
