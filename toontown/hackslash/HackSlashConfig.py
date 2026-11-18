@@ -55,6 +55,29 @@ LOCK_COMBO_ORBIT_LIFT = 0.28
 # After LocalAvatar.updateSmartCamera (priority 47) so the bias sticks a frame.
 LOCK_CAM_TASK_PRIORITY = 50
 
+# Soft-lock reticle hose pop — when acquire/snap lands on a corrupt/hostile.
+# Warm cream brackets + ink flecks; rubber-hose squash → stretch → settle.
+# Toontown spiritual-sequel tone only — no keyblades / no KH branding.
+SOFT_LOCK_RETICLE_LIFT = 2.35
+SOFT_LOCK_RETICLE_HALF = 0.42
+SOFT_LOCK_RETICLE_THICK = 0.08
+SOFT_LOCK_RETICLE_SETTLE_SCALE = 1.0
+# (sx, sy, sz, sec) multipliers of settle scale — flat then tall like combo HUD.
+SOFT_LOCK_RETICLE_SQUASH = (1.55, 1.55, 0.55, 0.05)
+SOFT_LOCK_RETICLE_STRETCH = (0.7, 0.7, 1.45, 0.07)
+SOFT_LOCK_RETICLE_SETTLE_SEC = 0.09
+SOFT_LOCK_RETICLE_COLOR = (1.0, 0.96, 0.72, 0.92)
+SOFT_LOCK_RETICLE_INK_COLOR = (0.2, 0.06, 0.26, 0.85)
+SOFT_LOCK_ACCENT_CREAM_COUNT = 3
+SOFT_LOCK_ACCENT_INK_COUNT = 4
+SOFT_LOCK_ACCENT_SIZE = 0.14
+SOFT_LOCK_ACCENT_DRIFT = 0.85
+SOFT_LOCK_ACCENT_SEC = 0.22
+SOFT_LOCK_ACCENT_CREAM_COLOR = (1.0, 0.95, 0.55, 0.95)
+SOFT_LOCK_ACCENT_CREAM_END = (1.0, 0.9, 0.45, 0.0)
+SOFT_LOCK_ACCENT_INK_COLOR = (0.22, 0.06, 0.28, 0.9)
+SOFT_LOCK_ACCENT_INK_END = (0.38, 0.1, 0.42, 0.0)
+
 # Brief aspect2d white flash on connect (beyond hitstop).
 HIT_FLASH_PEAK_ALPHA = 0.38
 HIT_FLASH_IN_SEC = 0.03

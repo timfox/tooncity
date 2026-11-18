@@ -7,6 +7,8 @@ Launcher hang uses buildLaunchHangInterval + spawnHangSparks for a readable
 airborne float before fall.
 Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks for a brief
 rubber-hose number pop (and tiny ink flecks) on each connect.
+Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
+cream/ink hose pop when soft-lock acquires or snaps a corrupt target.
 No keyblades / no KH framing — Toontown rubber-hose only.
 """
 
@@ -369,6 +371,137 @@ def spawnComboInkFlecks(origin, parent=None, name='hackslashComboInkFlecks'):
 
 def clearComboInkFlecks(nodes):
     """Remove ink-fleck CardMaker nodes spawned for a combo counter pop."""
+    for np in list(nodes or []):
+        try:
+            if np is not None and not np.isEmpty():
+                np.removeNode()
+        except Exception:
+            pass
+
+
+def playSoftLockReticlePop(node, settleScale, name='hackslashSoftLockReticlePop'):
+    """World soft-lock reticle: flat squash → tall stretch → settle. Starts.
+
+    settleScale is the uniform NodePath scale to land on. Squash/stretch
+    multipliers come from HackSlashConfig.SOFT_LOCK_RETICLE_*.
+    """
+    if node is None:
+        return None
+    try:
+        if hasattr(node, 'isEmpty') and node.isEmpty():
+            return None
+    except Exception:
+        return None
+
+    settle = max(0.001, float(settleScale))
+    sx, sy, sz, squashSec = HackSlashConfig.SOFT_LOCK_RETICLE_SQUASH
+    tx, ty, tz, stretchSec = HackSlashConfig.SOFT_LOCK_RETICLE_STRETCH
+    settleSec = float(HackSlashConfig.SOFT_LOCK_RETICLE_SETTLE_SEC)
+    settlePt = Point3(settle, settle, settle)
+    squashPt = Point3(settle * sx, settle * sy, settle * sz)
+    stretchPt = Point3(settle * tx, settle * ty, settle * tz)
+
+    try:
+        node.setScale(settlePt)
+    except Exception:
+        return None
+
+    ival = Sequence(
+        LerpScaleInterval(node, float(squashSec), squashPt, blendType='easeOut'),
+        LerpScaleInterval(
+            node, float(stretchSec), stretchPt, blendType='easeOut'),
+        LerpScaleInterval(node, settleSec, settlePt, blendType='easeIn'),
+        name=name,
+    )
+    ival.start()
+    return ival
+
+
+def spawnSoftLockAccents(origin, parent=None, name='hackslashSoftLockAccents'):
+    """Cream + ink flecks at a soft-lock snap. Returns (Parallel|None, nodes).
+
+    Caller owns cleanup (pause Parallel then clearSoftLockAccents).
+    """
+    if origin is None:
+        return None, []
+
+    parentNP = parent
+    if parentNP is None:
+        try:
+            parentNP = render  # noqa: F821
+        except Exception:
+            return None, []
+
+    size = float(HackSlashConfig.SOFT_LOCK_ACCENT_SIZE)
+    drift = float(HackSlashConfig.SOFT_LOCK_ACCENT_DRIFT)
+    sec = float(HackSlashConfig.SOFT_LOCK_ACCENT_SEC)
+    creamCount = int(HackSlashConfig.SOFT_LOCK_ACCENT_CREAM_COUNT)
+    inkCount = int(HackSlashConfig.SOFT_LOCK_ACCENT_INK_COUNT)
+    if creamCount + inkCount <= 0:
+        return None, []
+
+    ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+    nodes = []
+    parts = []
+
+    def _spawn(index, total, color, endColor, liftBias, nameSuffix):
+        if total <= 0:
+            return
+        r, g, b, a = color
+        er, eg, eb, ea = endColor
+        angle = (2.0 * pi * index) / float(max(1, total)) + liftBias
+        try:
+            cm = CardMaker('%s-%s-%s' % (name, nameSuffix, index))
+            cm.setFrame(-size, size, -size, size)
+            fleck = parentNP.attachNewNode(cm.generate())
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, a)
+            start = Point3(
+                ox + cos(angle) * 0.12,
+                oy + sin(angle) * 0.12,
+                oz + 0.04 * (index % 2))
+            fleck.setPos(start)
+            fleck.setScale(0.5 + 0.12 * (index % 3))
+            fleck.setBin('transparent', 27)
+            fleck.setDepthWrite(False)
+            fleck.setBillboardPointEye()
+        except Exception:
+            return
+        end = Point3(
+            start[0] + cos(angle) * drift,
+            start[1] + sin(angle) * drift,
+            start[2] + 0.25 + 0.1 * (index % 2))
+        parts.append(Parallel(
+            LerpPosInterval(fleck, sec, end, blendType='easeOut'),
+            LerpScaleInterval(fleck, sec, 0.05, blendType='easeIn'),
+            LerpColorScaleInterval(
+                fleck, sec, Vec4(er, eg, eb, ea), blendType='easeIn'),
+        ))
+        nodes.append(fleck)
+
+    for i in range(creamCount):
+        _spawn(
+            i, creamCount,
+            HackSlashConfig.SOFT_LOCK_ACCENT_CREAM_COLOR,
+            HackSlashConfig.SOFT_LOCK_ACCENT_CREAM_END,
+            0.2, 'cream')
+    for i in range(inkCount):
+        _spawn(
+            i, inkCount,
+            HackSlashConfig.SOFT_LOCK_ACCENT_INK_COLOR,
+            HackSlashConfig.SOFT_LOCK_ACCENT_INK_END,
+            0.85, 'ink')
+
+    if not parts:
+        return None, []
+    ival = Parallel(*parts, name=name)
+    ival.start()
+    return ival, nodes
+
+
+def clearSoftLockAccents(nodes):
+    """Remove cream/ink accent CardMaker nodes from a soft-lock snap."""
     for np in list(nodes or []):
         try:
             if np is not None and not np.isEmpty():

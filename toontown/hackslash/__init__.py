@@ -10,6 +10,7 @@ from .DemoHostile import DemoHostile
 from . import HitJuice
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
+from .SoftLockReticleFx import SoftLockReticleFx
 
 __all__ = [
     'MeleeCombatController',
@@ -19,4 +20,5 @@ __all__ = [
     'HitJuice',
     'DodgePerfectFx',
     'DodgeTrailFx',
+    'SoftLockReticleFx',
 ]
