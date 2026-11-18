@@ -1527,13 +1527,13 @@ def snareStringCounterUntil(armedAt, window=None):
 # Cream splash + delayed cream aftershock on successful Balloon Snare
 # string-snap punish/counter (#203 window). Sunny cream / pastel contrast
 # against amber SnareStringSnapSplashFx so the rewarded hit reads juicy.
-# Deepened string-snap juice beyond #245 (#214 deepen): juicier splat/flecks
+# Deepened string-snap juice beyond #269 (#245 deepen): juicier splat/flecks
 # + thicker horizontal cream whip filaments (rubber-string break read) +
 # wider sideways settle aftershock — distinct from Gunk puddle cream deepen
-# (#238, flat ground bloom), Smudge hit cream deepen (#259, radial hose
-# smears), and Brute spit cream deepen (#264, vertical drip). Same residual
-# grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_*. Client only. No keyblades /
-# KH branding.
+# (#276 / #238, flat ground bloom), Smudge hit cream deepen (#283 / #259,
+# radial hose smears), and Brute spit cream deepen (#289 / #264, vertical
+# drip). Same residual grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_*.
+# Client only. No keyblades / KH branding.
 # SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
 # SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED = False drops aftershock only.
 # SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_ENABLED = False drops whip filaments only.
@@ -1541,43 +1541,43 @@ SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED = True
 # Extra seconds after the counter window expires where a late swing hit may
 # still earn cream juice (covers stretch-punch hit delay after F spend).
 SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC = 0.28
-SNARE_STRING_COUNTER_CREAM_SPLASH_DELAY_SEC = 0.04  # fallback; look prefers amber compose
+SNARE_STRING_COUNTER_CREAM_SPLASH_DELAY_SEC = 0.035  # fallback; look prefers amber compose
 SNARE_STRING_COUNTER_CREAM_SPLASH_BIN = 46  # above amber snap splash (45)
-SNARE_STRING_COUNTER_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.98)  # sunny cream
-SNARE_STRING_COUNTER_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.82)
+SNARE_STRING_COUNTER_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.99)  # sunny cream
+SNARE_STRING_COUNTER_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.86)
 SNARE_STRING_COUNTER_CREAM_SPLASH_FLECK_COLORS = (
-    (1.0, 0.97, 0.82, 0.96),  # sunny cream
-    (1.0, 0.96, 0.62, 0.9),   # butter
-    (1.0, 0.9, 0.78, 0.86),   # soft peach pastel
-    (1.0, 0.94, 0.7, 0.84),   # warm lemon pastel — string snap pop
+    (1.0, 0.97, 0.82, 0.97),  # sunny cream
+    (1.0, 0.96, 0.62, 0.92),  # butter
+    (1.0, 0.9, 0.78, 0.88),   # soft peach pastel
+    (1.0, 0.94, 0.7, 0.86),   # warm lemon pastel — string snap pop
 )
 # Horizontal cream whip filaments — rubber-string break readability (not
 # Gunk flat puddle bloom / Smudge radial hose / Brute vertical drip).
 SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_ENABLED = True
-SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COUNT = 3  # beyond #245 (2)
-SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_HALF = 0.12
-SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SPREAD = 1.32  # wider string whip (beyond #245 1.15)
-SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SEC = 0.23
-SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_PEAK_ALPHA = 0.92
-SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COLOR = (1.0, 0.97, 0.84, 0.94)
+SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COUNT = 4  # beyond #269 (3)
+SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_HALF = 0.14
+SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SPREAD = 1.5  # wider string whip (beyond #269 1.32)
+SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SEC = 0.26
+SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_PEAK_ALPHA = 0.95
+SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COLOR = (1.0, 0.97, 0.84, 0.96)
 SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK = {
     'id': 'snare-string-counter-cream-splash',
     # lift / delaySec composed with snareStringSnapSplashLook('hit') when played.
     'lift': 1.95,
     'delaySec': SNARE_STRING_COUNTER_CREAM_SPLASH_DELAY_SEC,
-    'delayScale': 0.24,  # snappier pop as amber snap settles (beyond #245 0.28)
-    'peakAlpha': 0.98,
-    'splatHalf': 0.32,  # juicier counter core vs #245 (0.28) / #214 (0.22)
-    'splatPeak': 1.85,
-    'splatSec': 0.19,
-    'rimScale': 1.42,
+    'delayScale': 0.2,  # snappier pop as amber snap settles (beyond #269 0.24)
+    'peakAlpha': 0.99,
+    'splatHalf': 0.36,  # juicier counter core vs #269 (0.32) / #245 (0.28)
+    'splatPeak': 2.0,
+    'splatSec': 0.21,
+    'rimScale': 1.5,
     'splatColor': SNARE_STRING_COUNTER_CREAM_SPLASH_COLOR,
     'rimColor': SNARE_STRING_COUNTER_CREAM_SPLASH_RIM_COLOR,
-    'fleckCount': 6,  # beyond #245 (5) / #214 (3); string whip spray beside Gunk bloom
-    'fleckHalf': 0.12,
-    'fleckDist': 1.35,  # wider horizontal whip spray (beyond #245 1.2)
-    'fleckLift': 0.28,  # stay near string-lash height (vs Smudge/Brute taller spray)
-    'fleckSec': 0.26,
+    'fleckCount': 7,  # beyond #269 (6) / #245 (5); string whip spray beside Gunk bloom
+    'fleckHalf': 0.13,
+    'fleckDist': 1.5,  # wider horizontal whip spray (beyond #269 1.35)
+    'fleckLift': 0.26,  # stay near string-lash height (vs Smudge/Brute taller spray)
+    'fleckSec': 0.28,
     'fleckColors': SNARE_STRING_COUNTER_CREAM_SPLASH_FLECK_COLORS,
     'whipEnabled': SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_ENABLED,
     'whipCount': SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COUNT,
@@ -1589,24 +1589,24 @@ SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK = {
     'binSort': SNARE_STRING_COUNTER_CREAM_SPLASH_BIN,
 }
 SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED = True
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC = 0.12
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT = 5  # beyond #245 (4) / #214 (3)
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT = 3
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SIZE = 0.12
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_SIZE = 0.15
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT = 0.98  # wider horizontal settle (beyond #245 0.85)
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_FALL = 0.34  # lighter fall — string lash stays sideways
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SEC = 0.38
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.92)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC = 0.1
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT = 6  # beyond #269 (5) / #245 (4)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT = 4
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SIZE = 0.13
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_SIZE = 0.16
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT = 1.12  # wider horizontal settle (beyond #269 0.98)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_FALL = 0.3  # lighter fall — string lash stays sideways
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SEC = 0.4
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.94)
 SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.9)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.92)
 SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
 SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_ENABLED = True
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF = 0.6  # wider string-lash halo (beyond #245 0.52)
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_START = 0.28
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK = 1.75
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_SEC = 0.34
-SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.28
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF = 0.7  # wider string-lash halo (beyond #269 0.6)
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_START = 0.26
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK = 1.9
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_SEC = 0.36
+SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.32
 SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
