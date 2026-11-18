@@ -225,10 +225,15 @@ class CampaignEpilogueTests(unittest.TestCase):
         self.assertIn('_persistForToon', window)
         self.assertIn('oswaldBetrayalChaseCleared', window)
         self.assertIn('campaignEpilogue', window)
-        # Replay wipe clears chaseCleared.
+        # Replay wipe clears chaseCleared only after chase is already done.
         start_idx = src.find('def startCampaign')
-        start_win = src[start_idx:start_idx + 900]
+        start_win = src[start_idx:start_idx + 1400]
+        self.assertIn('_resumePendingOswaldBetrayalChase', start_win)
         self.assertIn('self.chaseCleared = 0', start_win)
+        # Hydrate must re-schedule pending chase after relog.
+        hydrate_idx = src.find('def _hydrateFromToon')
+        hydrate_win = src[hydrate_idx:hydrate_idx + 1600]
+        self.assertIn('_resumePendingOswaldBetrayalChase', hydrate_win)
 
     def test_presence_stub_and_betrayal_kit_untouched_markers(self):
         # Presence (#321) still present.
