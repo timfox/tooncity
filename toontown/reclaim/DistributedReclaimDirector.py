@@ -511,8 +511,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         on purityRestoreFx (composes with StreetColorWash soft-clear + wave
         cream burst). PurityCompleteCreamWashFx pulses a StreetColorWash-style
         cream veil under that sparkle and owns a delayed cream aftershock
-        (flecks + halo). ReclaimCheer + CheerCreamSparkleFx layer pitch swell
-        cream flecks + delayed cream aftershock + soft cream wash pulse.
+        (flecks + halo) + settle cream wash. ReclaimCheer + CheerCreamSparkleFx
+        layer pitch swell cream flecks + delayed cream aftershock + soft cream
+        wash pulse.
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
