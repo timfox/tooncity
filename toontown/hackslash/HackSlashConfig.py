@@ -879,13 +879,69 @@ def isPerfectDodgeCounterWindowOpen(armed, until, now):
     return bool(armed) and float(now) < float(until)
 
 
+# CampaignPower reclaim→melee scale (mirrors CampaignGlobals.POWER_BUMP_*).
+# Defaults keep HackSlashConfig import-light; AI / CampaignPower pass the
+# authored campaign constants so client juice and AI HP drain stay matched.
+POWER_BUMP_PER_RECLAIM_DEFAULT = 0.08
+POWER_BUMP_MAX_DEFAULT = 0.40
+
+
+def powerBumpMultiplier(reclaimCount, perReclaim=None, bumpMax=None):
+    """Multiplicative COMBO_DAMAGE scale from reclaimCount (1.0 = baseline)."""
+    if perReclaim is None:
+        perReclaim = POWER_BUMP_PER_RECLAIM_DEFAULT
+    if bumpMax is None:
+        bumpMax = POWER_BUMP_MAX_DEFAULT
+    try:
+        count = max(0.0, float(reclaimCount or 0))
+    except (TypeError, ValueError):
+        count = 0.0
+    try:
+        per = max(0.0, float(perReclaim))
+    except (TypeError, ValueError):
+        per = POWER_BUMP_PER_RECLAIM_DEFAULT
+    try:
+        cap = max(0.0, float(bumpMax))
+    except (TypeError, ValueError):
+        cap = POWER_BUMP_MAX_DEFAULT
+    bump = min(cap, count * per)
+    return 1.0 + bump
+
+
+def comboDamageTableFromReclaimCount(reclaimCount, baseTable=None,
+                                     perReclaim=None, bumpMax=None):
+    """Return COMBO_DAMAGE scaled by reclaim progress (CampaignPower math).
+
+    Pure helper — does not mutate module COMBO_DAMAGE. CorruptToonAI passes
+    the result as damageTable to meleeDamageFromHitIndex so mid-campaign
+    reclaim power changes actual hostile HP drain; client CampaignPower
+    still mutates the local table for juice / FX. Rubber-hose Oswald
+    stretch punches only — no KH.
+    """
+    table = COMBO_DAMAGE if baseTable is None else baseTable
+    if not table:
+        return ()
+    mult = powerBumpMultiplier(
+        reclaimCount, perReclaim=perReclaim, bumpMax=bumpMax)
+    out = []
+    for entry in table:
+        try:
+            amount = int(entry)
+        except (TypeError, ValueError):
+            amount = 0
+        out.append(max(1, int(round(amount * mult))))
+    return tuple(out)
+
+
 def meleeDamageFromHitIndex(hitIndex, counterFlags=0, damageTable=None):
     """Authoritative stretch-punch damage from hitIndex (+ optional counters).
 
     AI derives hit damage from COMBO_DAMAGE (or an explicit table) instead of
     trusting the client-sent amount. Optional counterFlags apply known
     rewarded opener mults (perfect-dodge / telegraph counter) without
-    accepting arbitrary damage. Rubber-hose Oswald punches only — no KH.
+    accepting arbitrary damage. Pass comboDamageTableFromReclaimCount(...)
+    as damageTable so reclaimCount power bumps apply on the AI. Rubber-hose
+    Oswald punches only — no KH.
     """
     table = COMBO_DAMAGE if damageTable is None else damageTable
     if not table:
