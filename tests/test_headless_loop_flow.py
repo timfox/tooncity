@@ -1147,6 +1147,28 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             params = rg.streetPackParams(zone)
             self.assertIn('waveModifiers', params)
             self.assertIn('ambushBeats', params)
+
+        # Campaign ACTS C path mirrors the same elite/ambush tables
+        # (Loopy depth aligned to 4 + elite; no overlordP2HpFrac on C).
+        act_by_id = {a['id']: a for a in self.acts}
+        loopy_act = act_by_id['loopy']
+        punch_act = act_by_id['punchline']
+        finale_act = act_by_id['finale']
+        self.assertEqual(loopy_act['maxPacks'], 4)
+        self.assertEqual(len(loopy_act['waveScripts']), 4)
+        self.assertEqual(
+            loopy_act['waveModifiers'], loopy_pack['waveModifiers'])
+        self.assertEqual(
+            loopy_act['ambushBeats'], loopy_pack['ambushBeats'])
+        self.assertEqual(
+            punch_act['waveModifiers'], punch_pack['waveModifiers'])
+        self.assertEqual(
+            punch_act['ambushBeats'], punch_pack['ambushBeats'])
+        self.assertEqual(
+            finale_act['waveModifiers'], silly_pack['waveModifiers'])
+        self.assertEqual(
+            finale_act['ambushBeats'], silly_pack['ambushBeats'])
+        self.assertNotIn('overlordP2HpFrac', finale_act)
         base_hp = 46
         elite_hp = rg.applyElitePackHp(base_hp, loopy_mods)
         self.assertGreater(elite_hp, base_hp)
@@ -1197,6 +1219,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'resolveAmbushBeat'):
             self.assertIn(
                 needle, ai_src, msg='AI director missing %s' % needle)
+
+        # Campaign C path forwards the same elite/ambush kwargs (no R-only
+        # overlordP2HpFrac promote onto ACTS start).
+        camp_ai = _read('toontown/campaign/CampaignDirectorAI.py')
+        self.assertIn('waveModifiers=params.get(', camp_ai)
+        self.assertIn('ambushBeats=params.get(', camp_ai)
+        self.assertNotIn('overlordP2HpFrac=params.get', camp_ai)
 
         client_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
         for needle in (
