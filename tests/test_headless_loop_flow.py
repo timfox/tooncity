@@ -409,6 +409,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         presence_names = _class_and_func_names(_module_ast(presence_rel))
         for sym in (
                 'presenceEnabled', 'shouldShowPresence', 'greetTipForZone',
+                'hubPlazaPos', 'cheerOnReclaim', 'playOswaldPresenceCheer',
                 'OswaldPresenceClient', 'ensureOswaldPresenceClient',
                 'refreshOswaldPresenceHub', 'stopOswaldPresenceClient'):
             self.assertIn(sym, presence_names)
@@ -416,11 +417,14 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn("accept('localAvatarZoneChange'", presence_src)
         self.assertIn('oswaldRevealBanner', presence_src)
         self.assertIn('oswaldBetrayalChase', presence_src)
-        # NPC-style body stub (#335) — CardMaker silhouette + E-talk, not
-        # a full DistributedNPC companion / TextNode-only placemarker.
+        # Plaza NPC deepen — authored hub stand + reclaim cheer beyond
+        # spawn-near-avatar CardMaker stub; still not a DistributedNPC.
         self.assertIn('full DistributedNPC', presence_src)
         self.assertIn('CardMaker', presence_src)
         self.assertIn('_buildNpcSilhouette', presence_src)
+        self.assertIn('_placeBodyAtPlaza', presence_src)
+        self.assertIn('playReclaimCheer', presence_src)
+        self.assertIn('npcCheerStub', presence_src)
         self.assertIn('_armInteract', presence_src)
         self.assertIn("accept('e'", presence_src)
         self.assertIn('oswaldPresenceInteract', presence_src)
@@ -430,6 +434,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertNotIn('distributednpctoon', presence_src.lower())
         self.assertIn('Talk', camp.OSWALD_PRESENCE_INTERACT_PROMPT)
         self.assertGreater(float(camp.OSWALD_PRESENCE_INTERACT_RADIUS), 2.0)
+        self.assertTrue(camp.OSWALD_PRESENCE_CHEER_ON_RECLAIM)
+        self.assertEqual(len(camp.OSWALD_PRESENCE_HUB_POS), 4)
+        self.assertIn('Oswald', camp.OSWALD_PRESENCE_CHEER_TIP)
+        cheer_src = _read('toontown/reclaim/ReclaimCheer.py')
+        self.assertIn('_nudgeOswald', cheer_src)
+        director_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
+        self.assertIn('ensureOswaldPresenceClient', director_src)
 
         play_src = _read('toontown/campaign/PlayEntry.py')
         self.assertIn('ensureOswaldPresenceClient', play_src)

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Headless/AST tests: Oswald hub/street NPC-style presence (trust lead).
+"""Headless/AST tests: Oswald plaza NPC deepen + reclaim cheer (trust lead).
 
 Loads CampaignGlobals with a ToontownGlobals stub — no Panda3D.
 OswaldPresence helpers are mirrored from CampaignGlobals (module imports
-panda); client wiring is AST-checked. Beyond the #321 TextNode
-placemarker: body silhouette + short greet interact; preserves #333
-persisted-victory hide.
+panda); client wiring is AST-checked. Beyond the CardMaker spawn-near-
+avatar stub: authored plaza stand, idle bob, reclaim cheer on
+npcCheerStub / ReclaimCheer nudge; preserves #333 persisted-victory hide.
 
 Run from repo root:
   python3 tests/test_oswald_presence.py
@@ -140,15 +140,24 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('Loopy', camp.OSWALD_PRESENCE_HUB_GREET)
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_STREET_GREET)
         self.assertIn('fight', camp.OSWALD_PRESENCE_STREET_GREET.lower())
+        self.assertIn('Oswald', camp.OSWALD_PRESENCE_CHEER_TIP)
+        self.assertIn('clean', camp.OSWALD_PRESENCE_CHEER_TIP.lower())
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_INTERACT_PROMPT)
         self.assertIn('Talk', camp.OSWALD_PRESENCE_INTERACT_PROMPT)
         self.assertGreater(float(camp.OSWALD_PRESENCE_INTERACT_RADIUS), 2.0)
         self.assertGreater(float(camp.OSWALD_PRESENCE_SPAWN_FORWARD), 0.0)
         self.assertGreater(float(camp.OSWALD_PRESENCE_BODY_SCALE), 0.0)
         self.assertTrue(camp.OSWALD_PRESENCE_HIDE_ON_BETRAYAL)
+        self.assertTrue(camp.OSWALD_PRESENCE_CHEER_ON_RECLAIM)
+        self.assertTrue(camp.OSWALD_PRESENCE_IDLE_BOB)
+        hub_pos = camp.OSWALD_PRESENCE_HUB_POS
+        self.assertEqual(len(hub_pos), 4)
+        self.assertTrue(all(isinstance(v, (int, float)) for v in hub_pos))
+        self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')
         blob = ' '.join([
             camp.OSWALD_PRESENCE_HUB_GREET,
             camp.OSWALD_PRESENCE_STREET_GREET,
+            camp.OSWALD_PRESENCE_CHEER_TIP,
             camp.OSWALD_PRESENCE_INTERACT_PROMPT,
             camp.OSWALD_PRESENCE_LABEL,
             camp.OSWALD_PRESENCE_PLATE,
@@ -183,17 +192,24 @@ class OswaldPresenceTests(unittest.TestCase):
                 'presenceLabel',
                 'hubGreetTip',
                 'streetGreetTip',
+                'cheerTip',
                 'interactPromptTip',
                 'greetTipForZone',
                 'shouldShowPresence',
                 'presenceZoneIds',
+                'hubPlazaPos',
+                'cheerOnReclaim',
                 'OswaldPresenceClient',
                 'ensureOswaldPresenceClient',
+                'getOswaldPresenceClient',
+                'playOswaldPresenceCheer',
                 'refreshOswaldPresenceHub',
                 'stopOswaldPresenceClient'):
             self.assertIn(required, names)
         methods = _class_methods(rel, 'OswaldPresenceClient')
         for required in (
+                '_placeBody',
+                '_placeBodyAtPlaza',
                 '_placeBodyNearAvatar',
                 '_buildNpcSilhouette',
                 '_buildNametag',
@@ -201,25 +217,38 @@ class OswaldPresenceTests(unittest.TestCase):
                 '_onInteractKey',
                 '_meetOswald',
                 '_playGreetWave',
+                '_playCheerBounce',
+                '_onReclaimCheer',
+                'playReclaimCheer',
+                '_startIdleBob',
                 '_onCampaignProgressSync',
                 '_onBetrayal'):
             self.assertIn(required, methods)
         src = _read(rel)
         src_l = src.lower()
         self.assertIn('oswaldpresencemet', src_l)
+        self.assertIn('oswaldpresencecheered', src_l)
         self.assertIn('localavatarzonechange', src_l)
         self.assertIn('oswaldrevealbanner', src_l)
         self.assertIn('oswaldbetrayalchase', src_l)
         self.assertIn('campaignvictory', src_l)
-        # NPC-style body + greet interact beyond TextNode placemarker.
+        self.assertIn('npccheerstub', src_l)
+        self.assertIn('purityrestorefx', src_l)
+        self.assertIn('oswaldpresencecheer', src_l)
+        # Plaza NPC deepen beyond spawn-near-avatar CardMaker stub.
         self.assertIn('CardMaker', src)
         self.assertIn('oswald-npc-torso', src)
         self.assertIn('oswald-npc-head', src)
         self.assertIn('oswald-npc-ear-l', src)
         self.assertIn('_buildNpcSilhouette', src)
+        self.assertIn('_placeBodyAtPlaza', src)
+        self.assertIn('OSWALD_PRESENCE_HUB_POS', src)
         self.assertIn('_armInteract', src)
         self.assertIn("accept('e'", src)
         self.assertIn('oswaldPresenceInteract', src)
+        self.assertIn('playReclaimCheer', src)
+        self.assertIn('_playCheerBounce', src)
+        self.assertIn('oswaldPresenceArms', src)
         # Preserve #333 login mirror hide on persisted victory.
         self.assertIn('_onCampaignProgressSync', src)
         self.assertIn('clientMirrorFromProgress', src)
@@ -235,6 +264,16 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('stub', src_l)
         # Beyond TextNode-only #321 placemarker.
         self.assertNotIn("TextNode('oswaldPresenceLabel')", src)
+
+    def test_reclaim_cheer_nudges_oswald(self):
+        cheer_src = _read('toontown/reclaim/ReclaimCheer.py')
+        self.assertIn('_nudgeOswald', cheer_src)
+        self.assertIn('ensureOswaldPresenceClient', cheer_src)
+        self.assertIn('OSWALD_PRESENCE_CHEER_MSG', cheer_src)
+        self.assertIn('oswaldPresenceCheer', cheer_src)
+        director_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
+        self.assertIn('ensureOswaldPresenceClient', director_src)
+        self.assertIn('npcCheerStub', director_src)
 
     def test_client_wiring(self):
         play_src = _read('toontown/campaign/PlayEntry.py')
@@ -267,21 +306,26 @@ class OswaldPresenceTests(unittest.TestCase):
 
     def test_magic_words_and_docs_mention_presence(self):
         magic = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('presence stub', magic)
+        self.assertIn('plaza', magic)
+        self.assertIn('cheer on reclaim', magic)
         self.assertIn('e-talk', magic)
         reclaim = _read('toontown/corruption/RECLAIM.md').lower()
         self.assertIn('oswaldpresence', reclaim)
         self.assertIn('trusted reclaim lead', reclaim)
         self.assertIn('e-talk', reclaim)
+        self.assertIn('npccheerstub', reclaim.replace('`', ''))
+        self.assertIn('plaza', reclaim)
 
     def test_not_cream_only_module(self):
         src = _read('toontown/campaign/OswaldPresence.py').lower()
-        # Presence stub owns NPC body/greet — not a cream wash deepen PR.
+        # Presence deepen owns plaza NPC / cheer — not a cream wash deepen PR.
         self.assertNotIn('cream_wash', src)
         self.assertNotIn('creamaftershock', src.replace('_', ''))
         self.assertIn('greet', src)
         self.assertIn('silhouette', src)
         self.assertIn('interact', src)
+        self.assertIn('cheer', src)
+        self.assertIn('plaza', src)
 
 
 if __name__ == '__main__':

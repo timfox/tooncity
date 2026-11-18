@@ -2,9 +2,12 @@
 
 Listens for reclaim purity / wave-clear messengers and plays a local Happy/wave
 beat plus a short rubber-hose cheer SFX with a pitch swell so the fantasy pays
-off beyond the aspect2d burst. Cream sparkle flecks + delayed cream aftershock
-+ soft cream wash pulse (CheerCreamSparkleFx / CheerCreamWashPulse) arm with
-this client and layer on the same swell messengers.
+off beyond the aspect2d burst. Also nudges the trusted Oswald plaza lead
+(`OswaldPresence.playReclaimCheer`) so the meetable NPC cheers on street
+clear — not only the local avatar / nearby `setAnimState` DOs. Cream sparkle
+flecks + delayed cream aftershock + soft cream wash pulse
+(CheerCreamSparkleFx / CheerCreamWashPulse) arm with this client and layer on
+the same swell messengers.
 """
 
 from panda3d.core import Point3
@@ -55,6 +58,8 @@ class ReclaimCheerClient(DirectObject):
             volume=getattr(ReclaimGlobals, 'CHEER_PITCH_VOLUME', 0.88))
         self._bounceLocal(av, full=True)
         self._nudgeNearby(av)
+        # Trusted plaza lead cheers with the street clear (beyond local bounce).
+        self._nudgeOswald(zoneId)
 
     def _onWaveCleared(self, zoneId=None, waveIndex=0):
         if self._debounce(minGap=0.2):
@@ -222,6 +227,28 @@ class ReclaimCheerClient(DirectObject):
                 ).start()
             except Exception:
                 pass
+
+    def _nudgeOswald(self, zoneId=None):
+        """CardMaker Oswald has no setAnimState — ping OswaldPresence cheer.
+
+        OswaldPresence already accepts npcCheerStub / purityRestoreFx; this
+        messenger is a thin backup (debounce collapses duplicates). Tip +
+        body bounce stay owned by OswaldPresence.
+        """
+        try:
+            from toontown.campaign.OswaldPresence import (
+                ensureOswaldPresenceClient)
+            ensureOswaldPresenceClient()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign import CampaignGlobals
+            msg = str(getattr(
+                CampaignGlobals, 'OSWALD_PRESENCE_CHEER_MSG',
+                'oswaldPresenceCheer'))
+            messenger.send(msg, [zoneId])  # noqa: F821
+        except Exception:
+            pass
 
 
 _client = None

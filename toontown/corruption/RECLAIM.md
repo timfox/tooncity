@@ -68,11 +68,12 @@ reclaim packs. Fight with **F**, dodge with **Shift**, campaign with **C**.
 No `~spawncorrupt` required for the happy path.
 
 On the TTC hub (and campaign streets before the twist), a stub **Oswald**
-NPC-style body + short E-talk greet
-(`toontown/campaign/OswaldPresence.py`) lets players meet the trusted reclaim lead
-before finale betrayal. Rubber-hose silhouette stub — not a full DistributedNPC /
-companion AI — suppresses after reveal / Corrupted Oswald chase (including
-persisted victory after relog).
+plaza NPC (`toontown/campaign/OswaldPresence.py`) lets players meet the
+trusted reclaim lead before finale betrayal: authored plaza stand on TTC,
+short E-talk greet, and a rubber-hose cheer when a street clears
+(`npcCheerStub` / `ReclaimCheer`). Silhouette stub — not a full
+DistributedNPC / companion AI — suppresses after reveal / Corrupted Oswald
+chase (including persisted victory after relog).
 
 On polluted ACTS street enter, `PlayEntry` flashes a brief rubber-hose ink **edge
 vignette** (hood-tinted) that fades as the tip bar appears

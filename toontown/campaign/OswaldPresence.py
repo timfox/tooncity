@@ -1,12 +1,14 @@
 """Trusted Oswald hub/street NPC-style presence before the twist.
 
-Players meet Oswald as a rubber-hose body stub + short greet interact on
-the TTC hub and campaign streets — the trust face they later lose at the
-finale betrayal. Stub-shippable: CardMaker silhouette + nametag (not a
-full DistributedNPC / DNA toon, not companion AI, not cream FX).
-Suppresses after reveal / betrayal chase, including AI-persisted
-STATE_VICTORY mirrored on login. Toontown spiritual sequel — no keyblades /
-KH branding.
+Players meet Oswald as a rubber-hose plaza lead + short greet interact on
+the TTC hub (authored plaza stand) and campaign streets — the trust face
+they later lose at the finale betrayal. Beyond the spawn-near-avatar
+CardMaker stub: fixed plaza placement, idle bob, and a reclaim cheer
+beat when a street clears (`npcCheerStub` / purity), then vanish for the
+twist. Stub-shippable: CardMaker silhouette + nametag (not a full DistributedNPC
+/ DNA toon, not companion AI, not cream FX). Suppresses after reveal /
+betrayal chase, including AI-persisted STATE_VICTORY mirrored on login.
+Toontown spiritual sequel — no keyblades / KH branding.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from direct.interval.IntervalGlobal import (
     Func,
     LerpColorScaleInterval,
     LerpHprInterval,
+    LerpPosInterval,
     LerpScaleInterval,
     Parallel,
     Sequence,
@@ -65,6 +68,13 @@ def streetGreetTip():
         'F fight  |  Shift dodge  |  C campaign'))
 
 
+def cheerTip():
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_CHEER_TIP',
+        'Oswald cheers — "Street\'s clean! On to the next!"  |  '
+        'Hop the tunnel  |  C campaign'))
+
+
 def interactPromptTip():
     return str(getattr(
         CampaignGlobals, 'OSWALD_PRESENCE_INTERACT_PROMPT',
@@ -89,6 +99,29 @@ def spawnRight():
 def hideOnBetrayal():
     return bool(getattr(
         CampaignGlobals, 'OSWALD_PRESENCE_HIDE_ON_BETRAYAL', True))
+
+
+def cheerOnReclaim():
+    return bool(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_CHEER_ON_RECLAIM', True))
+
+
+def cheerMsgName():
+    return str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_CHEER_MSG',
+        'oswaldPresenceCheer'))
+
+
+def hubPlazaPos():
+    """Authored TTC plaza stand (x, y, z, h) or None if unset."""
+    raw = getattr(CampaignGlobals, 'OSWALD_PRESENCE_HUB_POS', None)
+    if raw is None:
+        return None
+    try:
+        return (
+            float(raw[0]), float(raw[1]), float(raw[2]), float(raw[3]))
+    except Exception:
+        return None
 
 
 def presenceZoneIds():
@@ -140,33 +173,43 @@ _PROMPT_COLOR = Vec4(0.92, 0.96, 1.0, 1.0)
 
 
 class OswaldPresenceClient(DirectObject):
-    """NPC-style body stub + short greet interact for trusted Oswald.
+    """Plaza NPC-style body + greet interact + reclaim cheer for trusted Oswald.
 
-    AI-free stub: place a rubber-hose silhouette near the local toon on
-    hub/street enter, arm E-talk when approached, greet once per zone
-    visit, clear after betrayal messengers / persisted victory sync.
+    AI-free stub: place a rubber-hose silhouette at the authored TTC plaza
+    stand (streets: near local toon), arm E-talk when approached, greet once
+    per zone visit, cheer on street-clear purity messengers, clear after
+    betrayal messengers / persisted victory sync.
     """
 
     def __init__(self):
         DirectObject.__init__(self)
         self._rootNP = None
         self._bodyNP = None
+        self._armNP = None
         self._nametagNP = None
         self._tipNP = None
         self._tipIval = None
         self._promptNP = None
         self._waveIval = None
+        self._cheerIval = None
+        self._idleIval = None
         self._zoneId = None
         self._greetedZone = None
         self._betrayed = False
         self._markerPos = None
         self._inRange = False
         self._interactArmed = False
+        self._lastCheerT = -1.0
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('oswaldRevealBanner', self._onBetrayal)
         self.accept('oswaldRevealSting', self._onBetrayal)
         self.accept('campaignVictory', self._onBetrayal)
         self.accept('oswaldBetrayalChase', self._onBetrayal)
+        # Reclaim purity: director fires npcCheerStub / purityRestoreFx —
+        # Oswald body must cheer (local-avatar bounce alone is not enough).
+        self.accept('npcCheerStub', self._onReclaimCheer)
+        self.accept('purityRestoreFx', self._onReclaimCheer)
+        self.accept(cheerMsgName(), self._onReclaimCheer)
         # Login mirror — AI-persisted STATE_VICTORY must hide trusted Oswald
         # after relog (session-only `_betrayed` is not enough).
         syncMsg = getattr(
@@ -257,7 +300,7 @@ class OswaldPresenceClient(DirectObject):
         self._zoneId = zoneId
         if not shouldShowPresence(zoneId, betrayed=self._betrayed):
             return
-        self._placeBodyNearAvatar(zoneId)
+        self._placeBody(zoneId)
         self._startPoll()
 
     def refreshHub(self):
@@ -277,6 +320,41 @@ class OswaldPresenceClient(DirectObject):
         return Vec4(
             float(color[0]), float(color[1]),
             float(color[2]), float(color[3]))
+
+    def _isHubZone(self, zoneId):
+        try:
+            return int(zoneId) == int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
+        except Exception:
+            return False
+
+    def _placeBody(self, zoneId):
+        """Hub: authored plaza stand. Streets: near local toon (field lead)."""
+        if self._isHubZone(zoneId) and hubPlazaPos() is not None:
+            self._placeBodyAtPlaza(zoneId)
+        else:
+            self._placeBodyNearAvatar(zoneId)
+
+    def _placeBodyAtPlaza(self, zoneId):
+        parent = getattr(base, 'render', None)  # noqa: F821
+        plaza = hubPlazaPos()
+        if parent is None or plaza is None:
+            return
+        x, y, z, h = plaza
+        root = parent.attachNewNode('oswaldPresenceNpc')
+        root.setPos(x, y, z)
+        try:
+            root.setH(h)
+            root.setP(0)
+            root.setR(0)
+        except Exception:
+            pass
+        bodyColor = self._bodyColor()
+        self._buildNpcSilhouette(root, bodyColor)
+        self._buildNametag(root, bodyColor)
+        self._popAppear(root)
+        self._rootNP = root
+        self._markerPos = (x, y, z)
+        self._startIdleBob()
 
     def _placeBodyNearAvatar(self, zoneId):
         av = getattr(base, 'localAvatar', None)  # noqa: F821
@@ -312,8 +390,14 @@ class OswaldPresenceClient(DirectObject):
         bodyColor = self._bodyColor()
         self._buildNpcSilhouette(root, bodyColor)
         self._buildNametag(root, bodyColor)
+        self._popAppear(root)
 
-        # Soft rubber-hose appear pop on the whole body.
+        self._rootNP = root
+        self._markerPos = (x, y, baseZ)
+        self._startIdleBob()
+
+    def _popAppear(self, root):
+        """Soft rubber-hose appear pop on the whole body."""
         try:
             scale = float(getattr(
                 CampaignGlobals, 'OSWALD_PRESENCE_BODY_SCALE', 1.0))
@@ -326,11 +410,8 @@ class OswaldPresenceClient(DirectObject):
         except Exception:
             pass
 
-        self._rootNP = root
-        self._markerPos = (x, y, baseZ)
-
     def _buildNpcSilhouette(self, root, bodyColor):
-        """Rubber-hose CardMaker body — meetable NPC stub, not TextNode-only."""
+        """Rubber-hose CardMaker body — meetable plaza NPC stub, not TextNode-only."""
         bodyRoot = root.attachNewNode('oswaldPresenceBody')
 
         torso = CardMaker('oswald-npc-torso')
@@ -340,12 +421,15 @@ class OswaldPresenceClient(DirectObject):
         torsoNP.setBillboardPointEye()
         torsoNP.setTransparency(TransparencyAttrib.MAlpha)
 
+        # Separate arm node so reclaim cheer can wave it (beyond flat stub).
+        armRoot = bodyRoot.attachNewNode('oswaldPresenceArms')
         arm = CardMaker('oswald-npc-arm')
         arm.setFrame(-1.45, 1.45, 0.95, 1.28)
-        armNP = bodyRoot.attachNewNode(arm.generate())
+        armNP = armRoot.attachNewNode(arm.generate())
         armNP.setColor(_ARM_COLOR)
         armNP.setBillboardPointEye()
         armNP.setTransparency(TransparencyAttrib.MAlpha)
+        self._armNP = armRoot
 
         head = CardMaker('oswald-npc-head')
         head.setFrame(-0.48, 0.48, 0.0, 0.95)
@@ -408,6 +492,33 @@ class OswaldPresenceClient(DirectObject):
         except Exception:
             pass
         self._nametagNP = np
+
+    def _startIdleBob(self):
+        """Gentle plaza idle so the lead reads alive between greets."""
+        self._stopIdleBob()
+        if not bool(getattr(CampaignGlobals, 'OSWALD_PRESENCE_IDLE_BOB', True)):
+            return
+        body = self._bodyNP
+        if body is None:
+            return
+        try:
+            z0 = float(body.getZ())
+            self._idleIval = Sequence(
+                LerpPosInterval(body, 0.55, (0, 0, z0 + 0.06)),
+                LerpPosInterval(body, 0.55, (0, 0, z0)),
+                name='oswaldPresenceIdleBob',
+            )
+            self._idleIval.loop()
+        except Exception:
+            self._idleIval = None
+
+    def _stopIdleBob(self):
+        if self._idleIval is not None:
+            try:
+                self._idleIval.finish()
+            except Exception:
+                pass
+            self._idleIval = None
 
     def _pollTaskName(self):
         return 'oswaldPresencePoll'
@@ -511,6 +622,42 @@ class OswaldPresenceClient(DirectObject):
         except Exception:
             pass
 
+    def _cheerDebounce(self, minGap=0.4):
+        try:
+            now = globalClock.getFrameTime()  # noqa: F821
+        except Exception:
+            return False
+        if now - self._lastCheerT < float(minGap):
+            return True
+        self._lastCheerT = now
+        return False
+
+    def _onReclaimCheer(self, zoneId=None, *args):
+        """Street clear / purity — Oswald body cheers (then still vanish on twist)."""
+        if not cheerOnReclaim():
+            return
+        if self._betrayed or self._bodyNP is None:
+            return
+        if self._cheerDebounce():
+            return
+        self.playReclaimCheer(zoneId=zoneId, showTip=True)
+
+    def playReclaimCheer(self, zoneId=None, showTip=True):
+        """Public cheer beat for ReclaimCheer / director thin wire."""
+        if self._betrayed or self._bodyNP is None:
+            return False
+        self._playCheerBounce()
+        if showTip:
+            self._showGreetTip(cheerTip())
+        try:
+            messenger.send(  # noqa: F821
+                'oswaldPresenceCheered', [
+                    int(zoneId if zoneId is not None else (self._zoneId or 0)),
+                    presenceLabel()])
+        except Exception:
+            pass
+        return True
+
     def _playGreetWave(self):
         """Rubber-hose tip-of-ears / wave bounce on the NPC body."""
         if self._waveIval is not None:
@@ -524,7 +671,8 @@ class OswaldPresenceClient(DirectObject):
             return
         try:
             baseScale = body.getScale()
-            self._waveIval = Sequence(
+            arm = self._armNP
+            parts = [
                 Parallel(
                     LerpScaleInterval(
                         body, 0.10,
@@ -538,11 +686,92 @@ class OswaldPresenceClient(DirectObject):
                 ),
                 LerpHprInterval(body, 0.08, (-8, 0, 0)),
                 LerpHprInterval(body, 0.08, (0, 0, 0)),
-                name='oswaldPresenceGreetWave',
-            )
+            ]
+            if arm is not None:
+                parts = [
+                    Parallel(
+                        LerpScaleInterval(
+                            body, 0.10,
+                            (baseScale[0] * 1.08, baseScale[1],
+                             baseScale[2] * 1.12)),
+                        LerpHprInterval(body, 0.10, (12, 0, 0)),
+                        LerpHprInterval(arm, 0.10, (0, 0, 18)),
+                    ),
+                    Parallel(
+                        LerpScaleInterval(body, 0.12, baseScale),
+                        LerpHprInterval(body, 0.12, (0, 0, 0)),
+                        LerpHprInterval(arm, 0.12, (0, 0, 0)),
+                    ),
+                    LerpHprInterval(body, 0.08, (-8, 0, 0)),
+                    LerpHprInterval(body, 0.08, (0, 0, 0)),
+                ]
+            self._waveIval = Sequence(*parts, name='oswaldPresenceGreetWave')
             self._waveIval.start()
         except Exception:
             self._waveIval = None
+
+    def _playCheerBounce(self):
+        """Bigger rubber-hose cheer on street clear — arms up, hop, settle."""
+        if self._cheerIval is not None:
+            try:
+                self._cheerIval.finish()
+            except Exception:
+                pass
+            self._cheerIval = None
+        body = self._bodyNP
+        if body is None:
+            return
+        try:
+            baseScale = body.getScale()
+            arm = self._armNP
+            hops = [
+                Parallel(
+                    LerpScaleInterval(
+                        body, 0.10,
+                        (baseScale[0] * 1.18, baseScale[1] * 1.05,
+                         baseScale[2] * 0.88)),
+                    LerpHprInterval(body, 0.10, (16, 0, 0)),
+                ),
+                Parallel(
+                    LerpScaleInterval(
+                        body, 0.14,
+                        (baseScale[0] * 0.92, baseScale[1],
+                         baseScale[2] * 1.22)),
+                    LerpHprInterval(body, 0.14, (-14, 0, 0)),
+                ),
+                Parallel(
+                    LerpScaleInterval(body, 0.16, baseScale),
+                    LerpHprInterval(body, 0.16, (0, 0, 0)),
+                ),
+            ]
+            if arm is not None:
+                hops = [
+                    Parallel(
+                        LerpScaleInterval(
+                            body, 0.10,
+                            (baseScale[0] * 1.18, baseScale[1] * 1.05,
+                             baseScale[2] * 0.88)),
+                        LerpHprInterval(body, 0.10, (16, 0, 0)),
+                        LerpHprInterval(arm, 0.10, (0, 0, 28)),
+                    ),
+                    Parallel(
+                        LerpScaleInterval(
+                            body, 0.14,
+                            (baseScale[0] * 0.92, baseScale[1],
+                             baseScale[2] * 1.22)),
+                        LerpHprInterval(body, 0.14, (-14, 0, 0)),
+                        LerpHprInterval(arm, 0.14, (0, 0, -12)),
+                    ),
+                    Parallel(
+                        LerpScaleInterval(body, 0.16, baseScale),
+                        LerpHprInterval(body, 0.16, (0, 0, 0)),
+                        LerpHprInterval(arm, 0.16, (0, 0, 0)),
+                    ),
+                ]
+            self._cheerIval = Sequence(*hops, name='oswaldPresenceReclaimCheer')
+            self._cheerIval.start()
+        except Exception:
+            self._cheerIval = None
 
     def _showInteractPrompt(self):
         self._clearPrompt()
@@ -599,6 +828,10 @@ class OswaldPresenceClient(DirectObject):
         self._tipNP = tipNP
         hold = max(1.0, float(getattr(
             CampaignGlobals, 'OSWALD_PRESENCE_GREET_HOLD_SEC', 3.2)))
+        # Cheer tips can be a beat shorter than greets.
+        if tip == cheerTip():
+            hold = max(1.0, float(getattr(
+                CampaignGlobals, 'OSWALD_PRESENCE_CHEER_HOLD_SEC', 2.4)))
         pop = Parallel(
             Sequence(
                 LerpScaleInterval(tipNP, 0.08, 0.052),
@@ -630,12 +863,19 @@ class OswaldPresenceClient(DirectObject):
             self._tipNP = None
 
     def _clearBody(self):
+        self._stopIdleBob()
         if self._waveIval is not None:
             try:
                 self._waveIval.pause()
             except Exception:
                 pass
             self._waveIval = None
+        if self._cheerIval is not None:
+            try:
+                self._cheerIval.finish()
+            except Exception:
+                pass
+            self._cheerIval = None
         if self._rootNP is not None:
             try:
                 self._rootNP.removeNode()
@@ -643,6 +883,7 @@ class OswaldPresenceClient(DirectObject):
                 pass
             self._rootNP = None
         self._bodyNP = None
+        self._armNP = None
         self._nametagNP = None
         self._markerPos = None
 
@@ -657,6 +898,11 @@ def ensureOswaldPresenceClient():
     return _client
 
 
+def getOswaldPresenceClient():
+    """Thin accessor for ReclaimCheer / director — may be None before ensure."""
+    return _client
+
+
 def refreshOswaldPresenceHub():
     """Thin hub re-arm for TTPlayground enter."""
     client = ensureOswaldPresenceClient()
@@ -665,6 +911,15 @@ def refreshOswaldPresenceHub():
     except Exception:
         pass
     return client
+
+
+def playOswaldPresenceCheer(zoneId=None, showTip=True):
+    """Thin reclaim cheer entry for ReclaimCheer / director."""
+    client = ensureOswaldPresenceClient()
+    try:
+        return bool(client.playReclaimCheer(zoneId=zoneId, showTip=showTip))
+    except Exception:
+        return False
 
 
 def stopOswaldPresenceClient():
