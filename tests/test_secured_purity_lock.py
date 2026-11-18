@@ -172,7 +172,8 @@ class SecuredPurityLockTest(unittest.TestCase):
                 '__confirmSecuredLock',
                 '__showSecuredLockTip',
                 '__hideSecuredLockTip',
-                '__cancelSecuredHudHold'):
+                '__cancelSecuredHudHold',
+                '__playSecuredLockSparkleSting'):
             self.assertIn(
                 name, methods,
                 msg='DistributedReclaimDirector missing %s' % name)
@@ -180,12 +181,19 @@ class SecuredPurityLockTest(unittest.TestCase):
         self.assertIn('securedLockTipText', src)
         self.assertIn('confirmSecured', src)
         self.assertIn('announceReclaimComplete', src)
+        self.assertIn('reclaimStreetSecured', src)
+        self.assertIn('ensureSecuredLockSparkleFxClient', src)
         meter = _module_ast('toontown/reclaim/PurityMeterHud.py')
         meter_methods = _class_method_names(meter, 'PurityMeterHud')
         self.assertIn('confirmSecured', meter_methods)
         meter_src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('SECURED_LOCK_RIM', meter_src)
         self.assertIn('reclaimPurityMeterSecuredConfirm', meter_src)
+        # Sparkle sting module + tunables.
+        self.assertIs(self.rg.SECURED_LOCK_SPARKLE_ENABLED, True)
+        fx = _module_ast('toontown/reclaim/SecuredLockSparkleFx.py')
+        fx_methods = _class_method_names(fx, 'SecuredLockSparkleFxClient')
+        self.assertIn('playLockSting', fx_methods)
 
 
 def main() -> int:

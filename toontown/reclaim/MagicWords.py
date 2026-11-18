@@ -38,7 +38,8 @@ class StartReclaim(MagicWord):
         'plates get a cream edge pulse with cream sparkle flecks + soft '
         'cream wash pulse. Mid-wave purity stall / ink-rise whispers a short '
         'contested tip under the purity meter. Full clear purity-locks the '
-        'street so re-creep cannot undo it (HUD secured tip). Pair with '
+        'street so re-creep cannot undo it (HUD secured tip + green-cream '
+        'sparkle sting). Pair with '
         '~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

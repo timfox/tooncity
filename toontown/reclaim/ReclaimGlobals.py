@@ -447,6 +447,34 @@ SECURED_LOCK_RIM_COLOR = (0.55, 1.0, 0.72, 0.88)
 SECURED_LOCK_RIM_SEC = 0.85
 # Keep purity meter visible briefly so the secured rim confirm reads.
 SECURED_LOCK_HUD_HOLD_SEC = 1.15
+# Secured-lock purity sparkle sting — short green-cream flecks + quiet pitch
+# sting when the street purity lock seals (#205). Distinct from mid-wave
+# pressure tip (#202), wave-clear cream sparkle, cheer flecks, and
+# StreetSparkle horizon glitter. Toggle SECURED_LOCK_SPARKLE_ENABLED = False
+# drops flecks + sting; tip/rim still fire. No KH branding.
+SECURED_LOCK_SPARKLE_ENABLED = True
+SECURED_LOCK_SPARKLE_DELAY_SEC = 0.04
+SECURED_LOCK_SPARKLE_ORIGIN = (0.0, 0.0, 0.42)  # near tip / under meter
+SECURED_LOCK_SPARKLE_COUNT = 7
+SECURED_LOCK_SPARKLE_SIZE = 0.017
+SECURED_LOCK_SPARKLE_RISE = 0.22
+SECURED_LOCK_SPARKLE_SPREAD = 0.48
+SECURED_LOCK_SPARKLE_SEC = 0.30
+SECURED_LOCK_SPARKLE_BIN = 54  # above cheer flecks (53); under purity burst
+SECURED_LOCK_SPARKLE_COLOR = (0.78, 1.0, 0.86, 0.92)  # green-cream lock glitter
+SECURED_LOCK_SPARKLE_END_COLOR = (0.55, 1.0, 0.72, 0.0)
+# Quiet cheer-cousin pitch sting (not the full purity whistle on restore).
+SECURED_LOCK_STING_ENABLED = True
+SECURED_LOCK_STING_SFX = 'phase_3.5/audio/sfx/AV_jump_2.ogg'
+SECURED_LOCK_STING_VOLUME = 0.55
+SECURED_LOCK_STING_PITCH_START = 0.92
+SECURED_LOCK_STING_PITCH_PEAK = 1.28
+SECURED_LOCK_STING_PITCH_END = 1.08
+SECURED_LOCK_STING_SWELL_SEC = 0.10
+SECURED_LOCK_STING_SETTLE_SEC = 0.10
+# Soft meter hose-pop when secured rim confirms (HUD sting cousin of tip pop).
+SECURED_LOCK_METER_POP_SCALE = 1.12
+SECURED_LOCK_METER_POP_SEC = 0.09
 
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.

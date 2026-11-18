@@ -18,7 +18,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
     Mid-wave purity pressure: short rubber-hose tip whisper + meter rim warn
     when purity stalls or ink rises while packs are still alive (contested
     feel after incomplete re-creep #194). Full clear confirms the secured
-    purity lock with a short tip + meter rim so re-creep cannot undo it.
+    purity lock with a short tip + meter rim so re-creep cannot undo it,
+    plus a green-cream sparkle / soft pitch sting that celebrates the lock
+    (distinct from mid-wave tip and generic wave-clear sparkle).
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedReclaimDirector')
@@ -846,7 +848,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._pressureTipNP = None
 
     def __confirmSecuredLock(self, zoneId):
-        """HUD/tip confirmation that finished reclaim purity is locked."""
+        """HUD/tip + sparkle sting confirmation that purity is locked."""
         if not getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_ENABLED', True):
             self.__hideStatusHud()
             return
@@ -857,6 +859,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 self._purityMeter.confirmSecured()
             except Exception:
                 pass
+        # Green-cream lock sparkle + soft pitch sting (not wave-clear glitter).
+        self.__playSecuredLockSparkleSting(zoneId)
         hold = float(getattr(ReclaimGlobals, 'SECURED_LOCK_HUD_HOLD_SEC', 1.15))
         self.__cancelSecuredHudHold()
         try:
@@ -866,6 +870,21 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 self.uniqueName('reclaim-secured-hud'))
         except Exception:
             self.__hideStatusHud()
+
+    def __playSecuredLockSparkleSting(self, zoneId):
+        """Arm secured-lock flecks + audio sting; messenger-driven client FX."""
+        if not getattr(ReclaimGlobals, 'SECURED_LOCK_SPARKLE_ENABLED', True):
+            return
+        try:
+            from toontown.reclaim.SecuredLockSparkleFx import (
+                ensureSecuredLockSparkleFxClient)
+            ensureSecuredLockSparkleFxClient()
+        except Exception:
+            pass
+        try:
+            messenger.send('reclaimStreetSecured', [zoneId])  # noqa: F821
+        except Exception:
+            pass
 
     def __securedHudTimeout(self, task):
         self.__hideStatusHud()
