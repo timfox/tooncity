@@ -44,6 +44,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._purityFlashIval = None
         self._telegraphSfx = None
         self._attackHitSfx = None
+        self.archetype = CorruptionGlobals.ARCHETYPE_INK
 
     def generate(self):
         self.assign(render.attachNewNode('DistributedCorruptToon'))
@@ -53,6 +54,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
     def announceGenerate(self):
         DistributedNode.DistributedNode.announceGenerate(self)
         self.reparentTo(render)
+        self.__applyArchetypeLook()
         self.__startInkPulse()
 
     def disable(self):
@@ -137,12 +139,16 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             toon.setPos(0, 0, 0)
             toon.setH(0)
             look, _phase = self.__finalePhaseLook()
+            stats = CorruptionGlobals.archetypeStats(self.archetype)
             actorScale = (
                 float(look['actorScale']) if look
-                else CorruptionGlobals.CORRUPT_ACTOR_SCALE)
+                else float(stats.get('actorScale', CorruptionGlobals.CORRUPT_ACTOR_SCALE)))
             toon.setScale(actorScale)
-            # Ink-black multiply — corruption read stays strong over DNA colors.
-            toon.setColorScale(*CorruptionGlobals.CORRUPT_ACTOR_TINT)
+            # Ink / sludge multiply — archetype tint, Overlord phase can override.
+            tint = (
+                look.get('actorTint') if look and look.get('actorTint')
+                else stats.get('actorTint', CorruptionGlobals.CORRUPT_ACTOR_TINT))
+            toon.setColorScale(*tint)
             try:
                 toon.stopBlink()
             except Exception:
@@ -321,6 +327,32 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
     def getName(self):
         return self.name
+
+    def setArchetype(self, archetype):
+        self.archetype = int(archetype)
+        self.__applyArchetypeLook()
+
+    def getArchetype(self):
+        return int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
+
+    def __applyArchetypeLook(self):
+        """Scale/tint for Ink vs Sludge Brute (finale phase look still wins)."""
+        look, _phase = self.__finalePhaseLook()
+        stats = CorruptionGlobals.archetypeStats(self.archetype)
+        scale = (
+            float(look['actorScale']) if look
+            else float(stats.get('actorScale', CorruptionGlobals.CORRUPT_ACTOR_SCALE)))
+        tint = (
+            look.get('actorTint') if look and look.get('actorTint')
+            else stats.get('actorTint', CorruptionGlobals.CORRUPT_ACTOR_TINT))
+        target = self.toonActor if self.toonActor is not None else self.visualRoot
+        if target is None:
+            return
+        try:
+            target.setScale(scale)
+            target.setColorScale(*tint)
+        except Exception:
+            pass
 
     def setHp(self, hp):
         self.hp = int(hp)

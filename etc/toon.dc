@@ -3292,6 +3292,8 @@ dclass DistributedCorruptToon : DistributedNode {
   setName(string) required broadcast ram;
   setHp(int16) required broadcast ram;
   setMaxHp(int16) required broadcast ram;
+  // 0=Ink Smudge, 1=Sludge Brute (tank + spit reach)
+  setArchetype(uint8) required broadcast ram;
   announceDefeat() broadcast;
   // Wind-up cue before AI resolves modest toon damage.
   announceAttackTelegraph() broadcast;

@@ -14,15 +14,24 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedCorruptToonAI')
 
-    def __init__(self, air, name=None, maxHp=None):
+    def __init__(self, air, name=None, maxHp=None, archetype=None):
         DistributedNodeAI.__init__(self, air)
-        self.name = name or CorruptionGlobals.CORRUPT_TOON_DEFAULT_NAME
-        self.maxHp = maxHp if maxHp is not None else CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
+        self.archetype = (
+            CorruptionGlobals.ARCHETYPE_INK
+            if archetype is None else int(archetype))
+        stats = CorruptionGlobals.archetypeStats(self.archetype)
+        self.name = name or stats.get(
+            'name', CorruptionGlobals.CORRUPT_TOON_DEFAULT_NAME)
+        baseHp = (
+            CorruptionGlobals.CORRUPT_TOON_DEFAULT_HP
+            if maxHp is None else int(maxHp))
+        self.maxHp = max(1, int(round(baseHp * float(stats.get('hpScale', 1.0)))))
         self.hp = self.maxHp
         self._defeated = False
         self._attacking = False
         self._targetId = None
         self._attackReadyAt = 0.0
+        self._stats = stats
 
     def generate(self):
         DistributedNodeAI.generate(self)
@@ -39,6 +48,13 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     def getMaxHp(self):
         return self.maxHp
+
+    def getArchetype(self):
+        return int(self.archetype)
+
+    def setArchetype(self, archetype):
+        self.archetype = int(archetype)
+        self._stats = CorruptionGlobals.archetypeStats(self.archetype)
 
     def b_setHp(self, hp):
         self.setHp(hp)
@@ -92,7 +108,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
         self._targetId = target.doId
         dist = self.__planarDist(target)
-        if dist <= CorruptionGlobals.MELEE_RANGE:
+        meleeRange = float(self._stats.get('meleeRange', CorruptionGlobals.MELEE_RANGE))
+        if dist <= meleeRange:
             now = globalClock.getFrameTime()
             if now >= self._attackReadyAt:
                 self.__beginAttack(target)
@@ -137,7 +154,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         dist = math.sqrt(dx * dx + dy * dy)
         if dist < 0.05:
             return
-        step = CorruptionGlobals.CHASE_SPEED * CorruptionGlobals.AI_TICK_DT
+        chase = float(self._stats.get('chaseSpeed', CorruptionGlobals.CHASE_SPEED))
+        step = chase * CorruptionGlobals.AI_TICK_DT
         if step >= dist:
             nx, ny = tx, ty
         else:
@@ -153,15 +171,18 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._attacking = True
         self._targetId = target.doId
         self.sendUpdate('announceAttackTelegraph', [])
+        delay = float(self._stats.get(
+            'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY))
         taskMgr.doMethodLater(
-            CorruptionGlobals.ATTACK_TELEGRAPH_DELAY,
+            delay,
             self.__resolveAttack,
             self.uniqueName('corrupt-attack'))
 
     def __resolveAttack(self, task):
         self._attacking = False
-        self._attackReadyAt = (
-            globalClock.getFrameTime() + CorruptionGlobals.ATTACK_COOLDOWN)
+        cool = float(self._stats.get(
+            'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN))
+        self._attackReadyAt = globalClock.getFrameTime() + cool  # noqa: F821
         if self._defeated or self.isDeleted():
             return Task.done
         target = self.air.doId2do.get(self._targetId)
@@ -171,15 +192,18 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.done
         if getattr(target, 'hp', 1) <= 0:
             return Task.done
-        if self.__planarDist(target) > CorruptionGlobals.ATTACK_HIT_RANGE:
+        hitRange = float(self._stats.get(
+            'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
+        if self.__planarDist(target) > hitRange:
             return Task.done
         # Honor client-reported dodge / hit i-frames (PollutionManager.requestHackSlashIFrame).
         iframeUntil = float(getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
         if globalClock.getFrameTime() < iframeUntil:  # noqa: F821
             self.notify.debug('attack whiffed — av %s i-framed' % self._targetId)
             return Task.done
+        dmg = int(self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE))
         try:
-            target.takeDamage(CorruptionGlobals.ATTACK_DAMAGE)
+            target.takeDamage(dmg)
         except Exception:
             self.notify.debug('takeDamage failed on av %s' % self._targetId)
         self.sendUpdate('announceAttackHit', [])
