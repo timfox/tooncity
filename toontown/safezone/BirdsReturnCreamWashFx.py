@@ -7,12 +7,12 @@ PunchlineTipCreamWashPulse / CheerCreamWashPulse overlay grammar as a brief
 explore settle beat. Pairs with PollutionStreetAudio pure-street birds
 return (#55) so the neighborhood feeling clean reads juicily.
 
-Cream deepen past #246: brighter peak → longer mid hold on the veil,
+Cream deepen past #262: brighter peak → longer mid hold on the veil,
 then denser rising cream chirp flecks + stronger skyward halo residual
 (not crumb pip blot #241, not fog edge rim #236, not the original
-veil-only wash #226, not #246 alone). Soft under HUD; cream / pastel
-only (not ink). Client only. Safezone package — Toontown spiritual
-sequel (no KH props, names, or branding).
+veil-only wash #226, not #246/#262 alone). Soft under HUD; cream /
+pastel only (not ink). Client only. Safezone package — Toontown
+spiritual sequel (no KH props, names, or branding).
 """
 
 from __future__ import annotations
@@ -35,48 +35,49 @@ from direct.interval.IntervalGlobal import (
 BIRDS_RETURN_CREAM_WASH_ENABLED = True
 # Land during pure-street birds fade-in (#55 FADE_IN_SEC ≈ 0.55).
 BIRDS_RETURN_CREAM_WASH_DELAY_SEC = 0.42
-# Cream deepen past #246: brighter peak + longer mid linger than #226/#246.
-BIRDS_RETURN_CREAM_WASH_PEAK = 0.145
-BIRDS_RETURN_CREAM_WASH_MID = 0.084
-BIRDS_RETURN_CREAM_WASH_IN_SEC = 0.08
-BIRDS_RETURN_CREAM_WASH_PULSE_SEC = 0.14
-BIRDS_RETURN_CREAM_WASH_HOLD_SEC = 0.17
-BIRDS_RETURN_CREAM_WASH_OUT_SEC = 0.44
+# Cream deepen past #262: brighter peak + longer mid linger than #226/#246/#262.
+BIRDS_RETURN_CREAM_WASH_PEAK = 0.16
+BIRDS_RETURN_CREAM_WASH_MID = 0.095
+BIRDS_RETURN_CREAM_WASH_IN_SEC = 0.09
+BIRDS_RETURN_CREAM_WASH_PULSE_SEC = 0.16
+BIRDS_RETURN_CREAM_WASH_HOLD_SEC = 0.20
+BIRDS_RETURN_CREAM_WASH_OUT_SEC = 0.50
 BIRDS_RETURN_CREAM_WASH_BIN = 46
-BIRDS_RETURN_CREAM_WASH_COLOR = (1.0, 0.98, 0.80)
+BIRDS_RETURN_CREAM_WASH_COLOR = (1.0, 0.98, 0.82)
 # Collapse pollutionChanged + purityRestoreFx double-fires (birds debounce ≈ 2.5).
 BIRDS_RETURN_CREAM_WASH_DEBOUNCE_SEC = 2.2
 # Match PollutionStreetAudio polluted→pure flip threshold when readable.
 BIRDS_RETURN_CREAM_WASH_AUDIO_THRESHOLD = 0.05
 
-# Rising cream chirp residual — denser birds-return deepen past #246.
+# Rising cream chirp residual — denser birds-return deepen past #262.
 BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_ENABLED = True
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.15
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_COUNT = 6
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SEC = 0.38
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SIZE = 0.016
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_RISE = 0.36  # upward chirp — not fall
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SPREAD = 0.58
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.13
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_COUNT = 7
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SEC = 0.42
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SIZE = 0.018
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_RISE = 0.42  # upward chirp — not fall
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_SPREAD = 0.64
 BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.10)
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.98, 0.76, 0.86)
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.98, 0.78, 0.92)
 BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_BIN = 47
-# Soft skyward halo — stronger than #246; not crumb pip (#241) / fog rim (#236).
+# Soft skyward halo — stronger than #262; not crumb pip (#241) / fog rim (#236).
 BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.46
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_START = 0.24
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.18  # not pip 1.48 / rim 1.22 / #246 1.08
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.26
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.125
-BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.98, 0.82, 1.0)
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.50
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_START = 0.26
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.26  # not pip 1.48 / rim 1.22 / #262 1.18
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.30
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.145
+BIRDS_RETURN_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.98, 0.84, 1.0)
 
 
 def birdsReturnCreamWashParams():
-    """Pure timing / alpha for birds-return cream wash deepen past #246.
+    """Pure timing / alpha for birds-return cream wash deepen past #262.
 
     Headless-safe — no Panda geom. Distinct from placemarker (#230) /
     crumb (#241) local cream mid+pip, fog edge cream rim (#236), the
-    original veil-only birds wash (#226), and the first deepen (#246).
+    original veil-only birds wash (#226), first deepen (#246), and
+    second deepen (#262).
     """
     return {
         'enabled': bool(BIRDS_RETURN_CREAM_WASH_ENABLED),

@@ -2,10 +2,10 @@
 """Behavioral headless tests for TTC birds-return cream wash helpers.
 
 Loads pure helpers from BirdsReturnCreamWashFx via AST extraction (no
-Panda3D). Covers polluted→pure flip gate + cream deepen past #246
+Panda3D). Covers polluted→pure flip gate + cream deepen past #262
 (juicier veil + denser rising chirp aftershock) so clean-neighborhood
 birds return (#55) reads juicier on the hub — distinct from crumb pip
-(#241) / fog rim (#236) / original veil-only wash (#226) / #246 alone.
+(#241) / fog rim (#236) / original veil-only wash (#226) / #246/#262.
 
 Run from repo root:
   python3 tests/test_birds_return_cream_wash.py
@@ -111,15 +111,16 @@ class BirdsReturnCreamWashTest(unittest.TestCase):
         params = self._params()
         self.assertTrue(params['enabled'])
         self.assertGreater(params['peak'], 0.0)
-        self.assertLess(params['peak'], 0.18)
+        self.assertLess(params['peak'], 0.20)
         self.assertGreater(params['mid'], 0.0)
         self.assertLess(params['mid'], params['peak'])
-        # Cream deepen past #246: juicier than #226 (0.10/0.055) and #246 (0.13/0.072).
-        self.assertGreaterEqual(params['peak'], 0.14)
-        self.assertGreaterEqual(params['mid'], 0.078)
-        self.assertGreaterEqual(params['holdSec'], 0.15)
-        self.assertGreaterEqual(params['pulseSec'], 0.13)
-        self.assertGreaterEqual(params['outSec'], 0.40)
+        # Cream deepen past #262: juicier than #226/#246/#262 (0.145/0.084).
+        self.assertGreaterEqual(params['peak'], 0.155)
+        self.assertGreaterEqual(params['mid'], 0.090)
+        self.assertGreaterEqual(params['holdSec'], 0.18)
+        self.assertGreaterEqual(params['pulseSec'], 0.15)
+        self.assertGreaterEqual(params['outSec'], 0.46)
+        self.assertGreaterEqual(params['inSec'], 0.085)
         # Land during birds fade-in (~0.55s), not before chirps start.
         self.assertGreaterEqual(params['delaySec'], 0.25)
         self.assertLessEqual(params['delaySec'], 0.65)
@@ -142,30 +143,30 @@ class BirdsReturnCreamWashTest(unittest.TestCase):
         self.assertTrue(params['aftershockEnabled'])
         self.assertGreaterEqual(params['aftershockDelaySec'], 0.10)
         self.assertLessEqual(params['aftershockDelaySec'], 0.28)
-        # Denser chirp residual than #246 (count 5 / rise 0.28 / halo 1.08).
-        self.assertGreaterEqual(params['aftershockCount'], 6)
-        self.assertLessEqual(params['aftershockCount'], 8)
-        self.assertGreaterEqual(params['aftershockRise'], 0.32)
-        self.assertGreaterEqual(params['aftershockSpread'], 0.54)
-        self.assertGreaterEqual(params['aftershockSec'], 0.34)
-        # Skyward halo peak past #246; distinct from crumb pip 1.48 / fog rim 1.22.
-        self.assertGreaterEqual(params['aftershockHaloPeak'], 1.12)
+        # Denser chirp residual than #262 (count 6 / rise 0.36 / halo 1.18).
+        self.assertGreaterEqual(params['aftershockCount'], 7)
+        self.assertLessEqual(params['aftershockCount'], 9)
+        self.assertGreaterEqual(params['aftershockRise'], 0.38)
+        self.assertGreaterEqual(params['aftershockSpread'], 0.60)
+        self.assertGreaterEqual(params['aftershockSec'], 0.40)
+        # Skyward halo peak past #262; distinct from crumb pip 1.48 / fog rim 1.22.
+        self.assertGreaterEqual(params['aftershockHaloPeak'], 1.20)
         self.assertLess(params['aftershockHaloPeak'], 1.40)
         self.assertNotAlmostEqual(
             params['aftershockHaloPeak'], 1.48, places=2)
         self.assertNotAlmostEqual(
             params['aftershockHaloPeak'], 1.22, places=2)
         self.assertNotAlmostEqual(
-            params['aftershockHaloPeak'], 1.08, places=2)
-        self.assertGreaterEqual(params['aftershockHaloPeakAlpha'], 0.11)
+            params['aftershockHaloPeak'], 1.18, places=2)
+        self.assertGreaterEqual(params['aftershockHaloPeakAlpha'], 0.135)
         self.assertLess(params['aftershockHaloPeakAlpha'], 0.22)
-        self.assertGreaterEqual(params['aftershockHaloSec'], 0.24)
+        self.assertGreaterEqual(params['aftershockHaloSec'], 0.28)
         # Rising chirp residual — not combat settle fall grammar.
         self.assertIn('AFTERSHOCK_RISE', self.fx_src)
         self.assertIn('_spawnChirpFleck', self.fx_src)
         self.assertIn('safezone-birds-return-cream-wash-chirp', self.fx_src)
         self.assertIn('safezone-birds-return-cream-wash-sky-halo', self.fx_src)
-        self.assertIn('past #246', self.fx_src)
+        self.assertIn('past #262', self.fx_src)
         self.assertNotIn('AFTERSHOCK_FALL', self.fx_src)
 
     def test_should_play_on_polluted_to_pure_flip(self):
