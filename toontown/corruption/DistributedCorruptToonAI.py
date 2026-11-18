@@ -173,6 +173,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.done
         if self.__planarDist(target) > CorruptionGlobals.ATTACK_HIT_RANGE:
             return Task.done
+        # Honor client-reported dodge / hit i-frames (PollutionManager.requestHackSlashIFrame).
+        iframeUntil = float(getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+        if globalClock.getFrameTime() < iframeUntil:  # noqa: F821
+            self.notify.debug('attack whiffed — av %s i-framed' % self._targetId)
+            return Task.done
         try:
             target.takeDamage(CorruptionGlobals.ATTACK_DAMAGE)
         except Exception:

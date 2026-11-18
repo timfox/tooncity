@@ -452,9 +452,19 @@ class MeleeCombatController(DirectObject):
         now = globalClock.getFrameTime()  # noqa: F821
         self._iframeUntil = now + HackSlashConfig.IFRAME_SEC
         self.avatar.hackSlashIFrameUntil = self._iframeUntil
+        self._reportIFrameToAI(HackSlashConfig.IFRAME_SEC)
         # Stronger flash than normal hit confirm so the window is obvious.
         self._playHitFlash(peakAlpha=HackSlashConfig.IFRAME_FLASH_ALPHA)
         messenger.send('hackslash-iframe', [self.avatar, HackSlashConfig.IFRAME_SEC])  # noqa: F821
+
+    def _reportIFrameToAI(self, durationSec):
+        """So CorruptToonAI can skip takeDamage during the window."""
+        try:
+            pm = getattr(base.cr, 'pollutionManager', None)  # noqa: F821
+            if pm is not None and hasattr(pm, 'd_requestHackSlashIFrame'):
+                pm.d_requestHackSlashIFrame(int(float(durationSec) * 1000.0))
+        except Exception:
+            pass
 
     def _onDodgePressed(self):
         """Brief rubber-hose dash with i-frames (Shift / X)."""
@@ -467,6 +477,7 @@ class MeleeCombatController(DirectObject):
         self._dodgeReadyAt = now + HackSlashConfig.DODGE_COOLDOWN_SEC
         self._iframeUntil = now + HackSlashConfig.DODGE_IFRAME_SEC
         self.avatar.hackSlashIFrameUntil = self._iframeUntil
+        self._reportIFrameToAI(HackSlashConfig.DODGE_IFRAME_SEC)
         messenger.send(
             'hackslash-iframe',
             [self.avatar, HackSlashConfig.DODGE_IFRAME_SEC])  # noqa: F821
