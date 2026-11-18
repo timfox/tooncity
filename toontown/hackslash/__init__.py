@@ -10,6 +10,7 @@ from .DemoHostile import DemoHostile
 from . import HitJuice
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
+from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
 
 __all__ = [
@@ -20,5 +21,6 @@ __all__ = [
     'HitJuice',
     'DodgePerfectFx',
     'DodgeTrailFx',
+    'SlamDustFx',
     'SoftLockReticleFx',
 ]
