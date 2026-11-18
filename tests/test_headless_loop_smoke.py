@@ -2535,6 +2535,41 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('pickCycleChoice', hack_init)
         self.assertIn('nextCycleIndex', hack_init)
 
+        # Soft-lock hit assist — one-shot yaw/aim nudge on melee connect
+        # against the sticky soft-lock (combat feel, not cream FX).
+        for hit_assist_key in (
+                'LOCK_HIT_ASSIST_ENABLED',
+                'LOCK_HIT_ASSIST_YAW_FRAC',
+                'LOCK_HIT_ASSIST_YAW_MAX_DEG',
+                'LOCK_HIT_ASSIST_CAM_FRAC',
+                'LOCK_HIT_ASSIST_DEADZONE_DEG'):
+            self.assertIn(
+                hit_assist_key, config_names,
+                msg='HackSlashConfig missing hit assist %s' % hit_assist_key)
+        self.assertIs(config_assigns.get('LOCK_HIT_ASSIST_ENABLED'), True)
+        yaw_frac = config_assigns.get('LOCK_HIT_ASSIST_YAW_FRAC')
+        yaw_max = config_assigns.get('LOCK_HIT_ASSIST_YAW_MAX_DEG')
+        self.assertIsInstance(yaw_frac, float)
+        self.assertGreater(yaw_frac, 0.0)
+        self.assertLessEqual(yaw_frac, 1.0)
+        self.assertIsInstance(yaw_max, float)
+        self.assertGreater(yaw_max, 0.0)
+        self.assertLess(yaw_max, 90.0)
+        for assist_helper in (
+                'signedYawDeltaDeg',
+                'assistAimYawNudge',
+                'shouldAssistAimOnHit'):
+            self.assertIn(
+                assist_helper, soft_target_names,
+                msg='SoftTarget missing hit assist helper %s' % assist_helper)
+            self.assertIn(assist_helper, hack_init)
+        self.assertIn(
+            '_assistAimOnHit', melee_methods,
+            msg='MeleeCombatController missing _assistAimOnHit')
+        self.assertIn('LOCK_HIT_ASSIST_ENABLED', melee_src)
+        self.assertIn('_assistAimOnHit', melee_src)
+        self.assertIn('hit soft-lock aim', config_src)
+
         # Mid-act Oswald trust fracture (#190) + Punchline deepen unease tip
         # (#198). Finale stays sunny (no fracture) — foreshadow only.
         acts_node = _toplevel_value(self.campaign_tree, 'ACTS')

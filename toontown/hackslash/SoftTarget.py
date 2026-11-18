@@ -57,6 +57,57 @@ def pickCycleChoice(orderedKeys, currentKey, direction=1):
     return newKey, bool(snapped)
 
 
+def signedYawDeltaDeg(fromYaw, toYaw):
+    """Shortest signed yaw delta (degrees) from ``fromYaw`` to ``toYaw``.
+
+    Result in [-180, 180). Pure helper so headless tests cover hit-assist math
+    without Panda3D.
+    """
+    return ((float(toYaw) - float(fromYaw) + 180.0) % 360.0) - 180.0
+
+
+def assistAimYawNudge(deltaDeg, frac=None, maxDeg=None, deadzoneDeg=None):
+    """One-shot soft-lock hit-assist yaw nudge from a remaining facing error.
+
+    Closes ``frac`` of ``deltaDeg``, hard-capped at ``maxDeg``, with a
+    deadzone so already-aligned facing is left alone. Returns 0.0 when the
+    error is tiny or tunables collapse the nudge. Never snaps to full delta
+    unless frac/max allow it — soft assist, not hard lock.
+    """
+    if frac is None:
+        frac = HackSlashConfig.LOCK_HIT_ASSIST_YAW_FRAC
+    if maxDeg is None:
+        maxDeg = HackSlashConfig.LOCK_HIT_ASSIST_YAW_MAX_DEG
+    if deadzoneDeg is None:
+        deadzoneDeg = HackSlashConfig.LOCK_HIT_ASSIST_DEADZONE_DEG
+    delta = float(deltaDeg)
+    if abs(delta) <= float(deadzoneDeg):
+        return 0.0
+    frac = max(0.0, float(frac))
+    maxDeg = abs(float(maxDeg))
+    nudge = delta * frac
+    if nudge > maxDeg:
+        return maxDeg
+    if nudge < -maxDeg:
+        return -maxDeg
+    return nudge
+
+
+def shouldAssistAimOnHit(hitKey, lockedKey, enabled=None):
+    """True when a landed melee hit should fire soft-lock aim assist.
+
+    Only when assist is enabled and the hit target matches the sticky
+    soft-lock key — combo strings stay glued to the lock, not stray punches.
+    """
+    if enabled is None:
+        enabled = HackSlashConfig.LOCK_HIT_ASSIST_ENABLED
+    if not enabled:
+        return False
+    if hitKey is None or lockedKey is None:
+        return False
+    return hitKey == lockedKey
+
+
 class HackSlashTarget:
     """Shared hit interface so melee and future CorruptToon enemies share a path."""
 
