@@ -675,7 +675,7 @@ WAVE_CLEAR_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 # (#127) / clear shimmer (#93). Cheer (#142) / purity-complete (#104) cream
 # wash grammar. Quieter than purity-complete wash; cream/pastel only. Arms
 # from WaveClearCreamShimmerFx hang start (after shimmer delay). Toggle
-# WAVE_CLEAR_CREAM_WASH_ENABLED = False drops wash only.
+# WAVE_CLEAR_CREAM_WASH_ENABLED = False drops wash only (and wash sparkle).
 WAVE_CLEAR_CREAM_WASH_ENABLED = True
 WAVE_CLEAR_CREAM_WASH_DELAY_SEC = 0.40  # after hang start; after aftershock (0.24)
 WAVE_CLEAR_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -686,6 +686,23 @@ WAVE_CLEAR_CREAM_WASH_PULSE_SEC = 0.09
 WAVE_CLEAR_CREAM_WASH_HOLD_SEC = 0.06
 WAVE_CLEAR_CREAM_WASH_OUT_SEC = 0.34
 WAVE_CLEAR_CREAM_WASH_BIN = 50  # soft veil under shimmer flecks (51) / aftershock (52)
+# Cream sparkle flecks after wave-clear cream wash (#144) — CheerCreamSparkle /
+# StreetSparkle / wave-edge sparkle rising chip grammar. Quiet residual lift
+# during wash settle; not a shimmer hang restage or cheer swell fleck restage.
+# Delay is relative to wash start (after WAVE_CLEAR_CREAM_WASH_DELAY_SEC).
+# Sunny pastel only; no KH blue. Above wash veil (50); shares cheer sparkle band (53).
+# Toggle WAVE_CLEAR_CREAM_SPARKLE_ENABLED = False drops sparkles only.
+WAVE_CLEAR_CREAM_SPARKLE_ENABLED = True
+WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC = 0.12  # after wash starts
+WAVE_CLEAR_CREAM_SPARKLE_ORIGIN = (0.0, 0.0, 0.08)
+WAVE_CLEAR_CREAM_SPARKLE_BIN = 53
+WAVE_CLEAR_CREAM_SPARKLE_COUNT = 6
+WAVE_CLEAR_CREAM_SPARKLE_SIZE = 0.018
+WAVE_CLEAR_CREAM_SPARKLE_RISE = 0.24
+WAVE_CLEAR_CREAM_SPARKLE_SPREAD = 0.58
+WAVE_CLEAR_CREAM_SPARKLE_SEC = 0.28
+WAVE_CLEAR_CREAM_SPARKLE_COLOR = (1.0, 0.98, 0.72, 0.88)
+WAVE_CLEAR_CREAM_SPARKLE_END_COLOR = (1.0, 0.94, 0.55, 0.0)
 # Warm cream wave-clear banner (was icy cyan; keep rubber-hose sunny).
 WAVE_CLEAR_BANNER_COLOR = (1.0, 0.94, 0.62, 1.0)
 WAVE_CLEAR_SUB_BANNER_COLOR = (1.0, 0.97, 0.82, 1.0)

@@ -6,10 +6,11 @@ flash/ring. Matches EntryCreamShimmer / StreetSparkle chip style. A delayed
 cream aftershock (softer flecks settling downward + soft halo) follows the
 hang — same residual grammar as purity-fill cream aftershock (#123) and cheer
 cream aftershock (#118). A soft cream wash pulse then settles after the
-aftershock — CheerCreamWashPulse / PurityCompleteCreamWashFx vocabulary.
-Layers with cheer pitch swell and street wash; never stomps full-purity FOV /
-StreetSparkle payoff. Toontown spiritual-sequel tone only — no keyblades /
-no KH branding.
+aftershock — CheerCreamWashPulse / PurityCompleteCreamWashFx vocabulary —
+then quieter CheerCreamSparkle-style cream sparkle flecks ride the wash
+settle. Layers with cheer pitch swell and street wash; never stomps
+full-purity FOV / StreetSparkle payoff. Toontown spiritual-sequel tone only —
+no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -32,7 +33,7 @@ from toontown.reclaim.WaveClearCreamWashFx import WaveClearCreamWashPulse
 
 
 class WaveClearCreamShimmerFxClient(DirectObject):
-    """Listens for wave clear; owns shimmer hang + aftershock + cream wash."""
+    """Listens for wave clear; owns shimmer hang + aftershock + wash + sparkle."""
 
     def __init__(self):
         DirectObject.__init__(self)
@@ -52,7 +53,7 @@ class WaveClearCreamShimmerFxClient(DirectObject):
         self.playHang()
 
     def playHang(self):
-        """Soft cream veil + flecks + aftershock + delayed cream wash."""
+        """Soft cream veil + flecks + aftershock + wash + residual sparkle."""
         if not getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_SHIMMER_ENABLED', True):
             return
         self.clear()
@@ -103,7 +104,8 @@ class WaveClearCreamShimmerFxClient(DirectObject):
 
         aftershock = self._buildAftershock(parent, ox, oy, oz)
 
-        # Soft cream wash pulse after cream aftershock — cheer / purity grammar.
+        # Soft cream wash + residual sparkle after cream aftershock —
+        # cheer / purity wash grammar; sparkle owned by wash pulse.
         # Armed when hang kicks so DELAY is relative to hang start (not burst).
         washHold = 0.0
 
@@ -123,7 +125,7 @@ class WaveClearCreamShimmerFxClient(DirectObject):
                 self._creamWash = None
 
         if getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_ENABLED', True):
-            washHold = (
+            washLifetime = (
                 float(getattr(
                     ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_DELAY_SEC', 0.40))
                 + float(getattr(
@@ -135,12 +137,24 @@ class WaveClearCreamShimmerFxClient(DirectObject):
                 + float(getattr(
                     ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_OUT_SEC', 0.34))
                 + 0.02)
+            sparkleHold = 0.0
+            if getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_ENABLED', True):
+                sparkleHold = (
+                    float(getattr(
+                        ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_DELAY_SEC', 0.40))
+                    + float(getattr(
+                        ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC',
+                        0.12))
+                    + float(getattr(
+                        ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SEC', 0.28))
+                    + 0.06)
+            washHold = max(washLifetime, sparkleHold)
 
         hold = [Wait(hangSec + 0.04)]
         if aftershock is not None:
             hold.append(aftershock)
         if washHold > 0.0:
-            # Hold teardown beside delayed wash so clear() doesn't
+            # Hold teardown beside delayed wash/sparkle so clear() doesn't
             # kill the veil mid-pulse (wash self-clears too).
             hold.append(Wait(washHold))
 
@@ -411,7 +425,7 @@ class WaveClearCreamShimmerFxClient(DirectObject):
         )
 
     def clear(self):
-        """Stop shimmer/aftershock/wash and remove every cream hang node."""
+        """Stop shimmer/aftershock/wash/sparkle and remove every cream hang node."""
         if self._ival is not None:
             try:
                 self._ival.pause()

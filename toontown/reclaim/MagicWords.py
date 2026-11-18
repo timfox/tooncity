@@ -33,7 +33,8 @@ class StartReclaim(MagicWord):
         'Purity meter fill shimmer gets a '
         'delayed cream aftershock + soft cream wash pulse. Wave-clear cream '
         'shimmer hang gets a '
-        'delayed cream aftershock + soft cream wash pulse. Wave announce '
+        'delayed cream aftershock + soft cream wash pulse + cream sparkle '
+        'flecks. Wave announce '
         'plates get a cream edge pulse with cream sparkle flecks + soft '
         'cream wash pulse. Pair with '
         '~hackslash 0 for melee without demo dummies.')
