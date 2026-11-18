@@ -14,6 +14,7 @@ from toontown.campaign.HubStain import (
 )
 from toontown.campaign.OswaldBetrayalChase import (
     chaseClearMsg,
+    chaseCombatDefeated,
     chaseDelaySec,
     chaseEnabled,
     chaseSpawnMsg,
@@ -527,18 +528,37 @@ class CampaignDirectorAI(DirectObject):
         return Task.done
 
     def __watchOswaldBetrayalChase(self, doId, toonId, task):
+        """Clear chase only on intentional combat defeat — not zone leave.
+
+        Missing / deleted DOs without ``chaseCombatDefeated`` drop live
+        tracking and re-schedule so hub-hop cannot soft-end the twist.
+        """
         if doId <= 0:
             self._oswaldChaseWatch = None
             self._oswaldChaseDoId = None
             return Task.done
         corrupt = self.air.doId2do.get(int(doId))
-        alive = (
+        # Defeat wins even mid-delete (DO may already be isDeleted).
+        if corrupt is not None and chaseCombatDefeated(corrupt):
+            return self.__finishOswaldBetrayalChaseClear(doId, toonId)
+        present = (
             corrupt is not None
-            and not getattr(corrupt, 'isDeleted', lambda: True)()
-            and not getattr(corrupt, '_defeated', False)
-            and int(getattr(corrupt, 'hp', 0) or 0) > 0)
-        if alive:
+            and not getattr(corrupt, 'isDeleted', lambda: True)())
+        if present:
             return Task.again
+        # DO gone / deleted without combat defeat — do not false-clear.
+        self._oswaldChaseWatch = None
+        self._oswaldChaseDoId = None
+        toon = self.air.doId2do.get(int(toonId)) if toonId else None
+        if toon is None:
+            toon = self._toonFromLast()
+        # Keep chaseCleared=0; re-field so the wash fight stays reachable.
+        if self._pendingOswaldBetrayalChase():
+            self._resumePendingOswaldBetrayalChase(toon)
+        return Task.done
+
+    def __finishOswaldBetrayalChaseClear(self, doId, toonId):
+        """Persist chaseCleared + hub wash + epilogue after combat defeat."""
         self._oswaldChaseWatch = None
         self._oswaldChaseDoId = None
         toon = self.air.doId2do.get(int(toonId)) if toonId else None

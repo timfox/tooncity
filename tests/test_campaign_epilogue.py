@@ -220,11 +220,18 @@ class CampaignEpilogueTests(unittest.TestCase):
         self.assertIn('chaseCleared', src)
         watch_idx = src.find('def __watchOswaldBetrayalChase')
         self.assertGreater(watch_idx, 0)
-        window = src[watch_idx:watch_idx + 1600]
+        # Clear persists only after intentional combat defeat (finish helper).
+        finish_idx = src.find('def __finishOswaldBetrayalChaseClear')
+        self.assertGreater(finish_idx, watch_idx)
+        window = src[watch_idx:finish_idx + 1400]
+        self.assertIn('chaseCombatDefeated', window)
         self.assertIn('self.chaseCleared = 1', window)
         self.assertIn('_persistForToon', window)
         self.assertIn('oswaldBetrayalChaseCleared', window)
         self.assertIn('campaignEpilogue', window)
+        # Watch alone must not clear on DO absence.
+        watch_only = src[watch_idx:finish_idx]
+        self.assertNotIn('self.chaseCleared = 1', watch_only)
         # Replay wipe clears chaseCleared only after chase is already done.
         start_idx = src.find('def startCampaign')
         start_win = src[start_idx:start_idx + 1400]
