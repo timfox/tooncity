@@ -383,15 +383,21 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         # Gunk-only gate on telegraph announce (not Smudge/Brute/Snare).
         self.assertIn('isGagster and not look', corrupt_src)
         self.assertGreater(corrupt_src.count('__clearGagsterTelegraphPuddle'), 2)
-        # Gunk Gagster puddle land cream splash aftershock — juicy trap impact.
+        # Gunk Gagster puddle land cream splash deepen — juicier trap impact
+        # (ground bloom + wider aftershock; distinct from Smudge #231 / Brute #223).
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED'))
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_LOOK'))
         self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED'))
+        self.assertTrue(hasattr(cg, 'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED'))
         self.assertIs(cg.GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED, True)
         self.assertIs(cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED, True)
+        self.assertIs(cg.GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED, True)
         cream_look = cg.GAGSTER_PUDDLE_CREAM_SPLASH_LOOK
         self.assertEqual(cream_look.get('id'), 'gagster-puddle-cream-splash')
-        self.assertGreater(int(cream_look.get('fleckCount', 0)), 0)
+        self.assertGreaterEqual(int(cream_look.get('fleckCount', 0)), 6)
+        self.assertTrue(cream_look.get('bloomEnabled'))
+        self.assertGreaterEqual(
+            int(cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT), 5)
         cream_look_id = str(cream_look.get('id', '')).lower()
         self.assertNotIn('keyblade', cream_look_id)
         self.assertNotIn('kingdom hearts', cream_look_id)
@@ -405,6 +411,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('play', cream_fx_methods)
         self.assertIn('clear', cream_fx_methods)
         self.assertIn('_buildAftershock', cream_fx_methods)
+        self.assertIn('_spawnGroundBloom', cream_fx_methods)
         self.assertIn('GagsterPuddleCreamSplash', corrupt_src)
         self.assertIn('__playGagsterPuddleCreamSplash', corrupt_src)
         self.assertIn('__clearGagsterPuddleCreamSplash', corrupt_src)
@@ -412,6 +419,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertGreater(corrupt_src.count('__clearGagsterPuddleCreamSplash'), 2)
         reclaim_md = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('GagsterPuddleCreamSplashFx', reclaim_md)
+        self.assertIn('cream bloom', reclaim_md.lower())
         corr_init = _read('toontown/corruption/__init__.py')
         self.assertIn('GagsterPuddleCreamSplashFx', corr_init)
         # Sludge Brute spit land cream splash aftershock — juicy green spit impact.

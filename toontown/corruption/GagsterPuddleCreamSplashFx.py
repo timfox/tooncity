@@ -2,11 +2,13 @@
 
 World-space CardMaker juice that fires when the teal gag-lob puddle lands —
 sunny cream / pastel contrast against the teal GAGSTER_PUDDLE_* trap so the
-impact reads juicy after the telegraph puddle warn (#197). Immediate cream
-splat/flecks, then a soft settling aftershock (halo + residual flecks)
-matching telegraph cream warn aftershock grammar (#121) / Snare counter cream
-splash (#214). Wired from DistributedCorruptToon.__playGagPuddle. Client only.
-Toontown spiritual sequel — no keyblades / no KH branding.
+impact reads juicy after the telegraph puddle warn (#197). Deepened ground-
+trap juice: juicier splat/flecks, a flat cream bloom on the puddle plane, then
+a wider settling aftershock (halo + residual flecks) — distinct from Smudge
+hit cream splash (#231, mid-body) and Brute spit cream splash (#223). Same
+residual grammar as telegraph cream warn aftershock (#121) / Snare counter
+cream splash (#214). Wired from DistributedCorruptToon.__playGagPuddle.
+Client only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -85,6 +87,10 @@ class GagsterPuddleCreamSplash(object):
         splat = self._spawnSplat(parentNP, origin, look)
         if splat is not None:
             parts.append(splat)
+
+        bloom = self._spawnGroundBloom(parentNP, origin, look)
+        if bloom is not None:
+            parts.append(bloom)
 
         fleckCount = max(0, int(look.get('fleckCount', 0)))
         for i in range(fleckCount):
@@ -198,6 +204,77 @@ class GagsterPuddleCreamSplash(object):
                 ),
                 LerpScaleInterval(
                     rim, sec, peak * 1.14, blendType='easeOut'),
+            )
+        except Exception:
+            return None
+
+    def _spawnGroundBloom(self, parentNP, origin, look):
+        """Flat cream bloom on the puddle plane — ground-trap land cue.
+
+        Distinct from Smudge mid-body billboard splash and Brute spit spray:
+        lies on the trap ring (setP -90) and blooms as the teal puddle lands.
+        """
+        if not look.get(
+                'bloomEnabled',
+                getattr(
+                    CorruptionGlobals,
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED', True)):
+            return None
+        try:
+            half = float(look.get(
+                'bloomHalf',
+                getattr(
+                    CorruptionGlobals,
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_HALF', 0.72)))
+            cm = CardMaker('gagster-puddle-cream-splash-bloom')
+            cm.setFrame(-half, half, -half, half)
+            bloom = parentNP.attachNewNode(cm.generate())
+            # Sit just under the billboard splat lift on the puddle plane.
+            bloomLift = float(getattr(
+                CorruptionGlobals, 'GAGSTER_PUDDLE_CREAM_SPLASH_LIFT', 0.48))
+            bloom.setPos(
+                origin[0], origin[1],
+                origin[2] - bloomLift + 0.06)
+            bloom.setP(-90)
+            bloom.setTransparency(TransparencyAttrib.MAlpha)
+            color = look.get(
+                'bloomColor',
+                getattr(
+                    CorruptionGlobals,
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_COLOR',
+                    (1.0, 0.97, 0.84, 0.7)))
+            bloom.setColor(color[0], color[1], color[2], color[3])
+            bloom.setColorScale(1, 1, 1, 0)
+            bloom.setScale(0.35)
+            bloom.setBin('fixed', int(look.get('binSort', 40)) - 1)
+            bloom.setDepthWrite(False)
+            self._nodes.append(bloom)
+
+            peak = float(look.get(
+                'bloomPeak',
+                getattr(
+                    CorruptionGlobals,
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK', 2.05)))
+            sec = float(look.get(
+                'bloomSec',
+                getattr(
+                    CorruptionGlobals,
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_SEC', 0.28)))
+            peakA = float(look.get(
+                'bloomPeakAlpha',
+                getattr(
+                    CorruptionGlobals,
+                    'GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_PEAK_ALPHA', 0.55)))
+            return Parallel(
+                Sequence(
+                    LerpColorScaleInterval(
+                        bloom, sec * 0.28, Vec4(1, 1, 1, peakA),
+                        blendType='easeOut'),
+                    LerpColorScaleInterval(
+                        bloom, sec * 0.72, Vec4(1, 1, 1, 0),
+                        blendType='easeIn'),
+                ),
+                LerpScaleInterval(bloom, sec, peak, blendType='easeOut'),
             )
         except Exception:
             return None

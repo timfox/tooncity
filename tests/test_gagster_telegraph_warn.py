@@ -154,12 +154,19 @@ class GagsterTelegraphWarnTest(unittest.TestCase):
     def test_puddle_cream_splash_tunables(self):
         self.assertTrue(self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_ENABLED)
         self.assertTrue(self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_ENABLED)
+        self.assertTrue(self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_ENABLED)
         self.assertGreaterEqual(
             self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_DELAY_SEC, 0.0)
         self.assertGreater(self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_LIFT, 0.0)
         look = self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_LOOK
         self.assertEqual(look.get('id'), 'gagster-puddle-cream-splash')
-        self.assertGreater(int(look.get('fleckCount', 0)), 0)
+        # Deepened trap splash vs #218 baseline (4 flecks / 3 aftershock).
+        self.assertGreaterEqual(int(look.get('fleckCount', 0)), 6)
+        self.assertGreaterEqual(float(look.get('splatPeak', 0)), 1.8)
+        self.assertGreaterEqual(float(look.get('fleckDist', 0)), 1.3)
+        self.assertTrue(look.get('bloomEnabled'))
+        self.assertGreater(float(look.get('bloomHalf', 0)), 0.0)
+        self.assertGreater(float(look.get('bloomPeak', 0)), 1.0)
         look_id = str(look.get('id', '')).lower()
         self.assertNotIn('keyblade', look_id)
         self.assertNotIn('kingdom hearts', look_id)
@@ -168,9 +175,28 @@ class GagsterTelegraphWarnTest(unittest.TestCase):
         self.assertGreaterEqual(float(color[0]), 0.9)
         self.assertGreaterEqual(float(color[1]), 0.9)
         self.assertGreaterEqual(float(color[2]), 0.55)
+        bloom = self.cg.GAGSTER_PUDDLE_CREAM_SPLASH_BLOOM_COLOR
+        self.assertGreaterEqual(float(bloom[0]), 0.9)
+        self.assertGreaterEqual(float(bloom[1]), 0.9)
+        self.assertGreaterEqual(float(bloom[2]), 0.55)
         self.assertGreater(
             self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DELAY_SEC, 0.0)
-        self.assertGreater(self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT, 0)
+        # Deepened trap residual — juicier than Smudge hit (4) / Brute spit (3).
+        self.assertGreaterEqual(
+            self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_COUNT, 5)
+        self.assertGreaterEqual(
+            self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_STREAK_COUNT, 2)
+        self.assertGreaterEqual(
+            self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_DRIFT, 0.9)
+        self.assertGreaterEqual(
+            self.cg.GAGSTER_PUDDLE_CREAM_AFTERSHOCK_HALO_HALF, 0.55)
+        # Distinct from Smudge mid-body / Brute spit cream splash ids.
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'SMUDGE_HIT_CREAM_SPLASH_LOOK', {}).get('id'))
+        self.assertNotEqual(
+            look.get('id'),
+            getattr(self.cg, 'BRUTE_SPIT_CREAM_SPLASH_LOOK', {}).get('id'))
 
     def test_cream_splash_fx_module_and_wiring(self):
         rel = 'toontown/corruption/GagsterPuddleCreamSplashFx.py'
@@ -181,14 +207,22 @@ class GagsterTelegraphWarnTest(unittest.TestCase):
         methods = _class_method_names(
             _module_ast(rel), 'GagsterPuddleCreamSplash')
         for name in (
-                'play', 'clear', '_spawnSplat', '_spawnFleck',
-                '_buildAftershock'):
+                'play', 'clear', '_spawnSplat', '_spawnGroundBloom',
+                '_spawnFleck', '_buildAftershock'):
             self.assertIn(
                 name, methods,
                 msg='GagsterPuddleCreamSplash missing %s' % name)
         src = _read(rel)
         self.assertIn('GAGSTER_PUDDLE_CREAM_SPLASH_LOOK', src)
         self.assertIn('_buildAftershock', src)
+        self.assertIn('_spawnGroundBloom', src)
+        self.assertIn('setP(-90)', src)
+        self.assertIn('Smudge', src)  # docstring distinctness vs #231
+        self.assertIn('Brute', src)  # docstring distinctness vs #223
+        # CardMaker / interval names stay Toontown cream — no KH brand ids.
+        self.assertNotIn("'keyblade", src.lower())
+        self.assertNotIn('"keyblade', src.lower())
+        self.assertNotIn('kingdom_hearts', src.lower())
         wire = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('GagsterPuddleCreamSplash', wire)
         self.assertIn('__playGagsterPuddleCreamSplash', wire)
@@ -203,6 +237,7 @@ class GagsterTelegraphWarnTest(unittest.TestCase):
         self.assertIn('GagsterPuddleCreamSplashFx', init_src)
         reclaim = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('GagsterPuddleCreamSplashFx', reclaim)
+        self.assertIn('cream bloom', reclaim.lower())
 
 
 def main() -> int:
