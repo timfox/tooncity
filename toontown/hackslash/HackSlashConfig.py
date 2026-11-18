@@ -630,20 +630,46 @@ DODGE_CANCEL_WINDOW_SEC = 0.40
 DODGE_CANCEL_BUFFER = True
 
 # Dodge-cancel cream wash flash — soft aspect2d veil the instant F/LMB cancels
-# late-dodge recovery into stretch-punch (#186) so Shift→F reads clearly.
-# SoftLock FOV / dodge-trail / hurt-stagger cream wash grammar. Snappier than
-# dodge-trail settle wash; quieter than hit-connect wash. Cream/pastel only.
-# Toggle DODGE_CANCEL_CREAM_WASH_ENABLED = False drops the cancel flash.
+# late-dodge recovery into stretch-punch (#186 / #219) so Shift→F reads clearly.
+# SoftLock FOV / dodge-trail / hurt-stagger cream wash grammar. Deepened so
+# dodge→melee windows read juicier: brighter peak + longer mid hold. Snappier
+# than dodge-trail settle wash; cream/pastel only. Distinct from i-frame cream
+# wash deepen (#228) and combo cream edge deepen (#237). Toggle
+# DODGE_CANCEL_CREAM_WASH_ENABLED = False drops the cancel flash (+ aftershock).
 DODGE_CANCEL_CREAM_WASH_ENABLED = True
 DODGE_CANCEL_CREAM_WASH_DELAY_SEC = 0.0  # fire on cancel — no settle lag
 DODGE_CANCEL_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-DODGE_CANCEL_CREAM_WASH_PEAK = 0.11
-DODGE_CANCEL_CREAM_WASH_MID = 0.055
+DODGE_CANCEL_CREAM_WASH_PEAK = 0.14
+DODGE_CANCEL_CREAM_WASH_MID = 0.075
 DODGE_CANCEL_CREAM_WASH_IN_SEC = 0.03
-DODGE_CANCEL_CREAM_WASH_PULSE_SEC = 0.05
-DODGE_CANCEL_CREAM_WASH_HOLD_SEC = 0.02
-DODGE_CANCEL_CREAM_WASH_OUT_SEC = 0.18
+DODGE_CANCEL_CREAM_WASH_PULSE_SEC = 0.07
+DODGE_CANCEL_CREAM_WASH_HOLD_SEC = 0.04
+DODGE_CANCEL_CREAM_WASH_OUT_SEC = 0.24
 DODGE_CANCEL_CREAM_WASH_BIN = 28  # with dodge-trail wash; under soft-lock pulse
+
+# Dodge-cancel cream wash flash aftershock — residual cream flecks + soft halo
+# after the cancel flash so Shift→F still reads. Same grammar as i-frame /
+# hurt-stagger cream wash aftershock, snappier because cancel is intentional.
+# Cream/pastel only. Toggle DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED = False
+# drops aftershock only.
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED = True
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.06  # after flash starts
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.0)
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT = 4
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SIZE = 0.012
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DRIFT = 0.22
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_FALL = 0.14
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_SEC = 0.20
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.70)
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_BIN = 30  # over cancel wash veil (28)
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.38
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_START = 0.22
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.05
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.16
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.09
+DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
 def dodgeCancelCreamWashPeakAtSec(delay=None, inSec=None):
@@ -653,6 +679,13 @@ def dodgeCancelCreamWashPeakAtSec(delay=None, inSec=None):
     if inSec is None:
         inSec = DODGE_CANCEL_CREAM_WASH_IN_SEC
     return max(0.0, float(delay)) + max(0.0, float(inSec))
+
+
+def dodgeCancelCreamWashAftershockAtSec(delay=None):
+    """Seconds from cancel until cream flash aftershock residual begins."""
+    if delay is None:
+        delay = DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC
+    return max(0.0, float(delay))
 
 # Perfect-dodge counter → melee. When dodge i-frames eat a CorruptToon
 # telegraph, open a short rewarded cancel window into the next stretch-punch
@@ -1145,7 +1178,7 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  combo cream edge  |  '
     'Shift/X dodge i-frame cream wash  |  '
-    'dodge→F cream flash  |  perfect dodge→F counter  |  '
+    'dodge→F cream flash deepen  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash→F/Shift  |  '
     'Tab/` soft-lock cycle cream  |  hit soft-lock aim  |  ~melee'
 )

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for dodge-cancel cream wash flash helpers.
+"""Behavioral headless tests for dodge-cancel cream wash flash deepen helpers.
 
 Loads HackSlashConfig dodge-cancel cream wash helpers without Panda3D. Covers
-tunables + peak timing so the flash reads the instant late-dodge cancel into
-melee fires (#186).
+deepened flash tunables + quiet cream flash aftershock so late-dodge cancel
+into melee reads juicier (#219 deepen) — distinct from dodge i-frame cream
+wash deepen (#228) and combo counter cream edge deepen (#237).
 
 Run from repo root:
   python3 tests/test_dodge_cancel_cream_wash.py
@@ -73,7 +74,7 @@ def _top_level_names(tree: ast.AST) -> set[str]:
 
 
 class DodgeCancelCreamWashTest(unittest.TestCase):
-    """Config + AST checks for dodge-cancel cream wash flash."""
+    """Config + AST checks for deepened dodge-cancel cream wash flash."""
 
     @classmethod
     def setUpClass(cls):
@@ -81,13 +82,21 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
 
     def test_config_dodge_cancel_cream_wash_tunables(self):
         self.assertTrue(self.cfg.DODGE_CANCEL_CREAM_WASH_ENABLED)
+        self.assertTrue(self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED)
         self.assertGreaterEqual(self.cfg.DODGE_CANCEL_CREAM_WASH_DELAY_SEC, 0.0)
         self.assertGreater(self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK, 0.0)
         self.assertGreater(self.cfg.DODGE_CANCEL_CREAM_WASH_MID, 0.0)
         self.assertLess(
             self.cfg.DODGE_CANCEL_CREAM_WASH_MID,
             self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK)
-        # Snappier flash than dodge-trail settle wash; quieter than hit wash.
+        # Deepened readability: juicier than original #219 cancel flash.
+        self.assertGreaterEqual(
+            self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK, 0.14)
+        self.assertGreaterEqual(
+            self.cfg.DODGE_CANCEL_CREAM_WASH_HOLD_SEC, 0.04)
+        self.assertGreaterEqual(
+            self.cfg.DODGE_CANCEL_CREAM_WASH_MID, 0.075)
+        # Snappier flash than dodge-trail settle wash; still a brief cancel beat.
         self.assertLessEqual(
             self.cfg.DODGE_CANCEL_CREAM_WASH_DELAY_SEC,
             self.cfg.DODGE_TRAIL_CREAM_WASH_DELAY_SEC)
@@ -97,9 +106,25 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         self.assertLess(
             self.cfg.DODGE_CANCEL_CREAM_WASH_OUT_SEC,
             self.cfg.DODGE_TRAIL_CREAM_WASH_OUT_SEC)
+        # Cancel flash can pop a touch louder than hit wash; still soft.
         self.assertLessEqual(
             self.cfg.DODGE_CANCEL_CREAM_WASH_PEAK,
-            self.cfg.HIT_SPARK_CREAM_WASH_PEAK + 0.02)
+            self.cfg.HIT_SPARK_CREAM_WASH_PEAK + 0.05)
+        # Quiet residual flash aftershock after the deepened veil.
+        self.assertGreaterEqual(
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT, 1)
+        self.assertTrue(
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
+        self.assertGreater(
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_BIN,
+            self.cfg.DODGE_CANCEL_CREAM_WASH_BIN)
+        flash_body = (
+            self.cfg.DODGE_CANCEL_CREAM_WASH_IN_SEC
+            + self.cfg.DODGE_CANCEL_CREAM_WASH_PULSE_SEC
+            + self.cfg.DODGE_CANCEL_CREAM_WASH_HOLD_SEC
+            + self.cfg.DODGE_CANCEL_CREAM_WASH_OUT_SEC)
+        self.assertLess(
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC, flash_body)
         # Peak lands immediately so cancel→melee reads as one beat.
         peak_at = self.cfg.dodgeCancelCreamWashPeakAtSec()
         self.assertLess(peak_at, self.cfg.DODGE_CANCEL_WINDOW_SEC)
@@ -122,6 +147,14 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         self.assertAlmostEqual(peak_fn(0.0, 0.03), 0.03)
         self.assertAlmostEqual(peak_fn(-1.0, 0.05), 0.05)
 
+    def test_dodge_cancel_cream_wash_aftershock_helper(self):
+        after_fn = self.cfg.dodgeCancelCreamWashAftershockAtSec
+        self.assertAlmostEqual(
+            after_fn(),
+            self.cfg.DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_DELAY_SEC)
+        self.assertAlmostEqual(after_fn(0.10), 0.10)
+        self.assertAlmostEqual(after_fn(-1.0), 0.0)
+
     def test_ast_dodge_cancel_cream_wash_fx(self):
         rel = 'toontown/hackslash/DodgeCancelCreamWashFx.py'
         tree = _module_ast(rel)
@@ -129,10 +162,16 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         self.assertIn('DodgeCancelCreamWashPulse', names)
         src = (REPO_ROOT / rel).read_text(encoding='utf-8')
         self.assertIn('DODGE_CANCEL_CREAM_WASH_ENABLED', src)
+        self.assertIn('DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED', src)
         self.assertIn('_cancelDodgeIntoMelee', src)
+        self.assertIn('_buildAftershock', src)
+        self.assertIn('_spawnAftershockHalo', src)
+        self.assertIn('_spawnAftershockFleck', src)
         # Ban phrasing only — no KH product names as branding.
         self.assertIn('no keyblades', src.lower())
         self.assertNotIn('kingdom hearts', src.lower())
+        # Distinct from combo-edge / i-frame deepen cues.
+        self.assertIn('distinct from', src.lower())
 
     def test_ast_melee_wires_dodge_cancel_cream_wash(self):
         melee_rel = 'toontown/hackslash/MeleeCombat.py'
@@ -146,6 +185,7 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
         init_src = (REPO_ROOT / init_rel).read_text(encoding='utf-8')
         self.assertIn('DodgeCancelCreamWashPulse', init_src)
         self.assertIn('dodgeCancelCreamWashPeakAtSec', init_src)
+        self.assertIn('dodgeCancelCreamWashAftershockAtSec', init_src)
 
         cfg_names = _top_level_names(
             _module_ast('toontown/hackslash/HackSlashConfig.py'))
@@ -153,12 +193,17 @@ class DodgeCancelCreamWashTest(unittest.TestCase):
                 'DODGE_CANCEL_CREAM_WASH_ENABLED',
                 'DODGE_CANCEL_CREAM_WASH_DELAY_SEC',
                 'DODGE_CANCEL_CREAM_WASH_PEAK',
-                'dodgeCancelCreamWashPeakAtSec'):
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT',
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'dodgeCancelCreamWashPeakAtSec',
+                'dodgeCancelCreamWashAftershockAtSec'):
             self.assertIn(name, cfg_names)
 
         mw_src = (REPO_ROOT / 'toontown/hackslash/MagicWords.py').read_text(
             encoding='utf-8')
         self.assertIn('cream wash flash', mw_src.lower())
+        self.assertIn('aftershock', mw_src.lower())
         self.assertNotIn('keyblade', mw_src.lower())
 
 

@@ -2677,6 +2677,48 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_flushDodgeCancelBuffer', melee_src)
         self.assertIn('_cancelDodgeIntoMelee', melee_src)
 
+        # Dodge-cancel cream wash flash deepen (#219 deepen) — juicier Shift→F
+        # flash + quiet residual aftershock. Distinct from i-frame (#228) /
+        # combo cream edge (#237).
+        cancel_wash_rel = 'toontown/hackslash/DodgeCancelCreamWashFx.py'
+        _assert_module_file(cancel_wash_rel)
+        cancel_wash_names = _class_and_func_names(_module_ast(cancel_wash_rel))
+        self.assertIn('DodgeCancelCreamWashPulse', cancel_wash_names)
+        cancel_wash_methods = _class_method_names(
+            _module_ast(cancel_wash_rel), 'DodgeCancelCreamWashPulse')
+        self.assertIn('play', cancel_wash_methods)
+        self.assertIn('clear', cancel_wash_methods)
+        self.assertIn('_buildAftershock', cancel_wash_methods)
+        self.assertIn('_spawnAftershockHalo', cancel_wash_methods)
+        self.assertIn('_spawnAftershockFleck', cancel_wash_methods)
+        for cancel_wash_key in (
+                'DODGE_CANCEL_CREAM_WASH_ENABLED',
+                'DODGE_CANCEL_CREAM_WASH_PEAK',
+                'DODGE_CANCEL_CREAM_WASH_HOLD_SEC',
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_COUNT',
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_BIN'):
+            self.assertIn(
+                cancel_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % cancel_wash_key)
+        cancel_wash_funcs = _class_and_func_names(config_tree)
+        self.assertIn('dodgeCancelCreamWashPeakAtSec', cancel_wash_funcs)
+        self.assertIn('dodgeCancelCreamWashAftershockAtSec', cancel_wash_funcs)
+        cancel_wash_assigns = _assign_map(config_tree)
+        self.assertGreaterEqual(
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_PEAK'), 0.14)
+        self.assertGreaterEqual(
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_HOLD_SEC'), 0.04)
+        self.assertIs(
+            cancel_wash_assigns.get('DODGE_CANCEL_CREAM_WASH_AFTERSHOCK_ENABLED'),
+            True)
+        self.assertIn('DodgeCancelCreamWashPulse', melee_src)
+        self.assertIn('_playDodgeCancelCreamWash', melee_src)
+        self.assertIn('DodgeCancelCreamWashPulse', hack_init)
+        self.assertIn('dodgeCancelCreamWashPeakAtSec', hack_init)
+        self.assertIn('dodgeCancelCreamWashAftershockAtSec', hack_init)
+
         # Perfect-dodge counter → melee — rewarded cancel window after perfect
         # dodge into a bumped/snappy stretch-punch opener (builds on #186).
         for pd_counter_key in (
