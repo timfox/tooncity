@@ -220,22 +220,29 @@ ACTS = (
 
 # Hub PlayEntry tip — points new players at Act 1 without magic words / zone ids.
 # Soft next-street cues reuse hubPlayEntryTip(nextStreet=…) after a handoff.
-# After STATE_VICTORY / chase clear, hubVictoryReplayTip replaces the
-# generic Loopy invite so twist→soft-end has an authored epilogue beat.
+# STATE_VICTORY + chaseCleared=0 → chase-pending tip (stain still marks hub).
+# STATE_VICTORY + chaseCleared=1 → hubVictoryReplayTip (soft-end washed copy).
 HUB_TIP = (
     'Oswald needs you on Loopy Lane — hop the tunnel and reclaim purity!  |  '
+    'C campaign')
+HUB_CHASE_PENDING_TIP = (
+    "Oswald's stain still marks the hub — wash the betrayal chase!  |  "
     'C campaign')
 HUB_VICTORY_TIP = (
     "Campaign complete — Oswald's stain is washed. "
     'Replay from hub / C on Loopy Lane!  |  C campaign')
 
 
-def hubPlayEntryTip(face=None, nextStreet=None, victory=False):
+def hubPlayEntryTip(face=None, nextStreet=None, victory=False,
+                    chasePending=False):
     """Player-facing hub tip. nextStreet overrides Loopy after a handoff.
 
-    When ``victory`` is True (STATE_VICTORY / chase-clear epilogue), return
-    the soft-end replay tip instead of the Act 1 invite.
+    When ``victory`` is True with ``chasePending``, return the chase-pending
+    tip (do not claim the stain is washed). When ``victory`` alone, return
+    the soft-end replay tip after chase clear.
     """
+    if victory and chasePending:
+        return hubChasePendingTip(face=face)
     if victory:
         return hubVictoryReplayTip(face=face)
     face = face or RECLAIM_FACE
@@ -243,6 +250,17 @@ def hubPlayEntryTip(face=None, nextStreet=None, victory=False):
     return (
         '%s needs you on %s — hop the tunnel and reclaim purity!  |  '
         'C campaign' % (face, street))
+
+
+def hubChasePendingTip(face=None):
+    """Hub tip while STATE_VICTORY but Corrupted Oswald chase still pending."""
+    tip = HUB_CHASE_PENDING_TIP
+    if tip:
+        return str(tip)
+    face = face or RECLAIM_FACE
+    return (
+        "%s's stain still marks the hub — wash the betrayal chase!  |  "
+        'C campaign' % face)
 
 
 def hubVictoryReplayTip(face=None):

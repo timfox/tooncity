@@ -177,9 +177,13 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertTrue(mirror['betrayed'])
         self.assertTrue(mirror['chasePending'])
         self.assertIsNone(mirror['softNextStreet'])
-        # Hub tip branch for victory.
-        tip = camp.hubPlayEntryTip(victory=mirror['victoryEpilogue'])
-        self.assertIn('Campaign complete', tip)
+        # Hub tip must NOT claim stain washed while chase still pending.
+        tip = camp.hubPlayEntryTip(
+            victory=mirror['victoryEpilogue'],
+            chasePending=mirror['chasePending'])
+        self.assertEqual(tip, camp.HUB_CHASE_PENDING_TIP)
+        self.assertNotIn('stain is washed', tip.lower())
+        self.assertNotIn('Campaign complete', tip)
 
     def test_client_mirror_victory_chase_cleared(self):
         save = self.save
@@ -262,6 +266,8 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertIn('d_requestCampaignProgress', src)
         self.assertIn('clientMirrorFromProgress', src)
         self.assertIn('_victoryEpilogue', src)
+        self.assertIn('_chasePending', src)
+        self.assertIn("mirror.get('chasePending')", src)
         self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', src)
         # Preserve #332 hub breadcrumb unlock accept alongside login sync.
         self.assertIn("accept('campaignActUnlocked'", src)
