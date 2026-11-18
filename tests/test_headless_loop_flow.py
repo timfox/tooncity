@@ -459,6 +459,17 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'juggleHangStunSec', 'JUGGLE_HANG_STUN_ENABLED'):
             self.assertIn(needle, corrupt_ai, msg='AI missing %s' % needle)
 
+        # Melee mid-telegraph interrupt covers Snare + Brute spit + Gagster lob.
+        self.assertTrue(cg.BRUTE_SPIT_MELEE_INTERRUPT)
+        self.assertTrue(cg.GAGSTER_LOB_MELEE_INTERRUPT)
+        self.assertTrue(cg.isMeleeInterruptibleTelegraph(
+            cg.ARCHETYPE_BRUTE, 'spit'))
+        self.assertFalse(cg.isMeleeInterruptibleTelegraph(
+            cg.ARCHETYPE_BRUTE, 'slam'))
+        self.assertTrue(cg.isMeleeInterruptibleTelegraph(
+            cg.ARCHETYPE_GAGSTER, 'gag_lob'))
+        self.assertIn('__maybeInterruptMeleeTelegraph', corrupt_ai)
+
         # Player KO during reclaim is an authored fail (#323/#324).
         rg = self.rg
         self.assertIn('fail', str(rg.BANNER_FAILED).lower())

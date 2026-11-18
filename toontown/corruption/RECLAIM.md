@@ -341,16 +341,20 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # Brute AI: hold-plant spit is a real traveling projectile (aim snapshotted
 # at wind-up; trail chip + land splash) — dodge out during flight. Close
 # range swaps to a heavier slam secondary (tank, not tinted Smudge smack).
-# AV: green squash + spit-gob telegraph pop (BruteSpitTelegraphFx)
-# + ink drip + squirt SFX, then ink blob on spit land. Spit land also fires
-# BruteSpitCreamSplashFx (deepened cream splash beyond #264 + thicker
-# vertical cream drip filaments + heavier downward cream aftershock) so
-# the green tank spit reads juicier after the telegraph — distinct from
-# Snare whip / Gunk bloom / Smudge radial hose.
+# Melee mid-spit-telegraph cancels the wind-up (same snare-style AI interrupt;
+# slam stays commit-through). AV: green squash + spit-gob telegraph pop
+# (BruteSpitTelegraphFx) + ink drip + squirt SFX, then ink blob on spit land.
+# Spit land also fires BruteSpitCreamSplashFx (deepened cream splash beyond
+# #264 + thicker vertical cream drip filaments + heavier downward cream
+# aftershock) so the green tank spit reads juicier after the telegraph —
+# distinct from Snare whip / Gunk bloom / Smudge radial hose.
 # Land F / LMB — cheap green sludge splash (BruteSludgeSplashFx) on each hit;
 # defeat layers a larger splash with CorruptDeathPopFx.
 # Compare ~spawncorrupt 1   (Ink Smudge: ink_dash / ink_splat kit + purple
 # ink-fist telegraph + drip — not stationary smack fodder).
+# Gunk Gagster lob (~spawncorrupt 1 0 3 / ~spawngagster): melee mid-lob
+# telegraph likewise cancels the wind-up (does not clear an already-landed
+# linger sludge).
 ```
 
 ## Balloon Snare string-lash / splash demo
@@ -364,7 +368,8 @@ swarm identity, not default smack fodder. Distinct from Oswald
 # reels the toon a short planar yank toward the zip-flier (not damage-only).
 # After the string telegraph reads, a short string-snap counter window
 # arms — F / LMB for a bumped snappy punish opener (same reward path as
-# perfect-dodge counter); melee mid-telegraph interrupts the wind-up.
+# perfect-dodge counter); melee mid-telegraph interrupts the wind-up
+# (shared AI path with Brute spit / Gagster lob).
 # Land F / LMB — cheap amber string-snap splash (SnareStringSnapSplashFx)
 # on each hit; a successful string-snap counter punish also fires a deepened
 # cream splash beyond #269 + thicker horizontal cream whip filaments +
