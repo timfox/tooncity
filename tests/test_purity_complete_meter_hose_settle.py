@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for purity-complete meter hose settle.
+"""Behavioral headless tests for purity-complete meter hose settle cream.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-PURITY_COMPLETE_METER_SETTLE tunables, rubber-hose (non-KH) copy, and AST
-hooks on PurityMeterHud + reclaim director restore settle path.
+deepened PURITY_COMPLETE_METER_SETTLE / CREAM tunables, rubber-hose (non-KH)
+copy, and AST hooks on PurityMeterHud + reclaim director restore settle path.
+Distinct from wave-hose cream deepen (#239), lock celebration deepen (#243),
+and original complete hose settle (#225).
 
 Run from repo root:
   python3 tests/test_purity_complete_meter_hose_settle.py
@@ -76,7 +78,7 @@ def _class_method_names(tree: ast.AST, class_name: str) -> set[str]:
 
 
 class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
-    """Pure-Python purity-complete meter hose-settle wiring."""
+    """Pure-Python purity-complete meter hose-settle cream deepen wiring."""
 
     @classmethod
     def setUpClass(cls):
@@ -85,16 +87,22 @@ class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
     def test_complete_meter_settle_tunables_enabled(self):
         rg = self.rg
         self.assertIs(rg.PURITY_COMPLETE_METER_SETTLE_ENABLED, True)
-        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_SEC), 0.0)
-        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_RIM_SEC), 0.0)
+        self.assertIs(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED, True)
+        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_SEC), 0.16)
+        self.assertGreaterEqual(float(rg.PURITY_COMPLETE_METER_SETTLE_RIM_SEC), 0.32)
         stretch = rg.PURITY_COMPLETE_METER_SETTLE_STRETCH
         self.assertEqual(len(stretch), 4)
         # Tall stretch overshoot — settle finish, not flat squash first.
-        self.assertGreater(float(stretch[2]), 1.0)
+        self.assertGreater(float(stretch[2]), 1.28)  # deepened tall finish
+        self.assertLess(float(stretch[2]), float(rg.WAVE_START_METER_POP_STRETCH[2]))
         # Settle dwell longer than stretch beat so the finish lands.
         self.assertGreater(
             float(rg.PURITY_COMPLETE_METER_SETTLE_SEC),
             float(stretch[3]))
+        # Settling cream flecks / halo deepen (downward finish juice).
+        self.assertGreaterEqual(int(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT), 6)
+        self.assertGreater(float(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_FALL), 0.0)
+        self.assertTrue(rg.PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_ENABLED)
 
     def test_rim_accent_distinct_from_wave_start_and_secured(self):
         rg = self.rg
@@ -102,6 +110,7 @@ class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
         start = rg.WAVE_START_METER_RIM_COLOR
         lock = rg.SECURED_LOCK_RIM_COLOR
         warn = rg.PURITY_PRESSURE_RIM_WARN_COLOR
+        cream = rg.PURITY_COMPLETE_METER_SETTLE_CREAM_COLOR
         self.assertNotEqual(tuple(finish), tuple(start))
         self.assertNotEqual(tuple(finish), tuple(lock))
         self.assertNotEqual(tuple(finish), tuple(warn))
@@ -109,14 +118,22 @@ class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
         self.assertGreater(float(finish[0]), 0.9)
         self.assertGreater(float(finish[1]), 0.9)
         self.assertLess(float(finish[2]), float(finish[1]))
+        self.assertGreaterEqual(float(finish[3]), 0.88)  # creamier rim alpha
         self.assertGreater(float(lock[1]), float(lock[0]))  # green lock
+        # Settling finish flecks stay pure cream (high G), not green lock glitter.
+        self.assertGreater(float(cream[1]), 0.95)
+        self.assertNotEqual(
+            tuple(cream), tuple(rg.WAVE_START_METER_CREAM_COLOR))
+        self.assertNotEqual(
+            tuple(cream[:3]), tuple(rg.SECURED_LOCK_SPARKLE_COLOR[:3]))
 
     def test_no_kh_branding_in_complete_settle_tunables(self):
         banned = ('keyblade', 'kingdom hearts', 'sora', 'heartless', 'kh ')
         blob = ' '.join([
             str(self.rg.PURITY_COMPLETE_METER_SETTLE_ENABLED),
             str(self.rg.PURITY_COMPLETE_METER_SETTLE_RIM_COLOR),
-            'purity complete meter hose settle sunny cream',
+            str(self.rg.PURITY_COMPLETE_METER_SETTLE_CREAM_COLOR),
+            'purity complete meter hose settle sunny cream deepen',
         ]).lower()
         for term in banned:
             self.assertNotIn(term, blob)
@@ -125,19 +142,30 @@ class PurityCompleteMeterHoseSettleTest(unittest.TestCase):
         tree = _module_ast('toontown/reclaim/PurityMeterHud.py')
         methods = _class_method_names(tree, 'PurityMeterHud')
         self.assertIn('settleComplete', methods)
+        self.assertIn('_buildCompleteSettleCreamJuice', methods)
+        self.assertIn('_spawnCompleteSettleCreamFlecks', methods)
+        self.assertIn('_spawnCompleteSettleCreamHalo', methods)
         self.assertIn('popWaveStart', methods)
         self.assertIn('confirmSecured', methods)
         src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('PURITY_COMPLETE_METER_SETTLE', src)
+        self.assertIn('PURITY_COMPLETE_METER_SETTLE_CREAM', src)
         self.assertIn('reclaimPurityMeterCompleteSettle', src)
+        self.assertIn('reclaimPurityMeterCompleteSettleCream', src)
         # Complete settle stays distinct from wave-start squash and lock green.
         settle_snip = src.split('def settleComplete')[1].split(
             'def confirmSecured')[0]
         self.assertNotIn('WAVE_START_METER_POP_SQUASH', settle_snip)
+        self.assertNotIn('WAVE_START_METER_CREAM', settle_snip)
         self.assertNotIn('SECURED_LOCK_RIM_COLOR', settle_snip)
         self.assertNotIn('SECURED_LOCK_METER_POP', settle_snip)
+        self.assertNotIn('SECURED_LOCK_SPARKLE', settle_snip)
         self.assertIn('PURITY_COMPLETE_METER_SETTLE_STRETCH', settle_snip)
         self.assertIn('PURITY_COMPLETE_METER_SETTLE_SEC', settle_snip)
+        self.assertIn('_buildCompleteSettleCreamJuice', settle_snip)
+        # Settling flecks fall downward — finish residual, not rising begin.
+        self.assertIn('PURITY_COMPLETE_METER_SETTLE_CREAM_FALL', settle_snip)
+        self.assertNotIn('WAVE_START_METER_CREAM_RISE', settle_snip)
 
     def test_director_restore_calls_hose_settle_before_settled(self):
         tree = _module_ast('toontown/reclaim/DistributedReclaimDirector.py')

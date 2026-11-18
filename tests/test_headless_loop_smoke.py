@@ -1269,14 +1269,20 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('reclaimPurityMeterWaveStartHose', wave_start_hud_src)
         self.assertIn('reclaimPurityMeterWaveStartCream', wave_start_hud_src)
 
-        # Purity-complete meter hose settle — stretch→settle after celebration.
+        # Purity-complete meter hose settle cream deepen — stretch→settle
+        # + settling cream flecks / soft halo after celebration (#225 deepen).
         for complete_settle_key in (
                 'PURITY_COMPLETE_METER_SETTLE_ENABLED',
                 'PURITY_COMPLETE_METER_SETTLE_STRETCH',
                 'PURITY_COMPLETE_METER_SETTLE_SEC',
                 'PURITY_COMPLETE_METER_SETTLE_RIM_COLOR',
                 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC',
-                'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC'):
+                'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC',
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED',
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT',
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_FALL',
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_COLOR',
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_ENABLED'):
             self.assertIn(
                 complete_settle_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % complete_settle_key)
@@ -1284,13 +1290,22 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIs(
             complete_settle_assigns.get(
                 'PURITY_COMPLETE_METER_SETTLE_ENABLED'), True)
+        self.assertIs(
+            complete_settle_assigns.get(
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED'), True)
         self.assertIn('settleComplete', wave_start_hud_methods)
+        self.assertIn('_buildCompleteSettleCreamJuice', wave_start_hud_methods)
+        self.assertIn('_spawnCompleteSettleCreamFlecks', wave_start_hud_methods)
+        self.assertIn('_spawnCompleteSettleCreamHalo', wave_start_hud_methods)
         self.assertIn(
             '__hoseSettlePurityMeterComplete', wave_start_director_src)
         self.assertIn('settleComplete', wave_start_director_src)
         self.assertIn(
             'reclaimPurityMeterCompleteSettle', wave_start_hud_src)
+        self.assertIn(
+            'reclaimPurityMeterCompleteSettleCream', wave_start_hud_src)
         self.assertIn('PURITY_COMPLETE_METER_SETTLE', wave_start_hud_src)
+        self.assertIn('PURITY_COMPLETE_METER_SETTLE_CREAM', wave_start_hud_src)
 
         # Silhouette cream rim flecks (#114) — cream rim sparkle on corrupt ink.
         rim_rel = 'toontown/corruption/CorruptSilhouetteCreamRimFx.py'

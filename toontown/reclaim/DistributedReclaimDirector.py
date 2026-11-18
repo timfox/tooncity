@@ -552,7 +552,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         (flecks + halo) + settle cream wash. ReclaimCheer + CheerCreamSparkleFx
         layer pitch swell cream flecks + delayed cream aftershock + soft cream
         wash pulse. After celebration lands, PurityMeterHud.settleComplete
-        hose-settles the full meter so the finish reads clearly.
+        juicily hose-settles the full meter with settling pure-cream flecks
+        so the finish reads juicier.
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -609,10 +610,11 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._restoreIval.start()
 
     def __hoseSettlePurityMeterComplete(self):
-        """After celebration, hose-settle the meter so the finish reads clearly.
+        """After celebration, hose-settle the meter so the finish reads juicier.
 
-        Soft tall stretch→settle (#230) — not wave-start squash pop (#220) and
-        not secured-lock green soft scale (#209).
+        Deepened soft tall stretch→settle + settling pure cream (#225 deepen)
+        — not wave-start squash + rising cream (#239) and not secured-lock
+        green soft scale + tip-near sparkle (#243).
         """
         if self._purityMeter is not None:
             try:
@@ -621,9 +623,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 pass
         # Re-arm HUD hide after settle rim hold (meter stayed up through restore).
         rimSec = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.28))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_RIM_SEC', 0.36))
         hold = float(getattr(
-            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC', 0.55))
+            ReclaimGlobals, 'PURITY_COMPLETE_METER_SETTLE_HUD_HOLD_SEC', 0.65))
         self.__cancelSecuredHudHold()
         try:
             taskMgr.doMethodLater(  # noqa: F821
