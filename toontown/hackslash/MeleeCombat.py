@@ -1,0 +1,301 @@
+"""Real-time rubber-hose melee controller.
+
+Combo-ish swings with cartoon squash/stretch timing and soft targeting.
+Client-local prototype — does not enter turn-based battle FSM.
+"""
+
+from panda3d.core import Point3, TextNode, Vec4
+
+from direct.interval.IntervalGlobal import (
+    ActorInterval,
+    Func,
+    LerpScaleInterval,
+    Parallel,
+    Sequence,
+    Wait,
+)
+from direct.showbase.DirectObject import DirectObject
+from direct.task import Task
+
+from otp.avatar import Emote
+
+from . import HackSlashConfig
+from .DemoHostile import spawnDemoHostiles
+from .SoftTarget import SoftTargetFinder
+
+
+class MeleeCombatController(DirectObject):
+    notify = None
+
+    def __init__(self, avatar):
+        DirectObject.__init__(self)
+        self.avatar = avatar
+        self.enabled = False
+        self.comboIndex = 0
+        self.comboWindowOpen = False
+        self.busy = False
+        self._swingIval = None
+        self._hoseIval = None
+        self._origScale = None
+        self.targetFinder = SoftTargetFinder(avatar)
+        self._hintNP = None
+        self._lockHintNP = None
+        self._taskName = avatar.uniqueName('hackslashMeleeTick')
+
+    def enable(self, spawnHostiles=True):
+        if self.enabled:
+            return
+        self.enabled = True
+        self.comboIndex = 0
+        self.comboWindowOpen = False
+        self.busy = False
+        self.avatar.hackSlashDemoHostiles = getattr(
+            self.avatar, 'hackSlashDemoHostiles', []) or []
+        if spawnHostiles and not self.avatar.hackSlashDemoHostiles:
+            self.avatar.hackSlashDemoHostiles = spawnDemoHostiles(self.avatar)
+        self.accept(HackSlashConfig.ATTACK_KEY, self._onAttackPressed)
+        self.accept(HackSlashConfig.ATTACK_KEY_ALT, self._onAttackPressed)
+        self._showHint(HackSlashConfig.DEMO_HINT)
+        taskMgr.add(self._tick, self._taskName)  # noqa: F821
+
+    def disable(self):
+        if not self.enabled:
+            self._cleanupHostiles()
+            return
+        self.enabled = False
+        self.ignore(HackSlashConfig.ATTACK_KEY)
+        self.ignore(HackSlashConfig.ATTACK_KEY_ALT)
+        taskMgr.remove(self._taskName)  # noqa: F821
+        self._finishSwing()
+        self._restoreScale()
+        self.targetFinder.clear()
+        self._hideHint()
+        self._hideLockHint()
+        self._cleanupHostiles()
+        self.comboIndex = 0
+        self.comboWindowOpen = False
+        self.busy = False
+
+    def destroy(self):
+        self.disable()
+        self.ignoreAll()
+
+    def isEnabled(self):
+        return self.enabled
+
+    def _cleanupHostiles(self):
+        hostiles = getattr(self.avatar, 'hackSlashDemoHostiles', None) or []
+        for h in hostiles:
+            try:
+                h.cleanup()
+            except Exception:
+                pass
+        self.avatar.hackSlashDemoHostiles = []
+
+    def _tick(self, task):
+        if not self.enabled:
+            return Task.done
+        target = self.targetFinder.acquire()
+        if target is not None:
+            name = target.getHackSlashName()
+            hp = target.getHackSlashHp()
+            self._showLockHint('%s  [%d]' % (name, hp))
+        else:
+            self._hideLockHint()
+        return Task.cont
+
+    def _onAttackPressed(self):
+        if not self.enabled:
+            return
+        if getattr(self.avatar.controlManager.currentControls, 'isAirborne', 0):
+            return
+        # Presenting a pie — don't overlap classic toss.
+        if getattr(self.avatar, 'tossPieStart', None) is not None:
+            return
+        if self.busy and not self.comboWindowOpen:
+            return
+
+        messenger.send('wakeup')  # noqa: F821
+        if self.comboWindowOpen and self.comboIndex < HackSlashConfig.COMBO_LENGTH:
+            hitIndex = self.comboIndex
+        else:
+            hitIndex = 0
+            self.comboIndex = 0
+
+        self._startSwing(hitIndex)
+
+    def _startSwing(self, hitIndex):
+        self._finishSwing()
+        self.busy = True
+        self.comboWindowOpen = False
+        self.comboIndex = hitIndex
+
+        target = self.targetFinder.acquire()
+        if target is not None:
+            self._faceTarget(target)
+
+        anim = HackSlashConfig.COMBO_ANIMS[
+            min(hitIndex, len(HackSlashConfig.COMBO_ANIMS) - 1)]
+        rate = HackSlashConfig.COMBO_PLAY_RATES[
+            min(hitIndex, len(HackSlashConfig.COMBO_PLAY_RATES) - 1)]
+        damage = HackSlashConfig.COMBO_DAMAGE[
+            min(hitIndex, len(HackSlashConfig.COMBO_DAMAGE) - 1)]
+
+        Emote.globalEmote.disableBody(self.avatar, 'hackslashMelee')
+
+        # Hit check slightly after wind-up for readable cartoon timing.
+        hitDelay = max(0.05, 0.12 / rate)
+        windowStart = max(hitDelay + 0.05, 0.22 / rate)
+        windowEnd = windowStart + HackSlashConfig.COMBO_WINDOW_SEC
+        recovery = HackSlashConfig.COMBO_RECOVERY_SEC
+
+        try:
+            animIval = ActorInterval(
+                self.avatar, anim, playRate=rate, name='hackslashSwingAnim')
+        except Exception:
+            # Fallback if anim missing on this toon species / phase.
+            animIval = Wait(0.35 / rate)
+
+        self._playHosePulse(hitIndex)
+
+        def openWindow():
+            self.comboWindowOpen = True
+            self.comboIndex = hitIndex + 1
+
+        def closeWindowAndRecover():
+            self.comboWindowOpen = False
+
+        def finish():
+            self.busy = False
+            self.comboWindowOpen = False
+            if self.comboIndex >= HackSlashConfig.COMBO_LENGTH:
+                self.comboIndex = 0
+            Emote.globalEmote.releaseBody(self.avatar, 'hackslashMelee')
+            self._restoreScale()
+            # Return to locomotion anim state without forcing Happy if airborne.
+            try:
+                if not getattr(self.avatar.controlManager.currentControls, 'isAirborne', 0):
+                    self.avatar.setAnimState('Happy', 1.0)
+            except Exception:
+                pass
+
+        self._swingIval = Parallel(
+            Sequence(animIval),
+            Sequence(
+                Wait(hitDelay),
+                Func(self._resolveHit, damage, hitIndex, target),
+                Wait(max(0.0, windowStart - hitDelay)),
+                Func(openWindow),
+                Wait(HackSlashConfig.COMBO_WINDOW_SEC),
+                Func(closeWindowAndRecover),
+                Wait(recovery),
+                Func(finish),
+            ),
+            name=self.avatar.uniqueName('hackslashSwing'),
+        )
+        self._swingIval.start()
+
+    def _resolveHit(self, damage, hitIndex, preacquired):
+        target = preacquired
+        if target is None or not target.isHackSlashAlive():
+            target = self.targetFinder.acquire()
+        if target is None:
+            return
+        if not self._inHitRange(target):
+            # Still allow slightly generous finisher reach.
+            if hitIndex < HackSlashConfig.COMBO_LENGTH - 1:
+                return
+            if self.targetFinder._distance(target) > HackSlashConfig.TARGET_RANGE * 0.85:
+                return
+        landed = False
+        try:
+            landed = bool(target.applyHackSlashHit(damage, hitIndex, self.avatar))
+        except Exception:
+            landed = False
+        if landed:
+            messenger.send('hackslash-hit', [self.avatar, target, damage, hitIndex])  # noqa: F821
+
+    def _inHitRange(self, target):
+        dist = self.targetFinder._distance(target)
+        return dist <= (HackSlashConfig.HIT_FORWARD + HackSlashConfig.HIT_RADIUS)
+
+    def _faceTarget(self, target):
+        try:
+            pos = target.getHackSlashPos()
+            self.avatar.headsUp(pos)
+        except Exception:
+            pass
+
+    def _playHosePulse(self, hitIndex):
+        self._restoreScale()
+        av = self.avatar
+        self._origScale = av.getScale()
+        sx, sy, sz, dur = HackSlashConfig.HOSE_SQUASH[
+            min(hitIndex, len(HackSlashConfig.HOSE_SQUASH) - 1)]
+        recover = HackSlashConfig.HOSE_STRETCH_RECOVER
+        baseScale = self._origScale
+        self._hoseIval = Sequence(
+            LerpScaleInterval(
+                av, dur,
+                Point3(baseScale[0] * sx, baseScale[1] * sy, baseScale[2] * sz)),
+            LerpScaleInterval(av, recover, baseScale),
+        )
+        self._hoseIval.start()
+
+    def _restoreScale(self):
+        if self._hoseIval:
+            self._hoseIval.finish()
+            self._hoseIval = None
+        if self._origScale is not None:
+            try:
+                self.avatar.setScale(self._origScale)
+            except Exception:
+                pass
+            self._origScale = None
+
+    def _finishSwing(self):
+        if self._swingIval:
+            self._swingIval.pause()
+            self._swingIval = None
+        try:
+            Emote.globalEmote.releaseBody(self.avatar, 'hackslashMelee')
+        except Exception:
+            pass
+
+    def _showHint(self, text):
+        self._hideHint()
+        tn = TextNode('hackslash-hint')
+        tn.setText(text)
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(1, 1, 0.75, 1)
+        tn.setShadow(0.04, 0.04)
+        tn.setShadowColor(0, 0, 0, 0.7)
+        np = aspect2d.attachNewNode(tn)  # noqa: F821
+        np.setScale(0.045)
+        np.setPos(0, 0, 0.92)
+        self._hintNP = np
+
+    def _hideHint(self):
+        if self._hintNP and not self._hintNP.isEmpty():
+            self._hintNP.removeNode()
+        self._hintNP = None
+
+    def _showLockHint(self, text):
+        if self._lockHintNP and not self._lockHintNP.isEmpty():
+            self._lockHintNP.node().setText(text)
+            return
+        tn = TextNode('hackslash-lock')
+        tn.setText(text)
+        tn.setAlign(TextNode.ACenter)
+        tn.setTextColor(1, 0.55, 1, 1)
+        tn.setShadow(0.04, 0.04)
+        tn.setShadowColor(0, 0, 0, 0.7)
+        np = aspect2d.attachNewNode(tn)  # noqa: F821
+        np.setScale(0.05)
+        np.setPos(0, 0, 0.84)
+        self._lockHintNP = np
+
+    def _hideLockHint(self):
+        if self._lockHintNP and not self._lockHintNP.isEmpty():
+            self._lockHintNP.removeNode()
+        self._lockHintNP = None
