@@ -295,8 +295,9 @@ class CampaignHandoffClient(DirectObject):
                 playOswaldTrustBannerCreamEdge()
             except Exception:
                 pass
-            # Soft cream wash pulse after trust cream edge (#117) — handoff /
-            # victory wash grammar (#141/#138). Trusted early/mid only.
+            # Soft cream wash pulse + delayed cream aftershock after trust
+            # cream edge (#117) — finale reveal wash aftershock grammar
+            # (#176) / victory (#168). Trusted early/mid only.
             try:
                 playOswaldTrustCreamWash()
             except Exception:

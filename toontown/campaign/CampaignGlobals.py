@@ -322,8 +322,9 @@ OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.42)
 # touch quieter / shorter than handoff wash (#141) — trust settles fire
 # without glitter hang. Twist / victory / phase / carnival stay on their
 # own wash modules (no twist spoilers here).
-# OSWALD_TRUST_BANNER_CREAM_WASH_ENABLED = False drops wash only (hose
-# settle + cream edge remain). No keyblades / KH branding.
+# OSWALD_TRUST_BANNER_CREAM_WASH_ENABLED = False drops wash (+ wash
+# aftershock) only (hose settle + cream edge remain). No keyblades / KH
+# branding.
 OSWALD_TRUST_BANNER_CREAM_WASH_ENABLED = True
 OSWALD_TRUST_BANNER_CREAM_WASH_DELAY_SEC = 0.36  # after play; after edge peak
 OSWALD_TRUST_BANNER_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -335,6 +336,35 @@ OSWALD_TRUST_BANNER_CREAM_WASH_HOLD_SEC = 0.10
 OSWALD_TRUST_BANNER_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
 # Under cream edge (55) / plate (60); soft veil settle beat.
 OSWALD_TRUST_BANNER_CREAM_WASH_BIN = 54
+
+# Delayed cream aftershock after Oswald trust cream wash (#145). Finale
+# reveal cream wash aftershock grammar (#176) / victory (#168) / entry /
+# purity-complete (#132/#136) — quieter flecks settle downward with a soft
+# cream halo under the trust plate. Oswald trusted early/mid path only;
+# owned by OswaldTrustCreamWashFx. Quieter than finale / victory wash
+# aftershock — trust settles fire more often with no glitter hang.
+# OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_ENABLED = False drops wash
+# aftershock only (wash + hose settle + cream edge remain). No keyblades /
+# KH branding.
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_ENABLED = True
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.22  # after wash starts
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.32)  # under plate
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_COUNT = 5
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_SIZE = 0.015
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_DRIFT = 0.28
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_FALL = 0.22
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_SEC = 0.34
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.74)
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+# Above wash veil (54); rides with cream edge (55) residual.
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_BIN = 55
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.44
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_HALO_START = 0.28
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.14
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.28
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.11
+OSWALD_TRUST_BANNER_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Campaign handoff confetti / streamer pop (CampaignHandoffConfetti).
 # Short rubber-hose carnival burst on Loopy→Punchline (and act) handoffs.
