@@ -36,7 +36,9 @@ OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
 OverlordPhaseInkRainFx (ink rain / ink fall shower). Ink Overlord hits and
 deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
 rubber-hose ink splash; phase-retinted; composes with crown / rain / death /
-idle looks — not street Smudge purple). Defeat plays CorruptDeathPopFx
+idle looks — not street Smudge purple); Overlord hits also pulse
+OverlordHitCreamWashFx (soft cream wash — cream/pastel contrast against
+magenta ink; telegraph / silhouette / death cream-wash grammar). Defeat plays CorruptDeathPopFx
 (rubber-hose ink splat / balloon pop) layered with
 CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
 not ink), CorruptDeathCreamSparkleFx (sunny cream / pastel sparkle flecks

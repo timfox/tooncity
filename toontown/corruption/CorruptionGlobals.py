@@ -508,6 +508,40 @@ OVERLORD_MAGENTA_INK_SPLASH_LOOK = {
         'binSort': 47,
     },
 }
+
+# Soft cream wash pulse after Overlord magenta ink splash (hit only) —
+# aspect2d veil after OverlordMagentaInkSplashFx (#88) smack (client only).
+# Matches CorruptTelegraphCreamWashFx (#157) / CorruptSilhouetteCreamWashFx
+# (#153) / CorruptDeathCreamWashFx (#119) two-beat grammar. Delay composed
+# via OverlordHitCreamWashFx.overlordHitCreamWashLook →
+# overlordMagentaInkSplashLook('hit'). Soft cream/pastel contrast against
+# magenta / crimson ink. OVERLORD_HIT_CREAM_WASH_ENABLED = False drops wash
+# only (magenta splash stays). Death path keeps splash + death cream wash.
+OVERLORD_HIT_CREAM_WASH_ENABLED = True
+OVERLORD_HIT_CREAM_WASH_DELAY_SEC = 0.16  # fallback; look prefers splash compose
+OVERLORD_HIT_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+OVERLORD_HIT_CREAM_WASH_PEAK = 0.08  # quieter than death (0.14) / melee (0.10);
+# above telegraph (0.065) so boss hit reads against magenta ink
+OVERLORD_HIT_CREAM_WASH_MID = 0.045
+OVERLORD_HIT_CREAM_WASH_IN_SEC = 0.06
+OVERLORD_HIT_CREAM_WASH_PULSE_SEC = 0.10
+OVERLORD_HIT_CREAM_WASH_HOLD_SEC = 0.08
+OVERLORD_HIT_CREAM_WASH_OUT_SEC = 0.38
+OVERLORD_HIT_CREAM_WASH_BIN = 40  # soft veil under magenta splash (46)
+OVERLORD_HIT_CREAM_WASH_LOOK = {
+    'id': 'overlord-hit-cream-wash',
+    # delaySec composed with overlordMagentaInkSplashLook('hit') when played.
+    'delaySec': OVERLORD_HIT_CREAM_WASH_DELAY_SEC,
+    'delayScale': 0.72,
+    'color': OVERLORD_HIT_CREAM_WASH_COLOR,
+    'peak': OVERLORD_HIT_CREAM_WASH_PEAK,
+    'mid': OVERLORD_HIT_CREAM_WASH_MID,
+    'inSec': OVERLORD_HIT_CREAM_WASH_IN_SEC,
+    'pulseSec': OVERLORD_HIT_CREAM_WASH_PULSE_SEC,
+    'holdSec': OVERLORD_HIT_CREAM_WASH_HOLD_SEC,
+    'outSec': OVERLORD_HIT_CREAM_WASH_OUT_SEC,
+    'binSort': OVERLORD_HIT_CREAM_WASH_BIN,
+}
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
 ATTACK_HIT_FLASH_PEAK = 0.55
 ATTACK_HIT_FLASH_IN = 0.04

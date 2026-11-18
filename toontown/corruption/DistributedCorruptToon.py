@@ -25,6 +25,7 @@ from toontown.corruption.IdleCreamDripContrastFx import IdleCreamDripContrast
 from toontown.corruption.IdleCreamDripSparkleFx import IdleCreamDripSparkles
 from toontown.corruption.IdleCreamWashPulseFx import IdleCreamWashPulse
 from toontown.corruption.IdleInkDripFx import IdleInkDrip
+from toontown.corruption.OverlordHitCreamWashFx import OverlordHitCreamWashPulse
 from toontown.corruption.OverlordMagentaInkSplashFx import OverlordMagentaInkSplash
 from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
@@ -92,6 +93,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._overlordCrown = None
         self._overlordInkRain = None
         self._overlordMagentaInkSplash = None
+        self._overlordHitCreamWash = None
         self._snareTelegraphString = None
         self._snareStringSnapSplash = None
         self._bruteTelegraphSpit = None
@@ -178,6 +180,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearOverlordMagentaInkSplash()
+        self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
         self.__clearBruteTelegraphSpit()
@@ -1037,6 +1040,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearOverlordMagentaInkSplash()
+        self.__clearOverlordHitCreamWash()
         self.__clearSnareTelegraphString()
         self.__clearSnareStringSnapSplash()
         self.__clearBruteTelegraphSpit()
@@ -1549,6 +1553,25 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
         self._overlordMagentaInkSplash = None
 
+    def __playOverlordHitCreamWash(self):
+        """Soft cream wash after Overlord magenta hit splash (hit path only)."""
+        look, phase = self.__finalePhaseLook()
+        if not look or int(phase) < 1:
+            return
+        self.__clearOverlordHitCreamWash()
+        wash = OverlordHitCreamWashPulse()
+        self._overlordHitCreamWash = wash
+        wash.play(finaleLook=look, phase=phase)
+
+    def __clearOverlordHitCreamWash(self):
+        wash = getattr(self, '_overlordHitCreamWash', None)
+        if wash is not None:
+            try:
+                wash.clear()
+            except Exception:
+                pass
+        self._overlordHitCreamWash = None
+
     def __playSnareTelegraphString(self):
         """Amber string-lash telegraph pop — Balloon Snare wind-ups only."""
         self.__clearSnareTelegraphString()
@@ -1741,6 +1764,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__pauseSilhouetteCreamSparkle()
             self.__pauseSilhouetteCreamWash()
             self.__playOverlordMagentaInkSplash(kind='hit')
+            self.__playOverlordHitCreamWash()
             Sequence(
                 Wait(0.32),
                 Func(self.__resumeIdleInkDrip),
