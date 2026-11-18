@@ -3,6 +3,7 @@ from direct.distributed import DistributedObject
 from panda3d.core import Fog, Vec4
 
 from toontown.corruption import CorruptionGlobals
+from toontown.corruption import PollutionPropTint
 
 
 class PollutionManager(DistributedObject.DistributedObject):
@@ -17,22 +18,32 @@ class PollutionManager(DistributedObject.DistributedObject):
         self._fog = None
         self._activeZoneId = None
         self._lastLevel = CorruptionGlobals.POLLUTION_PURE
+        self._propTint = None
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
         self.accept('localToonLeftZone', self.__handleLeftZone)
         self.accept('localAvatarZoneChange', self.__handleZoneChange)
         base.cr.pollutionManager = self
+        # Hood-specific street geom tint (listens to pollutionPropTint).
+        self._propTint = PollutionPropTint.PollutionPropTint()
+        self._propTint.start()
 
     def disable(self):
         self.ignoreAll()
         self.__clearPresentation()
+        if self._propTint is not None:
+            self._propTint.stop()
+            self._propTint = None
         if getattr(base.cr, 'pollutionManager', None) is self:
             del base.cr.pollutionManager
         DistributedObject.DistributedObject.disable(self)
 
     def delete(self):
         self.__clearPresentation()
+        if self._propTint is not None:
+            self._propTint.stop()
+            self._propTint = None
         DistributedObject.DistributedObject.delete(self)
 
     def getPollution(self, zoneId=None):
@@ -71,7 +82,7 @@ class PollutionManager(DistributedObject.DistributedObject):
         self.__clearPresentation()
 
     def __applyLocalPresentation(self, zoneId, level):
-        """Fog + ink color grade + prop-tint messenger hooks (depth D3)."""
+        """Hood-biased fog + ink color grade + prop-tint messenger hooks."""
         self._activeZoneId = zoneId
         self._lastLevel = level
         if level <= CorruptionGlobals.POLLUTION_PURE:
@@ -83,18 +94,14 @@ class PollutionManager(DistributedObject.DistributedObject):
         if self._fog is None:
             self._fog = Fog('CorruptionFog')
             render.setFog(self._fog)
-        # Fog densifies and drifts toward ink purple as pollution rises.
-        fogR = CorruptionGlobals.CORRUPT_FOG_COLOR[0] * (0.7 + 0.3 * level)
-        fogG = CorruptionGlobals.CORRUPT_FOG_COLOR[1] * (0.75 + 0.25 * level)
-        fogB = CorruptionGlobals.CORRUPT_FOG_COLOR[2]
-        self._fog.setColor(fogR, fogG, fogB)
-        self._fog.setExpDensity(CorruptionGlobals.CORRUPT_FOG_EXP_MAX * level)
 
-        # Scene color grade beyond fog: desaturate toward sickly ink.
+        fogR, fogG, fogB = CorruptionGlobals.hoodFogColor(zoneId, level)
+        self._fog.setColor(fogR, fogG, fogB)
+        self._fog.setExpDensity(CorruptionGlobals.hoodFogExpDensity(zoneId, level))
+
+        # Scene color grade beyond fog: hood-biased desaturation.
         # Keep mild enough that melee readability survives high pollution.
-        tintR = 1.0 - (0.42 * level)
-        tintG = 1.0 - (0.50 * level)
-        tintB = 1.0 - (0.28 * level)
+        tintR, tintG, tintB = CorruptionGlobals.hoodColorGrade(zoneId, level)
         render.setColorScale(Vec4(tintR, tintG, tintB, 1.0))
 
         # Hooks for street props / future art to tint without hard coupling.
