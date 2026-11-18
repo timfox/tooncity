@@ -1930,6 +1930,93 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_armIFrameCreamWash', dodge_trail_src)
         self.assertIn('DodgeIFrameCreamWashPulse', hack_init)
 
+        # (#167 was prior headless smoke through #162 — no new juice symbols.)
+        # (#169 was prior headless smoke through #166 — no new juice symbols.)
+
+        # Victory cream aftershock (#168) — residual flecks + halo after victory wash.
+        victory_wash_methods = _class_method_names(
+            _module_ast(victory_wash_rel), 'VictoryCreamWashPulse')
+        self.assertIn('_buildAftershock', victory_wash_methods)
+        self.assertIn('_spawnAftershockHalo', victory_wash_methods)
+        self.assertIn('_spawnAftershockFleck', victory_wash_methods)
+        for victory_as_key in (
+                'VICTORY_CREAM_AFTERSHOCK_ENABLED',
+                'VICTORY_CREAM_AFTERSHOCK_DELAY_SEC',
+                'VICTORY_CREAM_AFTERSHOCK_COUNT',
+                'VICTORY_CREAM_AFTERSHOCK_COLOR',
+                'VICTORY_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'VICTORY_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                victory_as_key, campaign_names,
+                msg='CampaignGlobals missing %s' % victory_as_key)
+        victory_wash_src = _read(victory_wash_rel)
+        self.assertIn('VICTORY_CREAM_AFTERSHOCK_ENABLED', victory_wash_src)
+
+        # Entry aftershock cream wash (#170) — settle wash after entry aftershock.
+        entry_as_wash_rel = 'toontown/reclaim/EntryAftershockCreamWashFx.py'
+        _assert_module_file(entry_as_wash_rel)
+        entry_as_wash_names = _class_and_func_names(
+            _module_ast(entry_as_wash_rel))
+        self.assertIn('EntryAftershockCreamWashPulse', entry_as_wash_names)
+        entry_as_wash_methods = _class_method_names(
+            _module_ast(entry_as_wash_rel), 'EntryAftershockCreamWashPulse')
+        self.assertIn('play', entry_as_wash_methods)
+        self.assertIn('clear', entry_as_wash_methods)
+        for entry_as_wash_key in (
+                'ENTRY_AFTERSHOCK_CREAM_WASH_ENABLED',
+                'ENTRY_AFTERSHOCK_CREAM_WASH_DELAY_SEC',
+                'ENTRY_AFTERSHOCK_CREAM_WASH_COLOR',
+                'ENTRY_AFTERSHOCK_CREAM_WASH_PEAK',
+                'ENTRY_AFTERSHOCK_CREAM_WASH_MID',
+                'ENTRY_AFTERSHOCK_CREAM_WASH_BIN'):
+            self.assertIn(
+                entry_as_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % entry_as_wash_key)
+        entry_wash_src = _read(entry_wash_rel)
+        self.assertIn('EntryAftershockCreamWashPulse', entry_wash_src)
+        self.assertIn('ENTRY_AFTERSHOCK_CREAM_WASH_DELAY_SEC', entry_wash_src)
+
+        # Perfect-dodge cream wash aftershock (#171) — residual after wash pulse.
+        pd_wash_methods = _class_method_names(
+            _module_ast(pd_wash_rel), 'PerfectDodgeCreamWashPulse')
+        self.assertIn('_buildAftershock', pd_wash_methods)
+        self.assertIn('_spawnAftershockHalo', pd_wash_methods)
+        self.assertIn('_spawnAftershockFleck', pd_wash_methods)
+        for pd_as_key in (
+                'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_COUNT',
+                'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_COLOR',
+                'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                pd_as_key, config_names,
+                msg='HackSlashConfig missing %s' % pd_as_key)
+        pd_wash_src = _read(pd_wash_rel)
+        self.assertIn(
+            'PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_ENABLED', pd_wash_src)
+
+        # Corrupt death cream wash aftershock (#172) — residual after death wash.
+        death_wash_methods = _class_method_names(
+            _module_ast(death_wash_rel), 'DeathCreamWashPulse')
+        self.assertIn('_buildAftershock', death_wash_methods)
+        self.assertIn('_spawnAftershockHalo', death_wash_methods)
+        self.assertIn('_spawnAftershockFleck', death_wash_methods)
+        for death_as_key in (
+                'DEATH_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'DEATH_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                'DEATH_CREAM_WASH_AFTERSHOCK_COUNT',
+                'DEATH_CREAM_WASH_AFTERSHOCK_COLOR',
+                'DEATH_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'DEATH_CREAM_WASH_AFTERSHOCK_HALO_COLOR'):
+            self.assertTrue(
+                hasattr(cg, death_as_key),
+                msg='CorruptionGlobals missing %s' % death_as_key)
+        death_wash_src = _read(death_wash_rel)
+        self.assertIn('DEATH_CREAM_WASH_AFTERSHOCK_ENABLED', death_wash_src)
+        death_pop_src = _read('toontown/corruption/CorruptDeathPopFx.py')
+        self.assertIn('DeathCreamWashPulse', death_pop_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
