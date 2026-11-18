@@ -2933,7 +2933,8 @@ FINALE_PHASE_LOOK = {
 # Ink Overlord AI combat (server) — phase-differentiated beyond Smudge chase.
 # Client ink-rain / crown telegraph already plays on announceAttackTelegraph;
 # these tunables make the resolve match: P1 rain AoE puddle, P2 enrage
-# rain + close slam. Radii track OVERLORD_PHASE_INK_RAIN_LOOK spread/puddle.
+# rain + mid ink_surge + close slam (three-note Unleashed kit). Radii track
+# OVERLORD_PHASE_INK_RAIN_LOOK spread/puddle.
 # No KH branding — rubber-hose Oswald stretch-punch fight only.
 OVERLORD_PHASE_COMBAT = {
     1: {
@@ -2971,8 +2972,29 @@ OVERLORD_PHASE_COMBAT = {
         'slamTelegraphDelay': 0.38,
         'slamCooldown': 1.15,
         'slamMeleeRange': 5.2,
+        # Mid-range ink surge — planar rush then landing AoE (third Unleashed
+        # note between slam and rain). Longer than Smudge ink_dash.
+        'surgeMaxRange': 8.0,
+        'surgeDash': 4.6,
+        'surgeStop': 1.1,
+        'surgeHitRange': 7.0,
+        'surgeNearMissRange': 9.5,
+        'surgeDamage': 6,
+        'surgeTelegraphDelay': 0.48,
+        'surgeCooldown': 1.35,
     },
 }
+
+# ---------------------------------------------------------------------------
+# Overlord P2 ink surge — third Unleashed pressure pattern (gap scan #8).
+# P2 was two-note (rain AoE / close slam). Mid-range ink_surge dashes then
+# lands a self-centered AoE so climax combat reads three notes. Not cream FX.
+# OVERLORD_INK_SURGE_ENABLED = False restores legacy rain-or-slam picker.
+# ---------------------------------------------------------------------------
+OVERLORD_INK_SURGE_ENABLED = True
+OVERLORD_INK_SURGE_MAX_RANGE = 8.0
+OVERLORD_INK_SURGE_DASH = 4.6
+OVERLORD_INK_SURGE_STOP = 1.1
 
 # P2 Smudge adds — wave 2+ while Unleashed packSize keeps Overlord(s).
 OVERLORD_P2_ADD_WAVE_START = 2
@@ -3057,6 +3079,75 @@ def overlordPhaseCombat(phaseIndex):
     if phase < 1:
         return None
     return OVERLORD_PHASE_COMBAT.get(phase)
+
+
+def overlordSlamMeleeRange(stats=None):
+    """Close slam engage for Unleashed Overlord."""
+    if stats and 'slamMeleeRange' in stats:
+        return max(0.5, float(stats['slamMeleeRange']))
+    if stats and 'slamHitRange' in stats:
+        return max(0.5, float(stats['slamHitRange']))
+    return 5.2
+
+
+def overlordSurgeMaxRange(stats=None):
+    """Outer engage for mid-range ink_surge (inside this, outside slam)."""
+    if stats and 'surgeMaxRange' in stats:
+        return max(0.5, float(stats['surgeMaxRange']))
+    return max(0.5, float(OVERLORD_INK_SURGE_MAX_RANGE))
+
+
+def overlordSurgeDashDist(stats=None):
+    if stats and 'surgeDash' in stats:
+        return max(0.0, float(stats['surgeDash']))
+    return max(0.0, float(OVERLORD_INK_SURGE_DASH))
+
+
+def overlordSurgeStop(stats=None):
+    if stats and 'surgeStop' in stats:
+        return max(0.0, float(stats['surgeStop']))
+    return max(0.0, float(OVERLORD_INK_SURGE_STOP))
+
+
+def overlordPickEnrageMove(dist, stats=None):
+    """Choose Unleashed move: close slam, mid ink_surge, else rain.
+
+    Three-note P2 kit (gap scan #8). With surge disabled, falls back to
+    rain-or-slam. P1 callers should not use this — they stay on rain.
+    """
+    slamRange = overlordSlamMeleeRange(stats)
+    if float(dist) <= slamRange:
+        return 'slam'
+    if not OVERLORD_INK_SURGE_ENABLED:
+        return 'rain'
+    if float(dist) <= overlordSurgeMaxRange(stats):
+        return 'ink_surge'
+    return 'rain'
+
+
+def overlordSurgePos(sx, sy, tx, ty, dash=None, stop=None):
+    """Planar Overlord position after mid-range ink surge toward (tx, ty).
+
+    Advances up to ``dash`` but never closer than ``stop`` so the rush does
+    not overshoot through the toon. Longer boss step than Smudge ink_dash.
+    """
+    if dash is None:
+        dash = OVERLORD_INK_SURGE_DASH
+    if stop is None:
+        stop = OVERLORD_INK_SURGE_STOP
+    dash = max(0.0, float(dash))
+    stop = max(0.0, float(stop))
+    sx = float(sx)
+    sy = float(sy)
+    dx = float(tx) - sx
+    dy = float(ty) - sy
+    planar = (dx * dx + dy * dy) ** 0.5
+    if planar <= stop or planar < 1e-6 or dash <= 0.0:
+        return (sx, sy)
+    step = min(dash, planar - stop)
+    if step <= 0.0:
+        return (sx, sy)
+    return (sx + dx / planar * step, sy + dy / planar * step)
 
 
 def overlordP2AddCount(waveIndex, addCount=None, addWaveStart=None):

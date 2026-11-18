@@ -405,9 +405,10 @@ not a crimson Ink Smudge smack reskin). Full dialogue is out of scope here.
    hotter hit flash, FOV + fullscreen ink slam transition sting
    (`announceFinalePhaseTransition`), HUD `OVERLORD · P2 UNLEASHED`, wind-up
    chip `P2 CRIMSON FURY`.
-   **AI**: enrage chase + wider/faster rain AoE, close-range **slam** when
-   the player is already in the ink, plus **Smudge adds** on wave 2+
-   (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
+   **AI**: enrage chase + wider/faster rain AoE, mid-range **ink_surge**
+   (planar rush then landing AoE — third Unleashed note beyond rain/slam),
+   close-range **slam** when the player is already in the ink, plus
+   **Smudge adds** on wave 2+ (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
 4. Clear again → campaign victory + soft twist tease
    (`CampaignGlobals.FINALE_TWIST_TEASE`) → delayed **Corrupted Oswald**
    chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client) →

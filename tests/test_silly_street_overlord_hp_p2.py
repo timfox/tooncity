@@ -181,6 +181,10 @@ class SillyStreetOverlordHpP2Tests(unittest.TestCase):
         self.assertEqual(p2['moveMode'], 'enrage')
         self.assertIn('slamDamage', p2)
         self.assertIn('slamHitRange', p2)
+        # Third Unleashed note (ink_surge) stays armed after HP-threshold promote.
+        self.assertIn('surgeMaxRange', p2)
+        self.assertIn('surgeDamage', p2)
+        self.assertTrue(self.cg.OVERLORD_INK_SURGE_ENABLED)
 
     def test_no_kh_branding_in_street_p2_copy(self):
         silly = _read('toontown/reclaim/ReclaimGlobals.py')
