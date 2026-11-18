@@ -12,7 +12,8 @@ WaveClearCreamWashPulse vocabulary).
 
 Mid-wave purity pressure (director tip): brief contested rim warn flash when
 purity stalls or ink pressure rises — rubber-hose urgency after re-creep #194.
-Full reclaim secured lock: brief cream/green rim confirm that purity is locked.
+Full reclaim secured lock: brief cream/green rim confirm + soft meter hose-pop
+that purity is locked (pairs with SecuredLockSparkleFx flecks / pitch sting).
 """
 
 from math import cos, pi, sin
@@ -225,7 +226,7 @@ class PurityMeterHud(object):
         self._warnIval.start()
 
     def confirmSecured(self):
-        """Brief cream/green rim confirm when finished reclaim purity locks."""
+        """Brief cream/green rim + meter hose-pop when purity locks."""
         if not getattr(ReclaimGlobals, 'SECURED_LOCK_TIP_ENABLED', True):
             return
         if self._rimNP is None or self._rimNP.isEmpty():
@@ -239,7 +240,36 @@ class PurityMeterHud(object):
             self._rimNP.setColor(*lockColor)
         except Exception:
             return
+        # Soft meter hose-pop — HUD sting cousin of the secured tip pop.
+        popParts = []
+        if self._root is not None and not self._root.isEmpty():
+            popScale = float(getattr(
+                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SCALE', 1.12))
+            popSec = float(getattr(
+                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SEC', 0.09))
+            try:
+                baseScale = self._root.getScale()
+                try:
+                    bx = float(baseScale[0])
+                    by = float(baseScale[1])
+                    bz = float(baseScale[2])
+                except Exception:
+                    bx = by = bz = 1.0
+                popParts.append(Sequence(
+                    LerpScaleInterval(
+                        self._root, max(0.01, popSec),
+                        Point3(bx * popScale, by * popScale, bz * popScale),
+                        blendType='easeOut'),
+                    LerpScaleInterval(
+                        self._root, 0.14,
+                        Point3(bx, by, bz),
+                        blendType='easeInOut'),
+                ))
+            except Exception:
+                popParts = []
+        body = Parallel(*popParts) if popParts else Wait(0.01)
         self._warnIval = Sequence(
+            body,
             Wait(max(0.05, hold)),
             Func(self._onPressureWarnDone),
             name='reclaimPurityMeterSecuredConfirm',
