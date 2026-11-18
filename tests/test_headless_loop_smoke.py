@@ -1850,6 +1850,86 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 msg='CampaignGlobals missing %s' % silly_tip_wash_key)
         self.assertIn('playSillyTipCreamWash', play_src)
 
+        # FOV purity burst cream wash (#164) — soft wash after purity FOV punch.
+        purity_fov_wash_rel = 'toontown/reclaim/PurityFovCreamWashFx.py'
+        _assert_module_file(purity_fov_wash_rel)
+        purity_fov_wash_names = _class_and_func_names(
+            _module_ast(purity_fov_wash_rel))
+        self.assertIn('PurityFovCreamWashPulse', purity_fov_wash_names)
+        purity_fov_wash_methods = _class_method_names(
+            _module_ast(purity_fov_wash_rel), 'PurityFovCreamWashPulse')
+        self.assertIn('play', purity_fov_wash_methods)
+        self.assertIn('clear', purity_fov_wash_methods)
+        for purity_fov_wash_key in (
+                'PURITY_FOV_CREAM_WASH_ENABLED',
+                'PURITY_FOV_CREAM_WASH_DELAY_SEC',
+                'PURITY_FOV_CREAM_WASH_COLOR',
+                'PURITY_FOV_CREAM_WASH_PEAK',
+                'PURITY_FOV_CREAM_WASH_MID',
+                'PURITY_FOV_CREAM_WASH_BIN'):
+            self.assertIn(
+                purity_fov_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % purity_fov_wash_key)
+        purity_burst_src = _read('toontown/reclaim/PurityBurstFx.py')
+        self.assertIn('PurityFovCreamWashPulse', purity_burst_src)
+        self.assertIn('_armFovCreamWash', purity_burst_src)
+
+        # Smudge hit cream wash (#165) — soft wash after Smudge purple splash.
+        smudge_wash_rel = 'toontown/corruption/SmudgeHitCreamWashFx.py'
+        _assert_module_file(smudge_wash_rel)
+        smudge_wash_names = _class_and_func_names(_module_ast(smudge_wash_rel))
+        self.assertIn('SmudgeHitCreamWashPulse', smudge_wash_names)
+        self.assertIn('smudgeHitCreamWashLook', smudge_wash_names)
+        smudge_wash_methods = _class_method_names(
+            _module_ast(smudge_wash_rel), 'SmudgeHitCreamWashPulse')
+        self.assertIn('play', smudge_wash_methods)
+        self.assertIn('clear', smudge_wash_methods)
+        self.assertTrue(
+            hasattr(cg, 'SMUDGE_HIT_CREAM_WASH_LOOK'),
+            msg='CorruptionGlobals missing SMUDGE_HIT_CREAM_WASH_LOOK')
+        self.assertEqual(
+            cg.SMUDGE_HIT_CREAM_WASH_LOOK.get('id'),
+            'smudge-hit-cream-wash')
+        self.assertTrue(
+            hasattr(cg, 'SMUDGE_HIT_CREAM_WASH_ENABLED'),
+            msg='CorruptionGlobals missing SMUDGE_HIT_CREAM_WASH_ENABLED')
+        for smudge_wash_key in (
+                'SMUDGE_HIT_CREAM_WASH_ENABLED',
+                'SMUDGE_HIT_CREAM_WASH_DELAY_SEC',
+                'SMUDGE_HIT_CREAM_WASH_COLOR',
+                'SMUDGE_HIT_CREAM_WASH_PEAK',
+                'SMUDGE_HIT_CREAM_WASH_MID',
+                'SMUDGE_HIT_CREAM_WASH_BIN'):
+            self.assertTrue(
+                hasattr(cg, smudge_wash_key),
+                msg='CorruptionGlobals missing %s' % smudge_wash_key)
+        self.assertIn('SmudgeHitCreamWashPulse', corrupt_src)
+        self.assertIn('__playSmudgeHitCreamWash', corrupt_src)
+
+        # Dodge i-frame cream wash (#166) — soft wash after first i-frame pulse.
+        iframe_wash_rel = 'toontown/hackslash/DodgeIFrameCreamWashFx.py'
+        _assert_module_file(iframe_wash_rel)
+        iframe_wash_names = _class_and_func_names(_module_ast(iframe_wash_rel))
+        self.assertIn('DodgeIFrameCreamWashPulse', iframe_wash_names)
+        iframe_wash_methods = _class_method_names(
+            _module_ast(iframe_wash_rel), 'DodgeIFrameCreamWashPulse')
+        self.assertIn('play', iframe_wash_methods)
+        self.assertIn('clear', iframe_wash_methods)
+        for iframe_wash_key in (
+                'DODGE_TRAIL_PULSE_CREAM_WASH_ENABLED',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_DELAY_SEC',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_COLOR',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_PEAK',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_MID',
+                'DODGE_TRAIL_PULSE_CREAM_WASH_BIN'):
+            self.assertIn(
+                iframe_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % iframe_wash_key)
+        dodge_trail_src = _read('toontown/hackslash/DodgeTrailFx.py')
+        self.assertIn('DodgeIFrameCreamWashPulse', dodge_trail_src)
+        self.assertIn('_armIFrameCreamWash', dodge_trail_src)
+        self.assertIn('DodgeIFrameCreamWashPulse', hack_init)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
