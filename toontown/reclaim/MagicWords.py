@@ -44,7 +44,7 @@ class StartReclaim(MagicWord):
         'mid-wave warm rim flash, wave-clear sparkle, or secured green '
         'lock). Mid-wave purity stall / ink-rise whispers a '
         'short contested tip under the purity meter and juicily flashes the '
-        'meter rim warmer with richer cream flecks past #234 (danger blink + '
+        'meter rim warmer with richer cream flecks past #275 (danger blink + '
         'cream, not the secured green lock, wave-clear sparkle, wave-start '
         'hose, or complete hose settle). '
         'Full clear '

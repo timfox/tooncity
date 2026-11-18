@@ -3771,19 +3771,19 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             int(pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_PULSES', 0)), 3)
         self.assertGreaterEqual(
             float(pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_SCALE', 0)),
-            1.28)
+            1.36)
         self.assertGreaterEqual(
             int(pressure_assigns.get(
-                'PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT', 0)), 6)
+                'PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT', 0)), 8)
         self.assertGreaterEqual(
             float(pressure_assigns.get(
-                'PURITY_PRESSURE_RIM_FLASH_HOLD_SEC', 0)), 0.18)
+                'PURITY_PRESSURE_RIM_FLASH_HOLD_SEC', 0)), 0.22)
         pressure_hud_src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('PURITY_PRESSURE_RIM_FLASH', pressure_hud_src)
         self.assertIn('PURITY_PRESSURE_RIM_FLASH_CREAM', pressure_hud_src)
         self.assertIn('_buildRimWarnPulse', pressure_hud_src)
         self.assertIn('_buildRimWarnCreamJuice', pressure_hud_src)
-        self.assertIn('past #234', pressure_hud_src)
+        self.assertIn('past #275', pressure_hud_src)
 
 
 def main() -> int:
