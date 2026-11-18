@@ -82,6 +82,8 @@ class MeleeCombatController(DirectObject):
         self._perfectCounterUntil = 0.0
         self._perfectCounterBuffered = False
         self._perfectCounterPending = False
+        # Bits for AI requestHackSlashHit (authoritative COMBO_DAMAGE table).
+        self._pendingCounterFlags = HackSlashConfig.MELEE_COUNTER_FLAG_NONE
         # Air-juggle → slam cancel window (armed on mid-combo launch hang).
         self._juggleCancelArmed = False
         self._juggleCancelOpenAt = 0.0
@@ -595,6 +597,10 @@ class MeleeCombatController(DirectObject):
             min(hitIndex, len(HackSlashConfig.COMBO_PLAY_RATES) - 1)]
         damage = HackSlashConfig.COMBO_DAMAGE[
             min(hitIndex, len(HackSlashConfig.COMBO_DAMAGE) - 1)]
+        # Server derives damage from hitIndex + these flags; client amount is juice.
+        self._pendingCounterFlags = (
+            HackSlashConfig.MELEE_COUNTER_FLAG_PERFECT_DODGE
+            if fromPerfectCounter else HackSlashConfig.MELEE_COUNTER_FLAG_NONE)
         if fromPerfectCounter:
             # Rewarded perfect-dodge counter opener — bump damage + snap rate.
             damage = HackSlashConfig.perfectDodgeCounterOpenerDamage(damage)
@@ -667,15 +673,19 @@ class MeleeCombatController(DirectObject):
             if self.targetFinder._distance(target) > HackSlashConfig.TARGET_RANGE * 0.85:
                 return
         landed = False
+        counterFlags = int(getattr(self, '_pendingCounterFlags', 0) or 0)
         try:
             if hasattr(target, 'applyHackSlashHit'):
-                landed = bool(target.applyHackSlashHit(damage, hitIndex, self.avatar))
+                landed = bool(target.applyHackSlashHit(
+                    damage, hitIndex, self.avatar, counterFlags))
             elif hasattr(target, 'takeHackSlashDamage'):
                 # Corruption AI-style API fallback if a target skips the client bridge.
                 attackerId = getattr(self.avatar, 'doId', None)
                 landed = bool(target.takeHackSlashDamage(damage, attackerId))
         except Exception:
             landed = False
+        finally:
+            self._pendingCounterFlags = HackSlashConfig.MELEE_COUNTER_FLAG_NONE
         if landed:
             # One-shot soft-lock yaw/aim nudge so combo strings stay glued.
             self._assistAimOnHit(target)
@@ -948,7 +958,7 @@ class MeleeCombatController(DirectObject):
         """Upward juggle with readable rubber-hose hang/float before fall.
 
         Client hang juice only — CorruptToonAI hang stun is armed earlier from
-        applyHackSlashHit → requestHackSlashHit(hitIndex) so chase/attack pause
+        applyHackSlashHit → requestHackSlashHit(hitIndex, flags) so chase/attack pause
         while cancel→slam can stick under multi-enemy pressure.
         """
         self._clearLaunch()

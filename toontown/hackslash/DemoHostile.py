@@ -90,7 +90,7 @@ class DemoHostile(HackSlashTarget, NodePath):
     def getHackSlashPos(self):
         return self.getPos(render)  # noqa: F821
 
-    def applyHackSlashHit(self, damage, hitIndex, attacker):
+    def applyHackSlashHit(self, damage, hitIndex, attacker, counterFlags=0):
         if not self.isHackSlashAlive():
             return False
         self.hp = max(0, self.hp - int(damage))

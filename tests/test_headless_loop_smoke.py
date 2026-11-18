@@ -3518,10 +3518,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         corrupt_client_src = _read(
             'toontown/corruption/DistributedCorruptToon.py')
         self.assertIn(
-            "sendUpdate('requestHackSlashHit', [amount, idx])",
+            "sendUpdate('requestHackSlashHit', [idx, flags])",
             corrupt_client_src)
         dc_src = _read('etc/toon.dc')
-        self.assertIn('requestHackSlashHit(uint16, uint8)', dc_src)
+        self.assertIn('requestHackSlashHit(uint8, uint8)', dc_src)
         # Demo hint stays rubber-hose (no KH product nouns in player-facing copy).
         demo_hint_node = _toplevel_value(config_tree, 'DEMO_HINT')
         demo_hint = _literal(demo_hint_node)

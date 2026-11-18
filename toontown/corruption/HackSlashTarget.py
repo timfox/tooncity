@@ -2,8 +2,10 @@
 
 Slice 1 SoftTarget prefers objects that expose this API. MeleeCombat calls
 `applyHackSlashHit` on the client; CorruptToon bridges that to AI via
-`requestHackSlashHit(damage, hitIndex)` → `takeHackSlashDamage` (+ juggle-hang
-stun on launch beats so AI chase/attack pause during hang).
+`requestHackSlashHit(hitIndex, counterFlags)` → authoritative
+`meleeDamageFromHitIndex` / `takeHackSlashDamage` (+ juggle-hang stun on
+launch beats so AI chase/attack pause during hang). Client damage is juice
+only — the AI owns the COMBO_DAMAGE table.
 """
 
 
@@ -29,6 +31,6 @@ class HackSlashTarget:
         """Apply damage. AI subclasses should override and sync state."""
         raise NotImplementedError
 
-    def applyHackSlashHit(self, damage, hitIndex, attacker):
+    def applyHackSlashHit(self, damage, hitIndex, attacker, counterFlags=0):
         """Client hit bridge used by MeleeCombat SoftTarget resolution."""
         raise NotImplementedError
