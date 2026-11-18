@@ -668,6 +668,115 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('TelegraphCreamWarnFlecks', corrupt_src)
         self.assertIn('CorruptTelegraphCreamWarnFx', corrupt_src)
 
+        # Purity-complete cream wash pulse (#104) — veil under StreetSparkleFx.
+        purity_wash_rel = 'toontown/reclaim/PurityCompleteCreamWashFx.py'
+        _assert_module_file(purity_wash_rel)
+        purity_wash_names = _class_and_func_names(_module_ast(purity_wash_rel))
+        self.assertIn('PurityCompleteCreamWashFxClient', purity_wash_names)
+        self.assertIn('ensurePurityCompleteCreamWashFxClient', purity_wash_names)
+        purity_wash_methods = _class_method_names(
+            _module_ast(purity_wash_rel), 'PurityCompleteCreamWashFxClient')
+        self.assertIn('playPulse', purity_wash_methods)
+        self.assertIn('_onPurityRestore', purity_wash_methods)
+        for purity_wash_key in (
+                'PURITY_COMPLETE_CREAM_WASH_ENABLED',
+                'PURITY_COMPLETE_CREAM_WASH_COLOR',
+                'PURITY_COMPLETE_CREAM_WASH_BIN',
+                'PURITY_COMPLETE_CREAM_WASH_PEAK',
+                'PURITY_COMPLETE_CREAM_WASH_MID',
+                'PURITY_COMPLETE_CREAM_WASH_OUT_SEC'):
+            self.assertIn(
+                purity_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % purity_wash_key)
+        self.assertIn('ensurePurityCompleteCreamWashFxClient', director_src)
+
+        # Victory cream sparkle flecks (#105) — glitter on victory confetti swell.
+        for victory_key in (
+                'VICTORY_CREAM_SPARKLE_ENABLED',
+                'VICTORY_CREAM_SPARKLE_COUNT',
+                'VICTORY_CREAM_SPARKLE_STREAK_COUNT',
+                'VICTORY_CREAM_SPARKLE_COLORS',
+                'VICTORY_CREAM_SPARKLE_BIN'):
+            self.assertIn(
+                victory_key, campaign_names,
+                msg='CampaignGlobals missing %s' % victory_key)
+        victory_methods = _class_method_names(
+            _module_ast(confetti_rel), 'VictoryCreamConfettiSwell')
+        self.assertIn('_spawnCreamSparkle', victory_methods)
+        self.assertIn('play', victory_methods)
+        self.assertIn('VictoryCreamConfettiSwell', confetti_names)
+        self.assertIn('ensureVictoryCreamConfettiSwell', confetti_names)
+        self.assertIn('VICTORY_CREAM_SPARKLE_ENABLED', confetti_src)
+
+        # Finisher cream sparkle hang (#107) — delayed residual after slam flash.
+        slam_rel = 'toontown/hackslash/CreamSlamFlashFx.py'
+        _assert_module_file(slam_rel)
+        slam_names = _class_and_func_names(_module_ast(slam_rel))
+        self.assertIn('CreamSlamFlashFx', slam_names)
+        slam_methods = _class_method_names(_module_ast(slam_rel), 'CreamSlamFlashFx')
+        self.assertIn('play', slam_methods)
+        self.assertIn('_buildSparkleHang', slam_methods)
+        self.assertIn('_spawnHangVeil', slam_methods)
+        self.assertIn('_spawnHangSpark', slam_methods)
+        for hang_key in (
+                'FINISHER_CREAM_SPARKLE_HANG_ENABLED',
+                'FINISHER_CREAM_SPARKLE_HANG_DELAY_SEC',
+                'FINISHER_CREAM_SPARKLE_HANG_COUNT',
+                'FINISHER_CREAM_SPARKLE_HANG_COLOR',
+                'FINISHER_CREAM_SPARKLE_HANG_VEIL_ENABLED',
+                'FINISHER_CREAM_SPARKLE_HANG_VEIL_COLOR'):
+            self.assertIn(
+                hang_key, config_names,
+                msg='HackSlashConfig missing finisher sparkle hang %s' % hang_key)
+        slam_src = _read(slam_rel)
+        self.assertIn('FINISHER_CREAM_SPARKLE_HANG_ENABLED', slam_src)
+        self.assertIn('CreamSlamFlashFx', melee_src)
+
+        # Idle cream drip contrast (#108) — soft cream drips vs idle ink.
+        cream_drip_rel = 'toontown/corruption/IdleCreamDripContrastFx.py'
+        _assert_module_file(cream_drip_rel)
+        cream_drip_names = _class_and_func_names(_module_ast(cream_drip_rel))
+        self.assertIn('IdleCreamDripContrast', cream_drip_names)
+        self.assertIn('idleCreamDripLook', cream_drip_names)
+        cream_drip_methods = _class_method_names(
+            _module_ast(cream_drip_rel), 'IdleCreamDripContrast')
+        self.assertIn('start', cream_drip_methods)
+        self.assertIn('_spawnDrip', cream_drip_methods)
+        self.assertIn('_emitBurst', cream_drip_methods)
+        self.assertTrue(
+            hasattr(cg, 'IDLE_CREAM_DRIP_LOOK'),
+            msg='CorruptionGlobals missing IDLE_CREAM_DRIP_LOOK')
+        self.assertEqual(
+            cg.IDLE_CREAM_DRIP_LOOK.get('id'), 'idle-cream-drip')
+        self.assertTrue(
+            hasattr(cg, 'IDLE_CREAM_DRIP_ENABLED'),
+            msg='CorruptionGlobals missing IDLE_CREAM_DRIP_ENABLED')
+        self.assertIn('IdleCreamDripContrast', corrupt_src)
+        self.assertIn('__startIdleCreamDrip', corrupt_src)
+
+        # Entry cream wash pulse (#109) — soft veil under EntryCreamShimmerFx.
+        entry_wash_rel = 'toontown/reclaim/EntryCreamWashPulseFx.py'
+        _assert_module_file(entry_wash_rel)
+        entry_wash_names = _class_and_func_names(_module_ast(entry_wash_rel))
+        self.assertIn('EntryCreamWashPulseFxClient', entry_wash_names)
+        self.assertIn('ensureEntryCreamWashPulseFxClient', entry_wash_names)
+        entry_wash_methods = _class_method_names(
+            _module_ast(entry_wash_rel), 'EntryCreamWashPulseFxClient')
+        self.assertIn('playPulse', entry_wash_methods)
+        self.assertIn('_streetIsPolluted', entry_wash_methods)
+        for entry_wash_key in (
+                'ENTRY_CREAM_WASH_PULSE_ENABLED',
+                'ENTRY_CREAM_WASH_PULSE_MIN_POLLUTION',
+                'ENTRY_CREAM_WASH_PULSE_COLOR',
+                'ENTRY_CREAM_WASH_PULSE_BIN',
+                'ENTRY_CREAM_WASH_PULSE_PEAK',
+                'ENTRY_CREAM_WASH_PULSE_OUT_SEC'):
+            self.assertIn(
+                entry_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % entry_wash_key)
+        self.assertIn('ensureEntryCreamWashPulseFxClient', director_src)
+        self.assertIn('ensureEntryCreamWashPulseFxClient', cheer_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
