@@ -687,10 +687,30 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             self.assertIn(need, acquire_names, msg='acquire missing %s' % need)
         cfg_src = _read('toontown/hackslash/HackSlashConfig.py')
         self.assertIn('sticky hold yield', cfg_src.lower())
+        # Tab/` cycle-with-lock jumps to Overlord/Oswald over yaw-orbit.
+        self.assertIn('shouldCyclePreferPriority', soft_src)
+        self.assertTrue(
+            soft.shouldCyclePreferPriority(False, True))
+        self.assertFalse(
+            soft.shouldCyclePreferPriority(True, True))
+        self.assertFalse(
+            soft.shouldCyclePreferPriority(False, False))
+        self.assertFalse(
+            soft.shouldCyclePreferPriority(False, True, enabled=False))
+        cycle_names = _method_body_names(
+            'toontown/hackslash/SoftTarget.py',
+            'SoftTargetFinder',
+            'cycle')
+        for need in (
+                'shouldCyclePreferPriority', '_isPriorityTarget',
+                'pickSoftLockAcquire', 'pickCycleChoice'):
+            self.assertIn(need, cycle_names, msg='cycle missing %s' % need)
+        self.assertIn('cycle-with-lock', cfg_src.lower())
         hs_init = _read('toontown/hackslash/__init__.py')
         self.assertIn('softLockAcquireRank', hs_init)
         self.assertIn('pickSoftLockAcquire', hs_init)
         self.assertIn('shouldStickyYieldToPriority', hs_init)
+        self.assertIn('shouldCyclePreferPriority', hs_init)
 
         melee_tree = _module_ast('toontown/hackslash/MeleeCombat.py')
         melee_methods = _class_method_names(melee_tree, 'MeleeCombatController')
