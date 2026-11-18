@@ -2456,18 +2456,34 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('pickCycleChoice', hack_init)
         self.assertIn('nextCycleIndex', hack_init)
 
-        # Mid-act Oswald trust fracture (#190) — Loopy clear foreshadow only.
+        # Mid-act Oswald trust fracture (#190) + Punchline deepen unease tip.
         acts_node = _toplevel_value(self.campaign_tree, 'ACTS')
         acts = [_literal(elt) for elt in acts_node.elts]
         loopy_act = next(
             (a for a in acts if isinstance(a, dict) and a.get('id') == 'loopy'),
             None)
+        punch_act = next(
+            (a for a in acts if isinstance(a, dict) and a.get('id') == 'punchline'),
+            None)
         self.assertIsNotNone(loopy_act)
+        self.assertIsNotNone(punch_act)
         self.assertIs(loopy_act.get('trustFracture'), True)
+        self.assertIs(punch_act.get('trustFracture'), True)
         handoff = loopy_act.get('handoff') or ''
         if isinstance(handoff, list):
             handoff = ''.join(str(part) for part in handoff)
         self.assertIn('rubbery beat', str(handoff).lower())
+        punch_handoff = punch_act.get('handoff') or ''
+        if isinstance(punch_handoff, list):
+            punch_handoff = ''.join(str(part) for part in punch_handoff)
+        punch_tip = punch_act.get('entryTip') or ''
+        if isinstance(punch_tip, list):
+            punch_tip = ''.join(str(part) for part in punch_tip)
+        self.assertIn('rubbery again', str(punch_handoff).lower())
+        self.assertIn('half-beat off', str(punch_tip).lower())
+        for banned in ('keyblade', 'kingdom hearts', 'caused the corruption'):
+            self.assertNotIn(banned, str(punch_handoff).lower())
+            self.assertNotIn(banned, str(punch_tip).lower())
         for fracture_key in (
                 'OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED',
                 'OSWALD_TRUST_FRACTURE_CREAM_EDGE_HOLD_SEC',
@@ -2483,6 +2499,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('trustFracture', handoff_src)
         self.assertIn('playOswaldTrustFractureCreamEdge', handoff_src)
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn('OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT', play_src)
         edge_fx_names = _class_and_func_names(
             _module_ast('toontown/campaign/ActBannerCreamEdgeFx.py'))
         self.assertIn('playOswaldTrustFractureCreamEdge', edge_fx_names)

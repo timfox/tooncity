@@ -520,9 +520,11 @@ class PlayEntryClient(DirectObject):
         """Build flat squash → tall stretch → settle Sequence (does not start).
 
         tipHose='punchline' uses Act 2 Punchline tunables + Oswald-trust
-        settle bounce. tipHose='silly' uses Act 3 Silly Overlord tunables +
-        the same trust settle (Oswald stays trusted on this tip — no twist).
-        Default path keeps the shared PLAY_ENTRY_TIP_* hose pop.
+        settle bounce. When the Punchline act carries trustFracture (#190
+        deepen), settle holds a rubbery beat longer (unease tip). tipHose=
+        'silly' uses Act 3 Silly Overlord tunables + the same trust settle
+        (Oswald stays trusted on this tip — no twist). Default path keeps
+        the shared PLAY_ENTRY_TIP_* hose pop.
         """
         if tipNP is None:
             return None
@@ -545,8 +547,18 @@ class PlayEntryClient(DirectObject):
                 CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SETTLE_SEC',
                 CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC))
             trustSettle = True
-            trustOvershootAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
-            trustRestAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC'
+            # Punchline unease tip: longer fracture settle when armed.
+            punchAct = None
+            for act in getattr(CampaignGlobals, 'ACTS', ()):
+                if act.get('id') == 'punchline':
+                    punchAct = act
+                    break
+            if punchAct is not None and punchAct.get('trustFracture'):
+                trustOvershootAttr = 'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT'
+                trustRestAttr = 'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC'
+            else:
+                trustOvershootAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT'
+                trustRestAttr = 'PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC'
         elif tipHose == 'silly':
             sx, sy, sz, squashSec = getattr(
                 CampaignGlobals, 'SILLY_ACT_TIP_POP_SQUASH',

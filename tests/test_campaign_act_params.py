@@ -327,15 +327,14 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertNotIn('~startcampaign', hint)
 
     def test_loopy_mid_act_trust_fracture(self):
-        """Loopy clear (#190) foreshadows twist — Punchline/Silly stay sunny."""
+        """Loopy clear (#190) foreshadows twist — Punchline deepens unease."""
         camp = self.camp
         loopy = self.acts_by_id['loopy']
         punch = self.acts_by_id['punchline']
         finale = self.acts_by_id['finale']
 
         self.assertIs(loopy.get('trustFracture'), True)
-        self.assertNotIn('trustFracture', punch)
-        self.assertFalse(bool(punch.get('trustFracture')))
+        self.assertIs(punch.get('trustFracture'), True)
         self.assertFalse(bool(finale.get('trustFracture')))
 
         handoff = loopy.get('handoff') or ''
@@ -343,10 +342,21 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('rubbery beat', handoff.lower())
         self.assertIn('Punchline Place', handoff)
         self.assertIn('stretchy', next_cue.lower())
+        # Punchline handoff/act tip deepen Oswald unease (no Silly spoilers).
+        punch_handoff = punch.get('handoff') or ''
+        punch_cue = punch.get('nextCue') or ''
+        punch_tip = punch.get('entryTip') or ''
+        self.assertIn('rubbery again', punch_handoff.lower())
+        self.assertIn('half-beat', punch_cue.lower())
+        self.assertIn('half-beat off', punch_tip.lower())
+        self.assertIn('Silly Street', punch_handoff)
         # Foreshadow only — no Silly twist spoilers on mid-act beat.
-        for banned in ('keyblade', 'kingdom hearts', 'betrayed', 'villain'):
-            self.assertNotIn(banned, handoff.lower())
-            self.assertNotIn(banned, next_cue.lower())
+        for banned in (
+                'keyblade', 'kingdom hearts', 'betrayed', 'villain',
+                'caused the corruption', 'his all along'):
+            for blob in (
+                    handoff, next_cue, punch_handoff, punch_cue, punch_tip):
+                self.assertNotIn(banned, blob.lower())
 
         # Cool cream → shadow fleck edge tunables present + enabled.
         self.assertTrue(camp.OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED)

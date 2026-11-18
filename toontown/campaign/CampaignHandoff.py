@@ -9,8 +9,9 @@ PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
 Oswald cheer/lead subtitle, framed by a soft cream edge pulse and a
 delayed soft cream wash pulse (no carnival / no twist spoilers). Loopy
-clear arms a mid-act trust fracture: off-tone cheer copy + cooler cream
-edge that settles into soft shadow flecks (still no Silly spoilers). Act
+and Punchline clears arm mid-act trust fracture: off-tone cheer copy +
+cooler cream edge that settles into soft shadow flecks (still no Silly
+twist spoilers). Act
 handoffs fire a short confetti / streamer + cream-sparkle pop
 (CampaignHandoffConfetti) framed by a soft cream edge pulse and a delayed
 soft cream wash pulse tuned to the carnival glitter — no KH / keyblade
@@ -165,7 +166,7 @@ class CampaignHandoffClient(DirectObject):
             nextCue = act.get('nextCue') or (
                 'Take a victory lap with %s' % face)
         # Loopy→Punchline (and act) handoffs: confetti + Oswald trust settle.
-        # Loopy trustFracture: off-tone cheer + cool cream/shadow edge.
+        # trustFracture (Loopy + Punchline): off-tone cheer + cool cream/shadow.
         self._celebrate(
             title,
             subtitle=subtitle,
@@ -285,8 +286,8 @@ class CampaignHandoffClient(DirectObject):
             except Exception:
                 pass
             if trustFracture:
-                # Mid-act unease: cool cream → soft shadow flecks (Loopy).
-                # Carnival stays; sunny handoff edge / wash swap out.
+                # Mid-act unease: cool cream → soft shadow flecks
+                # (Loopy + Punchline). Carnival stays; sunny edge/wash swap.
                 try:
                     playOswaldTrustFractureCreamEdge()
                 except Exception:

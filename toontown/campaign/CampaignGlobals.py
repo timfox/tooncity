@@ -84,17 +84,25 @@ ACTS = (
             'Act 2 — Oswald leads the reclaim — '
             'Punchline Place is drowning in sludge!'),
         # Act-entry tip (PlayEntry) — Oswald trusted lead + Gagster/Brute/Snare.
-        # Mid-campaign only; no twist spoilers. Hose-pop tunables below.
+        # Deepens Loopy mid-act unease (#190): cheer feels a half-beat off —
+        # foreshadow only (no Silly twist spoilers). Hose-pop tunables below.
         'entryTip': (
-            'Oswald leads Act 2 — Punchline Place sludge: explore → '
+            'Oswald leads Act 2 — cheer feels a half-beat off — '
+            'Punchline Place sludge: explore → '
             'F fight Gunk Gagsters, Sludge Brutes & Balloon Snares → reclaim  |  '
             'Shift dodge  |  C campaign'),
+        # Punchline clear deepens trust fracture: still a cheer, rubber-hose
+        # grin hangs odd again — foreshadow only (no Silly twist spoilers).
         'handoffTitle': 'PUNCHLINE PLACE LAUGHS CLEAN!',
         'handoff': (
             'Oswald points ahead: Punchline laughs clean! '
-            'Finale awaits on Silly Street.'),
-        'nextCue': 'Oswald steers you on → Silly Street finale',
+            'Cheer stretches rubbery again… '
+            'Next: Silly Street.'),
+        'nextCue': (
+            'Oswald steers you on → Silly Street — '
+            'smile still a half-beat late'),
         'nextStreet': 'Silly Street',
+        'trustFracture': True,
     },
     {
         'id': 'finale',
@@ -355,16 +363,19 @@ OSWALD_TRUST_SUB_POP_SQUASH = (1.50, 1.0, 0.56, 0.05)   # sx, sy, sz, sec
 OSWALD_TRUST_SUB_POP_STRETCH = (0.80, 1.0, 1.40, 0.08)
 OSWALD_TRUST_SUB_POP_SETTLE_SEC = 0.10
 
-# Mid-act Oswald trust fracture (Loopy clear → Punchline handoff / tip).
+# Mid-act Oswald trust fracture (Loopy + Punchline clears / tips).
 # Off-tone trust foreshadow only — no twist spoilers / no KH branding.
 # Hose settle holds a rubbery beat longer than sunny trust (#76); cream
 # edge cools toward a soft shadow fleck settle (ActBannerCreamEdgeFx).
+# Punchline deepens Loopy unease (#190) — Silly finale path stays twist-free
+# until victory reveal.
 OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT = (0.88, 1.0, 1.18, 0.09)
 OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC = 0.14
 OSWALD_TRUST_FRACTURE_SUB_COLOR = (0.88, 0.92, 0.86, 1.0)
-# Cooler cream frame + shadow-fade flecks on Loopy trust-fracture handoff.
+# Cooler cream frame + shadow-fade flecks on trust-fracture handoffs.
 # Composes with carnival confetti (#57) — replaces sunny handoff cream edge
-# on trustFracture acts only. Punchline / Silly paths stay sunny.
+# on trustFracture acts only (Loopy + Punchline). Silly victory stays sunny
+# until twist reveal.
 # OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED = False drops fracture edge only
 # (carnival + hose settle remain).
 OSWALD_TRUST_FRACTURE_CREAM_EDGE_ENABLED = True
