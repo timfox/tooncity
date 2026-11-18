@@ -62,6 +62,12 @@ ACTS = (
         'banner': (
             'Act 2 — Oswald leads the reclaim — '
             'Punchline Place is drowning in sludge!'),
+        # Act-entry tip (PlayEntry) — Oswald trusted lead + Brute/Snare cues.
+        # Mid-campaign only; no twist spoilers. Hose-pop tunables below.
+        'entryTip': (
+            'Oswald leads Act 2 — Punchline Place sludge: explore → '
+            'F fight Sludge Brutes & Balloon Snares → reclaim  |  '
+            'Shift dodge  |  C campaign'),
         'handoffTitle': 'PUNCHLINE PLACE LAUGHS CLEAN!',
         'handoff': (
             'Oswald points ahead: Punchline laughs clean! '
@@ -139,6 +145,16 @@ PLAY_ENTRY_TIP_POS = (0.0, 0.0, -0.92)
 PLAY_ENTRY_TIP_POP_SQUASH = (1.55, 1.0, 0.55, 0.05)   # sx, sy, sz, sec
 PLAY_ENTRY_TIP_POP_STRETCH = (0.78, 1.0, 1.42, 0.08)
 PLAY_ENTRY_TIP_POP_SETTLE_SEC = 0.10
+
+# Punchline Place Act 2 entry tip — tip-matched hose pop, slightly punchier
+# for the Brute/Snare sludge beat. Oswald stays the trusted mid-campaign
+# lead (no twist spoilers). Soft trust settle matches act-banner #76.
+# Toontown spiritual sequel — no keyblades / KH branding.
+PUNCHLINE_ACT_TIP_POP_SQUASH = (1.62, 1.0, 0.50, 0.05)   # sx, sy, sz, sec
+PUNCHLINE_ACT_TIP_POP_STRETCH = (0.74, 1.0, 1.48, 0.08)
+PUNCHLINE_ACT_TIP_POP_SETTLE_SEC = 0.10
+PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.90, 1.0, 1.16, 0.07)
+PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 
 # PlayEntry act-enter flash banner (ACTS['banner'] / reclaim cues).
 # Same squash→stretch→settle hose pop as the tip bar — readable act beat
