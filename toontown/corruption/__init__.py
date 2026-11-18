@@ -32,8 +32,12 @@ hits also pulse SmudgeHitCreamWashFx (soft cream wash — cream/pastel contrast
 against purple ink; overlord-hit / telegraph / silhouette / death cream-wash
 grammar). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
-pop). Sludge Brute hits and deaths also flash BruteSludgeSplashFx (cheap
-green rubber-hose sludge splash; composes with spit / death / idle looks).
+pop). Sludge Brute spit land / splash also fires BruteSpitCreamSplashFx
+(brief cream splash + delayed cream aftershock — sunny cream/pastel juice
+on the spit impact; telegraph cream warn aftershock grammar / Gunk puddle
+cream splash #218). Sludge Brute hits and deaths also flash
+BruteSludgeSplashFx (cheap green rubber-hose sludge splash; composes with
+spit / death / idle looks).
 Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
 rubber-hose string-lash pop) and, after the string reads, arm a short
 string-snap counter window into melee (SNARE_STRING_COUNTER_*; synchs
