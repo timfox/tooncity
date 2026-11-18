@@ -11,6 +11,7 @@ from . import HitJuice
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 from .HitSparkFx import HitSparkFx
+from .HitStopFx import HitStopFx
 from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
 
@@ -23,6 +24,7 @@ __all__ = [
     'DodgePerfectFx',
     'DodgeTrailFx',
     'HitSparkFx',
+    'HitStopFx',
     'SlamDustFx',
     'SoftLockReticleFx',
 ]

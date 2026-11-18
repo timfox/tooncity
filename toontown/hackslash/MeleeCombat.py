@@ -28,6 +28,7 @@ from .DemoHostile import spawnDemoHostiles
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 from .HitSparkFx import HitSparkFx
+from .HitStopFx import HitStopFx
 from .SlamDustFx import SlamDustFx
 from .SoftLockReticleFx import SoftLockReticleFx
 from .SoftTarget import SoftTargetFinder
@@ -47,7 +48,6 @@ class MeleeCombatController(DirectObject):
         self._hoseIval = None
         self._impactIval = None
         self._playerHitReactIval = None
-        self._hitstopIval = None
         self._fovIval = None
         self._flashIval = None
         self._flashNP = None
@@ -60,9 +60,12 @@ class MeleeCombatController(DirectObject):
         self._dodging = False
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
+        self._hitStop = HitStopFx(avatar)
         self._hitSpark = HitSparkFx(avatar)
         self._slamDust = SlamDustFx(avatar)
         self._softLockReticle = SoftLockReticleFx(avatar)
+        self._pendingConnectTarget = None
+        self._pendingConnectHitIndex = None
         self._origScale = None
         self._baseFov = None
         self._shakeAmp = 0.0
@@ -426,14 +429,9 @@ class MeleeCombatController(DirectObject):
             messenger.send('hackslash-hit', [self.avatar, target, damage, hitIndex])  # noqa: F821
             # Squash first so hitstop freezes on the impact silhouette.
             self._playConnectImpactJuice(hitIndex, target)
-            self._playHitstop(hitIndex)
+            # Flash reads during the freeze; launch / hop / FOV wait for resume.
             self._playHitFlash()
-            if hitIndex >= HackSlashConfig.LAUNCH_HIT_INDEX:
-                self._playLauncher(target, hitIndex)
-            if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
-                self._playFinisherFovPunch()
-                self._playFinisherShake()
-                self._playFinisherSelfHop()
+            self._playHitstop(hitIndex, target=target)
         else:
             # Whiff inside a live string soft-breaks the on-screen counter.
             if self._comboHits > 0:
@@ -827,52 +825,53 @@ class MeleeCombatController(DirectObject):
         """True only during Shift/X dodge i-frames (not post-hit window)."""
         return globalClock.getFrameTime() < self._dodgeIFrameUntil  # noqa: F821
 
-    def _playHitstop(self, hitIndex):
-        """Brief attack freeze so contacts read as rubber-hose impacts."""
+    def _playHitstop(self, hitIndex, target=None):
+        """Brief rubber-hose freeze so connects stick before launch juice."""
         stopSec = HackSlashConfig.HITSTOP_SEC[
             min(hitIndex, len(HackSlashConfig.HITSTOP_SEC) - 1)]
-        self._playTinyHitstop(stopSec)
+        self._pendingConnectTarget = target
+        self._pendingConnectHitIndex = hitIndex
+        self._playTinyHitstop(
+            stopSec, target=target, onDone=self._afterConnectHitstop)
 
-    def _playTinyHitstop(self, stopSec):
-        """Pause swing / hose / impact juice so the silhouette sticks briefly."""
-        self._clearHitstop()
-        stopSec = max(0.0, float(stopSec))
-        if stopSec <= 0.0:
+    def _playTinyHitstop(self, stopSec, target=None, onDone=None):
+        """Pause swing / hose / impact juice + anims so the silhouette sticks."""
+        targetIval = None
+        if target is not None:
+            targetIval = getattr(target, '_hackslashImpactIval', None)
+        intervals = (
+            self._swingIval,
+            self._hoseIval,
+            self._impactIval,
+            self._playerHitReactIval,
+            targetIval,
+        )
+        actors = (self.avatar, target)
+        self._hitStop.play(
+            stopSec, intervals=intervals, actors=actors, onDone=onDone)
+
+    def _afterConnectHitstop(self):
+        """Resume deferred connect juice after the freeze window."""
+        target = self._pendingConnectTarget
+        hitIndex = self._pendingConnectHitIndex
+        self._pendingConnectTarget = None
+        self._pendingConnectHitIndex = None
+        if hitIndex is None:
             return
-        for ival in (self._swingIval, self._hoseIval, self._impactIval,
-                     self._playerHitReactIval):
-            try:
-                if ival:
-                    ival.pause()
-            except Exception:
-                pass
-        name = self.avatar.uniqueName('hackslashHitstop')
-        taskMgr.remove(name)  # noqa: F821
-        taskMgr.doMethodLater(stopSec, self._resumeAfterHitstop, name)  # noqa: F821
-
-    def _resumeAfterHitstop(self, task):
-        for ival in (self._swingIval, self._hoseIval, self._impactIval,
-                     self._playerHitReactIval):
-            try:
-                if ival:
-                    ival.resume()
-            except Exception:
-                pass
-        return Task.done
+        if hitIndex >= HackSlashConfig.LAUNCH_HIT_INDEX:
+            self._playLauncher(target, hitIndex)
+        if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
+            self._playFinisherFovPunch()
+            self._playFinisherShake()
+            self._playFinisherSelfHop()
 
     def _clearHitstop(self):
-        name = self.avatar.uniqueName('hackslashHitstop')
+        self._pendingConnectTarget = None
+        self._pendingConnectHitIndex = None
         try:
-            taskMgr.remove(name)  # noqa: F821
+            self._hitStop.clear(resume=True, runDone=False)
         except Exception:
             pass
-        for ival in (self._swingIval, self._hoseIval, self._impactIval,
-                     self._playerHitReactIval):
-            try:
-                if ival:
-                    ival.resume()
-            except Exception:
-                pass
 
     def _playHitFlash(self, peakAlpha=None):
         """Brief full-screen white flash so connects read beyond hitstop alone."""

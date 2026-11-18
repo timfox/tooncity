@@ -11,6 +11,8 @@ Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
 cream/ink hose pop when soft-lock acquires or snaps a corrupt target.
 Hit connect uses spawnHitSparkFlecks for short cream/ink fleck sparkles that
 layer with the impact squash silhouette.
+Hitstop freeze uses pauseIntervals / freezeActorPlayRates so the impact
+silhouette sticks before launch juice resumes.
 No keyblades / no KH framing — Toontown rubber-hose only.
 """
 
@@ -648,5 +650,69 @@ def finishInterval(ival, node=None, restoreScale=None):
     if node is not None and restoreScale is not None:
         try:
             node.setScale(restoreScale)
+        except Exception:
+            pass
+
+
+def pauseIntervals(intervals):
+    """Pause every live interval (hitstop freeze)."""
+    for ival in intervals or ():
+        try:
+            if ival:
+                ival.pause()
+        except Exception:
+            pass
+
+
+def resumeIntervals(intervals):
+    """Resume intervals paused by hitstop."""
+    for ival in intervals or ():
+        try:
+            if ival:
+                ival.resume()
+        except Exception:
+            pass
+
+
+def freezeActorPlayRates(actors):
+    """Zero anim play rates so the silhouette freezes. Returns restore tuples.
+
+    Each restore entry is (actor, animName, rate). Empty when freeze is off.
+    """
+    if not getattr(HackSlashConfig, 'HITSTOP_FREEZE_ANIMS', True):
+        return []
+    saved = []
+    for actor in actors or ():
+        if actor is None:
+            continue
+        try:
+            anim = None
+            if hasattr(actor, 'getCurrentAnim'):
+                anim = actor.getCurrentAnim()
+            if not anim:
+                continue
+            rate = 1.0
+            if hasattr(actor, 'getPlayRate'):
+                try:
+                    rate = float(actor.getPlayRate(anim))
+                except Exception:
+                    rate = float(actor.getPlayRate())
+            if hasattr(actor, 'setPlayRate'):
+                actor.setPlayRate(0.0, anim)
+                saved.append((actor, anim, rate))
+        except Exception:
+            pass
+    return saved
+
+
+def restoreActorPlayRates(saved):
+    """Restore play rates captured by freezeActorPlayRates."""
+    for entry in saved or ():
+        try:
+            actor, anim, rate = entry
+            if actor is None or not anim:
+                continue
+            if hasattr(actor, 'setPlayRate'):
+                actor.setPlayRate(float(rate), anim)
         except Exception:
             pass
