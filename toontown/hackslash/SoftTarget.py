@@ -10,7 +10,9 @@ without KH branding / keyblades.
 Auto-acquire (and fresh Tab with no lock) prefers Ink Overlord /
 Corrupted Oswald over nearer pack Smudge adds. Sticky hold also yields
 from glued adds when a priority Overlord/Oswald enters the acquire cone
-so climax and twist fights do not stay stuck on trash.
+so climax and twist fights do not stay stuck on trash. Manual Tab/`
+with an existing lock on a pack add jumps to Overlord/Oswald in the
+cycle cone instead of yaw-orbiting through Smudge trash.
 """
 
 import math
@@ -53,6 +55,25 @@ def shouldStickyYieldToPriority(
     Sticky still glues onto the current target when already on a priority
     subject, when no priority candidate is in the acquire cone, or when
     TARGET_PRIORITY_ENABLED is off. Pure helper for headless tests.
+    """
+    if enabled is None:
+        enabled = HackSlashConfig.TARGET_PRIORITY_ENABLED
+    if not enabled:
+        return False
+    if lockedIsPriority:
+        return False
+    return bool(hasPriorityCandidate)
+
+
+def shouldCyclePreferPriority(
+        lockedIsPriority, hasPriorityCandidate, enabled=None):
+    """True when Tab/` with an existing lock should jump to Overlord/Oswald.
+
+    Cycle still yaw-orbits when already locked on a priority subject, when
+    no priority candidate is in the cycle cone, or when
+    TARGET_PRIORITY_ENABLED is off. Pure helper for headless tests —
+    pairs with sticky yield so manual cycle-with-lock does not step through
+    Smudge trash during climax/twist.
     """
     if enabled is None:
         enabled = HackSlashConfig.TARGET_PRIORITY_ENABLED
@@ -240,7 +261,7 @@ class SoftTargetFinder:
         orderedKeys = [row[2] for row in scored]
         # Fresh Tab with nothing locked: land on preferred sticky hostile
         # (Overlord / Oswald over nearer pack adds; direction still used
-        # once a lock exists for orbit next/prev).
+        # once a lock exists for orbit next/prev when not jumping to boss).
         if self._lockedKey not in byKey:
             ranked = []
             for yaw, dist, key in scored:
@@ -252,8 +273,26 @@ class SoftTargetFinder:
             newKey = pickSoftLockAcquire(ranked)
             snapped = newKey is not None
         else:
-            newKey, snapped = pickCycleChoice(
-                orderedKeys, self._lockedKey, direction=direction)
+            # Locked path: prefer jumping to Overlord / Oswald over
+            # yaw-orbit through pack adds when glued on trash and a
+            # priority subject is already in the cycle cone. Already on
+            # boss/Oswald, or no boss in cone → normal pickCycleChoice.
+            lockedTarget = byKey.get(self._lockedKey)
+            lockedIsPriority = self._isPriorityTarget(lockedTarget)
+            priorityRanked = []
+            for yaw, dist, key in scored:
+                if key == self._lockedKey:
+                    continue
+                target = byKey.get(key)
+                if self._isPriorityTarget(target):
+                    priorityRanked.append((True, dist, key))
+            if shouldCyclePreferPriority(
+                    lockedIsPriority, bool(priorityRanked)):
+                newKey = pickSoftLockAcquire(priorityRanked)
+                snapped = newKey is not None and newKey != self._lockedKey
+            else:
+                newKey, snapped = pickCycleChoice(
+                    orderedKeys, self._lockedKey, direction=direction)
         chosen = byKey.get(newKey) if newKey is not None else None
         self._lockedKey = newKey
         self._lockedUntil = (
