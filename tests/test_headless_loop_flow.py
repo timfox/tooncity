@@ -1325,6 +1325,17 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('def announceAmbushSpawn', client_src)
         self.assertIn('ambushOswaldTip', client_src)
         self.assertIn('reclaimAmbushSpawn', client_src)
+        self.assertIn('__onAmbushSpawnCue', client_src)
+        self.assertIn('ambushMsgName()', client_src)
+        self.assertIn('ambushPressureTipText', client_src)
+        rg = self.rg
+        self.assertTrue(rg.AMBUSH_PRESSURE_TIP_ENABLED)
+        self.assertEqual(rg.ambushMsgName(), 'reclaimAmbushSpawn')
+        self.assertIn('ambush', rg.ambushPressureTipText(3, 2).lower())
+        melee_src = _read('toontown/hackslash/MeleeCombat.py')
+        self.assertIn('_onAmbushSpawnPrefer', melee_src)
+        soft_lock_src = _read('toontown/hackslash/SoftTarget.py')
+        self.assertIn('pulseAmbushPrefer', soft_lock_src)
         dc = _read('etc/toon.dc')
         self.assertIn('announceAmbushSpawn(uint8, uint8) broadcast;', dc)
 

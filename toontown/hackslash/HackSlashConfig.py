@@ -35,6 +35,14 @@ TARGET_CYCLE_HALF_ANGLE_DEG = 95.0
 # TARGET_PRIORITY_ENABLED = False restores nearest-only soft-lock.
 TARGET_PRIORITY_ENABLED = True
 
+# Ambush soft-lock prefer pulse — reclaimAmbushSpawn briefly prefers
+# Ambush-prefixed flanks and expires sticky glue so mid-fight ambush
+# packs get focus. Tunables mirror ReclaimGlobals; SoftTarget reads both.
+# AMBUSH_SOFT_LOCK_PREFER_ENABLED = False drops the prefer pulse only.
+AMBUSH_SOFT_LOCK_PREFER_ENABLED = True
+AMBUSH_SOFT_LOCK_PREFER_SEC = 4.0
+AMBUSH_SOFT_LOCK_PREFER_MSG = 'reclaimAmbushSpawn'
+
 # Soft-lock cycle reticle pulse — brief rubber-hose pulse when Tab/` switches
 # the sticky lock so the new target reads clearly (tracking feel without the
 # full acquire snap FOV / accents spam). Milder/snappier than

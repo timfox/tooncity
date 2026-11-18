@@ -354,6 +354,10 @@ class EliteWaveModifiersAmbushTests(unittest.TestCase):
         self.assertIn('def announceAmbushSpawn', client)
         self.assertIn('ambushOswaldTip', client)
         self.assertIn('reclaimAmbushSpawn', client)
+        # Orphan messenger is accepted for mid-fight pressure tip.
+        self.assertIn('__onAmbushSpawnCue', client)
+        self.assertIn('ambushMsgName()', client)
+        self.assertIn('ambushPressureTipText', client)
         dc = _read('etc/toon.dc')
         self.assertIn('announceAmbushSpawn(uint8, uint8) broadcast;', dc)
 

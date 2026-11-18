@@ -13,6 +13,9 @@ from glued adds when a priority Overlord/Oswald enters the acquire cone
 so climax and twist fights do not stay stuck on trash. Manual Tab/`
 with an existing lock on a pack add jumps to Overlord/Oswald in the
 cycle cone instead of yaw-orbiting through Smudge trash.
+
+Between-wave ambush also briefly prefers Ambush-prefixed flanks when
+reclaimAmbushSpawn fires a soft-lock prefer pulse (expire sticky + window).
 """
 
 import math
@@ -27,6 +30,37 @@ def softLockAcquireRank(dist, priority=False):
     nearest wins within the same tier. Pure helper for headless tests.
     """
     return (0 if priority else 1, float(dist))
+
+
+def isAmbushPreferName(name, prefix=None):
+    """True when a hostile name is Ambush-prefixed for prefer pulse.
+
+    Pure helper for headless tests. Prefers ReclaimGlobals.AMBUSH_NAME_PREFIX
+    when available; falls back to ``'Ambush '``.
+    """
+    if prefix is None:
+        try:
+            from toontown.reclaim import ReclaimGlobals
+            prefix = getattr(ReclaimGlobals, 'AMBUSH_NAME_PREFIX', 'Ambush ')
+        except ImportError:
+            prefix = 'Ambush '
+    text = str(name or '')
+    return bool(prefix) and text.startswith(str(prefix))
+
+
+def ambushPreferWindowActive(preferUntil, now, enabled=None):
+    """True while an ambush soft-lock prefer pulse window is live."""
+    if enabled is None:
+        enabled = getattr(
+            HackSlashConfig, 'AMBUSH_SOFT_LOCK_PREFER_ENABLED', True)
+    if not enabled:
+        return False
+    try:
+        until = float(preferUntil or 0.0)
+        t = float(now)
+    except (TypeError, ValueError):
+        return False
+    return t < until
 
 
 def pickSoftLockAcquire(scoredRows):
@@ -212,12 +246,57 @@ class SoftTargetFinder:
         self._suitAdapters = {}
         # True only for the acquire() call that freshly snaps onto a target.
         self._snapped = False
+        # reclaimAmbushSpawn prefer pulse — Ambush names score priority
+        # while now < _ambushPreferUntil (sticky glue expires on pulse).
+        self._ambushPreferUntil = 0.0
 
     def clear(self):
         self._lockedKey = None
         self._lockedUntil = 0.0
         self._suitAdapters.clear()
         self._snapped = False
+        self._ambushPreferUntil = 0.0
+
+    def pulseAmbushPrefer(self, duration=None, now=None):
+        """Brief Ambush soft-lock prefer after reclaimAmbushSpawn.
+
+        Expires sticky hold so the next acquire can snap onto Ambush-
+        prefixed flanks. Returns True when the pulse armed.
+        """
+        if not getattr(
+                HackSlashConfig, 'AMBUSH_SOFT_LOCK_PREFER_ENABLED', True):
+            return False
+        if now is None:
+            try:
+                now = float(globalClock.getFrameTime())  # noqa: F821
+            except Exception:
+                now = 0.0
+        if duration is None:
+            duration = getattr(
+                HackSlashConfig, 'AMBUSH_SOFT_LOCK_PREFER_SEC', 4.0)
+            try:
+                from toontown.reclaim import ReclaimGlobals
+                duration = getattr(
+                    ReclaimGlobals, 'AMBUSH_SOFT_LOCK_PREFER_SEC', duration)
+            except ImportError:
+                pass
+        try:
+            hold = max(0.1, float(duration))
+        except (TypeError, ValueError):
+            hold = 4.0
+        self._ambushPreferUntil = float(now) + hold
+        # Drop sticky glue so mid-fight flanks can steal focus.
+        self._lockedUntil = 0.0
+        return True
+
+    def isAmbushPreferActive(self, now=None):
+        """True while the ambush soft-lock prefer pulse window is live."""
+        if now is None:
+            try:
+                now = float(globalClock.getFrameTime())  # noqa: F821
+            except Exception:
+                now = 0.0
+        return ambushPreferWindowActive(self._ambushPreferUntil, now)
 
     def didSnap(self):
         """True if the most recent acquire() snapped onto a new lock key."""
@@ -359,25 +438,16 @@ class SoftTargetFinder:
         return best
 
     def _isPriorityTarget(self, target):
-        """True for Ink Overlord / Corrupted Oswald soft-lock preference."""
+        """True for Ink Overlord / Corrupted Oswald soft-lock preference.
+
+        Also True for Ambush-prefixed names while a reclaimAmbushSpawn
+        prefer pulse window is live (mid-fight flank cue).
+        """
         if target is None:
             return False
         if not getattr(HackSlashConfig, 'TARGET_PRIORITY_ENABLED', True):
             return False
-        try:
-            from toontown.corruption import CorruptionGlobals
-        except ImportError:
-            return False
-        archetype = 0
         name = ''
-        finalePhase = 0
-        try:
-            if callable(getattr(target, 'getArchetype', None)):
-                archetype = int(target.getArchetype())
-            elif hasattr(target, 'archetype'):
-                archetype = int(getattr(target, 'archetype', 0) or 0)
-        except Exception:
-            archetype = 0
         try:
             if callable(getattr(target, 'getHackSlashName', None)):
                 name = str(target.getHackSlashName() or '')
@@ -387,6 +457,23 @@ class SoftTargetFinder:
                 name = str(getattr(target, 'name', '') or '')
         except Exception:
             name = ''
+        # Brief ambush prefer pulse — Ambush flanks score priority mid-fight
+        # without permanent Elite/Ambush soft-lock prefer (separate deepen).
+        if self.isAmbushPreferActive() and isAmbushPreferName(name):
+            return True
+        try:
+            from toontown.corruption import CorruptionGlobals
+        except ImportError:
+            return False
+        archetype = 0
+        finalePhase = 0
+        try:
+            if callable(getattr(target, 'getArchetype', None)):
+                archetype = int(target.getArchetype())
+            elif hasattr(target, 'archetype'):
+                archetype = int(getattr(target, 'archetype', 0) or 0)
+        except Exception:
+            archetype = 0
         # Per-hostile phase only (AI Overlord DOs). Never use reclaim-director
         # street phase — P2 Smudge adds share that street flag.
         try:

@@ -17,9 +17,11 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     Mid-wave purity pressure: short rubber-hose tip whisper + meter rim warn
     when purity stalls or ink rises while packs are still alive (contested
-    feel after incomplete re-creep #194). Full clear confirms the secured
-    purity lock with a short tip + meter rim so re-creep cannot undo it,
-    plus a green-cream sparkle / soft pitch sting that celebrates the lock
+    feel after incomplete re-creep #194). Between-wave ambush also accepts
+    reclaimAmbushSpawn for a meter-adjacent pressure tip (soft-lock prefer
+    pulse lives on MeleeCombat). Full clear confirms the secured purity
+    lock with a short tip + meter rim so re-creep cannot undo it, plus a
+    green-cream sparkle / soft pitch sting that celebrates the lock
     (distinct from mid-wave tip and generic wave-clear sparkle).
     """
 
@@ -67,6 +69,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.accept('pollutionChanged', self.__onPollutionChanged)
         # Overlord wind-up cue (P1 magenta vs P2 crimson) from CorruptToon AV.
         self.accept('finaleTelegraphCue', self.__onFinaleTelegraphCue)
+        # Ambush spawn messenger → mid-fight pressure tip (orphan → accept).
+        self.accept(
+            ReclaimGlobals.ambushMsgName(), self.__onAmbushSpawnCue)
         # Polluted STREET_PACK enter cream shimmer + soft wash pulse
         # (wash client also owns delayed cream aftershock + settle cream wash;
         # also via ReclaimCheer).
@@ -287,10 +292,36 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.__showBanner(title, color, hold=hold, pop=True)
         self.__showSubBanner(tip, subColor, hold=hold)
         messenger.send(
-            'reclaimAmbushSpawn',
+            ReclaimGlobals.ambushMsgName(),
             [self.reclaimZoneId, int(afterWave), int(count)])
         self.__armPurityPressure(resetStall=True)
         self.__showStatusHud()
+
+    def __onAmbushSpawnCue(self, zoneId=0, afterWave=0, count=0):
+        """Accept reclaimAmbushSpawn → meter tip + rim (mid-fight pressure).
+
+        Banner plate already shows ambushOswaldTip; this whisper sits under
+        the purity meter with the contested rim flash so flanks read as
+        pressure, not only a title card. Soft-lock prefer pulse is the
+        MeleeCombat thin accept of the same messenger.
+        """
+        if not getattr(ReclaimGlobals, 'AMBUSH_PRESSURE_TIP_ENABLED', True):
+            return
+        tip = ReclaimGlobals.ambushPressureTipText(
+            afterWave=afterWave, count=count, zoneId=zoneId)
+        hold = float(getattr(
+            ReclaimGlobals, 'AMBUSH_PRESSURE_TIP_HOLD_SEC',
+            getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_HOLD_SEC', 2.4)))
+        self.__showPressureTip(tip, hold=hold)
+        if self._purityMeter is not None:
+            try:
+                self._purityMeter.warnPressure()
+            except Exception:
+                pass
+        now = self.__now()
+        cooldown = float(getattr(
+            ReclaimGlobals, 'AMBUSH_PRESSURE_COOLDOWN_SEC', 6.0))
+        self._pressureCooldownUntil = now + max(0.5, cooldown)
 
     def announceWaveCleared(self, waveIndex):
         # Light banner pop + cheer pitch swell + cream burst between packs.

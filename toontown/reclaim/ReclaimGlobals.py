@@ -48,6 +48,21 @@ AMBUSH_BANNER = 'AMBUSH!'
 AMBUSH_BANNER_HOLD_SEC = 1.85
 AMBUSH_BANNER_COLOR = (1.0, 0.55, 0.32, 1.0)
 AMBUSH_SUB_BANNER_COLOR = (1.0, 0.82, 0.62, 1.0)
+# Mid-fight ambush pressure cue — accept reclaimAmbushSpawn (orphan send
+# from announceAmbushSpawn) for a meter-adjacent tip + soft-lock prefer
+# pulse. Distinct from the ambush banner plate; no cream deepen / no KH.
+# Toggle AMBUSH_PRESSURE_TIP_ENABLED = False drops tip + rim only.
+AMBUSH_PRESSURE_TIP_ENABLED = True
+AMBUSH_PRESSURE_TIP = (
+    "Ambush flanks mid-fight! Soft-lock the new pack before purity stalls!"
+)
+AMBUSH_PRESSURE_TIP_HOLD_SEC = 2.2
+AMBUSH_PRESSURE_COOLDOWN_SEC = 6.0
+# Soft-lock prefer pulse window (MeleeCombat / SoftTarget thin accept).
+# Toggle AMBUSH_SOFT_LOCK_PREFER_ENABLED = False drops prefer pulse only.
+AMBUSH_SOFT_LOCK_PREFER_ENABLED = True
+AMBUSH_SOFT_LOCK_PREFER_SEC = 4.0
+AMBUSH_MSG = 'reclaimAmbushSpawn'
 
 # Sludge Brute mix for default reclaim (Ink Smudge stays majority).
 # Wave 1 = pure Smudge; later waves introduce ~⅓ tanks.
@@ -1536,6 +1551,49 @@ def ambushOswaldTip(clearedWave, zoneId=None):
             'Oswald: flanks! Smudge ambush between swells — '
             'twin Overlord next!')
     return 'Oswald: ambush after wave %s — stay sharp!' % wave
+
+
+def ambushMsgName():
+    """Messenger name for between-wave ambush spawn cue."""
+    return AMBUSH_MSG
+
+
+def ambushPressureTipText(afterWave=0, count=0, zoneId=None):
+    """Meter-adjacent mid-fight pressure tip after reclaimAmbushSpawn.
+
+    Distinct from ambushOswaldTip (banner sub) and stall/rise purity
+    pressure whispers — rubber-hose contested feel, no KH branding.
+    """
+    tip = AMBUSH_PRESSURE_TIP
+    try:
+        n = int(count)
+    except (TypeError, ValueError):
+        n = 0
+    if n > 0:
+        tip = '%s  ·  pack of %s' % (tip, n)
+    return tip
+
+
+def isAmbushSoftLockPreferName(name, prefix=None):
+    """True when a hostile name is Ambush-prefixed for prefer pulse."""
+    if prefix is None:
+        prefix = AMBUSH_NAME_PREFIX
+    text = str(name or '')
+    return bool(prefix) and text.startswith(str(prefix))
+
+
+def ambushSoftLockPreferActive(preferUntil, now, enabled=None):
+    """True while an ambush soft-lock prefer pulse window is live."""
+    if enabled is None:
+        enabled = AMBUSH_SOFT_LOCK_PREFER_ENABLED
+    if not enabled:
+        return False
+    try:
+        until = float(preferUntil or 0.0)
+        t = float(now)
+    except (TypeError, ValueError):
+        return False
+    return t < until
 
 
 def streetBannerStart(zoneId, finalePhase=0):

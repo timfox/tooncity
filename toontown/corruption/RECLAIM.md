@@ -109,8 +109,10 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
   scripted Smudge tutorial → Brute intro → Snare joins → mixed elite
   (seed 0.55, maxPacks 4). Wave 4 carries real elite HP/damage modifiers;
   between-wave ambush beats after waves 1–3 (Smudge → Snare tease → Snare)
-  fill the blank pauses before the next scripted pack. PlayEntry tip reads
-  explore → fight → reclaim; warm ink-yellow start banner.
+  fill the blank pauses before the next scripted pack. `reclaimAmbushSpawn`
+  is accepted for a mid-fight purity-meter pressure tip + brief Ambush
+  soft-lock prefer pulse (not send-only). PlayEntry tip reads explore →
+  fight → reclaim; warm ink-yellow start banner.
 - Loopy campaign **C** mirrors that ramp across 4 waves + elite / ambush
   (`ACTS` `waveScripts` / `waveModifiers` / `ambushBeats`); fraction fields
   stay `0` as fallback only.
