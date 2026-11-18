@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for deepened secured-street purity sparkle sting.
+"""Behavioral headless tests for further-deepened secured-lock sparkle sting.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-deepened SECURED_LOCK_SPARKLE / AFTERSHOCK / STING tunables, rubber-hose
+SECURED_LOCK_SPARKLE / AFTERSHOCK / STING tunables past #243, rubber-hose
 (non-KH) copy, and AST hooks on SecuredLockSparkleFx + reclaim director /
 meter confirm. Distinct from wave-hose cream deepen (#239), wave-clear
-sparkle (#229), and rim-flash cream (#234).
+sparkle (#253), and rim-flash cream (#234).
 
 Run from repo root:
   python3 tests/test_secured_lock_sparkle_sting.py
@@ -86,26 +86,28 @@ def _top_level_func_names(tree: ast.AST) -> set[str]:
 
 
 class SecuredLockSparkleStingTest(unittest.TestCase):
-    """Pure-Python deepened secured-lock sparkle / sting wiring."""
+    """Pure-Python further-deepened secured-lock sparkle / sting wiring."""
 
     @classmethod
     def setUpClass(cls):
         cls.rg = _load_reclaim_globals()
 
-    def test_sparkle_sting_tunables_deepened_and_enabled(self):
+    def test_sparkle_sting_tunables_deepened_past_243(self):
         rg = self.rg
         self.assertIs(rg.SECURED_LOCK_SPARKLE_ENABLED, True)
         self.assertIs(rg.SECURED_LOCK_STING_ENABLED, True)
         self.assertIs(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED, True)
-        # Juicier than the original quiet lock glitter (#209 baseline 7 / 0.22).
-        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_COUNT, 9)
-        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_RISE), 0.30)
-        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_SEC), 0.34)
-        self.assertGreater(float(rg.SECURED_LOCK_SPARKLE_POP), 1.10)
-        self.assertGreater(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT, 0)
-        self.assertGreater(
-            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC), 0.0)
+        # Juicier than #243 deepen (10 / 0.34 / 1.24 / aftershock 4 / halo 1.16).
+        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_COUNT, 11)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_RISE), 0.38)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_SEC), 0.38)
+        self.assertGreater(float(rg.SECURED_LOCK_SPARKLE_POP), 1.24)
+        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT, 5)
+        self.assertGreaterEqual(
+            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC), 0.32)
         self.assertTrue(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_ENABLED)
+        self.assertGreaterEqual(
+            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK), 1.18)
         self.assertGreater(rg.SECURED_LOCK_STING_VOLUME, 0.0)
         self.assertLess(rg.SECURED_LOCK_STING_VOLUME, rg.PURITY_STING_VOLUME)
         self.assertGreaterEqual(float(rg.SECURED_LOCK_METER_POP_SCALE), 1.15)
@@ -156,6 +158,8 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         self.assertIn('reclaimSecuredLockSparkle', src)
         self.assertIn('reclaimSecuredLockSparkleAftershock', src)
         self.assertIn('reclaimSecuredLockSting', src)
+        self.assertIn('#243', src)
+        self.assertIn('#253', src)
         lower = src.lower()
         self.assertIn('no kh', lower)
         for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
@@ -213,6 +217,19 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         wave = self.rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_COLOR
         self.assertGreater(after[1], after[0])  # greener
         self.assertNotEqual(tuple(after), tuple(wave))
+
+    def test_globals_comment_kh_free_and_distinct(self):
+        rg_src = _read('toontown/reclaim/ReclaimGlobals.py')
+        idx = rg_src.find('SECURED_LOCK_SPARKLE_ENABLED')
+        self.assertGreater(idx, 0)
+        snip = rg_src[max(0, idx - 700):idx + 200].lower()
+        self.assertIn('no kh', snip)
+        self.assertIn('#243', snip)
+        self.assertTrue(
+            '#253' in snip or 'wave-clear' in snip,
+            msg='lock sparkle comment should stay distinct from wave-clear')
+        for banned in ('kingdom hearts', 'sora', 'heartless', 'keyblade'):
+            self.assertNotIn(banned, snip)
 
 
 def main() -> int:
