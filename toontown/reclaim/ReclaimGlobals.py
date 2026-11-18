@@ -44,6 +44,21 @@ DEMO_HINT = (
     '~stopreclaim to end'
 )
 
+# Reclaim-complete purity burst (HUD overlay + sting).
+# Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.
+PURITY_BURST_PEAK_ALPHA = 0.72
+PURITY_BURST_IN_SEC = 0.08
+PURITY_BURST_HOLD_SEC = 0.12
+PURITY_BURST_OUT_SEC = 0.55
+PURITY_BURST_COLOR = (1.0, 1.0, 0.82, 1.0)
+PURITY_RING_PEAK_SCALE = 2.4
+PURITY_RING_SEC = 0.55
+PURITY_BANNER_POP_SCALE = 0.13
+PURITY_BANNER_POP_SEC = 0.18
+# Existing toon SFX — light celebration sting, optional if asset missing.
+PURITY_STING_SFX = 'phase_4/audio/sfx/AA_sound_whistle.ogg'
+PURITY_STING_VOLUME = 0.85
+
 WAVE_BANNER_FMT = 'Wave %s/%s — %s'
 WAVE_LABELS = (
     'Ink blotches appear!',

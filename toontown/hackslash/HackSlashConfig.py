@@ -43,6 +43,24 @@ HIT_FLASH_PEAK_ALPHA = 0.38
 HIT_FLASH_IN_SEC = 0.03
 HIT_FLASH_OUT_SEC = 0.10
 
+# On-screen combo counter (ticks on hackslash-hit; fades after break).
+# Parked lower-left so reclaim banners / soft-lock hints stay readable up top.
+COMBO_COUNTER_POS = (-0.95, 0.0, -0.42)
+COMBO_COUNTER_BASE_SCALE = 0.11
+COMBO_COUNTER_POP_SCALE = 0.16
+COMBO_COUNTER_POP_SEC = 0.08
+COMBO_COUNTER_SETTLE_SEC = 0.12
+COMBO_BREAK_SEC = 1.15
+COMBO_FADE_SEC = 0.45
+COMBO_COUNTER_LABEL = 'HIT'
+# Color ramps slightly warmer as the string climbs (still readable on busy streets).
+COMBO_COUNTER_COLORS = (
+    (1.0, 0.95, 0.55, 1.0),
+    (1.0, 0.85, 0.35, 1.0),
+    (1.0, 0.7, 0.25, 1.0),
+    (1.0, 0.55, 0.2, 1.0),
+)
+
 # Mid/finisher launcher juice (upward juggle feel on the target).
 LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more
 LAUNCH_HEIGHT = (0.0, 1.6, 2.4)
@@ -85,5 +103,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Hack-Slash: F/LMB melee  |  Shift/X dodge  |  soft-lock  |  ~hackslash'
+    'Hack-Slash: F/LMB melee  |  Shift/X dodge  |  combo counter  |  ~hackslash'
 )

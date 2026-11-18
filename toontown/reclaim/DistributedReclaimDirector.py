@@ -1,9 +1,9 @@
-from panda3d.core import TextNode, Vec4
+from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
 
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed import DistributedObject
 from direct.interval.IntervalGlobal import (
-    Func, LerpColorScaleInterval, Parallel, Sequence, Wait)
+    Func, LerpColorScaleInterval, LerpScaleInterval, Parallel, Sequence, Wait)
 
 from toontown.corruption import CorruptionGlobals
 from toontown.reclaim import ReclaimGlobals
@@ -28,6 +28,9 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._statusNP = None
         self._demoHintNP = None
         self._restoreIval = None
+        self._burstFlashNP = None
+        self._burstRingNP = None
+        self._puritySfx = None
 
     def generate(self):
         DistributedObject.DistributedObject.generate(self)
@@ -45,6 +48,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         if self._restoreIval is not None:
             self._restoreIval.finish()
             self._restoreIval = None
+        self.__clearPurityBurstOverlay()
+        self._puritySfx = None
         if getattr(base.cr, 'reclaimDirector', None) is self:
             del base.cr.reclaimDirector
         DistributedObject.DistributedObject.disable(self)
@@ -112,7 +117,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     def announceReclaimComplete(self):
         self.__showBanner(
-            ReclaimGlobals.BANNER_COMPLETE, (0.55, 1.0, 0.7, 1.0), hold=3.4)
+            ReclaimGlobals.BANNER_COMPLETE, (0.55, 1.0, 0.7, 1.0),
+            hold=3.4, pop=True)
         self.__showSubBanner(
             ReclaimGlobals.BANNER_COMPLETE_SUB, (0.85, 1.0, 0.9, 1.0), hold=3.4)
         self.__playRestoreFx()
@@ -126,7 +132,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             self.pollutionHint = level
             self.__showStatusHud()
 
-    def __showBanner(self, text, color, hold=2.2):
+    def __showBanner(self, text, color, hold=2.2, pop=False):
         self.__hideBanner()
         tn = TextNode('reclaim-banner')
         tn.setText(text)
@@ -135,9 +141,18 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         tn.setShadow(0.05, 0.05)
         tn.setShadowColor(0, 0, 0, 0.75)
         np = aspect2d.attachNewNode(tn)
-        np.setScale(0.09)
+        baseScale = 0.09
+        np.setScale(baseScale)
         np.setPos(0, 0, 0.78)
         self._bannerNP = np
+        if pop:
+            # Soft scale punch so "PURITY RESTORED!" lands as a payoff beat.
+            Sequence(
+                LerpScaleInterval(
+                    np, ReclaimGlobals.PURITY_BANNER_POP_SEC,
+                    ReclaimGlobals.PURITY_BANNER_POP_SCALE),
+                LerpScaleInterval(np, 0.22, baseScale),
+            ).start()
         taskMgr.doMethodLater(
             hold, self.__bannerTimeout, self.uniqueName('reclaim-banner'))
 
@@ -242,32 +257,117 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self._demoHintNP = None
 
     def __playRestoreFx(self):
-        """Purity restore moment: burst, sting/NPC hooks, lingering glow."""
+        """Purity restore moment: HUD burst + sting + brief render bloom.
+
+        Overlay flash/ring stay on aspect2d so hood geom prop tint / fog
+        grade (PollutionPropTint / PollutionManager) are never stomped.
+        """
         if self._restoreIval is not None:
             self._restoreIval.finish()
+        self.__clearPurityBurstOverlay()
         messenger.send('purityRestoreFx', [self.reclaimZoneId])
         messenger.send('purityRestoreSting', [self.reclaimZoneId])
         messenger.send('npcCheerStub', [self.reclaimZoneId])
-        # Two-beat wash: ink lifts, then a warm purity bloom settles.
+        self.__playPurityStingSfx()
+        self.__spawnPurityBurstOverlay()
+        # Stronger two-beat wash: bright lift, then warm settle.
         self._restoreIval = Sequence(
             Parallel(
-                LerpColorScaleInterval(render, 0.12, Vec4(1.55, 1.6, 1.35, 1.0)),
+                LerpColorScaleInterval(render, 0.1, Vec4(1.7, 1.75, 1.45, 1.0)),
                 Func(messenger.send, 'purityBurstPulse', [self.reclaimZoneId, 1]),
             ),
-            LerpColorScaleInterval(render, 0.35, Vec4(1.15, 1.25, 1.05, 1.0)),
+            LerpColorScaleInterval(render, 0.28, Vec4(1.25, 1.35, 1.1, 1.0)),
             Parallel(
-                LerpColorScaleInterval(render, 0.55, Vec4(1.05, 1.12, 0.98, 1.0)),
+                LerpColorScaleInterval(render, 0.5, Vec4(1.08, 1.16, 1.0, 1.0)),
                 Func(messenger.send, 'purityBurstPulse', [self.reclaimZoneId, 2]),
             ),
-            Wait(0.35),
-            LerpColorScaleInterval(render, 0.7, Vec4(1, 1, 1, 1)),
+            Wait(0.4),
+            LerpColorScaleInterval(render, 0.75, Vec4(1, 1, 1, 1)),
             Func(render.clearColorScale),
+            Func(self.__clearPurityBurstOverlay),
             Func(messenger.send, 'purityRestoreSettled', [self.reclaimZoneId]),
         )
         self._restoreIval.start()
+
+    def __playPurityStingSfx(self):
+        """Fire an existing celebration SFX if the asset is present."""
+        try:
+            if self._puritySfx is None:
+                self._puritySfx = base.loader.loadSfx(ReclaimGlobals.PURITY_STING_SFX)
+            if self._puritySfx is not None:
+                try:
+                    self._puritySfx.setVolume(ReclaimGlobals.PURITY_STING_VOLUME)
+                except Exception:
+                    pass
+                base.playSfx(self._puritySfx)
+        except Exception:
+            # Missing phase audio in a stripped checkout — visual burst still pays off.
+            self.notify.debug('purity sting sfx unavailable')
+
+    def __spawnPurityBurstOverlay(self):
+        """Warm full-screen flash + expanding ring — readable payoff beat."""
+        try:
+            cm = CardMaker('reclaim-purity-flash')
+            cm.setFrame(-2, 2, -2, 2)
+            flash = aspect2d.attachNewNode(cm.generate())
+            flash.setTransparency(TransparencyAttrib.MAlpha)
+            r, g, b, _a = ReclaimGlobals.PURITY_BURST_COLOR
+            flash.setColor(r, g, b, 1)
+            flash.setColorScale(r, g, b, 0)
+            flash.setBin('fixed', 58)
+            flash.setDepthTest(False)
+            flash.setDepthWrite(False)
+            self._burstFlashNP = flash
+
+            rcm = CardMaker('reclaim-purity-ring')
+            rcm.setFrame(-0.55, 0.55, -0.55, 0.55)
+            ring = aspect2d.attachNewNode(rcm.generate())
+            ring.setTransparency(TransparencyAttrib.MAlpha)
+            ring.setColor(r, g, b, 1)
+            ring.setColorScale(r, g, b, 0.85)
+            ring.setScale(0.35)
+            ring.setPos(0, 0, 0.1)
+            ring.setBin('fixed', 59)
+            ring.setDepthTest(False)
+            ring.setDepthWrite(False)
+            self._burstRingNP = ring
+
+            peak = ReclaimGlobals.PURITY_BURST_PEAK_ALPHA
+            Sequence(
+                LerpColorScaleInterval(
+                    flash, ReclaimGlobals.PURITY_BURST_IN_SEC,
+                    Vec4(r, g, b, peak)),
+                Wait(ReclaimGlobals.PURITY_BURST_HOLD_SEC),
+                LerpColorScaleInterval(
+                    flash, ReclaimGlobals.PURITY_BURST_OUT_SEC,
+                    Vec4(r, g, b, 0)),
+            ).start()
+            Sequence(
+                Parallel(
+                    LerpScaleInterval(
+                        ring, ReclaimGlobals.PURITY_RING_SEC,
+                        ReclaimGlobals.PURITY_RING_PEAK_SCALE),
+                    LerpColorScaleInterval(
+                        ring, ReclaimGlobals.PURITY_RING_SEC,
+                        Vec4(r, g, b, 0)),
+                ),
+            ).start()
+        except Exception:
+            self.__clearPurityBurstOverlay()
+
+    def __clearPurityBurstOverlay(self):
+        for attr in ('_burstFlashNP', '_burstRingNP'):
+            np = getattr(self, attr, None)
+            if np is not None and not np.isEmpty():
+                try:
+                    np.removeNode()
+                except Exception:
+                    pass
+            setattr(self, attr, None)
 
     def __clearHud(self):
         self.__hideBanner()
         self.__hideSubBanner()
         self.__hideStatusHud()
         self.__hideDemoHint()
+        self.__clearPurityBurstOverlay()

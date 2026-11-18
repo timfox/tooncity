@@ -50,6 +50,9 @@ class MeleeCombatController(DirectObject):
         self._dodging = False
         self._origScale = None
         self._baseFov = None
+        self._comboHits = 0
+        self._comboNP = None
+        self._comboIval = None
         self.targetFinder = SoftTargetFinder(avatar)
         self._hintNP = None
         self._lockHintNP = None
@@ -65,6 +68,7 @@ class MeleeCombatController(DirectObject):
         self._iframeUntil = 0.0
         self._dodgeReadyAt = 0.0
         self._dodging = False
+        self._comboHits = 0
         self.avatar.hackSlashDemoHostiles = getattr(
             self.avatar, 'hackSlashDemoHostiles', []) or []
         if spawnHostiles and not self.avatar.hackSlashDemoHostiles:
@@ -74,6 +78,7 @@ class MeleeCombatController(DirectObject):
         self.accept(HackSlashConfig.DODGE_KEY, self._onDodgePressed)
         self.accept(HackSlashConfig.DODGE_KEY_ALT, self._onDodgePressed)
         self.accept('corruptToonHitPlayer', self._onCorruptHitPlayer)
+        self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
         taskMgr.add(self._tick, self._taskName)  # noqa: F821
 
@@ -87,7 +92,9 @@ class MeleeCombatController(DirectObject):
         self.ignore(HackSlashConfig.DODGE_KEY)
         self.ignore(HackSlashConfig.DODGE_KEY_ALT)
         self.ignore('corruptToonHitPlayer')
+        self.ignore('hackslash-hit')
         taskMgr.remove(self._taskName)  # noqa: F821
+        taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
         self._finishSwing()
         self._restoreScale()
         self._clearHitstop()
@@ -95,8 +102,10 @@ class MeleeCombatController(DirectObject):
         self._clearHitFlash()
         self._clearLaunch()
         self._clearDodge()
+        self._clearComboCounter()
         self._iframeUntil = 0.0
         self._dodging = False
+        self._comboHits = 0
         self.targetFinder.clear()
         self._hideHint()
         self._hideLockHint()
@@ -290,6 +299,112 @@ class MeleeCombatController(DirectObject):
                 self._playLauncher(target, hitIndex)
             if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
                 self._playFinisherFovPunch()
+        else:
+            # Whiff inside a live string soft-breaks the on-screen counter.
+            if self._comboHits > 0:
+                self._armComboBreak(delay=0.35)
+
+    def _onHackSlashHit(self, avatar=None, target=None, damage=0, hitIndex=0):
+        """Tick the on-screen combo counter for any local melee connect."""
+        if not self.enabled:
+            return
+        if avatar is not None and avatar is not self.avatar:
+            return
+        self._comboHits += 1
+        self._showComboCounter(self._comboHits)
+        self._armComboBreak()
+
+    def _armComboBreak(self, delay=None):
+        name = self.avatar.uniqueName('hackslashComboBreak')
+        taskMgr.remove(name)  # noqa: F821
+        hold = HackSlashConfig.COMBO_BREAK_SEC if delay is None else float(delay)
+        taskMgr.doMethodLater(hold, self._breakComboCounter, name)  # noqa: F821
+
+    def _breakComboCounter(self, task):
+        self._fadeComboCounter()
+        return Task.done
+
+    def _showComboCounter(self, hits):
+        """Readable KH-style hit counter — pops on each connect, then settles."""
+        text = '%d %s' % (int(hits), HackSlashConfig.COMBO_COUNTER_LABEL)
+        colors = HackSlashConfig.COMBO_COUNTER_COLORS
+        color = colors[min(max(0, hits - 1), len(colors) - 1)]
+        if self._comboNP is None or self._comboNP.isEmpty():
+            tn = TextNode('hackslash-combo')
+            tn.setText(text)
+            tn.setAlign(TextNode.ACenter)
+            tn.setTextColor(*color)
+            tn.setShadow(0.05, 0.05)
+            tn.setShadowColor(0, 0, 0, 0.8)
+            np = aspect2d.attachNewNode(tn)  # noqa: F821
+            np.setPos(*HackSlashConfig.COMBO_COUNTER_POS)
+            np.setScale(HackSlashConfig.COMBO_COUNTER_BASE_SCALE)
+            np.setTransparency(TransparencyAttrib.MAlpha)
+            np.setColorScale(1, 1, 1, 1)
+            np.setBin('fixed', 55)
+            self._comboNP = np
+        else:
+            node = self._comboNP.node()
+            node.setText(text)
+            node.setTextColor(*color)
+            self._comboNP.setColorScale(1, 1, 1, 1)
+            self._comboNP.show()
+
+        if self._comboIval:
+            try:
+                self._comboIval.pause()
+            except Exception:
+                pass
+            self._comboIval = None
+        baseScale = HackSlashConfig.COMBO_COUNTER_BASE_SCALE
+        popScale = HackSlashConfig.COMBO_COUNTER_POP_SCALE
+        # Slight size climb so long strings stay readable as a reward.
+        grow = min(0.04, 0.008 * max(0, hits - 1))
+        settle = baseScale + grow
+        peak = popScale + grow
+        self._comboIval = Sequence(
+            LerpScaleInterval(
+                self._comboNP, HackSlashConfig.COMBO_COUNTER_POP_SEC, peak),
+            LerpScaleInterval(
+                self._comboNP, HackSlashConfig.COMBO_COUNTER_SETTLE_SEC, settle),
+            name=self.avatar.uniqueName('hackslashComboPop'),
+        )
+        self._comboIval.start()
+
+    def _fadeComboCounter(self):
+        if self._comboNP is None or self._comboNP.isEmpty():
+            self._comboHits = 0
+            return
+        if self._comboIval:
+            try:
+                self._comboIval.pause()
+            except Exception:
+                pass
+        np = self._comboNP
+        self._comboIval = Sequence(
+            LerpColorScaleInterval(
+                np, HackSlashConfig.COMBO_FADE_SEC, Vec4(1, 1, 1, 0)),
+            Func(self._clearComboCounter),
+            name=self.avatar.uniqueName('hackslashComboFade'),
+        )
+        self._comboIval.start()
+        self._comboHits = 0
+
+    def _clearComboCounter(self):
+        taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
+        if self._comboIval:
+            try:
+                self._comboIval.pause()
+            except Exception:
+                pass
+            self._comboIval = None
+        if self._comboNP and not self._comboNP.isEmpty():
+            try:
+                self._comboNP.removeNode()
+            except Exception:
+                pass
+        self._comboNP = None
+        self._comboHits = 0
 
     def _playLauncher(self, target, hitIndex):
         """Brief upward juggle on mid/finisher hits (rubber-hose pop)."""
