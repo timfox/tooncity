@@ -250,6 +250,15 @@ PUNCHLINE_ACT_TIP_POP_STRETCH = (0.74, 1.0, 1.48, 0.08)
 PUNCHLINE_ACT_TIP_POP_SETTLE_SEC = 0.10
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_OVERSHOOT = (0.90, 1.0, 1.16, 0.07)
 PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
+# Brief cream hose settle after Punchline tip trust/fracture bounce (#198).
+# Outward overshoot → rest so the Act 2 unease tip lands rubber-hose and
+# readable — handoff cream edge settle (#222) twin on the tip bar. Armed
+# on tipHose='punchline' only. PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED
+# = False drops this cream settle only (hose pop + trust/fracture settle +
+# cream wash remain). No keyblades / KH branding.
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED = True
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT = (1.06, 1.0, 1.10, 0.06)  # sx, sy, sz, sec
+PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC = 0.09
 
 # Soft cream wash pulse after Punchline Act 2 tip hose pop (#91).
 # Act-banner / trust wash grammar (#154/#145) — delayed two-beat aspect2d
@@ -259,9 +268,10 @@ PUNCHLINE_ACT_TIP_TRUST_SETTLE_REST_SEC = 0.09
 # default tip hose stay wash-free; Silly tip wash lives in its own module.
 # Act-enter / trust / handoff / victory / finale washes live in their own
 # modules. PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = False drops wash only
-# (hose pop + trust settle remain). No keyblades / KH branding.
+# (hose pop + trust settle + cream hose settle remain). No keyblades / KH
+# branding.
 PUNCHLINE_ACT_TIP_CREAM_WASH_ENABLED = True
-PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.36  # after play; after hose settle
+PUNCHLINE_ACT_TIP_CREAM_WASH_DELAY_SEC = 0.52  # after play; after cream hose settle
 PUNCHLINE_ACT_TIP_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
 PUNCHLINE_ACT_TIP_CREAM_WASH_PEAK = 0.12
 PUNCHLINE_ACT_TIP_CREAM_WASH_MID = 0.07

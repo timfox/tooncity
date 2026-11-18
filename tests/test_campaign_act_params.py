@@ -476,6 +476,29 @@ class CampaignActParamsTest(unittest.TestCase):
         ).read_text(encoding='utf-8').lower()
         self.assertIn('edge settle', magic_l)
 
+    def test_punchline_tip_cream_hose_settle_tunables(self):
+        """#198 Punchline tip gets brief cream hose settle after trust bounce."""
+        camp = self.camp
+        self.assertTrue(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED)
+        over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
+        self.assertEqual(len(over), 4)
+        self.assertGreater(float(over[0]), 1.0)
+        self.assertGreater(float(over[2]), 1.0)
+        self.assertGreater(float(over[3]), 0.0)
+        self.assertGreater(
+            float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC), 0.0)
+        play_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'PlayEntry.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_ENABLED', play_src)
+        self.assertIn('PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT', play_src)
+        magic_l = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8').lower()
+        self.assertIn('cream hose settle', magic_l)
+
     def test_finale_betrayal_handoff_banner(self):
         """Finale betrayal handoff plate lands twist when reveal fires."""
         camp = self.camp
