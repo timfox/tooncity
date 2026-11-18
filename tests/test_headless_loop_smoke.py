@@ -2218,6 +2218,60 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_flushDodgeCancelBuffer', melee_src)
         self.assertIn('_cancelDodgeIntoMelee', melee_src)
 
+        # Perfect-dodge counter → melee — rewarded cancel window after perfect
+        # dodge into a bumped/snappy stretch-punch opener (builds on #186).
+        for pd_counter_key in (
+                'PERFECT_DODGE_COUNTER_ENABLED',
+                'PERFECT_DODGE_COUNTER_WINDOW_SEC',
+                'PERFECT_DODGE_COUNTER_DAMAGE_MULT',
+                'PERFECT_DODGE_COUNTER_RATE_MULT',
+                'PERFECT_DODGE_COUNTER_BUFFER'):
+            self.assertIn(
+                pd_counter_key, config_names,
+                msg='HackSlashConfig missing perfect-dodge counter %s' % (
+                    pd_counter_key,))
+        self.assertIs(config_assigns.get('PERFECT_DODGE_COUNTER_ENABLED'), True)
+        self.assertIs(config_assigns.get('PERFECT_DODGE_COUNTER_BUFFER'), True)
+        pd_window = config_assigns.get('PERFECT_DODGE_COUNTER_WINDOW_SEC')
+        pd_dmg = config_assigns.get('PERFECT_DODGE_COUNTER_DAMAGE_MULT')
+        pd_rate = config_assigns.get('PERFECT_DODGE_COUNTER_RATE_MULT')
+        self.assertIsInstance(pd_window, float)
+        self.assertIsInstance(pd_dmg, float)
+        self.assertIsInstance(pd_rate, float)
+        self.assertGreater(pd_window, 0.0)
+        self.assertGreater(pd_dmg, 1.0)
+        self.assertGreater(pd_rate, 1.0)
+        config_funcs = {
+            node.name for node in getattr(config_tree, 'body', [])
+            if isinstance(node, ast.FunctionDef)}
+        for pd_helper in (
+                'perfectDodgeCounterOpenerDamage',
+                'perfectDodgeCounterOpenerRate',
+                'isPerfectDodgeCounterWindowOpen'):
+            self.assertIn(
+                pd_helper, config_funcs,
+                msg='HackSlashConfig missing helper %s' % pd_helper)
+        for pd_counter_method in (
+                '_armPerfectDodgeCounterWindow',
+                '_clearPerfectDodgeCounterWindow',
+                '_consumePerfectDodgeCounter',
+                'isPerfectDodgeCounterOpen',
+                '_flushPerfectDodgeCounterBuffer'):
+            self.assertIn(
+                pd_counter_method, melee_methods,
+                msg='MeleeCombatController missing %s' % pd_counter_method)
+        self.assertIn('PERFECT_DODGE_COUNTER_ENABLED', melee_src)
+        self.assertIn('hackslash-perfect-dodge-counter', melee_src)
+        self.assertIn('_armPerfectDodgeCounterWindow', melee_src)
+        self.assertIn('perfectDodgeCounterOpenerDamage', melee_src)
+        config_src = _read('toontown/hackslash/HackSlashConfig.py')
+        self.assertIn('perfect dodge→F counter', config_src)
+        hack_init_src = _read('toontown/hackslash/__init__.py')
+        self.assertIn('perfectDodgeCounterOpenerDamage', hack_init_src)
+        self.assertIn('isPerfectDodgeCounterWindowOpen', hack_init_src)
+        magic_src = _read('toontown/hackslash/MagicWords.py')
+        self.assertIn('perfect-dodge counter', magic_src)
+
         # Hub tip discoverability (#184) — Oswald + Loopy + C, no magic words.
         hub_tip_node = _toplevel_value(self.campaign_tree, 'HUB_TIP')
         hub_tip = _literal(hub_tip_node)

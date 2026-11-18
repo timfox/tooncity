@@ -359,6 +359,39 @@ DODGE_CANCEL_WINDOW_SEC = 0.40
 # Buffer F/LMB pressed during early dodge; fire when the cancel window opens.
 DODGE_CANCEL_BUFFER = True
 
+# Perfect-dodge counter → melee. When dodge i-frames eat a CorruptToon
+# telegraph, open a short rewarded cancel window into the next stretch-punch
+# opener (damage bump + snappy rate). Builds on DODGE_CANCEL_* (#186) and
+# perfect-dodge juice — rubber-hose punish feel, no keyblades / KH branding.
+PERFECT_DODGE_COUNTER_ENABLED = True
+# Seconds the rewarded counter window stays open after the perfect-dodge beat.
+PERFECT_DODGE_COUNTER_WINDOW_SEC = 0.50
+# Opener damage multiplier while the counter window is consumed.
+PERFECT_DODGE_COUNTER_DAMAGE_MULT = 1.5
+# Opener play-rate multiplier for a snappier counter punch.
+PERFECT_DODGE_COUNTER_RATE_MULT = 1.2
+# Buffer F/LMB pressed just as perfect dodge fires; flush on the melee tick.
+PERFECT_DODGE_COUNTER_BUFFER = True
+
+
+def perfectDodgeCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after a perfect dodge."""
+    if mult is None:
+        mult = PERFECT_DODGE_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def perfectDodgeCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after a perfect dodge."""
+    if mult is None:
+        mult = PERFECT_DODGE_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isPerfectDodgeCounterWindowOpen(armed, until, now):
+    """True while a perfect-dodge counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
 # Dodge roll afterimage / smear trail (Shift/X i-frame roll juice).
 # Warm cartoon smear ghosts drip behind the toon — not KH blue streaks.
 DODGE_TRAIL_SPAWN_SEC = 0.045
@@ -780,5 +813,6 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Stretch punches: F/LMB  |  Shift/X dodge→F  |  Tab/` soft-lock cycle  |  ~melee'
+    'Stretch punches: F/LMB  |  Shift/X dodge→F  |  perfect dodge→F counter  |  '
+    'Tab/` soft-lock cycle  |  ~melee'
 )

@@ -5,6 +5,11 @@ Slice 1: stretch punches, short combo window, soft nearest-hostile targeting.
 """
 
 from .MeleeCombat import MeleeCombatController
+from .HackSlashConfig import (
+    isPerfectDodgeCounterWindowOpen,
+    perfectDodgeCounterOpenerDamage,
+    perfectDodgeCounterOpenerRate,
+)
 from .SoftTarget import (
     SoftTargetFinder,
     HackSlashTarget,
@@ -33,6 +38,9 @@ from .SoftLockReticleFx import SoftLockReticleFx
 
 __all__ = [
     'MeleeCombatController',
+    'isPerfectDodgeCounterWindowOpen',
+    'perfectDodgeCounterOpenerDamage',
+    'perfectDodgeCounterOpenerRate',
     'SoftTargetFinder',
     'HackSlashTarget',
     'nextCycleIndex',
