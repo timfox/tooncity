@@ -173,39 +173,39 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         damage = max(0, int(amount))
         newHp = max(0, self.hp - damage)
         self.b_setHp(newHp)
-        # Balloon Snare string-snap punish: melee mid-telegraph cancels the
-        # wind-up so the zip-flier feels fair to counter.
+        # Melee mid-telegraph punish: cancel Snare string / Brute spit /
+        # Gagster lob wind-ups so Punchline kits feel fair to interrupt.
         if newHp > 0:
-            self.__maybeInterruptSnareTelegraph()
+            self.__maybeInterruptMeleeTelegraph()
         if newHp <= 0:
             self.__defeat(attackerId)
         return damage
 
-    def __maybeInterruptSnareTelegraph(self):
-        """Cancel Snare wind-up when punished mid-string telegraph."""
+    def __maybeInterruptMeleeTelegraph(self):
+        """Cancel Snare / Brute spit / Gagster lob wind-up mid-telegraph."""
         if not self._attacking:
             return
-        if not getattr(
-                CorruptionGlobals, 'SNARE_STRING_COUNTER_INTERRUPT', True):
-            return
-        if (CorruptionGlobals.normalizeArchetype(self.archetype)
-                != CorruptionGlobals.ARCHETYPE_SNARE):
+        move = getattr(self, '_attackMove', 'smack') or 'smack'
+        if not CorruptionGlobals.isMeleeInterruptibleTelegraph(
+                self.archetype, move):
             return
         self._attacking = False
+        # Clear wind-up aim snapshots only — do not drop an already-landed
+        # Gagster linger sludge (independent of this unit's telegraph).
         self._puddleXY = None
+        self._spitAimXY = None
         try:
             taskMgr.remove(self.uniqueName('corrupt-attack'))
         except Exception:
             pass
-        # Snare interrupt does not clear an already-landed Gagster linger
-        # sludge — that hazard is independent of this unit's wind-up.
         # Brief recovery so a successful punish doesn't chain into an instant
         # re-telegraph — still snappier than a full miss cooldown.
         cool = float(self._stats.get(
             'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN))
         self._attackReadyAt = (
             globalClock.getFrameTime() + max(0.2, cool * 0.45))  # noqa: F821
-        self.notify.debug('snare string-snap interrupt — wind-up cancelled')
+        self.notify.debug(
+            'melee telegraph interrupt (%s) — wind-up cancelled' % move)
 
     def requestHackSlashHit(self, damage, hitIndex=0):
         """Client melee RPC: SoftTarget applyHackSlashHit → AI damage + hang stun."""

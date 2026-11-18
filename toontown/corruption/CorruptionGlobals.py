@@ -2059,8 +2059,33 @@ SNARE_STRING_COUNTER_DAMAGE_MULT = 1.5
 SNARE_STRING_COUNTER_RATE_MULT = 1.2
 # Cancel Snare wind-up when melee lands mid-telegraph (AI interrupt).
 SNARE_STRING_COUNTER_INTERRUPT = True
+# Extend the same snare-style mid-telegraph melee cancel to Punchline kits:
+# Brute spit + Gagster lob wind-ups only (not Brute slam, Overlord rain/surge,
+# or dedicated counter damage windows — those stay separate / deferred).
+# AI path in DistributedCorruptToonAI.__maybeInterruptMeleeTelegraph.
+BRUTE_SPIT_MELEE_INTERRUPT = True
+GAGSTER_LOB_MELEE_INTERRUPT = True
 # Messenger name — DistributedCorruptToon → MeleeCombat thin hook.
 SNARE_STRING_COUNTER_EVENT = 'corruptSnareStringSnapCounter'
+
+
+def isMeleeInterruptibleTelegraph(archetype, move):
+    """True when stretch-punch mid-telegraph should cancel this wind-up.
+
+    Snare: any string telegraph when SNARE_STRING_COUNTER_INTERRUPT.
+    Brute: spit only (slam stays commit-through).
+    Gagster: gag_lob only.
+    Overlord / Smudge / Oswald: False here — out of this PR's scope.
+    """
+    aid = normalizeArchetype(archetype)
+    moveName = str(move or 'smack')
+    if aid == ARCHETYPE_SNARE:
+        return bool(SNARE_STRING_COUNTER_INTERRUPT)
+    if aid == ARCHETYPE_BRUTE and moveName == 'spit':
+        return bool(BRUTE_SPIT_MELEE_INTERRUPT)
+    if aid == ARCHETYPE_GAGSTER and moveName == 'gag_lob':
+        return bool(GAGSTER_LOB_MELEE_INTERRUPT)
+    return False
 
 
 def snareStringCounterOpenerDamage(baseDamage, mult=None):
