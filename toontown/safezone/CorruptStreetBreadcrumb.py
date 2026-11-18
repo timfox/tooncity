@@ -13,11 +13,11 @@ deepened with a juicier cream mid-settle + soft cream pip blot under
 each crumb so polluted streets read juicier from the playground side —
 distinct from placemarker cream deepen (#230), fog edge cream deepen
 (#236), and birds-return fullscreen wash (#226). A soft pollution fog
-edge veil also breathes at the playground-side tunnel lip (#221),
-deepened with a juicier cream mid-settle + soft cream rim bloom so
-polluted borders read punchier — distinct from placemarker/crumb scale
-pulses, tunnel placemarker cream deepen (#230), and birds-return
-fullscreen wash (#226).
+edge veil also breathes at the playground-side tunnel lip (#221 / #236),
+deepened again on the cream rim (juicier peak/mid + soft mid hold +
+micro rebound) so polluted borders read juicier — distinct from fog
+edge cream #236, birds-return cream deepen #246, and placemarker/crumb
+cues.
 
 When a polluted reclaim tunnel clears (or purityRestoreFx fires while
 the hub is live), a brief birds-return cream wash pulses so the
@@ -124,15 +124,21 @@ _FOG_PEAK = Vec4(0.14, 0.08, 0.17, 0.40)  # slightly warmer / juicier ink peak
 _FOG_CREAM_MID = Vec4(0.62, 0.48, 0.34, 0.28)  # cream-ink settle before rest
 _FOG_CREAM_MID_SEC = 0.14  # slower than placemarker mid (#230) — fog is soft
 # Soft cream rim under the ink fog during the edge breath.
+# Rim deepen (post-#236): juicier peak/mid + mid hold + micro rebound
+# settle — not birds rising chirp/sky halo #246; not #236 peak→mid→rest.
 _FOG_CREAM_RIM_NAME = 'playgroundPollutionFogCreamRim'
-_FOG_CREAM_RIM_HALF_W = 3.45  # peeks past ink fog as a sunny rim
-_FOG_CREAM_RIM_HALF_H = 1.08
+_FOG_CREAM_RIM_HALF_W = 3.55  # peeks past ink fog as a sunnier rim
+_FOG_CREAM_RIM_HALF_H = 1.14
 _FOG_CREAM_RIM_Y_OFF = 0.04
 _FOG_CREAM_RIM_Z_OFF = -0.04
-_FOG_CREAM_RIM_SCALE_PEAK = 1.16  # gentler than placemarker halo 1.32
-_FOG_CREAM_RIM_PEAK = Vec4(1.0, 0.97, 0.82, 0.30)  # sunny cream rim peek
-_FOG_CREAM_RIM_MID = Vec4(1.0, 0.94, 0.74, 0.14)
+_FOG_CREAM_RIM_SCALE_PEAK = 1.22  # juicier than #236 1.16; < halo 1.32 / pip 1.48
+_FOG_CREAM_RIM_PEAK = Vec4(1.0, 0.98, 0.84, 0.38)  # brighter sunny cream rim
+_FOG_CREAM_RIM_MID = Vec4(1.0, 0.95, 0.76, 0.20)
 _FOG_CREAM_RIM_REST = Vec4(1.0, 0.97, 0.82, 0.0)
+_FOG_CREAM_RIM_HOLD_SEC = 0.10  # soft mid linger on the rim (not birds hold)
+_FOG_CREAM_RIM_REBOUND_SCALE = 1.06  # micro rebound after mid→rest
+_FOG_CREAM_RIM_REBOUND_SEC = 0.08
+_FOG_CREAM_RIM_REBOUND_PEAK = Vec4(1.0, 0.96, 0.78, 0.10)  # soft cream flash
 
 # Short rubber-hose signpost copy (world placemarker — keep punchy).
 _STREET_COPY = {
@@ -315,14 +321,17 @@ def playgroundFogEdgePulseParams():
 def playgroundFogEdgeCreamParams():
     """Pure cream-deepen params for playground pollution fog edge breath.
 
-    Juicier cream mid-settle on the ink fog veil + soft cream rim bloom
-    at the tunnel lip (#221 deepen). Distinct from placemarkerPulseCream
-    Params (#230 local text halo) and BirdsReturnCreamWashFx fullscreen
-    wash (#226). Headless-safe — no Panda geom.
+    Cream mid-settle on the ink fog veil + juicier cream rim bloom at
+    the tunnel lip (#236 deepen, rim deepen aftershock). Distinct from
+    placemarkerPulseCreamParams (#230 local text halo), BirdsReturnCream
+    WashFx fullscreen wash + rising chirp (#246 / #226), and the
+    original #236 peak→mid→rest rim (no hold / rebound). Headless-safe
+    — no Panda geom.
     """
     mid = _FOG_CREAM_MID
     rimPeak = _FOG_CREAM_RIM_PEAK
     rimMid = _FOG_CREAM_RIM_MID
+    rebound = _FOG_CREAM_RIM_REBOUND_PEAK
     return {
         'creamMid': (float(mid[0]), float(mid[1]), float(mid[2]), float(mid[3])),
         'creamMidSec': float(_FOG_CREAM_MID_SEC),
@@ -332,10 +341,16 @@ def playgroundFogEdgeCreamParams():
         'rimScalePeak': float(_FOG_CREAM_RIM_SCALE_PEAK),
         'rimHalfW': float(_FOG_CREAM_RIM_HALF_W),
         'rimHalfH': float(_FOG_CREAM_RIM_HALF_H),
+        'rimHoldSec': float(_FOG_CREAM_RIM_HOLD_SEC),
+        'rimReboundScale': float(_FOG_CREAM_RIM_REBOUND_SCALE),
+        'rimReboundSec': float(_FOG_CREAM_RIM_REBOUND_SEC),
+        'rimReboundAlpha': float(rebound[3]),
         # Tunnel-lip world-space cream rim — not placemarker halo / wash.
         'localRim': True,
+        'rimRebound': True,
         'fullscreenWash': False,
         'placemarkerHalo': False,
+        'birdsChirpFlecks': False,
     }
 
 
@@ -633,7 +648,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         return fog
 
     def _attachFogCreamRim(self, link, zoneId):
-        """Soft cream rim under ink fog — deepen #221 fog edge cream cue."""
+        """Soft cream rim under ink fog — deepen rim juice past #236."""
         zoneId = int(zoneId)
         old = self._fogCreamRims.pop(zoneId, None)
         if old is not None:
@@ -1100,26 +1115,54 @@ class CorruptStreetBreadcrumb(DirectObject):
         return Parallel(*parts)
 
     def _buildFogCreamRimIval(self, rim, half, midSec):
-        """Tunnel-lip cream rim bloom — peak → mid → fade (not #230/#226)."""
+        """Tunnel-lip cream rim bloom — juicier peak → mid hold → rest → rebound.
+
+        Distinct from #236 peak→mid→rest (no hold/rebound), birds #246
+        rising chirp/sky halo, and placemarker halo #230.
+        """
         peakScale = float(_FOG_CREAM_RIM_SCALE_PEAK)
+        holdSec = max(0.04, float(_FOG_CREAM_RIM_HOLD_SEC))
+        reboundSec = max(0.04, float(_FOG_CREAM_RIM_REBOUND_SEC))
+        reboundScale = float(_FOG_CREAM_RIM_REBOUND_SCALE)
+        # Settle mid window uses fog cream midSec; rim then holds + rebounds.
+        settleSec = max(0.04, float(midSec))
         return Parallel(
             Sequence(
                 LerpColorScaleInterval(
                     rim, half, _FOG_CREAM_RIM_PEAK,
                     startColorScale=_FOG_CREAM_RIM_REST, blendType='easeOut'),
                 LerpColorScaleInterval(
-                    rim, midSec, _FOG_CREAM_RIM_MID,
+                    rim, settleSec, _FOG_CREAM_RIM_MID,
                     startColorScale=_FOG_CREAM_RIM_PEAK, blendType='easeInOut'),
+                # Soft mid linger so the sunny rim reads before fade.
+                LerpColorScaleInterval(
+                    rim, holdSec, _FOG_CREAM_RIM_MID,
+                    startColorScale=_FOG_CREAM_RIM_MID, blendType='easeInOut'),
                 LerpColorScaleInterval(
                     rim, half, _FOG_CREAM_RIM_REST,
                     startColorScale=_FOG_CREAM_RIM_MID, blendType='easeIn'),
+                # Micro cream rebound flash — rim deepen residual (not #246).
+                LerpColorScaleInterval(
+                    rim, reboundSec * 0.45, _FOG_CREAM_RIM_REBOUND_PEAK,
+                    startColorScale=_FOG_CREAM_RIM_REST, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    rim, reboundSec * 0.55, _FOG_CREAM_RIM_REST,
+                    startColorScale=_FOG_CREAM_RIM_REBOUND_PEAK,
+                    blendType='easeIn'),
             ),
             Sequence(
                 LerpScaleInterval(
                     rim, half, peakScale, startScale=1.0,
                     blendType='easeOut'),
                 LerpScaleInterval(
-                    rim, half + midSec, 1.0, startScale=peakScale,
+                    rim, settleSec + holdSec, 1.0, startScale=peakScale,
+                    blendType='easeIn'),
+                Wait(half),  # color fade to rest; hold scale at 1.0
+                LerpScaleInterval(
+                    rim, reboundSec * 0.45, reboundScale, startScale=1.0,
+                    blendType='easeOut'),
+                LerpScaleInterval(
+                    rim, reboundSec * 0.55, 1.0, startScale=reboundScale,
                     blendType='easeIn'),
             ),
         )

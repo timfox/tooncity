@@ -3366,6 +3366,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_FOG_CREAM_MID', crumb_src)
         self.assertIn('_attachFogCreamRim', crumb_src)
         self.assertIn('playgroundPollutionFogCreamRim', crumb_src)
+        # Fog cream rim deepen (hold + rebound; not birds #246 / #236 alone).
+        self.assertIn('_FOG_CREAM_RIM_HOLD_SEC', crumb_src)
+        self.assertIn('_FOG_CREAM_RIM_REBOUND_SCALE', crumb_src)
+        self.assertIn('rimRebound', crumb_src)
         # Birds-return cream wash on hub pollution clear (pairs with #55).
         birds_wash_rel = 'toontown/safezone/BirdsReturnCreamWashFx.py'
         _assert_module_file(birds_wash_rel)

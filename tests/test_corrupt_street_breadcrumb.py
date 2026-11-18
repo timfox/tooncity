@@ -7,7 +7,8 @@ discoverability (#192), placemarker notice-pulse timing (#211), cream
 deepen mid-settle + local halo on that pulse, the distinct tunnel-mouth
 crumb-trail pulse (#216), crumb pulse cream deepen (mid-settle + pip,
 distinct from #230 / #236 / #226), playground pollution fog edge breath
-(#221), and fog-edge cream deepen (cream mid-settle + rim).
+(#221), fog-edge cream deepen (cream mid-settle + rim #236), and fog
+cream rim deepen (juicier rim + mid hold + rebound; ≠ #246 / #236).
 
 Run from repo root:
   python3 tests/test_corrupt_street_breadcrumb.py
@@ -47,6 +48,8 @@ def _extract_pure_helpers():
         '_FOG_CREAM_MID', '_FOG_CREAM_MID_SEC',
         '_FOG_CREAM_RIM_PEAK', '_FOG_CREAM_RIM_MID',
         '_FOG_CREAM_RIM_SCALE_PEAK', '_FOG_CREAM_RIM_HALF_W', '_FOG_CREAM_RIM_HALF_H',
+        '_FOG_CREAM_RIM_HOLD_SEC', '_FOG_CREAM_RIM_REBOUND_SCALE',
+        '_FOG_CREAM_RIM_REBOUND_SEC', '_FOG_CREAM_RIM_REBOUND_PEAK',
     }
     keep = []
     for node in tree.body:
@@ -245,6 +248,17 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'localRim'):
             self.assertIn(
                 needle, self.src, msg='missing fog cream deepen %s' % needle)
+        # Fog cream rim deepen (mid hold + rebound; not birds #246 / #236 alone).
+        for needle in (
+                '_FOG_CREAM_RIM_HOLD_SEC',
+                '_FOG_CREAM_RIM_REBOUND_SCALE',
+                '_FOG_CREAM_RIM_REBOUND_SEC',
+                '_FOG_CREAM_RIM_REBOUND_PEAK',
+                'rimHoldSec',
+                'rimRebound',
+                'birdsChirpFlecks'):
+            self.assertIn(
+                needle, self.src, msg='missing fog cream rim deepen %s' % needle)
         # Birds-return cream wash when hub pollution clears (#231).
         for needle in (
                 '_cueBirdsReturnCreamWash',
@@ -434,6 +448,42 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         self.assertNotIn('highlight', cream)
         self.assertNotIn('rimPeakAlpha', placemarker_cream)
         self.assertNotIn('localRim', placemarker_cream)
+
+    def test_playground_fog_cream_rim_deepen_params(self):
+        """Rim deepen past #236 — juicier rim + hold + rebound (≠ #246)."""
+        cream = self._fog_cream()
+        placemarker_cream = self._cream()
+        crumb_cream = self._crumb_cream()
+        # Local rim rebound residual — not birds chirp flecks / fullscreen.
+        self.assertTrue(cream['localRim'])
+        self.assertTrue(cream['rimRebound'])
+        self.assertFalse(cream['birdsChirpFlecks'])
+        self.assertFalse(cream['fullscreenWash'])
+        # Juicier than original #236 rim peak (0.30) / scale (1.16).
+        self.assertGreater(cream['rimPeakAlpha'], 0.30)
+        self.assertLess(cream['rimPeakAlpha'], 0.50)
+        self.assertGreater(cream['rimMidAlpha'], 0.14)
+        self.assertLess(cream['rimMidAlpha'], cream['rimPeakAlpha'])
+        self.assertGreater(cream['rimScalePeak'], 1.16)
+        self.assertLess(cream['rimScalePeak'], placemarker_cream['haloScalePeak'])
+        # Still gentler than crumb pip bloom; wider than crumb pip blot.
+        self.assertLess(cream['rimScalePeak'], crumb_cream['pipScalePeak'])
+        self.assertGreater(cream['rimHalfW'], crumb_cream['pipHalfW'])
+        # Soft mid hold + micro rebound settle (rim deepen signature).
+        self.assertGreater(cream['rimHoldSec'], 0.05)
+        self.assertLessEqual(cream['rimHoldSec'], 0.20)
+        self.assertGreater(cream['rimReboundScale'], 1.0)
+        self.assertLess(cream['rimReboundScale'], cream['rimScalePeak'])
+        self.assertGreater(cream['rimReboundSec'], 0.04)
+        self.assertLessEqual(cream['rimReboundSec'], 0.16)
+        self.assertGreater(cream['rimReboundAlpha'], 0.04)
+        self.assertLess(cream['rimReboundAlpha'], cream['rimMidAlpha'])
+        # Distinct deepen keys — not placemarker halo / crumb pip vocabulary.
+        self.assertNotIn('rimHoldSec', placemarker_cream)
+        self.assertNotIn('rimRebound', placemarker_cream)
+        self.assertNotIn('rimReboundScale', crumb_cream)
+        self.assertNotIn('birdsChirpFlecks', placemarker_cream)
+        self.assertNotIn('birdsChirpFlecks', crumb_cream)
 
     def test_tt_playground_wires_breadcrumbs(self):
         playground = (
