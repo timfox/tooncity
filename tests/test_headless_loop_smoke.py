@@ -517,6 +517,12 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertGreater(float(cg.GAGSTER_PUDDLE_LINGER_SEC), 1.0)
         self.assertIn('__armGagsterPuddleLinger', ai_src)
         self.assertIn('__tickGagsterPuddleLinger', ai_src)
+        # Overlord ink-rain linger sludge hazard (DoT / slow) after rain resolve.
+        self.assertTrue(hasattr(cg, 'OVERLORD_RAIN_LINGER_ENABLED'))
+        self.assertIs(cg.OVERLORD_RAIN_LINGER_ENABLED, True)
+        self.assertGreater(float(cg.OVERLORD_RAIN_LINGER_SEC), 1.0)
+        self.assertIn('__armOverlordRainLinger', ai_src)
+        self.assertIn('__tickOverlordRainLinger', ai_src)
         magic_src = _read('toontown/corruption/MagicWords.py')
         self.assertIn('spawngagster', magic_src)
         self.assertIn('ARCHETYPE_GAGSTER', magic_src)

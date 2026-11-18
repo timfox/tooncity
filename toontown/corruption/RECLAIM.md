@@ -453,10 +453,12 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    **AI**: slower chase + mid-range **ink-rain AoE** plus close-range **slam**
    when the player is already in the ink (`OVERLORD_PHASE_COMBAT[1]` two-note
    Rising kit — second pressure beyond rain-only before Unleash) matching the
-   rain puddle / spread — not Smudge melee smack. Mid-range surge stays on
-   Unleashed only. Melee mid-rain / mid-slam telegraph cancels the wind-up
-   (same snare-style AI interrupt as Brute spit / Gagster lob;
-   `OVERLORD_RAIN_MELEE_INTERRUPT` / `OVERLORD_SLAM_MELEE_INTERRUPT`).
+   rain puddle / spread — not Smudge melee smack. Rain resolve also leaves a
+   short **lingering sludge hazard** (`OVERLORD_RAIN_LINGER_*` — Gagster-like
+   DoT / slow while standing in the magenta puddle; arena trap, not cream
+   deepen). Mid-range surge stays on Unleashed only. Melee mid-rain / mid-slam
+   telegraph cancels the wind-up (same snare-style AI interrupt as Brute spit /
+   Gagster lob; `OVERLORD_RAIN_MELEE_INTERRUPT` / `OVERLORD_SLAM_MELEE_INTERRUPT`).
    After each telegraph reads, a short dedicated counter window arms by
    move id — F / LMB punish opener (`OVERLORD_RAIN_COUNTER_*` /
    `OVERLORD_SLAM_COUNTER_*`; same reward path as Snare / Brute spit /

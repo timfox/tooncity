@@ -102,6 +102,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._gagPuddleIval = None
         self._gagPuddleNP = None
         self._gagsterSludgeSlow = None
+        self._overlordRainLingerIval = None
+        self._overlordRainLingerNP = None
+        self._overlordRainSludgeSlow = None
         self._deathPopSplat = None
         self._telegraphInkDrip = None
         self._telegraphCreamWarn = None
@@ -200,7 +203,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                      '_telegraphIval', '_attackHitIval',
                      '_attackFlashIval', '_purityFlashIval',
                      '_spitBlobIval', '_stringLashIval',
-                     '_gagLobIval', '_gagPuddleIval'):
+                     '_gagLobIval', '_gagPuddleIval',
+                     '_overlordRainLingerIval'):
             ival = getattr(self, attr, None)
             if ival is not None:
                 ival.finish()
@@ -223,6 +227,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSilhouetteCreamWash()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordRainLingerPuddle()
         self.__clearOverlordTelegraphPunch()
         self.__clearOverlordMagentaInkSplash()
         self.__clearOverlordHitCreamWash()
@@ -903,6 +908,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if look:
             # Overlord impact ground punch bloom — warn ring already cleared.
             self.__playOverlordTelegraphPunchImpact(look, phase)
+            # Rain land leaves a linger sludge ring (DoT / slow arena trap).
+            overlordMove = (
+                CorruptionGlobals.normalizeOverlordTelegraphMove(
+                    getattr(self, '_telegraphMove', ''))
+                or 'rain')
+            if CorruptionGlobals.overlordTelegraphShowsInkRain(overlordMove):
+                self.__playOverlordRainLingerPuddle()
         if isBrute:
             self.__playSpitBlob()
         elif isSnare:
@@ -946,9 +958,21 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
             self.__resumePulse()
         # Drop Overlord warn ring / crown / rain so dodge owns the recover beat.
+        look, _phase = self.__finalePhaseLook()
+        overlordMove = (
+            CorruptionGlobals.normalizeOverlordTelegraphMove(
+                getattr(self, '_telegraphMove', ''))
+            or '')
+        rainLinger = bool(
+            look
+            and CorruptionGlobals.overlordTelegraphShowsInkRain(overlordMove))
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearOverlordTelegraphPunch()
+        # Rain still leaves arena sludge even when the land tick was dodged —
+        # matches AI __armOverlordRainLinger after resolve.
+        if rainLinger:
+            self.__playOverlordRainLingerPuddle()
         # Hackslash listens and plays perfect-dodge ink sparkle juice.
         messenger.send('corruptToonAttackDodged', [self])  # noqa: F821
 
@@ -1528,6 +1552,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSilhouetteCreamWash()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
+        self.__clearOverlordRainLingerPuddle()
         self.__clearOverlordTelegraphPunch()
         self.__clearOverlordMagentaInkSplash()
         self.__clearOverlordHitCreamWash()
@@ -2037,6 +2062,156 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._overlordInkRain = None
+
+    def __playOverlordRainLingerPuddle(self):
+        """Hold a magenta sludge ring after rain resolve (DoT / slow zone).
+
+        Gameplay trap readability — not cream FX deepen. Hold matches AI
+        OVERLORD_RAIN_LINGER_SEC so the puddle stays while ticks fire.
+        """
+        self.__clearOverlordRainLingerPuddle()
+        if not bool(getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_ENABLED', True)):
+            return
+        lingerSec = float(getattr(
+            CorruptionGlobals, 'OVERLORD_RAIN_LINGER_SEC', 0.0) or 0.0)
+        if lingerSec <= 0.0:
+            return
+        try:
+            landPos = self.getPos(render)  # noqa: F821
+        except Exception:
+            return
+        try:
+            look = dict(CorruptionGlobals.OVERLORD_PHASE_INK_RAIN_LOOK)
+            cm = CardMaker('overlord-rain-linger-puddle')
+            half = float(look.get('puddleHalf', 0.72))
+            cm.setFrame(-half, half, -half * 0.55, half * 0.55)
+            puddle = render.attachNewNode(cm.generate())  # noqa: F821
+            lift = float(look.get('puddleLift', 0.08))
+            puddle.setPos(landPos[0], landPos[1], landPos[2] + lift)
+            puddle.setP(-90)
+            puddle.setTransparency(TransparencyAttrib.MAlpha)
+            color = look.get('puddleColor', (0.12, 0.04, 0.18, 0.7))
+            puddle.setColor(color[0], color[1], color[2], color[3])
+            puddle.setBin('fixed', int(look.get('binSort', 43)) - 1)
+            puddle.setDepthWrite(False)
+            peak = float(look.get('puddlePeak', 2.65))
+            bloomSec = float(look.get('puddleInSec', 0.14))
+            fadeSec = float(look.get('puddleOutSec', 0.26))
+            holdSec = max(0.0, lingerSec)
+            self._overlordRainLingerNP = puddle
+            self._overlordRainLingerIval = Sequence(
+                Parallel(
+                    LerpScaleInterval(
+                        puddle, bloomSec, Point3(peak, peak, 1.0),
+                        startScale=Point3(0.35, 0.35, 1.0)),
+                    LerpColorScaleInterval(
+                        puddle, bloomSec, Vec4(1, 1, 1, 1),
+                        startColorScale=Vec4(1, 1, 1, 0.35)),
+                ),
+                Wait(holdSec),
+                Parallel(
+                    LerpScaleInterval(
+                        puddle, fadeSec,
+                        Point3(peak * 1.15, peak * 1.15, 1.0)),
+                    LerpColorScaleInterval(puddle, fadeSec, Vec4(1, 1, 1, 0)),
+                ),
+                Func(self.__clearOverlordRainLingerPuddle),
+            )
+            self._overlordRainLingerIval.start()
+            _look, phase = self.__finalePhaseLook()
+            combat = CorruptionGlobals.overlordPhaseCombat(
+                max(1, int(phase or 1))) or {}
+            radius = float(combat.get(
+                'attackHitRange',
+                CorruptionGlobals.OVERLORD_RAIN_LINGER_RADIUS))
+            until = CorruptionGlobals.overlordRainLingerUntil(
+                globalClock.getFrameTime(), holdSec)  # noqa: F821
+            self.__armOverlordRainSludgeSlow(landPos, radius, until)
+        except Exception:
+            self.__clearOverlordRainLingerPuddle()
+
+    def __armOverlordRainSludgeSlow(self, landPos, radius, until):
+        """Apply LocalAvatar walk-slow while standing in rain linger sludge."""
+        self.__clearOverlordRainSludgeSlow()
+        self._overlordRainSludgeSlow = {
+            'pos': landPos,
+            'radius': float(radius),
+            'until': float(until),
+            'active': False,
+        }
+        taskMgr.add(  # noqa: F821
+            self.__tickOverlordRainSludgeSlow,
+            self.uniqueName('overlord-rain-sludge-slow'))
+
+    def __tickOverlordRainSludgeSlow(self, task):
+        state = getattr(self, '_overlordRainSludgeSlow', None)
+        if state is None:
+            return Task.done
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now >= float(state['until']):
+            self.__clearOverlordRainSludgeSlow()
+            return Task.done
+        la = getattr(base, 'localAvatar', None)  # noqa: F821
+        inside = False
+        if la is not None:
+            try:
+                if not la.isEmpty():
+                    dx = float(la.getX(render)) - float(state['pos'].getX())
+                    dy = float(la.getY(render)) - float(state['pos'].getY())
+                    inside = CorruptionGlobals.isInsideOverlordRainLinger(
+                        dx, dy, state['radius'])
+            except Exception:
+                inside = False
+        if inside and not state['active']:
+            try:
+                if hasattr(la, 'setWalkSpeedSlow'):
+                    la.setWalkSpeedSlow()
+                    state['active'] = True
+            except Exception:
+                pass
+        elif (not inside) and state['active']:
+            try:
+                if hasattr(la, 'setWalkSpeedNormal'):
+                    la.setWalkSpeedNormal()
+            except Exception:
+                pass
+            state['active'] = False
+        return Task.cont
+
+    def __clearOverlordRainSludgeSlow(self):
+        state = getattr(self, '_overlordRainSludgeSlow', None)
+        self._overlordRainSludgeSlow = None
+        try:
+            taskMgr.remove(  # noqa: F821
+                self.uniqueName('overlord-rain-sludge-slow'))
+        except Exception:
+            pass
+        if state and state.get('active'):
+            la = getattr(base, 'localAvatar', None)  # noqa: F821
+            try:
+                if la is not None and hasattr(la, 'setWalkSpeedNormal'):
+                    la.setWalkSpeedNormal()
+            except Exception:
+                pass
+
+    def __clearOverlordRainLingerPuddle(self):
+        self.__clearOverlordRainSludgeSlow()
+        ival = getattr(self, '_overlordRainLingerIval', None)
+        self._overlordRainLingerIval = None
+        if ival is not None:
+            try:
+                ival.pause()
+            except Exception:
+                pass
+        np = getattr(self, '_overlordRainLingerNP', None)
+        self._overlordRainLingerNP = None
+        if np is not None:
+            try:
+                if not np.isEmpty():
+                    np.removeNode()
+            except Exception:
+                pass
 
     def __playOverlordTelegraphPunchWarn(
             self, finaleLook=None, phase=1, moveId=''):

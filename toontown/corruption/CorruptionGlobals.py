@@ -3481,6 +3481,11 @@ OVERLORD_PHASE_COMBAT = {
         # Rain hits every toon in the puddle, not just the chase target.
         'aoe': True,
         'moveMode': 'rising',
+        # Lingering sludge after rain resolve — arena trap vs one-shot AoE.
+        'rainLingerSec': 3.0,
+        'rainLingerTickSec': 0.5,
+        'rainLingerTickDamage': 1,
+        'rainLingerSlowFactor': 0.5,
         # Close-range slam — second Rising pressure beyond rain-only so Silly
         # climax is not one-note before HP-threshold Unleash. Slower / softer
         # than P2 slam; no ink_surge on P1 (surge stays Unleashed-only).
@@ -3503,6 +3508,11 @@ OVERLORD_PHASE_COMBAT = {
         'attackCooldown': 1.55,
         'aoe': True,
         'moveMode': 'enrage',
+        # Lingering sludge after rain resolve — denser Unleashed arena trap.
+        'rainLingerSec': 3.5,
+        'rainLingerTickSec': 0.5,
+        'rainLingerTickDamage': 2,
+        'rainLingerSlowFactor': 0.45,
         # Close-range slam when the player is already in the ink — faster
         # single-target pressure between rain volleys.
         'slamHitRange': 5.5,
@@ -3523,6 +3533,71 @@ OVERLORD_PHASE_COMBAT = {
         'surgeCooldown': 1.35,
     },
 }
+
+# Lingering sludge hazard after Ink Overlord rain resolve (gameplay trap).
+# Initial rain resolve stays a one-shot AoE around the boss XY; then the
+# magenta puddle ticks DoT and stamps a short slow while toons stay inside.
+# Silly climax arena control — Gagster-like linger, not cream FX deepen.
+# OVERLORD_RAIN_LINGER_ENABLED = False restores one-shot-only rain damage.
+# No KH branding / keyblades.
+OVERLORD_RAIN_LINGER_ENABLED = True
+OVERLORD_RAIN_LINGER_SEC = 3.0
+OVERLORD_RAIN_LINGER_TICK_SEC = 0.5
+OVERLORD_RAIN_LINGER_TICK_DAMAGE = 1
+# Planar radius fallback when phase combat attackHitRange is missing (P1).
+OVERLORD_RAIN_LINGER_RADIUS = 9.5
+# Client walk slow + AI stamp refresh while standing in rain sludge.
+OVERLORD_RAIN_LINGER_SLOW_FACTOR = 0.5
+OVERLORD_RAIN_LINGER_SLOW_SEC = 0.7
+
+
+def overlordRainLingerUntil(landAt, lingerSec=None):
+    """Absolute expiry for an Overlord ink-rain linger sludge hazard."""
+    if lingerSec is None:
+        lingerSec = OVERLORD_RAIN_LINGER_SEC
+    return float(landAt) + max(0.0, float(lingerSec))
+
+
+def overlordRainLingerTickCount(lingerSec=None, tickSec=None):
+    """How many DoT ticks fit inside a rain linger window (excludes land hit)."""
+    if lingerSec is None:
+        lingerSec = OVERLORD_RAIN_LINGER_SEC
+    if tickSec is None:
+        tickSec = OVERLORD_RAIN_LINGER_TICK_SEC
+    linger = max(0.0, float(lingerSec))
+    tick = max(0.05, float(tickSec))
+    if linger <= 0.0:
+        return 0
+    # First tick fires after one interval; last tick must still be < until.
+    return int(linger // tick)
+
+
+def isInsideOverlordRainLinger(dx, dy, radius):
+    """True when planar offset is inside the rain linger / land puddle radius."""
+    r = max(0.0, float(radius))
+    return (float(dx) * float(dx) + float(dy) * float(dy)) <= (r * r)
+
+
+def isOverlordRainSlowActive(until, now):
+    """True while an AI-stamped Overlord rain sludge slow window is live."""
+    return float(now) < float(until)
+
+
+def overlordRainSlowUntil(now, slowSec=None):
+    """Absolute expiry for a rain-sludge-slow refresh stamped on a tick."""
+    if slowSec is None:
+        slowSec = OVERLORD_RAIN_LINGER_SLOW_SEC
+    return float(now) + max(0.0, float(slowSec))
+
+
+def overlordRainLingerTickDamage(stats=None):
+    """Per-tick DoT while standing in rain linger sludge (min 1 when enabled)."""
+    if stats is None:
+        stats = {}
+    raw = stats.get(
+        'rainLingerTickDamage', OVERLORD_RAIN_LINGER_TICK_DAMAGE)
+    return max(1, int(raw))
+
 
 # ---------------------------------------------------------------------------
 # Overlord P1 Rising slam — second Rising pressure beyond rain (TC-342).
