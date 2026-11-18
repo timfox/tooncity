@@ -1827,18 +1827,33 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             _module_ast(wave_wash_rel), 'WaveClearCreamWashPulse')
         self.assertIn('play', wave_wash_methods)
         self.assertIn('clear', wave_wash_methods)
+        self.assertIn('_buildSparkle', wave_wash_methods)
+        self.assertIn('_buildSparkleAftershock', wave_wash_methods)
         for wave_wash_key in (
                 'WAVE_CLEAR_CREAM_WASH_ENABLED',
                 'WAVE_CLEAR_CREAM_WASH_DELAY_SEC',
                 'WAVE_CLEAR_CREAM_WASH_COLOR',
                 'WAVE_CLEAR_CREAM_WASH_PEAK',
                 'WAVE_CLEAR_CREAM_WASH_MID',
-                'WAVE_CLEAR_CREAM_WASH_BIN'):
+                'WAVE_CLEAR_CREAM_WASH_BIN',
+                'WAVE_CLEAR_CREAM_SPARKLE_ENABLED',
+                'WAVE_CLEAR_CREAM_SPARKLE_POP',
+                'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_ENABLED',
+                'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT'):
             self.assertIn(
                 wave_wash_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % wave_wash_key)
         wave_shimmer_src = _read(shimmer_rel)
         self.assertIn('WaveClearCreamWashPulse', wave_shimmer_src)
+        self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK', wave_shimmer_src)
+        # Deepened pack-clear glitter stays below StreetSparkle horizon payoff.
+        wave_sparkle_assigns = _assign_map(self.reclaim_tree)
+        self.assertGreaterEqual(
+            int(wave_sparkle_assigns.get('WAVE_CLEAR_CREAM_SPARKLE_COUNT', 0)),
+            8)
+        self.assertLess(
+            int(wave_sparkle_assigns.get('WAVE_CLEAR_CREAM_SPARKLE_COUNT', 0)),
+            int(wave_sparkle_assigns.get('STREET_SPARKLE_COUNT', 0)))
 
         # Oswald trust cream wash (#145) — soft wash after trust cream edge.
         trust_wash_rel = 'toontown/campaign/OswaldTrustCreamWashFx.py'
