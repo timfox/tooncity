@@ -2,9 +2,10 @@
 
 Fullscreen soft cream veil that settles *after* the sunny death fleck burst —
 PurityCompleteCreamWashFx / EntryCreamWashPulseFx overlay grammar as a brief
-defeat aftershock. Soft under world-space flecks; cream / pastel only (not
-ink). Wired from DeathPopSplat.play beside DeathCreamFleckBurst. Client only.
-Toontown spiritual sequel — no keyblades / no KH branding.
+defeat aftershock. Soft under world-space flecks + rising death cream
+sparkles; cream / pastel only (not ink). Wired from DeathPopSplat.play beside
+DeathCreamFleckBurst + DeathCreamSparkles. Client only. Toontown spiritual
+sequel — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4

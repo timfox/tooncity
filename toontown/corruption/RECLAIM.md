@@ -117,7 +117,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # crimson, phase-retinted); Overlord death layers splash with DeathPop.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray + CorruptDeathCreamFleckFx sunny
-# cream / pastel flecks + CorruptDeathCreamWashFx soft cream wash after);
+# cream / pastel flecks + CorruptDeathCreamSparkleFx rising cream sparkles
+# + CorruptDeathCreamWashFx soft cream wash after);
 # purity pop + pollution drop.
 ```
 
@@ -185,6 +186,17 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Land F / LMB until defeat — CorruptDeathPopFx ink splat layers with
 # sunny cream / pastel flecks (CorruptDeathCreamFleckFx). Not ink.
 # DEATH_CREAM_FLECK_ENABLED = False drops flecks only.
+```
+
+## Death cream fleck rising sparkle demo
+
+```
+~spawncorrupt 1
+~hackslash 0
+# Land F / LMB until defeat — cream fleck burst with sunny cream / pastel
+# sparkle flecks rising from the burst (CorruptDeathCreamSparkleFx —
+# telegraph / silhouette cream sparkle grammar), then soft cream wash.
+# DEATH_CREAM_SPARKLE_ENABLED = False drops rising sparkles only.
 ```
 
 ## Death cream wash pulse demo

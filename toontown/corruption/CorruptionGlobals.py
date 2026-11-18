@@ -998,6 +998,9 @@ SNARE_TELEGRAPH_STRING_LOOK = {
 # Per-archetype palette so Smudge (purple), Brute (green), Snare (amber) read.
 # Cream fleck burst (DEATH_CREAM_FLECK_*) layers sunny purity chips on top via
 # CorruptDeathCreamFleckFx — not ink. Toggle DEATH_CREAM_FLECK_ENABLED.
+# Rising cream sparkles (DEATH_CREAM_SPARKLE_*) rise from the fleck burst via
+# CorruptDeathCreamSparkleFx — telegraph / silhouette cream sparkle grammar.
+# Toggle DEATH_CREAM_SPARKLE_ENABLED.
 # Soft cream wash (DEATH_CREAM_WASH_*) pulses after the fleck burst via
 # CorruptDeathCreamWashFx — reclaim purity-wash grammar. Toggle
 # DEATH_CREAM_WASH_ENABLED.
@@ -1109,6 +1112,53 @@ DEATH_CREAM_FLECK_LOOK = {
     'fleckColors': DEATH_CREAM_FLECK_COLORS,
     'fleckEndColors': DEATH_CREAM_FLECK_END_COLORS,
     'binSort': DEATH_CREAM_FLECK_BIN,
+}
+
+# Rising cream sparkle flecks on death cream fleck burst — soft sunny chips
+# that rise from CorruptDeathCreamFleckFx (#94) (client only).
+# Compose lift / burst radius via CorruptDeathCreamSparkleFx.deathCreamSparkleLook
+# → deathCreamFleckLook; fleck size/timing/rise borrows telegraph cream sparkle
+# (#135) / silhouette cream sparkle (#131) twinkle grammar. Distinct from
+# outward death flecks and soft cream wash (#119): starts near fleck spray,
+# rises mostly upward with twinkle. Not ink-colored.
+# DEATH_CREAM_SPARKLE_ENABLED = False drops rising sparkles only.
+DEATH_CREAM_SPARKLE_ENABLED = True
+DEATH_CREAM_SPARKLE_BIN = 48  # above flecks (47); soft rising chips
+DEATH_CREAM_SPARKLE_COLORS = (
+    (1.0, 0.97, 0.82, 0.88),  # sunny cream
+    (1.0, 0.96, 0.62, 0.82),  # butter
+    (1.0, 0.9, 0.78, 0.78),   # soft peach pastel
+    (0.98, 0.94, 0.88, 0.74),  # warm parchment
+)
+DEATH_CREAM_SPARKLE_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+DEATH_CREAM_SPARKLE_LOOK = {
+    'id': 'death-cream-sparkle',
+    # lift / burstRadius composed with deathCreamFleckLook when played; fallbacks below.
+    'lift': 1.35,
+    'startDelaySec': 0.08,
+    'startDelayBias': 0.04,
+    'fleckCount': 4,
+    'fleckHalf': 0.07,
+    'fleckHalfScale': 1.08,
+    'burstRadius': 0.57,
+    'burstRadiusScale': 0.28,
+    'burstZJitter': 0.3,
+    'burstZJitterScale': 0.22,
+    'fleckDist': 0.17,
+    'fleckDistScale': 1.2,
+    'fleckLift': 0.69,
+    'fleckLiftScale': 1.15,
+    'fleckSec': 0.39,
+    'fleckSecScale': 1.05,
+    'fleckStagger': 0.038,
+    'fleckColors': DEATH_CREAM_SPARKLE_COLORS,
+    'fleckEndColors': DEATH_CREAM_SPARKLE_END_COLORS,
+    'binSort': DEATH_CREAM_SPARKLE_BIN,
 }
 
 # Defeat cream wash pulse — soft aspect2d veil after DEATH_CREAM_FLECK_* burst
