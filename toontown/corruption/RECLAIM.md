@@ -96,6 +96,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Smudge death layers splash with CorruptDeathPopFx for swarm readability.
 # Melee hits on Brute flash BruteSludgeSplashFx (cheap green sludge splash);
 # Brute death layers splash with CorruptDeathPopFx.
+# Melee hits on Snare flash SnareStringSnapSplashFx (cheap amber string-snap);
+# Snare death layers splash with CorruptDeathPopFx.
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray); purity pop + pollution drop.
 ```
@@ -124,7 +126,7 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Compare ~spawncorrupt 1   (Ink Smudge: purple ink-fist telegraph + drip).
 ```
 
-## Balloon Snare string-lash demo
+## Balloon Snare string-lash / splash demo
 
 ```
 ~spawncorrupt 1 0 2
@@ -132,6 +134,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~hackslash 0
 # Snare: amber horizontal rubber stretch + string-lash telegraph pop
 # (BalloonSnareTelegraphFx) + vine zip SFX; string line snaps on hit.
+# Land F / LMB — cheap amber string-snap splash (SnareStringSnapSplashFx)
+# on each hit; defeat layers a larger splash with CorruptDeathPopFx.
 # Fast fragile zip-flier — distinct from Smudge melee and Brute spit.
 ```
 
