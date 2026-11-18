@@ -892,6 +892,147 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SilhouetteCreamRimFlecks', corrupt_src)
         self.assertIn('__startSilhouetteCreamRim', corrupt_src)
 
+        # Combo counter cream aftershock (#116) — delayed residual after cream tick.
+        hit_juice_rel = 'toontown/hackslash/HitJuice.py'
+        _assert_module_file(hit_juice_rel)
+        hit_juice_names = _class_and_func_names(_module_ast(hit_juice_rel))
+        self.assertIn('spawnComboCreamSparkles', hit_juice_names)
+        self.assertIn('_buildComboCreamAftershock', hit_juice_names)
+        self.assertIn('_spawnComboCreamAftershockHalo', hit_juice_names)
+        self.assertIn('_spawnComboCreamAftershockSpark', hit_juice_names)
+        for combo_as_key in (
+                'COMBO_COUNTER_CREAM_AFTERSHOCK_ENABLED',
+                'COMBO_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC',
+                'COMBO_COUNTER_CREAM_AFTERSHOCK_COUNT',
+                'COMBO_COUNTER_CREAM_AFTERSHOCK_COLOR',
+                'COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                combo_as_key, config_names,
+                msg='HackSlashConfig missing combo aftershock %s' % combo_as_key)
+        hit_juice_src = _read(hit_juice_rel)
+        self.assertIn('COMBO_COUNTER_CREAM_AFTERSHOCK_ENABLED', hit_juice_src)
+        self.assertIn('spawnComboCreamSparkles', melee_src)
+
+        # Oswald trust banner cream edge (#117) — cream frame on handoff settle.
+        act_edge_names = _class_and_func_names(_module_ast(act_edge_rel))
+        self.assertIn('playOswaldTrustBannerCreamEdge', act_edge_names)
+        self.assertIn('clearOswaldTrustBannerCreamEdge', act_edge_names)
+        for trust_edge_key in (
+                'OSWALD_TRUST_BANNER_CREAM_EDGE_ENABLED',
+                'OSWALD_TRUST_BANNER_CREAM_EDGE_COLOR',
+                'OSWALD_TRUST_BANNER_CREAM_EDGE_PEAK',
+                'OSWALD_TRUST_BANNER_CREAM_EDGE_FLECK_COUNT',
+                'OSWALD_TRUST_BANNER_CREAM_EDGE_BIN'):
+            self.assertIn(
+                trust_edge_key, campaign_names,
+                msg='CampaignGlobals missing %s' % trust_edge_key)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('playOswaldTrustBannerCreamEdge', handoff_src)
+        self.assertIn('trustSettle=True', handoff_src)
+
+        # Cheer cream aftershock (#118) — delayed residual after cheer sparkle.
+        cheer_sparkle_methods = _class_method_names(
+            _module_ast(cheer_sparkle_rel), 'CheerCreamSparkleFxClient')
+        self.assertIn('_buildAftershock', cheer_sparkle_methods)
+        self.assertIn('_spawnAftershockHalo', cheer_sparkle_methods)
+        self.assertIn('_spawnAftershockFleck', cheer_sparkle_methods)
+        for cheer_as_key in (
+                'CHEER_CREAM_AFTERSHOCK_ENABLED',
+                'CHEER_CREAM_AFTERSHOCK_DELAY_SEC',
+                'CHEER_CREAM_AFTERSHOCK_COUNT',
+                'CHEER_CREAM_AFTERSHOCK_COLOR',
+                'CHEER_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'CHEER_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                cheer_as_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % cheer_as_key)
+        cheer_sparkle_src = _read(cheer_sparkle_rel)
+        self.assertIn('CHEER_CREAM_AFTERSHOCK_ENABLED', cheer_sparkle_src)
+
+        # Corrupt death cream wash (#119) — soft wash after death fleck burst.
+        death_wash_rel = 'toontown/corruption/CorruptDeathCreamWashFx.py'
+        _assert_module_file(death_wash_rel)
+        death_wash_names = _class_and_func_names(_module_ast(death_wash_rel))
+        self.assertIn('DeathCreamWashPulse', death_wash_names)
+        death_wash_methods = _class_method_names(
+            _module_ast(death_wash_rel), 'DeathCreamWashPulse')
+        self.assertIn('play', death_wash_methods)
+        self.assertIn('clear', death_wash_methods)
+        for death_wash_key in (
+                'DEATH_CREAM_WASH_ENABLED',
+                'DEATH_CREAM_WASH_DELAY_SEC',
+                'DEATH_CREAM_WASH_COLOR',
+                'DEATH_CREAM_WASH_PEAK',
+                'DEATH_CREAM_WASH_MID',
+                'DEATH_CREAM_WASH_BIN'):
+            self.assertTrue(
+                hasattr(cg, death_wash_key),
+                msg='CorruptionGlobals missing %s' % death_wash_key)
+        death_pop_src = _read('toontown/corruption/CorruptDeathPopFx.py')
+        self.assertIn('DeathCreamWashPulse', death_pop_src)
+        self.assertIn('CorruptDeathCreamWashFx', death_pop_src)
+
+        # (#120 was prior headless smoke through #114 — no new juice symbols.)
+
+        # Telegraph cream aftershock (#121) — delayed residual after warn flecks.
+        warn_methods = _class_method_names(
+            _module_ast(warn_rel), 'TelegraphCreamWarnFlecks')
+        self.assertIn('_buildAftershock', warn_methods)
+        self.assertIn('_spawnAftershockHalo', warn_methods)
+        self.assertIn('_spawnAftershockSpark', warn_methods)
+        for telegraph_as_key in (
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_ENABLED',
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_DELAY_SEC',
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_COUNT',
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_COLOR',
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_ENABLED',
+                'TELEGRAPH_CREAM_WARN_AFTERSHOCK_HALO_COLOR'):
+            self.assertTrue(
+                hasattr(cg, telegraph_as_key),
+                msg='CorruptionGlobals missing %s' % telegraph_as_key)
+        warn_src = _read(warn_rel)
+        self.assertIn('TELEGRAPH_CREAM_WARN_AFTERSHOCK_ENABLED', warn_src)
+
+        # Finisher cream aftershock (#122) — delayed residual after sparkle hang.
+        slam_methods = _class_method_names(
+            _module_ast(slam_rel), 'CreamSlamFlashFx')
+        self.assertIn('_buildAftershock', slam_methods)
+        self.assertIn('_spawnAftershockHalo', slam_methods)
+        self.assertIn('_spawnAftershockSpark', slam_methods)
+        for finisher_as_key in (
+                'FINISHER_CREAM_AFTERSHOCK_ENABLED',
+                'FINISHER_CREAM_AFTERSHOCK_DELAY_SEC',
+                'FINISHER_CREAM_AFTERSHOCK_COUNT',
+                'FINISHER_CREAM_AFTERSHOCK_COLOR',
+                'FINISHER_CREAM_AFTERSHOCK_HALO_ENABLED',
+                'FINISHER_CREAM_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                finisher_as_key, config_names,
+                msg='HackSlashConfig missing finisher aftershock %s'
+                % finisher_as_key)
+        slam_src = _read(slam_rel)
+        self.assertIn('FINISHER_CREAM_AFTERSHOCK_ENABLED', slam_src)
+
+        # Purity-fill cream aftershock (#123) — delayed residual after fill shimmer.
+        purity_methods = _class_method_names(
+            _module_ast('toontown/reclaim/PurityMeterHud.py'), 'PurityMeterHud')
+        self.assertIn('_buildFillAftershock', purity_methods)
+        self.assertIn('_spawnFillAftershockHalo', purity_methods)
+        self.assertIn('_spawnFillAftershockFleck', purity_methods)
+        for purity_as_key in (
+                'PURITY_METER_FILL_AFTERSHOCK_ENABLED',
+                'PURITY_METER_FILL_AFTERSHOCK_DELAY_SEC',
+                'PURITY_METER_FILL_AFTERSHOCK_COUNT',
+                'PURITY_METER_FILL_AFTERSHOCK_COLOR',
+                'PURITY_METER_FILL_AFTERSHOCK_HALO_ENABLED',
+                'PURITY_METER_FILL_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                purity_as_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % purity_as_key)
+        purity_src = _read('toontown/reclaim/PurityMeterHud.py')
+        self.assertIn('PURITY_METER_FILL_AFTERSHOCK_ENABLED', purity_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
