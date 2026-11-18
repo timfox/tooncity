@@ -543,6 +543,39 @@ TELEGRAPH_INK_DRIP_LOOK = {
     },
 }
 
+# Telegraph cream / pastel warn flecks — sunny purity chips layered on
+# announceAttackTelegraph with CorruptTelegraphInkFx / silhouette pops
+# (client only). Contrast to ink drip (cream floats out; ink falls). Not ink;
+# matches reclaim / death-cream / hit-spark cream family.
+# TELEGRAPH_CREAM_WARN_ENABLED = False drops flecks only.
+TELEGRAPH_CREAM_WARN_ENABLED = True
+TELEGRAPH_CREAM_WARN_BIN = 43
+TELEGRAPH_CREAM_WARN_COLORS = (
+    (1.0, 0.97, 0.82, 0.95),  # sunny cream
+    (1.0, 0.96, 0.62, 0.92),  # butter
+    (1.0, 0.9, 0.78, 0.9),    # soft peach pastel
+    (0.98, 0.94, 0.88, 0.88),  # warm parchment
+)
+TELEGRAPH_CREAM_WARN_END_COLORS = (
+    (1.0, 0.94, 0.55, 0.0),
+    (1.0, 0.9, 0.45, 0.0),
+    (1.0, 0.85, 0.7, 0.0),
+    (0.98, 0.92, 0.8, 0.0),
+)
+TELEGRAPH_CREAM_WARN_LOOK = {
+    'id': 'telegraph-cream-warn',
+    # lift composed with telegraphInkLook when played; this is the fallback.
+    'lift': 2.15,
+    'fleckCount': 5,
+    'fleckHalf': 0.12,
+    'fleckDist': 1.15,
+    'fleckLift': 0.55,
+    'fleckSec': 0.24,
+    'fleckColors': TELEGRAPH_CREAM_WARN_COLORS,
+    'fleckEndColors': TELEGRAPH_CREAM_WARN_END_COLORS,
+    'binSort': TELEGRAPH_CREAM_WARN_BIN,
+}
+
 # Ambient idle ink drip — sparse rubber-hose pollution presence between
 # telegraphs (client only). Cheaper than TELEGRAPH_INK_DRIP_*: 1–2 drips,
 # no splat pop, longer period, lower alpha. Pauses while telegraph juice

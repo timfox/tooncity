@@ -13,6 +13,7 @@ from toontown.corruption.CorruptDeathPopFx import (
 from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphString
 from toontown.corruption.BruteSludgeSplashFx import BruteSludgeSplash
 from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
+from toontown.corruption.CorruptTelegraphCreamWarnFx import TelegraphCreamWarnFlecks
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.IdleInkDripFx import IdleInkDrip
@@ -70,6 +71,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._stringLashNP = None
         self._deathPopSplat = None
         self._telegraphInkDrip = None
+        self._telegraphCreamWarn = None
         self._idleInkDrip = None
         self._overlordCrown = None
         self._overlordInkRain = None
@@ -141,6 +143,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSpitBlob()
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
+        self.__clearTelegraphCreamWarn()
         self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
@@ -502,6 +505,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Pause ambient idle drips so telegraph splat/drip owns the frame.
         self.__pauseIdleInkDrip()
         self.__playTelegraphInkDrip(look)
+        # Cream / pastel warn flecks — contrast layer on ink drip / silhouette.
+        self.__playTelegraphCreamWarn(look)
         # Ink Smudge-only: purple ink-fist telegraph pop for melee wind-up read.
         if (not look) and (not isBrute) and (not isSnare):
             self.__playSmudgeTelegraphInk()
@@ -564,8 +569,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / crown / rain / snare / spit / smudge fist so impact owns the frame.
+        # Clear telegraph drip / cream warn / crown / rain / snare / spit / smudge fist so impact owns the frame.
         self.__clearTelegraphInkDrip()
+        self.__clearTelegraphCreamWarn()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
@@ -958,6 +964,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSpitBlob()
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
+        self.__clearTelegraphCreamWarn()
         self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
@@ -1034,6 +1041,30 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._telegraphInkDrip = None
+
+    def __playTelegraphCreamWarn(self, finaleLook=None):
+        """Cream / pastel warn flecks at telegraph start (contrast to ink)."""
+        self.__clearTelegraphCreamWarn()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        flecks = TelegraphCreamWarnFlecks()
+        self._telegraphCreamWarn = flecks
+        flecks.play(
+            pos,
+            archetype=self.getArchetype(),
+            finaleLook=finaleLook,
+        )
+
+    def __clearTelegraphCreamWarn(self):
+        flecks = getattr(self, '_telegraphCreamWarn', None)
+        if flecks is not None:
+            try:
+                flecks.clear()
+            except Exception:
+                pass
+        self._telegraphCreamWarn = None
 
     def __startIdleInkDrip(self):
         """Ambient pollution drips between telegraphs (client-only presence)."""
