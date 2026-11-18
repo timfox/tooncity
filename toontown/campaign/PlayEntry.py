@@ -5,6 +5,9 @@ points at the next reclaim street (Loopy first; soft handoff cue after).
 On campaign streets: auto-arm melee, auto-start the **campaign** act (C
 path — not street-pack R) so packs field without ~startcampaign / racing
 C vs auto-reclaim, show prompts, bind R/C via PollutionManager.
+Loopy Act 1 keeps a trusted early street tip, then a delayed mid-act
+unease approach tip (smile sticks a rubbery half-beat) before Punchline
+handoff — foreshadow only, no Silly twist spoilers / no KH branding.
 
 On polluted ACTS street enter: brief rubber-hose ink edge vignette that
 fades as the tip bar appears. Tip bar and act-enter flash banners play a
@@ -60,6 +63,8 @@ PUNCHLINE_AUTO_RECLAIM_DELAY_SEC = 1.85
 SILLY_AUTO_RECLAIM_DELAY_SEC = 2.15
 # Fallback if CampaignGlobals.SILLY_APPROACH_TIP_DELAY_SEC is missing.
 _SILLY_APPROACH_TIP_DELAY_FALLBACK_SEC = 3.85
+# Fallback if CampaignGlobals.LOOPY_APPROACH_TIP_DELAY_SEC is missing.
+_LOOPY_APPROACH_TIP_DELAY_FALLBACK_SEC = 3.45
 
 
 def _face():
@@ -82,6 +87,7 @@ class PlayEntryClient(DirectObject):
         self._armedZone = None
         self._autoReclaimZone = None
         self._approachTipZone = None
+        self._loopyApproachTipZone = None
         self._reclaimLive = False
         # Soft next-street cue survives hub / playground hops until the
         # pointed ACTS street is entered (no magic words / zone ids).
@@ -125,6 +131,7 @@ class PlayEntryClient(DirectObject):
             pass
         self._cancelAutoReclaim()
         self._cancelSillyApproachTip()
+        self._cancelLoopyApproachTip()
         self._clearTip()
         self._clearFlash()
         self._clearVignette()
@@ -151,6 +158,7 @@ class PlayEntryClient(DirectObject):
             zoneId = int(zoneId)
         self._cancelAutoReclaim()
         self._cancelSillyApproachTip()
+        self._cancelLoopyApproachTip()
         self._reclaimLive = False
         hubZone = int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
         if zoneId == hubZone:
@@ -185,8 +193,9 @@ class PlayEntryClient(DirectObject):
         tipHose = None
         # Campaign ACTS entryTip wins (Punchline Act 2 sludge mix + Oswald
         # unease tip; Silly Act 3 Ink Overlord + cheer-feels-wrong foreshadow).
-        # Else STREET_PACK tip; finale without entryTip keeps Overlord vs line.
+        # Else STREET_PACK tip; Loopy Act 1 keeps trusted street tip early.
         # Finale also arms a delayed mid-act approachTip (almost-confess).
+        # Loopy arms a delayed mid-act unease approachTip before Punchline.
         if act and act.get('entryTip'):
             tip = act['entryTip']
             if act.get('id') == 'punchline':
@@ -211,6 +220,8 @@ class PlayEntryClient(DirectObject):
         else:
             self._clearVignette()
             self._showTip(tip, tipHose=tipHose)
+        if act and act.get('id') == 'loopy' and act.get('approachTip'):
+            self._armLoopyApproachTip(zoneId)
         if act and act.get('id') == 'finale' and act.get('approachTip'):
             self._armSillyApproachTip(zoneId)
         self.accept('r', self._requestReclaim)
@@ -355,6 +366,55 @@ class PlayEntryClient(DirectObject):
         # Reuse Silly tipHose — entryTipUnease keeps fracture settle +
         # cream hose settle so the almost-confess tip lands juicier.
         self._showTip(tip, tipHose='silly')
+        return task.done
+
+    def _loopyApproachTipTaskName(self, zoneId):
+        return 'playEntryLoopyApproachTip-%s' % int(zoneId)
+
+    def _armLoopyApproachTip(self, zoneId):
+        """Schedule mid-act Loopy unease tip after trusted street entry."""
+        self._cancelLoopyApproachTip()
+        act = self._actForZone(zoneId)
+        if act is None or act.get('id') != 'loopy' or not act.get('approachTip'):
+            return
+        delay = float(getattr(
+            CampaignGlobals, 'LOOPY_APPROACH_TIP_DELAY_SEC',
+            _LOOPY_APPROACH_TIP_DELAY_FALLBACK_SEC))
+        delay = max(0.5, delay)
+        self._loopyApproachTipZone = int(zoneId)
+        taskMgr.doMethodLater(  # noqa: F821
+            delay,
+            self._showLoopyApproachTip,
+            self._loopyApproachTipTaskName(zoneId))
+
+    def _cancelLoopyApproachTip(self):
+        zoneId = self._loopyApproachTipZone
+        self._loopyApproachTipZone = None
+        if zoneId is None:
+            return
+        try:
+            taskMgr.remove(self._loopyApproachTipTaskName(zoneId))  # noqa: F821
+        except Exception:
+            pass
+
+    def _showLoopyApproachTip(self, task):
+        """Swap tip bar to Loopy mid-act Oswald unease (before Punchline)."""
+        zoneId = self._loopyApproachTipZone
+        self._loopyApproachTipZone = None
+        if zoneId is None:
+            return task.done
+        av = getattr(base, 'localAvatar', None)  # noqa: F821
+        if av is None or int(getattr(av, 'zoneId', -1)) != int(zoneId):
+            return task.done
+        act = self._actForZone(zoneId)
+        if act is None or act.get('id') != 'loopy':
+            return task.done
+        tip = act.get('approachTip')
+        if not tip:
+            return task.done
+        # tipHose='loopy' — shared tip pop + trust-fracture settle when
+        # armed (no cream hose / wash deepen; Punchline owns tip cream).
+        self._showTip(tip, tipHose='loopy')
         return task.done
 
     def _showHubTip(self):
@@ -598,20 +658,23 @@ class PlayEntryClient(DirectObject):
     def _tipHosePopInterval(self, tipNP, tipHose=None):
         """Build flat squash → tall stretch → settle Sequence (does not start).
 
-        tipHose='punchline' uses Act 2 Punchline tunables + Oswald-trust
-        settle bounce. When the Punchline act carries trustFracture (#190
-        deepen), settle holds a rubbery beat longer (unease tip), then a
-        deepened cream hose settle past #256 (juicier overshoot → rest →
-        micro rebound) so the Act 2 unease tip lands rubber-hose and
-        reads juicier. tipHose='silly' uses Act 3 Silly Overlord tunables
-        + trust settle; when the finale act carries entryTipUnease,
-        settle holds the longer fracture beat (entry foreshadow + mid-act
-        almost-confess approach tip — no twist spoil), then a juicier
-        cream hose settle past #279 so the trust-fracture tip lands
-        rubber-hose and clear (taller/longer primary overshoot; no tip
-        rebound — Punchline deepen owns that; distinct from #251/#279
-        wash aftershock and betrayal banner #288). Default path keeps
-        the shared PLAY_ENTRY_TIP_* hose pop.
+        tipHose='loopy' uses the shared PLAY_ENTRY tip pop plus Oswald
+        trust-fracture settle when Loopy carries trustFracture — mid-act
+        unease approach tip before Punchline handoff (no cream hose /
+        wash deepen). tipHose='punchline' uses Act 2 Punchline tunables +
+        Oswald-trust settle bounce. When the Punchline act carries
+        trustFracture (#190 deepen), settle holds a rubbery beat longer
+        (unease tip), then a deepened cream hose settle past #256
+        (juicier overshoot → rest → micro rebound) so the Act 2 unease
+        tip lands rubber-hose and reads juicier. tipHose='silly' uses
+        Act 3 Silly Overlord tunables + trust settle; when the finale
+        act carries entryTipUnease, settle holds the longer fracture beat
+        (entry foreshadow + mid-act almost-confess approach tip — no
+        twist spoil), then a juicier cream hose settle past #279 so the
+        trust-fracture tip lands rubber-hose and clear (taller/longer
+        primary overshoot; no tip rebound — Punchline deepen owns that;
+        distinct from #251/#279 wash aftershock and betrayal banner
+        #288). Default path keeps the shared PLAY_ENTRY_TIP_* hose pop.
         """
         if tipNP is None:
             return None
@@ -628,7 +691,24 @@ class PlayEntryClient(DirectObject):
         creamHoseRestAttr = None
         creamHoseReboundAttr = None
         creamHoseReboundRestAttr = None
-        if tipHose == 'punchline':
+        if tipHose == 'loopy':
+            sx, sy, sz, squashSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH
+            tx, ty, tz, stretchSec = CampaignGlobals.PLAY_ENTRY_TIP_POP_STRETCH
+            settleSec = float(CampaignGlobals.PLAY_ENTRY_TIP_POP_SETTLE_SEC)
+            trustSettle = True
+            # Loopy mid-act unease tip: longer fracture settle when armed.
+            loopyAct = None
+            for act in getattr(CampaignGlobals, 'ACTS', ()):
+                if act.get('id') == 'loopy':
+                    loopyAct = act
+                    break
+            if loopyAct is not None and loopyAct.get('trustFracture'):
+                trustOvershootAttr = 'OSWALD_TRUST_FRACTURE_SETTLE_OVERSHOOT'
+                trustRestAttr = 'OSWALD_TRUST_FRACTURE_SETTLE_REST_SEC'
+            else:
+                trustOvershootAttr = 'OSWALD_TRUST_BANNER_SETTLE_OVERSHOOT'
+                trustRestAttr = 'OSWALD_TRUST_BANNER_SETTLE_REST_SEC'
+        elif tipHose == 'punchline':
             sx, sy, sz, squashSec = getattr(
                 CampaignGlobals, 'PUNCHLINE_ACT_TIP_POP_SQUASH',
                 CampaignGlobals.PLAY_ENTRY_TIP_POP_SQUASH)

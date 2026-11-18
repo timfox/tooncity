@@ -245,7 +245,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         methods = _class_method_names(play_tree, 'PlayEntryClient')
         for method in (
                 '_showHubTip', '_latchSoftNextCue', '_autoStartReclaim',
-                '_requestCampaign', '_armSillyApproachTip'):
+                '_requestCampaign', '_armSillyApproachTip',
+                '_armLoopyApproachTip'):
             self.assertIn(method, methods, msg='PlayEntryClient missing %s' % method)
 
         self.assertIn('CampaignGlobals.ACTS', play_src)
@@ -483,6 +484,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         approach = finale.get('approachTip') or ''
         self.assertIn('almost confess', approach.lower())
         self.assertNotIn('keyblade', approach.lower())
+        loopy_approach = self.act_by_id['loopy'].get('approachTip') or ''
+        self.assertIn('rubbery half-beat', loopy_approach.lower())
+        self.assertNotIn('keyblade', loopy_approach.lower())
+        self.assertFalse(bool(self.act_by_id['loopy'].get('entryTip')))
         handoff = finale.get('handoff') or ''
         self.assertIn('his all along', handoff.lower())
 
@@ -543,10 +548,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         for name in (
                 'FINALE_TWIST_TEASE', 'FINALE_REVEAL_BANNER',
                 'FINALE_REVEAL_DELAY_SEC', 'FINALE_BETRAYAL_HANDOFF_CUE',
-                'VICTORY_TWIST_CONFETTI_ENABLED', 'SILLY_APPROACH_TIP_DELAY_SEC'):
+                'VICTORY_TWIST_CONFETTI_ENABLED', 'SILLY_APPROACH_TIP_DELAY_SEC',
+                'LOOPY_APPROACH_TIP_DELAY_SEC'):
             self.assertIn(name, camp_names)
         self.assertTrue(camp.VICTORY_TWIST_CONFETTI_ENABLED)
         self.assertGreater(camp.SILLY_APPROACH_TIP_DELAY_SEC, 0.0)
+        self.assertGreater(camp.LOOPY_APPROACH_TIP_DELAY_SEC, 0.0)
         self.assertGreater(camp.FINALE_REVEAL_DELAY_SEC, 0.0)
 
 
