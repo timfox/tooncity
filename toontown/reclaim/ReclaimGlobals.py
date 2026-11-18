@@ -266,6 +266,17 @@ PURITY_METER_TICK_FLECK_SEC = 0.18
 PURITY_METER_TICK_FLECK_COLOR = (1.0, 0.96, 0.62, 0.95)
 PURITY_METER_TICK_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
 PURITY_METER_TICK_FLECK_BIN = 48
+# Cream shimmer flecks along the filled bar on purity tick (StreetSparkle /
+# EntryCreamShimmer chip style). Layers with tip flecks — sunny pastel only.
+PURITY_METER_FILL_SHIMMER_ENABLED = True
+PURITY_METER_FILL_SHIMMER_COUNT = 7
+PURITY_METER_FILL_SHIMMER_SIZE = 0.011
+PURITY_METER_FILL_SHIMMER_RISE = 0.055
+PURITY_METER_FILL_SHIMMER_SEC = 0.28
+PURITY_METER_FILL_SHIMMER_COLOR = (1.0, 0.98, 0.72, 0.92)
+PURITY_METER_FILL_SHIMMER_END_COLOR = (1.0, 0.94, 0.55, 0.0)
+# Above meter fill (45) / tip flecks (48); below street sparkle (50).
+PURITY_METER_FILL_SHIMMER_BIN = 49
 
 # Polluted reclaim-street entry cream shimmer (aspect2d center veil + flecks).
 # Soft lift for tip readability against ink fog — not a purity payoff.
