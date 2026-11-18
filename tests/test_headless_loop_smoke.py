@@ -2702,6 +2702,39 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('pickCycleChoice', hack_init)
         self.assertIn('nextCycleIndex', hack_init)
 
+        # Soft-lock cycle reticle pulse — brief hose pulse + short cream ring
+        # when Tab/` switches lock (lighter than acquire snap FOV/wash).
+        for cycle_pulse_key in (
+                'SOFT_LOCK_CYCLE_PULSE_ENABLED',
+                'SOFT_LOCK_CYCLE_PULSE_SQUASH',
+                'SOFT_LOCK_CYCLE_PULSE_STRETCH',
+                'SOFT_LOCK_CYCLE_PULSE_SETTLE_SEC',
+                'SOFT_LOCK_CYCLE_PULSE_RING_ENABLED',
+                'SOFT_LOCK_CYCLE_PULSE_RING_PEAK',
+                'SOFT_LOCK_CYCLE_PULSE_RING_SEC',
+                'SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA'):
+            self.assertIn(
+                cycle_pulse_key, config_names,
+                msg='HackSlashConfig missing cycle pulse %s' % cycle_pulse_key)
+        self.assertIs(config_assigns.get('SOFT_LOCK_CYCLE_PULSE_ENABLED'), True)
+        self.assertIs(
+            config_assigns.get('SOFT_LOCK_CYCLE_PULSE_RING_ENABLED'), True)
+        self.assertIn(
+            'softLockCyclePulseScaleKeys', config_funcs,
+            msg='HackSlashConfig missing softLockCyclePulseScaleKeys')
+        self.assertIn('softLockCyclePulseScaleKeys', hack_init)
+        reticle_tree = _module_ast('toontown/hackslash/SoftLockReticleFx.py')
+        reticle_methods = _class_method_names(reticle_tree, 'SoftLockReticleFx')
+        self.assertIn(
+            'playCyclePulse', reticle_methods,
+            msg='SoftLockReticleFx missing playCyclePulse')
+        self.assertIn('_playCyclePulseRing', reticle_methods)
+        hit_juice_src = _read('toontown/hackslash/HitJuice.py')
+        self.assertIn('playSoftLockCyclePulse', hit_juice_src)
+        self.assertIn('cycled=', melee_src)
+        self.assertIn('SOFT_LOCK_CYCLE_PULSE_ENABLED', config_src)
+        self.assertIn('Tab/` soft-lock cycle pulse', config_src)
+
         # Soft-lock hit assist — one-shot yaw/aim nudge on melee connect
         # against the sticky soft-lock (combat feel, not cream FX).
         for hit_assist_key in (

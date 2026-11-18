@@ -160,8 +160,8 @@ class SoftTargetFinder:
 
         Candidates are ordered by signed yaw around the avatar (then
         distance) so Tab/` reads as orbiting focus, not a random hop.
-        Sets ``_snapped`` when the lock key changes so reticle/FOV juice
-        fires the same path as a fresh acquire.
+        Sets ``_snapped`` when the lock key changes so MeleeCombat can fire
+        the brief cycle reticle pulse (not full acquire snap FOV/wash).
         """
         if now is None:
             now = globalClock.getFrameTime()  # noqa: F821

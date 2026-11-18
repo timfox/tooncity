@@ -25,6 +25,43 @@ TARGET_CYCLE_COOLDOWN_SEC = 0.12
 TARGET_CYCLE_RANGE = 18.0
 TARGET_CYCLE_HALF_ANGLE_DEG = 95.0
 
+# Soft-lock cycle reticle pulse — brief rubber-hose pulse when Tab/` switches
+# the sticky lock so the new target reads clearly (tracking feel without the
+# full acquire snap FOV / cream wash spam). Milder/snappier than
+# SOFT_LOCK_RETICLE_* hose pop. SOFT_LOCK_CYCLE_PULSE_ENABLED = False drops
+# the cycle pulse only (cycle still switches lock).
+SOFT_LOCK_CYCLE_PULSE_ENABLED = True
+# (sx, sy, sz, sec) multipliers of settle scale — flat then tall, snappier.
+SOFT_LOCK_CYCLE_PULSE_SQUASH = (1.35, 1.35, 0.72, 0.035)
+SOFT_LOCK_CYCLE_PULSE_STRETCH = (0.82, 0.82, 1.28, 0.05)
+SOFT_LOCK_CYCLE_PULSE_SETTLE_SEC = 0.06
+# Short cream pulse ring on cycle — quieter/faster than acquire ring (#92).
+# Reuses acquire ring half / colors / bin; only peak/sec/alpha differ.
+# SOFT_LOCK_CYCLE_PULSE_RING_ENABLED = False drops the ring only.
+SOFT_LOCK_CYCLE_PULSE_RING_ENABLED = True
+SOFT_LOCK_CYCLE_PULSE_RING_PEAK = 1.65
+SOFT_LOCK_CYCLE_PULSE_RING_SEC = 0.14
+SOFT_LOCK_CYCLE_PULSE_RING_PEAK_ALPHA = 0.48
+
+
+def softLockCyclePulseScaleKeys(settle=None):
+    """Return (settle_xyz, squash_xyz, stretch_xyz) for cycle reticle pulse.
+
+    Pure helper for HitJuice.playSoftLockCyclePulse and headless tests.
+    Each xyz is a 3-tuple of floats (uniform settle × cycle squash/stretch).
+    """
+    if settle is None:
+        settle = SOFT_LOCK_RETICLE_SETTLE_SCALE
+    settle = max(0.001, float(settle))
+    sx, sy, sz, _squashSec = SOFT_LOCK_CYCLE_PULSE_SQUASH
+    tx, ty, tz, _stretchSec = SOFT_LOCK_CYCLE_PULSE_STRETCH
+    return (
+        (settle, settle, settle),
+        (settle * float(sx), settle * float(sy), settle * float(sz)),
+        (settle * float(tx), settle * float(ty), settle * float(tz)),
+    )
+
+
 # Combo: 3 stretch punches, cartoon cadence with overshoot on the finisher.
 COMBO_LENGTH = 3
 COMBO_WINDOW_SEC = 0.55
@@ -907,5 +944,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  Shift/X dodge→F  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt→F/Shift cancel  |  '
-    'Tab/` soft-lock cycle  |  hit soft-lock aim  |  ~melee'
+    'Tab/` soft-lock cycle pulse  |  hit soft-lock aim  |  ~melee'
 )

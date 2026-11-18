@@ -915,6 +915,49 @@ def playSoftLockReticlePop(node, settleScale, name='hackslashSoftLockReticlePop'
     return ival
 
 
+def playSoftLockCyclePulse(node, settleScale, name='hackslashSoftLockCyclePulse'):
+    """World soft-lock reticle: brief cycle pulse on Tab/` switch. Starts.
+
+    Milder/snappier than playSoftLockReticlePop — squash → stretch → settle
+    from HackSlashConfig.SOFT_LOCK_CYCLE_PULSE_*. Scale keys match
+    softLockCyclePulseScaleKeys for headless tests.
+    """
+    if node is None:
+        return None
+    try:
+        if hasattr(node, 'isEmpty') and node.isEmpty():
+            return None
+    except Exception:
+        return None
+
+    settle = max(0.001, float(settleScale))
+    settlePt, squashXYZ, stretchXYZ = HackSlashConfig.softLockCyclePulseScaleKeys(
+        settle)
+    _sx, _sy, _sz, squashSec = HackSlashConfig.SOFT_LOCK_CYCLE_PULSE_SQUASH
+    _tx, _ty, _tz, stretchSec = HackSlashConfig.SOFT_LOCK_CYCLE_PULSE_STRETCH
+    settleSec = float(HackSlashConfig.SOFT_LOCK_CYCLE_PULSE_SETTLE_SEC)
+    squashPt = Point3(*squashXYZ)
+    stretchPt = Point3(*stretchXYZ)
+    settlePoint = Point3(*settlePt)
+
+    try:
+        node.setScale(settlePoint)
+    except Exception:
+        return None
+
+    ival = Sequence(
+        LerpScaleInterval(
+            node, float(squashSec), squashPt, blendType='easeOut'),
+        LerpScaleInterval(
+            node, float(stretchSec), stretchPt, blendType='easeOut'),
+        LerpScaleInterval(
+            node, settleSec, settlePoint, blendType='easeIn'),
+        name=name,
+    )
+    ival.start()
+    return ival
+
+
 def spawnSoftLockAccents(origin, parent=None, name='hackslashSoftLockAccents'):
     """Cream + ink flecks at a soft-lock snap. Returns (Parallel|None, nodes).
 
