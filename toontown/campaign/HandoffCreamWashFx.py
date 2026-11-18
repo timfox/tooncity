@@ -6,10 +6,10 @@ HitSparkCreamWashPulse / VictoryCreamWashPulse / OswaldTrustCreamWashPulse
 / FinaleRevealCreamWashPulse overlay grammar as a brief act-handoff settle
 beat. Soft under the handoff plate + edge strips; cream / pastel only (not
 ink). Wired from CampaignHandoff confetti (act handoff path only) beside
-the cream edge. Oswald trust wash lives in OswaldTrustCreamWashFx;
-finale-reveal wash lives in FinaleRevealCreamWashFx; phase stays
-wash-free here. Client only. Toontown spiritual sequel — no keyblades /
-no KH branding.
+the cream edge. Act-enter wash lives in ActBannerCreamWashFx; Oswald
+trust wash lives in OswaldTrustCreamWashFx; finale-reveal wash lives in
+FinaleRevealCreamWashFx; phase stays wash-free here. Client only.
+Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from panda3d.core import CardMaker, TransparencyAttrib, Vec4

@@ -208,6 +208,27 @@ PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
 # Flecks cluster near the act banner (PLAY_ENTRY_BANNER_POS ~z 0.72).
 PLAY_ENTRY_BANNER_CREAM_EDGE_FLECK_ORIGIN = (0.0, 0.0, 0.72)
 
+# Soft cream wash pulse after act-enter banner cream edge (#110).
+# Trust / handoff / victory / finale-reveal wash grammar (#145/#141/#138/#149)
+# — delayed two-beat aspect2d veil on PlayEntry ACTS creamEdge path only.
+# Soft under edge strips (bin 50); cream / pastel only. A touch quieter /
+# shorter than handoff wash (#141) — act-enter banners fire without glitter
+# hang (trust wash twin). Reclaim cue flashes stay wash-free. Other campaign
+# washes live in their own modules.
+# PLAY_ENTRY_BANNER_CREAM_WASH_ENABLED = False drops wash only (hose pop +
+# cream edge remain). No keyblades / KH branding.
+PLAY_ENTRY_BANNER_CREAM_WASH_ENABLED = True
+PLAY_ENTRY_BANNER_CREAM_WASH_DELAY_SEC = 0.36  # after play; after edge peak
+PLAY_ENTRY_BANNER_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+PLAY_ENTRY_BANNER_CREAM_WASH_PEAK = 0.12
+PLAY_ENTRY_BANNER_CREAM_WASH_MID = 0.07
+PLAY_ENTRY_BANNER_CREAM_WASH_IN_SEC = 0.07
+PLAY_ENTRY_BANNER_CREAM_WASH_PULSE_SEC = 0.12
+PLAY_ENTRY_BANNER_CREAM_WASH_HOLD_SEC = 0.10
+PLAY_ENTRY_BANNER_CREAM_WASH_OUT_SEC = 0.36  # soft settle, no glitter hang
+# Under cream edge (50); above ink entry vignette (48); soft veil settle.
+PLAY_ENTRY_BANNER_CREAM_WASH_BIN = 49
+
 # CampaignHandoff celebration title — rubber-hose scale pop on act clears.
 # Matches PlayEntry tip/banner hose pattern; cue keeps a lighter settle.
 # Oswald twist / victory copy unchanged — juice only. No KH branding.
