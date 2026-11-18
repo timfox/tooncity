@@ -812,7 +812,8 @@ class MeleeCombatController(DirectObject):
             name=self.avatar.uniqueName('hackslashDodge'),
         )
         self._dodgeIval.start()
-        # Afterimage smear + i-frame cream/ink pulse — isolated helper.
+        # Afterimage smear + cream sparkle + cream aftershock + i-frame pulse.
+        # DodgeTrailFx owns sparkle (#101) and residual cream aftershock.
         try:
             self._dodgeTrail.start(
                 iframeSec=HackSlashConfig.DODGE_IFRAME_SEC)

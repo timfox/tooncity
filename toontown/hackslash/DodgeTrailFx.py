@@ -3,8 +3,9 @@
 Client juice for the Shift/X i-frame roll: brief translucent smear ghosts
 (and tiny spark pops) drip behind the toon while rolling. While dodge
 i-frames are active, short cream/ink pulses pop along the trail path.
-Cream/pastel sparkle flecks also drip along the smear path (no ink) so the
-roll reads as sunny glitter beside the i-frame pulse. Wired from
+Cream/pastel sparkle flecks also drip along the smear path (no ink), then
+a delayed cream aftershock (softer flecks + soft halo) settles — same
+residual grammar as finisher / combo cream aftershock. Wired from
 MeleeCombat dodge start/end so hit-squash / hitstop paths stay untouched.
 
 Toontown spiritual-sequel tone only — no keyblades / no KH branding.
@@ -21,6 +22,7 @@ from direct.interval.IntervalGlobal import (
     LerpScaleInterval,
     Parallel,
     Sequence,
+    Wait,
 )
 from direct.task import Task
 
@@ -89,7 +91,7 @@ class DodgeTrailFx(object):
                 pass
 
     def clear(self):
-        """Hard-stop and remove every ghost/spark/pulse/cream fleck."""
+        """Hard-stop and remove every ghost/spark/pulse/cream fleck/aftershock."""
         self._active = False
         self._iframeUntil = 0.0
         try:
@@ -356,7 +358,7 @@ class DodgeTrailFx(object):
         return part, fleck
 
     def _spawnCreamSparkles(self):
-        """Cream/pastel sparkle flecks along the active dodge smear trail."""
+        """Cream/pastel sparkle flecks + delayed cream aftershock on trail."""
         if not getattr(
                 HackSlashConfig, 'DODGE_TRAIL_CREAM_SPARKLE_ENABLED', True):
             return
@@ -375,6 +377,7 @@ class DodgeTrailFx(object):
         drift = float(HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_DRIFT)
         parts = []
         nodes = []
+        aftershockNodes = []
         self._creamSparkleIndex += 1
 
         creamCount = int(HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_COUNT)
@@ -419,14 +422,201 @@ class DodgeTrailFx(object):
         if not parts:
             return
 
+        # Residual cream aftershock after this sparkle drip settles.
+        aftershock = self._buildCreamAftershock(
+            trailOrigin, backX, backY, aftershockNodes)
+
+        layers = [Parallel(*parts)]
+        if aftershock is not None:
+            layers.append(aftershock)
+        allNodes = list(nodes) + list(aftershockNodes)
         ival = Sequence(
-            Parallel(*parts),
-            Func(self._retirePulseNodes, nodes),
+            Parallel(*layers),
+            Func(self._retirePulseNodes, allNodes),
             name=self.avatar.uniqueName(
                 'hackslashDodgeTrailCreamSparkle-%s' % self._creamSparkleIndex),
         )
-        self._creamSparkles.append({'ival': ival, 'nodes': nodes})
+        self._creamSparkles.append({
+            'ival': ival,
+            'nodes': allNodes,
+        })
         ival.start()
+
+    def _buildCreamAftershock(self, origin, backX, backY, nodeBucket):
+        """Delayed soft cream flecks (+ optional halo) after trail sparkle.
+
+        Cream/pastel only — no ink. Same residual grammar as finisher /
+        combo cream aftershock.
+        """
+        if not getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_ENABLED', True):
+            return None
+        delay = float(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_DELAY_SEC', 0.16))
+        parts = []
+
+        if getattr(
+                HackSlashConfig,
+                'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_ENABLED', True):
+            halo = self._spawnCreamAftershockHalo(origin, nodeBucket)
+            if halo is not None:
+                parts.append(halo)
+
+        creamCount = int(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_COUNT', 2))
+        streakCount = int(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_STREAK_COUNT', 1))
+        for i in range(creamCount):
+            part = self._spawnCreamAftershockFleck(
+                origin, i, creamCount, elongated=False,
+                backX=backX, backY=backY, nodeBucket=nodeBucket)
+            if part is not None:
+                parts.append(part)
+        for i in range(streakCount):
+            part = self._spawnCreamAftershockFleck(
+                origin, i, max(1, streakCount), elongated=True,
+                backX=backX, backY=backY, nodeBucket=nodeBucket)
+            if part is not None:
+                parts.append(part)
+
+        if not parts:
+            return None
+        return Sequence(
+            Wait(max(0.0, delay)),
+            Parallel(*parts),
+        )
+
+    def _spawnCreamAftershockHalo(self, origin, nodeBucket):
+        """Soft cream halo pulse behind residual dodge aftershock flecks."""
+        half = float(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_HALF', 0.38))
+        startScale = float(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_START', 0.32))
+        peakScale = float(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_PEAK', 1.45))
+        sec = float(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_SEC', 0.28))
+        peakA = float(getattr(
+            HackSlashConfig,
+            'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.22))
+        r, g, b, _a = getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_COLOR',
+            (1.0, 0.96, 0.78, 1.0))
+        try:
+            cm = CardMaker(
+                'hackslash-dodge-cream-aftershock-halo-%s' % (
+                    self._creamSparkleIndex,))
+            cm.setFrame(-half, half, -half, half)
+            halo = render.attachNewNode(cm.generate())  # noqa: F821
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, peakA)
+            halo.setPos(origin)
+            halo.setScale(startScale)
+            # Under flecks so residual glitter reads on top of the soft wash.
+            halo.setBin('transparent', 22)
+            halo.setDepthWrite(False)
+            halo.setBillboardPointEye()
+        except Exception:
+            return None
+        nodeBucket.append(halo)
+        return Parallel(
+            LerpScaleInterval(
+                halo, max(0.01, sec), peakScale, blendType='easeOut'),
+            Sequence(
+                Wait(max(0.0, sec * 0.2)),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.8), Vec4(r, g, b, 0),
+                    blendType='easeIn'),
+            ),
+        )
+
+    def _spawnCreamAftershockFleck(self, origin, index, total, elongated=False,
+                                   backX=0.0, backY=0.0, nodeBucket=None):
+        """Softer cream fleck / streak that settles — residual trail aftershock."""
+        count = max(1, int(total))
+        if elongated:
+            size = float(getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_STREAK_SIZE',
+                0.065))
+            r, g, b, a = getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_STREAK_COLOR',
+                (1.0, 0.98, 0.82, 0.82))
+            er, eg, eb, ea = getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_STREAK_END',
+                (1.0, 0.9, 0.5, 0.0))
+            nameSuffix = 'streak'
+            angleBias = 0.58
+        else:
+            size = float(getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_SIZE', 0.09))
+            r, g, b, a = getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_COLOR',
+                (1.0, 0.96, 0.72, 0.86))
+            er, eg, eb, ea = getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_END',
+                (1.0, 0.92, 0.55, 0.0))
+            nameSuffix = 'cream'
+            angleBias = 0.26
+        drift = float(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_DRIFT', 0.5))
+        sec = float(getattr(
+            HackSlashConfig, 'DODGE_TRAIL_CREAM_AFTERSHOCK_SEC', 0.34))
+        angle = (
+            (2.0 * pi * index) / float(count)
+            + angleBias
+            + 0.07 * (self._creamSparkleIndex % 3))
+        try:
+            cm = CardMaker(
+                'hackslash-dodge-cream-aftershock-%s-%s-%s' % (
+                    self._creamSparkleIndex, nameSuffix, index))
+            if elongated:
+                cm.setFrame(
+                    -size * 0.35, size * 0.35,
+                    -size * 1.15, size * 1.15)
+            else:
+                cm.setFrame(-size, size, -size * 0.85, size * 0.85)
+            fleck = render.attachNewNode(cm.generate())  # noqa: F821
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, 0)
+            fleck.setPos(
+                origin[0] + cos(angle) * 0.08,
+                origin[1] + sin(angle) * 0.08,
+                origin[2] + 0.03 * (index % 2))
+            fleck.setScale(0.28 + 0.08 * (index % 3))
+            fleck.setBin('transparent', 24)
+            fleck.setDepthWrite(False)
+            fleck.setBillboardPointEye()
+        except Exception:
+            return None
+
+        # Settle downward/back — residual cream, not the sparkle drip punch.
+        end = Point3(
+            origin[0] + cos(angle) * drift * 0.55 + backX * 0.12,
+            origin[1] + sin(angle) * drift * 0.55 + backY * 0.12,
+            origin[2] - 0.35 - 0.08 * (index % 3))
+        peak = 0.95 + 0.08 * (index % 2)
+        if nodeBucket is not None:
+            nodeBucket.append(fleck)
+        stagger = 0.016 * (index % 3)
+        return Sequence(
+            Wait(stagger),
+            Parallel(
+                LerpColorScaleInterval(
+                    fleck, 0.05, Vec4(r, g, b, a), blendType='easeOut'),
+                LerpScaleInterval(
+                    fleck, sec * 0.28, peak, blendType='easeOut'),
+            ),
+            Parallel(
+                LerpPosInterval(fleck, sec * 0.72, end, blendType='easeIn'),
+                LerpScaleInterval(
+                    fleck, sec * 0.72, 0.04, blendType='easeIn'),
+                LerpColorScaleInterval(
+                    fleck, sec * 0.72, Vec4(er, eg, eb, ea),
+                    blendType='easeIn'),
+            ),
+        )
 
     def _makeCreamSparkleFleck(self, origin, index, count, size, drift, sec,
                                color, endColor, elongated=False,
