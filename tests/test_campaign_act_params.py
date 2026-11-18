@@ -542,6 +542,39 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('cream hose settle', magic_l)
         self.assertIn('almost confess', magic_l)
 
+    def test_silly_tip_cream_wash_deepen_tunables(self):
+        """#200 Silly Overlord foreshadow tip gets juicier cream wash + aftershock."""
+        camp = self.camp
+        self.assertTrue(camp.SILLY_ACT_TIP_CREAM_WASH_ENABLED)
+        self.assertTrue(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED)
+        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK), 0.14)
+        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_MID), 0.08)
+        self.assertGreater(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT, 0)
+        origin = camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN
+        self.assertEqual(len(origin), 3)
+        self.assertLess(float(origin[2]), 0.0)
+        # Distinct from victory twist aftershock (#244) and betrayal hose (#235).
+        self.assertNotEqual(
+            tuple(origin), tuple(camp.VICTORY_TWIST_CONFETTI_ORIGIN))
+        self.assertNotEqual(
+            int(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT),
+            int(camp.VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT))
+        self.assertNotEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK),
+            float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT[0]))
+        wash_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'SillyTipCreamWashFx.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK', wash_src)
+        self.assertIn('_buildAftershock', wash_src)
+        magic_l = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8').lower()
+        self.assertIn(
+            'deepened soft cream wash pulse + cream aftershock', magic_l)
+
     def test_betrayal_banner_cream_hose_settle_tunables(self):
         """#212 betrayal handoff banner gets juicier cream hose settle."""
         camp = self.camp
