@@ -3205,26 +3205,39 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('Tab/` soft-lock cycle cream', config_src)
         self.assertIn('SoftLockCycleCreamWashPulse', hack_init)
 
-        # Soft-lock hit assist — one-shot yaw/aim nudge on melee connect
-        # against the sticky soft-lock (combat feel, not cream FX).
+        # Soft-lock hit assist — deepened one-shot yaw/aim nudge + quiet cream
+        # wash flash / aftershock on melee connect against the sticky soft-lock.
+        # Distinct from soft-lock cycle reticle cream deepen (#233) and hurt
+        # wash cream deepen (#247).
         for hit_assist_key in (
                 'LOCK_HIT_ASSIST_ENABLED',
                 'LOCK_HIT_ASSIST_YAW_FRAC',
                 'LOCK_HIT_ASSIST_YAW_MAX_DEG',
                 'LOCK_HIT_ASSIST_CAM_FRAC',
-                'LOCK_HIT_ASSIST_DEADZONE_DEG'):
+                'LOCK_HIT_ASSIST_DEADZONE_DEG',
+                'LOCK_HIT_ASSIST_CREAM_WASH_ENABLED',
+                'LOCK_HIT_ASSIST_CREAM_WASH_PEAK',
+                'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT'):
             self.assertIn(
                 hit_assist_key, config_names,
                 msg='HackSlashConfig missing hit assist %s' % hit_assist_key)
         self.assertIs(config_assigns.get('LOCK_HIT_ASSIST_ENABLED'), True)
+        self.assertIs(
+            config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_ENABLED'), True)
         yaw_frac = config_assigns.get('LOCK_HIT_ASSIST_YAW_FRAC')
         yaw_max = config_assigns.get('LOCK_HIT_ASSIST_YAW_MAX_DEG')
         self.assertIsInstance(yaw_frac, float)
-        self.assertGreater(yaw_frac, 0.0)
+        self.assertGreaterEqual(yaw_frac, 0.62)
         self.assertLessEqual(yaw_frac, 1.0)
         self.assertIsInstance(yaw_max, float)
-        self.assertGreater(yaw_max, 0.0)
+        self.assertGreaterEqual(yaw_max, 26.0)
         self.assertLess(yaw_max, 90.0)
+        self.assertGreaterEqual(
+            config_assigns.get('LOCK_HIT_ASSIST_CREAM_WASH_PEAK'), 0.085)
+        assist_cream_funcs = _class_and_func_names(config_tree)
+        self.assertIn('hitAssistCreamWashPeakAtSec', assist_cream_funcs)
+        self.assertIn('hitAssistCreamWashAftershockAtSec', assist_cream_funcs)
         for assist_helper in (
                 'signedYawDeltaDeg',
                 'assistAimYawNudge',
@@ -3238,7 +3251,21 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             msg='MeleeCombatController missing _assistAimOnHit')
         self.assertIn('LOCK_HIT_ASSIST_ENABLED', melee_src)
         self.assertIn('_assistAimOnHit', melee_src)
-        self.assertIn('hit soft-lock aim', config_src)
+        self.assertIn('HitAssistCreamWashPulse', melee_src)
+        self.assertIn('_playHitAssistCreamWash', melee_src)
+        self.assertIn('hit soft-lock aim cream deepen', config_src)
+        assist_wash_rel = 'toontown/hackslash/HitAssistCreamWashFx.py'
+        _assert_module_file(assist_wash_rel)
+        assist_wash_names = _class_and_func_names(_module_ast(assist_wash_rel))
+        self.assertIn('HitAssistCreamWashPulse', assist_wash_names)
+        assist_wash_methods = _class_method_names(
+            _module_ast(assist_wash_rel), 'HitAssistCreamWashPulse')
+        self.assertIn('play', assist_wash_methods)
+        self.assertIn('clear', assist_wash_methods)
+        self.assertIn('_buildAftershock', assist_wash_methods)
+        self.assertIn('HitAssistCreamWashPulse', hack_init)
+        self.assertIn('hitAssistCreamWashPeakAtSec', hack_init)
+        self.assertIn('hitAssistCreamWashAftershockAtSec', hack_init)
 
         # Mid-act Oswald trust fracture (#190) + Punchline deepen unease tip
         # (#198). Finale stays sunny (no fracture) — foreshadow only.

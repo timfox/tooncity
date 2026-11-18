@@ -12,6 +12,8 @@ from .HackSlashConfig import (
     dodgeCancelCreamWashPeakAtSec,
     dodgeIFrameCreamWashPeakAtSec,
     finisherFovPunchKeys,
+    hitAssistCreamWashAftershockAtSec,
+    hitAssistCreamWashPeakAtSec,
     hurtStaggerCreamWashAftershockAtSec,
     hurtStaggerCreamWashPeakAtSec,
     hurtStaggerTotalSec,
@@ -46,6 +48,7 @@ from .CreamHangCreamWashFx import CreamHangCreamWashPulse
 from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
 from .FinisherCreamWashFx import FinisherCreamWashPulse
+from .HitAssistCreamWashFx import HitAssistCreamWashPulse
 from .HitSparkFx import HitSparkFx
 from .HitSparkCreamWashFx import HitSparkCreamWashPulse
 from .HitStopFx import HitStopFx
@@ -65,6 +68,8 @@ __all__ = [
     'dodgeCancelCreamWashPeakAtSec',
     'dodgeIFrameCreamWashPeakAtSec',
     'finisherFovPunchKeys',
+    'hitAssistCreamWashAftershockAtSec',
+    'hitAssistCreamWashPeakAtSec',
     'hurtStaggerCreamWashAftershockAtSec',
     'hurtStaggerCreamWashPeakAtSec',
     'hurtStaggerTotalSec',
@@ -96,6 +101,7 @@ __all__ = [
     'DodgeIFrameCreamWashPulse',
     'DodgeTrailCreamWashPulse',
     'FinisherCreamWashPulse',
+    'HitAssistCreamWashPulse',
     'HitSparkFx',
     'HitSparkCreamWashPulse',
     'HitStopFx',

@@ -163,12 +163,71 @@ LOCK_CAM_TASK_PRIORITY = 50
 # Soft-lock hit assist — one-shot yaw/aim nudge on melee connect against the
 # sticky soft-lock target so combo strings stay glued without hard lock.
 # Stronger than per-tick LOCK_FACE_LERP but hard-capped; deadzone skips tiny
-# error. LOCK_HIT_ASSIST_ENABLED = False drops assist only (tick nudge stays).
+# error. Deepened so soft-lock connect glue reads juicier (#204 deepen).
+# LOCK_HIT_ASSIST_ENABLED = False drops assist + cream wash (tick nudge stays).
 LOCK_HIT_ASSIST_ENABLED = True
-LOCK_HIT_ASSIST_YAW_FRAC = 0.55
-LOCK_HIT_ASSIST_YAW_MAX_DEG = 22.0
-LOCK_HIT_ASSIST_CAM_FRAC = 0.28
+LOCK_HIT_ASSIST_YAW_FRAC = 0.62
+LOCK_HIT_ASSIST_YAW_MAX_DEG = 26.0
+LOCK_HIT_ASSIST_CAM_FRAC = 0.34
 LOCK_HIT_ASSIST_DEADZONE_DEG = 2.0
+
+# Soft-lock hit-assist cream wash — soft aspect2d veil the instant connect
+# yaw/aim nudge fires (#204 deepen) so hit assist reads juicier. SoftLock FOV /
+# SoftLockCycle / DodgeCancel cream wash grammar. Quieter/faster than hit-spark
+# cream wash (#147) so combo strings stay readable; cream/pastel only. Distinct
+# from soft-lock cycle reticle cream deepen (#233) and hurt wash cream deepen
+# (#247). Toggle LOCK_HIT_ASSIST_CREAM_WASH_ENABLED = False drops wash
+# (+ aftershock) only — assist yaw/cam still fire.
+LOCK_HIT_ASSIST_CREAM_WASH_ENABLED = True
+LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC = 0.0  # fire with nudge — no settle lag
+LOCK_HIT_ASSIST_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+LOCK_HIT_ASSIST_CREAM_WASH_PEAK = 0.085
+LOCK_HIT_ASSIST_CREAM_WASH_MID = 0.048
+LOCK_HIT_ASSIST_CREAM_WASH_IN_SEC = 0.03
+LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC = 0.06
+LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC = 0.035
+LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC = 0.20
+LOCK_HIT_ASSIST_CREAM_WASH_BIN = 26  # under cycle wash (27) / hit wash (28)
+
+# Soft-lock hit-assist cream wash aftershock — residual cream flecks + soft
+# halo after the assist flash so connect glue still reads. Same grammar as
+# dodge-cancel / hurt-stagger cream wash aftershock, quieter because assists
+# fire often mid-combo. Cream/pastel only. Toggle
+# LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED = True
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.05  # after flash starts
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.04)
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT = 3
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SIZE = 0.011
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DRIFT = 0.18
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_FALL = 0.12
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SEC = 0.18
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.68)
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_BIN = 28  # over assist wash veil (26)
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.34
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_START = 0.20
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 0.98
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.14
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.08
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+
+
+def hitAssistCreamWashPeakAtSec(delay=None, inSec=None):
+    """Seconds from assist nudge until cream wash flash reaches peak alpha."""
+    if delay is None:
+        delay = LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC
+    if inSec is None:
+        inSec = LOCK_HIT_ASSIST_CREAM_WASH_IN_SEC
+    return max(0.0, float(delay)) + max(0.0, float(inSec))
+
+
+def hitAssistCreamWashAftershockAtSec(delay=None):
+    """Seconds from assist nudge until cream wash aftershock residual begins."""
+    if delay is None:
+        delay = LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC
+    return max(0.0, float(delay))
 
 # Soft-lock reticle hose pop — when acquire/snap lands on a corrupt/hostile.
 # Warm cream brackets + ink flecks; rubber-hose squash → stretch → settle.
@@ -1192,5 +1251,5 @@ DEMO_HINT = (
     'Shift/X dodge i-frame cream wash  |  '
     'dodge→F cream flash deepen  |  perfect dodge→F counter  |  '
     'Snare string→F counter  |  juggle→F slam  |  hurt cream wash deepen→F/Shift  |  '
-    'Tab/` soft-lock cycle cream  |  hit soft-lock aim  |  ~melee'
+    'Tab/` soft-lock cycle cream  |  hit soft-lock aim cream deepen  |  ~melee'
 )

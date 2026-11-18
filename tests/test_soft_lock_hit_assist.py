@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for soft-lock hit-assist aim nudge helpers.
+"""Behavioral headless tests for soft-lock hit-assist aim nudge + cream deepen.
 
 Imports SoftTarget assist helpers with a stub package path (no Panda3D).
-Covers signed yaw delta, capped assist nudge, and shouldAssistAimOnHit gate
-used by MeleeCombatController._assistAimOnHit on melee connect.
+Covers signed yaw delta, capped assist nudge, shouldAssistAimOnHit gate,
+and deepened hit-assist cream wash tunables / AST wiring used by
+MeleeCombatController._assistAimOnHit on melee connect.
 
 Run from repo root:
   python3 tests/test_soft_lock_hit_assist.py
@@ -12,6 +13,7 @@ Run from repo root:
 
 from __future__ import annotations
 
+import ast
 import importlib.util
 import sys
 import types
@@ -57,8 +59,31 @@ def _load_soft_target_helpers():
     return soft, cfg
 
 
+def _module_ast(rel_path: str) -> ast.Module:
+    src = (REPO_ROOT / rel_path).read_text(encoding='utf-8')
+    return ast.parse(src, filename=rel_path)
+
+
+def _class_names(tree: ast.AST) -> set[str]:
+    return {node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+
+
+def _top_level_names(tree: ast.AST) -> set[str]:
+    names: set[str] = set()
+    for node in getattr(tree, 'body', []):
+        if isinstance(node, ast.ClassDef):
+            names.add(node.name)
+        elif isinstance(node, ast.FunctionDef):
+            names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    names.add(target.id)
+    return names
+
+
 class SoftLockHitAssistTest(unittest.TestCase):
-    """Table-driven yaw assist math / gate for soft-lock hit nudge."""
+    """Table-driven yaw assist math / gate + cream deepen for soft-lock hit nudge."""
 
     @classmethod
     def setUpClass(cls):
@@ -76,10 +101,96 @@ class SoftLockHitAssistTest(unittest.TestCase):
             self.cfg.LOCK_HIT_ASSIST_CAM_FRAC,
             self.cfg.LOCK_HIT_ASSIST_YAW_FRAC)
         self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_DEADZONE_DEG, 0.0)
-        self.assertIn('hit soft-lock aim', self.cfg.DEMO_HINT)
+        # Deepened glue vs original #204 assist.
+        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_YAW_FRAC, 0.62)
+        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_YAW_MAX_DEG, 26.0)
+        self.assertGreaterEqual(self.cfg.LOCK_HIT_ASSIST_CAM_FRAC, 0.34)
+        self.assertIn('hit soft-lock aim cream deepen', self.cfg.DEMO_HINT)
         hint_l = self.cfg.DEMO_HINT.lower()
         self.assertNotIn('keyblade', hint_l)
         self.assertNotIn('kingdom hearts', hint_l)
+
+    def test_config_hit_assist_cream_wash_tunables(self):
+        self.assertTrue(self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_ENABLED)
+        self.assertTrue(self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED)
+        self.assertGreaterEqual(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC, 0.0)
+        self.assertGreater(self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK, 0.0)
+        self.assertGreater(self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_MID, 0.0)
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_MID,
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK)
+        # Deepened readability: juicier assist cream flash.
+        self.assertGreaterEqual(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK, 0.085)
+        self.assertGreaterEqual(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC, 0.035)
+        self.assertGreaterEqual(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_MID, 0.048)
+        # Quieter / earlier than hit-connect wash — assists fire mid-combo.
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK,
+            self.cfg.HIT_SPARK_CREAM_WASH_PEAK)
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC,
+            self.cfg.HIT_SPARK_CREAM_WASH_DELAY_SEC)
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_BIN,
+            self.cfg.HIT_SPARK_CREAM_WASH_BIN)
+        # Distinct from soft-lock cycle reticle cream deepen (#233) — connect
+        # assist flash (not Tab/` cycle settle).
+        self.assertGreater(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK,
+            self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_PEAK)
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC,
+            self.cfg.SOFT_LOCK_CYCLE_CREAM_WASH_DELAY_SEC)
+        # Distinct from hurt wash cream deepen (#247) — quieter/snappier glue
+        # flash (not smack→recovery settle).
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PEAK,
+            self.cfg.HURT_STAGGER_CREAM_WASH_PEAK)
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC,
+            self.cfg.HURT_STAGGER_CREAM_WASH_DELAY_SEC)
+        # Quiet residual wash aftershock after the deepened veil.
+        self.assertGreaterEqual(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT, 3)
+        self.assertTrue(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
+        self.assertGreater(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_BIN,
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_BIN)
+        wash_body = (
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_IN_SEC
+            + self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC
+            + self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC
+            + self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC)
+        self.assertLess(
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC,
+            wash_body)
+        cream = self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_COLOR
+        self.assertEqual(len(cream), 3)
+        # Cream / pastel — no ink purple wash.
+        self.assertGreaterEqual(cream[0], cream[2])
+        self.assertGreaterEqual(cream[1], cream[2])
+
+    def test_hit_assist_cream_wash_peak_helper(self):
+        peak_fn = self.cfg.hitAssistCreamWashPeakAtSec
+        self.assertAlmostEqual(
+            peak_fn(),
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC
+            + self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_IN_SEC)
+        self.assertAlmostEqual(peak_fn(0.02, 0.05), 0.07)
+        self.assertAlmostEqual(peak_fn(-1.0, 0.05), 0.05)
+
+    def test_hit_assist_cream_wash_aftershock_helper(self):
+        after_fn = self.cfg.hitAssistCreamWashAftershockAtSec
+        self.assertAlmostEqual(
+            after_fn(),
+            self.cfg.LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC)
+        self.assertAlmostEqual(after_fn(0.10), 0.10)
+        self.assertAlmostEqual(after_fn(-1.0), 0.0)
 
     def test_signed_yaw_delta_wraparound(self):
         delta = self.soft.signedYawDeltaDeg
@@ -123,6 +234,48 @@ class SoftLockHitAssistTest(unittest.TestCase):
         self.assertFalse(gate(key_a, key_a, enabled=False))
         # Default enabled follows config (True on develop).
         self.assertTrue(gate(key_a, key_a))
+
+    def test_ast_hit_assist_cream_wash_fx(self):
+        rel = 'toontown/hackslash/HitAssistCreamWashFx.py'
+        tree = _module_ast(rel)
+        names = _class_names(tree)
+        self.assertIn('HitAssistCreamWashPulse', names)
+        src = (REPO_ROOT / rel).read_text(encoding='utf-8')
+        self.assertIn('LOCK_HIT_ASSIST_CREAM_WASH_ENABLED', src)
+        self.assertIn('LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED', src)
+        self.assertIn('_buildAftershock', src)
+        self.assertIn('_spawnAftershockHalo', src)
+        self.assertIn('_spawnAftershockFleck', src)
+        # Ban phrasing only — no KH product names as branding.
+        self.assertIn('no keyblades', src.lower())
+        self.assertNotIn('kingdom hearts', src.lower())
+        # Distinct from cycle reticle / hurt wash deepen cues.
+        self.assertIn('distinct from', src.lower())
+
+    def test_ast_melee_wires_hit_assist_cream_wash(self):
+        melee_rel = 'toontown/hackslash/MeleeCombat.py'
+        melee_src = (REPO_ROOT / melee_rel).read_text(encoding='utf-8')
+        self.assertIn('HitAssistCreamWashPulse', melee_src)
+        self.assertIn('_playHitAssistCreamWash', melee_src)
+        self.assertIn('_clearHitAssistCreamWash', melee_src)
+        self.assertIn('self._playHitAssistCreamWash()', melee_src)
+
+        init_rel = 'toontown/hackslash/__init__.py'
+        init_src = (REPO_ROOT / init_rel).read_text(encoding='utf-8')
+        self.assertIn('HitAssistCreamWashPulse', init_src)
+        self.assertIn('hitAssistCreamWashPeakAtSec', init_src)
+        self.assertIn('hitAssistCreamWashAftershockAtSec', init_src)
+
+        cfg_names = _top_level_names(
+            _module_ast('toontown/hackslash/HackSlashConfig.py'))
+        for name in (
+                'LOCK_HIT_ASSIST_CREAM_WASH_ENABLED',
+                'LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC',
+                'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT',
+                'hitAssistCreamWashPeakAtSec',
+                'hitAssistCreamWashAftershockAtSec'):
+            self.assertIn(name, cfg_names)
 
 
 def main() -> int:
