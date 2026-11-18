@@ -3032,7 +3032,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         magic_src = _read('toontown/hackslash/MagicWords.py')
         self.assertIn('perfect-dodge counter', magic_src)
 
-        # Balloon Snare string-snap counter cream deepen beyond #245 — juicier
+        # Balloon Snare string-snap counter cream deepen beyond #269 — juicier
         # punish splash (thicker whip filaments + wider sideways aftershock;
         # distinct from Gunk #238 / Smudge #259 / Brute #264). Synergy with
         # perfect-dodge counter window unchanged.
@@ -3086,11 +3086,11 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         snare_cream_look = self.corruption.SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK
         self.assertEqual(
             snare_cream_look.get('id'), 'snare-string-counter-cream-splash')
-        self.assertGreaterEqual(int(snare_cream_look.get('fleckCount', 0)), 6)
+        self.assertGreaterEqual(int(snare_cream_look.get('fleckCount', 0)), 7)
         self.assertTrue(snare_cream_look.get('whipEnabled'))
-        self.assertGreaterEqual(int(snare_cream_look.get('whipCount', 0)), 3)
+        self.assertGreaterEqual(int(snare_cream_look.get('whipCount', 0)), 4)
         self.assertGreaterEqual(
-            int(self.corruption.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT), 5)
+            int(self.corruption.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT), 6)
         for snare_helper in (
                 'snareStringCounterOpenerDamage',
                 'snareStringCounterOpenerRate',

@@ -49,7 +49,7 @@ rubber-hose string-lash pop) and, after the string reads, arm a short
 string-snap counter window into melee (SNARE_STRING_COUNTER_*; synchs
 with hackslash perfect-dodge counter; mid-telegraph melee interrupts
 the wind-up). Successful string-snap punish/counter hits also flash
-SnareStringCounterCreamSplashFx (deepened cream splash beyond #245 +
+SnareStringCounterCreamSplashFx (deepened cream splash beyond #269 +
 thicker horizontal cream whip filaments + wider sideways cream aftershock
 — sunny cream/pastel juice on the rewarded window; distinct from Gunk
 puddle cream bloom / Smudge radial hose / Brute vertical drip; telegraph

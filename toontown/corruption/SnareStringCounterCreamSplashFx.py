@@ -3,14 +3,14 @@
 World-space CardMaker juice that fires when a Snare string-snap punish /
 counter lands successfully — sunny cream / pastel contrast against the amber
 SnareStringSnapSplashFx (#84) so the rewarded window reads juicy. Deepened
-string-snap juice beyond #245: juicier splat/flecks, thicker horizontal cream
+string-snap juice beyond #269: juicier splat/flecks, thicker horizontal cream
 whip filaments (rubber-string break read), then a wider sideways settle
 aftershock (halo + residual flecks) — distinct from Gunk puddle cream deepen
-(#238, flat ground bloom), Smudge hit cream deepen (#259, radial hose), and
-Brute spit cream deepen (#264, vertical drip). Same residual grammar as
-telegraph cream warn aftershock (#121). Wired from DistributedCorruptToon hit
-reaction when the string-snap counter juice window is live. Client only.
-Toontown spiritual sequel — no keyblades / no KH branding.
+(#276 / #238, flat ground bloom), Smudge hit cream deepen (#283 / #259,
+radial hose), and Brute spit cream deepen (#289 / #264, vertical drip). Same
+residual grammar as telegraph cream warn aftershock (#121). Wired from
+DistributedCorruptToon hit reaction when the string-snap counter juice window
+is live. Client only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -158,7 +158,7 @@ class SnareStringCounterCreamSplash(object):
     def _spawnSplat(self, parentNP, origin, look):
         """Tiny billboard cream blob — rewarded punish readability core."""
         try:
-            half = float(look.get('splatHalf', 0.22))
+            half = float(look.get('splatHalf', 0.36))
             cm = CardMaker('snare-string-counter-cream-splash-core')
             cm.setFrame(-half, half, -half * 0.92, half * 0.92)
             splat = parentNP.attachNewNode(cm.generate())
@@ -170,15 +170,15 @@ class SnareStringCounterCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'SNARE_STRING_COUNTER_CREAM_SPLASH_COLOR',
-                    (1.0, 0.97, 0.82, 0.94)))
+                    (1.0, 0.97, 0.82, 0.99)))
             splat.setColor(color[0], color[1], color[2], color[3])
             splat.setColorScale(1, 1, 1, 0)
-            splat.setScale(0.32)
+            splat.setScale(0.34)
             splat.setBin('fixed', int(look.get('binSort', 46)))
             splat.setDepthWrite(False)
             self._nodes.append(splat)
 
-            rimHalf = half * float(look.get('rimScale', 1.28))
+            rimHalf = half * float(look.get('rimScale', 1.5))
             cmRim = CardMaker('snare-string-counter-cream-splash-rim')
             cmRim.setFrame(-rimHalf, rimHalf, -rimHalf * 0.9, rimHalf * 0.9)
             rim = parentNP.attachNewNode(cmRim.generate())
@@ -190,37 +190,37 @@ class SnareStringCounterCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'SNARE_STRING_COUNTER_CREAM_SPLASH_RIM_COLOR',
-                    (1.0, 0.98, 0.88, 0.7)))
+                    (1.0, 0.98, 0.88, 0.86)))
             rim.setColor(rimColor[0], rimColor[1], rimColor[2], rimColor[3])
             rim.setColorScale(1, 1, 1, 0)
-            rim.setScale(0.28)
+            rim.setScale(0.3)
             rim.setBin('fixed', int(look.get('binSort', 46)) - 1)
             rim.setDepthWrite(False)
             self._nodes.append(rim)
 
-            peak = float(look.get('splatPeak', 1.85))
-            sec = float(look.get('splatSec', 0.19))
-            peakA = float(look.get('peakAlpha', 0.98))
+            peak = float(look.get('splatPeak', 2.0))
+            sec = float(look.get('splatSec', 0.21))
+            peakA = float(look.get('peakAlpha', 0.99))
             return Parallel(
                 Sequence(
                     LerpColorScaleInterval(
-                        splat, sec * 0.22, Vec4(1, 1, 1, peakA),
+                        splat, sec * 0.2, Vec4(1, 1, 1, peakA),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        splat, sec * 0.78, Vec4(1, 1, 1, 0),
+                        splat, sec * 0.8, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(splat, sec, peak, blendType='easeOut'),
                 Sequence(
                     LerpColorScaleInterval(
-                        rim, sec * 0.18, Vec4(1, 1, 1, 0.7),
+                        rim, sec * 0.16, Vec4(1, 1, 1, 0.74),
                         blendType='easeOut'),
                     LerpColorScaleInterval(
-                        rim, sec * 0.82, Vec4(1, 1, 1, 0),
+                        rim, sec * 0.84, Vec4(1, 1, 1, 0),
                         blendType='easeIn'),
                 ),
                 LerpScaleInterval(
-                    rim, sec, peak * 1.18, blendType='easeOut'),
+                    rim, sec, peak * 1.22, blendType='easeOut'),
             )
         except Exception:
             return None
@@ -228,39 +228,40 @@ class SnareStringCounterCreamSplash(object):
     def _spawnWhipFilament(self, parentNP, origin, look, index):
         """Horizontal cream whip filament — rubber-string break cue.
 
-        Distinct from Gunk flat puddle-plane bloom (#238), Smudge radial hose
-        (#259), and Brute vertical drip (#264): sideways cream smear matching
-        amber SnareStringSnapSplashFx string-break grammar.
+        Distinct from Gunk flat puddle-plane bloom (#276 / #238), Smudge
+        radial hose (#283 / #259), and Brute vertical drip (#289 / #264):
+        sideways cream smear matching amber SnareStringSnapSplashFx
+        string-break grammar.
         """
         try:
             side = -1.0 if (index % 2) == 0 else 1.0
-            t = 0.58 + 0.24 * (index // 2)
+            t = 0.62 + 0.26 * (index // 2)
             # Bias sideways so the cream whip reads as a rubber string snap.
-            angle = (pi * 0.05) + side * (0.34 + 0.2 * index)
+            angle = (pi * 0.04) + side * (0.36 + 0.22 * index)
             spread = float(look.get(
                 'whipSpread',
                 getattr(
                     CorruptionGlobals,
-                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SPREAD', 1.32)))
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SPREAD', 1.5)))
             end = Point3(
                 origin[0] + cos(angle) * spread * t,
-                origin[1] + sin(angle) * spread * 0.28,
-                origin[2] + 0.04 + sin(pi * 0.16 * index) * 0.14,
+                origin[1] + sin(angle) * spread * 0.26,
+                origin[2] + 0.035 + sin(pi * 0.14 * index) * 0.12,
             )
             half = float(look.get(
                 'whipHalf',
                 getattr(
                     CorruptionGlobals,
-                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_HALF', 0.12)))
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_HALF', 0.14)))
             cm = CardMaker(
                 'snare-string-counter-cream-splash-whip-%s' % index)
             # Wider / flatter frame — cream filament, not ink blob / puddle bloom.
-            cm.setFrame(-half * 1.55, half * 1.55, -half * 0.62, half * 0.62)
+            cm.setFrame(-half * 1.65, half * 1.65, -half * 0.55, half * 0.55)
             whip = parentNP.attachNewNode(cm.generate())
             start = Point3(
-                origin[0] + side * 0.06,
-                origin[1] + 0.025,
-                origin[2] + 0.035 * ((index % 3) - 1),
+                origin[0] + side * 0.07,
+                origin[1] + 0.03,
+                origin[2] + 0.04 * ((index % 3) - 1),
             )
             whip.setPos(start)
             whip.setBillboardPointEye()
@@ -270,7 +271,7 @@ class SnareStringCounterCreamSplash(object):
                 getattr(
                     CorruptionGlobals,
                     'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_COLOR',
-                    (1.0, 0.97, 0.84, 0.94)))
+                    (1.0, 0.97, 0.84, 0.96)))
             tint = 0.92 + 0.06 * (index % 3)
             whip.setColor(
                 min(1.4, color[0] * tint),
@@ -278,7 +279,7 @@ class SnareStringCounterCreamSplash(object):
                 min(1.4, color[2] * tint),
                 color[3])
             whip.setColorScale(1, 1, 1, 0)
-            whip.setScale(Point3(0.55, 0.42, 0.48))
+            whip.setScale(Point3(0.6, 0.4, 0.46))
             whip.setBin('fixed', int(look.get('binSort', 46)) + 1)
             whip.setDepthWrite(False)
             self._nodes.append(whip)
@@ -286,32 +287,32 @@ class SnareStringCounterCreamSplash(object):
                 'whipSec',
                 getattr(
                     CorruptionGlobals,
-                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SEC', 0.23)))
+                    'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_SEC', 0.26)))
             peakA = float(look.get(
                 'whipPeakAlpha',
                 getattr(
                     CorruptionGlobals,
                     'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_PEAK_ALPHA',
-                    0.92)))
-            delay = 0.01 * index
+                    0.95)))
+            delay = 0.009 * index
             return Sequence(
                 Wait(delay),
                 Parallel(
                     LerpPosInterval(whip, travel, end, blendType='easeOut'),
                     Sequence(
                         LerpScaleInterval(
-                            whip, travel * 0.32, Point3(1.85, 0.55, 0.9),
+                            whip, travel * 0.3, Point3(2.05, 0.5, 0.85),
                             blendType='easeOut'),
                         LerpScaleInterval(
-                            whip, travel * 0.68, Point3(0.16, 0.16, 1.55),
+                            whip, travel * 0.7, Point3(0.14, 0.14, 1.7),
                             blendType='easeIn'),
                     ),
                     Sequence(
                         LerpColorScaleInterval(
-                            whip, travel * 0.2, Vec4(1, 1, 1, peakA),
+                            whip, travel * 0.18, Vec4(1, 1, 1, peakA),
                             blendType='easeOut'),
                         LerpColorScaleInterval(
-                            whip, travel * 0.8, Vec4(1, 1, 1, 0),
+                            whip, travel * 0.82, Vec4(1, 1, 1, 0),
                             blendType='easeIn'),
                     ),
                 ),
@@ -399,10 +400,10 @@ class SnareStringCounterCreamSplash(object):
 
         creamCount = max(0, int(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT', 3)))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT', 6)))
         streakCount = max(0, int(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT', 1)))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT', 4)))
         for i in range(creamCount):
             part = self._spawnAftershockSpark(
                 parentNP, origin, i, creamCount, elongated=False)
@@ -424,19 +425,19 @@ class SnareStringCounterCreamSplash(object):
     def _spawnAftershockHalo(self, parentNP, origin):
         half = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF', 0.42))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_HALF', 0.7))
         startScale = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_START', 0.28))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_START', 0.26))
         peakScale = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK', 1.4))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK', 1.9))
         sec = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_SEC', 0.28))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_SEC', 0.36))
         peakA = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.2))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA', 0.32))
         r, g, b, _a = getattr(
             CorruptionGlobals,
             'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_HALO_COLOR',
@@ -503,13 +504,13 @@ class SnareStringCounterCreamSplash(object):
             angleBias = 0.2
         drift = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT', 0.55))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DRIFT', 1.12))
         fall = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_FALL', 0.42))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_FALL', 0.3))
         sec = float(getattr(
             CorruptionGlobals,
-            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SEC', 0.32))
+            'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_SEC', 0.4))
         angle = (2.0 * pi * index) / float(count) + angleBias
         try:
             cm = CardMaker(
@@ -538,14 +539,14 @@ class SnareStringCounterCreamSplash(object):
         except Exception:
             return None
 
-        # Wider sideways settle after string whip (beyond #245 residual).
+        # Wider sideways settle after string whip (beyond #269 residual).
         end = Point3(
-            origin[0] + cos(angle) * drift * 0.7,
-            origin[1] + sin(angle) * drift * 0.7,
-            origin[2] - fall - 0.06 * (index % 3))
-        peak = size * (1.22 + 0.1 * (index % 2))
+            origin[0] + cos(angle) * drift * 0.8,
+            origin[1] + sin(angle) * drift * 0.8,
+            origin[2] - fall - 0.05 * (index % 3))
+        peak = size * (1.28 + 0.12 * (index % 2))
         self._nodes.append(spark)
-        stagger = 0.018 * (index % 3)
+        stagger = 0.016 * (index % 3)
         return Sequence(
             Wait(stagger),
             Parallel(
@@ -556,10 +557,10 @@ class SnareStringCounterCreamSplash(object):
                     spark, max(0.01, sec), end, blendType='easeIn'),
                 Sequence(
                     LerpScaleInterval(
-                        spark, max(0.01, sec * 0.38), peak,
+                        spark, max(0.01, sec * 0.35), peak,
                         blendType='easeOut'),
                     LerpScaleInterval(
-                        spark, max(0.01, sec * 0.62), 0.1,
+                        spark, max(0.01, sec * 0.65), 0.09,
                         blendType='easeIn'),
                 ),
             ),

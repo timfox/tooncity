@@ -6,7 +6,7 @@ BalloonSnareTelegraphFx (amber string/tip), CorruptDeathPopFx (radial flecks),
 and IdleInkDripFx (soft falling drip). Wired from DistributedCorruptToon hit
 reaction + announceDefeat for ARCHETYPE_SNARE only. Successful string-snap
 counter punish layers SnareStringCounterCreamSplashFx (deepened cream splash
-beyond #245 + thicker whip filaments + wider sideways aftershock) beside this
+beyond #269 + thicker whip filaments + wider sideways aftershock) beside this
 amber snap. Toontown spiritual sequel only — no keyblades / no KH branding.
 """
 
