@@ -2178,6 +2178,23 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertIn(
                 dodge_cancel_key, config_names,
                 msg='HackSlashConfig missing dodge cancel %s' % dodge_cancel_key)
+        # Timing values (#186): commitment lockout then open cancel window.
+        config_assigns = _assign_map(config_tree)
+        self.assertIs(config_assigns.get('DODGE_CANCEL_ENABLED'), True)
+        self.assertIs(config_assigns.get('DODGE_CANCEL_BUFFER'), True)
+        start_sec = config_assigns.get('DODGE_CANCEL_START_SEC')
+        window_sec = config_assigns.get('DODGE_CANCEL_WINDOW_SEC')
+        dodge_dur = config_assigns.get('DODGE_DURATION_SEC')
+        self.assertIsInstance(start_sec, float)
+        self.assertIsInstance(window_sec, float)
+        self.assertGreater(start_sec, 0.0)
+        self.assertGreater(window_sec, 0.0)
+        # Commitment lockout ends mid-roll; cancel stays open into recovery.
+        if isinstance(dodge_dur, float):
+            self.assertLess(start_sec, dodge_dur)
+        dodge_cd = config_assigns.get('DODGE_COOLDOWN_SEC')
+        if isinstance(dodge_cd, float):
+            self.assertLessEqual(start_sec + window_sec, dodge_cd + 0.05)
         melee_tree = _module_ast('toontown/hackslash/MeleeCombat.py')
         melee_methods = _class_method_names(melee_tree, 'MeleeCombatController')
         for dodge_cancel_method in (
@@ -2194,6 +2211,20 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('DODGE_CANCEL_ENABLED', melee_src)
         self.assertIn('hackslash-dodge-cancel', melee_src)
         self.assertIn('dodge→F', _read('toontown/hackslash/HackSlashConfig.py'))
+        # Mid-roll attack during lockout buffers; window flush starts fresh hit 0.
+        self.assertIn('_flushDodgeCancelBuffer', melee_src)
+        self.assertIn('_cancelDodgeIntoMelee', melee_src)
+
+        # Hub tip discoverability (#184) — Oswald + Loopy + C, no magic words.
+        hub_tip_node = _toplevel_value(self.campaign_tree, 'HUB_TIP')
+        hub_tip = _literal(hub_tip_node)
+        if isinstance(hub_tip, list):
+            hub_tip = ''.join(str(part) for part in hub_tip)
+        self.assertIsInstance(hub_tip, str)
+        self.assertIn('Oswald', hub_tip)
+        self.assertIn('Loopy Lane', hub_tip)
+        self.assertIn('C campaign', hub_tip)
+        self.assertNotIn('~startcampaign', hub_tip)
 
 
 def main() -> int:

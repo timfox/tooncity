@@ -334,6 +334,66 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertEqual(silly_w2, [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])
         self.assertTrue(all(a == cg.ARCHETYPE_INK for a in silly_w2))
 
+    def test_street_pack_scripts_lock_full_compositions(self):
+        """Lock every STREET_PACKS wave beat (#185) — not just openers."""
+        rg, cg = self.rg, self.cg
+        ink, brute, snare = (
+            cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE, cg.ARCHETYPE_SNARE)
+
+        expected = {
+            LOOPY: {
+                1: [ink, ink, ink],
+                2: [ink, ink, brute],
+                3: [snare, ink, brute, ink],
+                4: [snare, ink, brute, snare, ink],
+            },
+            PUNCHLINE: {
+                1: [snare, ink, ink, brute],
+                2: [snare, snare, ink, brute, ink],
+                3: [snare, ink, brute, brute, ink],
+                4: [snare, snare, ink, brute, snare, ink],
+            },
+            SILLY: {
+                1: [ink],
+                2: [ink, ink],
+            },
+        }
+        for zone, waves in expected.items():
+            scripts = rg.STREET_PACKS[zone]['waveScripts']
+            for wave, composition in waves.items():
+                self.assertEqual(
+                    rg.resolveWaveScript(scripts, wave), composition,
+                    msg='zone %s wave %s script' % (zone, wave))
+            # Past the last scripted beat → fraction fallback path.
+            past = max(waves) + 1
+            self.assertIsNone(
+                rg.resolveWaveScript(scripts, past),
+                msg='zone %s wave %s should fall through' % (zone, past))
+
+    def test_scripted_pack_size_matches_composition(self):
+        """wavePackSize must honor script length so spawned slots = script."""
+        rg = self.rg
+        for zone in (LOOPY, PUNCHLINE, SILLY):
+            pack = rg.STREET_PACKS[zone]
+            scripts = pack['waveScripts']
+            for wave in range(1, len(scripts) + 1):
+                script = rg.resolveWaveScript(scripts, wave)
+                self.assertIsNotNone(script)
+                self.assertEqual(
+                    rg.wavePackSize(pack['packSize'], wave, waveScript=script),
+                    len(script),
+                    msg='zone %s wave %s pack size' % (zone, wave))
+
+    def test_director_prefers_wave_scripts_ast(self):
+        """DistributedReclaimDirectorAI must resolve + spawn from waveScripts."""
+        src = (REPO_ROOT / 'toontown' / 'reclaim' /
+               'DistributedReclaimDirectorAI.py').read_text(encoding='utf-8')
+        self.assertIn('waveScripts=', src)
+        self.assertIn('resolveWaveScript', src)
+        self.assertIn('waveScript=waveScript', src)
+        # Start kwargs keep scripts for the whole reclaim session.
+        self.assertIn('self._waveScripts = waveScripts', src)
+
 
 if __name__ == '__main__':
     unittest.main()
