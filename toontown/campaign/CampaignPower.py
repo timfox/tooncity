@@ -2,6 +2,10 @@
 
 Mutates HackSlashConfig.COMBO_DAMAGE in place from a stored baseline so
 campaign depth can ship without rewriting the combat package.
+
+Login / hydrate re-applies via CampaignHandoff._onCampaignProgressSync
+using AI-persisted reclaimCount (PollutionManager setCampaignProgress)
+so mid-campaign relog keeps the same melee scale as an unbroken session.
 """
 
 from toontown.campaign import CampaignGlobals

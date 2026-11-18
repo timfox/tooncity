@@ -255,7 +255,7 @@ class PollutionManagerAI(DistributedObjectAI):
         return applied
 
     def requestCampaignProgress(self):
-        """Client login ask: hydrate + push victory / unlock / chaseCleared."""
+        """Client login ask: hydrate + push victory / unlock / chase / reclaimCount."""
         avId = self.air.getAvatarIdFromSender()
         toon = self.air.doId2do.get(avId)
         if toon is None:
@@ -263,10 +263,11 @@ class PollutionManagerAI(DistributedObjectAI):
         self.pushCampaignProgressToAvatar(toon, hydrate=True)
 
     def pushCampaignProgressToAvatar(self, toon, hydrate=False):
-        """Thin per-avatar status push for PlayEntry / OswaldPresence mirror.
+        """Thin per-avatar status push for PlayEntry / OswaldPresence / power.
 
         Hydrate reads CampaignProgressSave so relog clients see AI-persisted
-        STATE_VICTORY / unlockedThrough / chaseCleared without pressing C/R.
+        STATE_VICTORY / unlockedThrough / chaseCleared / reclaimCount without
+        pressing C/R. reclaimCount rehydrates CampaignPower melee bump.
         """
         if toon is None:
             return False
@@ -276,6 +277,7 @@ class PollutionManagerAI(DistributedObjectAI):
         unlocked = 0
         state = 0
         chaseCleared = 0
+        reclaimCount = 0
         try:
             from toontown.campaign import CampaignProgressSave
             from toontown.campaign.CampaignDirectorAI import getCampaignDirector
@@ -288,6 +290,8 @@ class PollutionManagerAI(DistributedObjectAI):
             unlocked = int(blob.get('unlockedThrough', 0) or 0)
             state = int(blob.get('state', 0) or 0)
             chaseCleared = int(blob.get('chaseCleared', 0) or 0)
+            # uint8 DC field — clamp; power bump already caps at POWER_BUMP_MAX.
+            reclaimCount = max(0, min(255, int(blob.get('reclaimCount', 0) or 0)))
         except Exception:
             self.notify.warning('pushCampaignProgressToAvatar failed')
             return False
@@ -295,7 +299,7 @@ class PollutionManagerAI(DistributedObjectAI):
             self.sendUpdateToAvatarId(
                 int(avId),
                 'setCampaignProgress',
-                [unlocked, state, chaseCleared])
+                [unlocked, state, chaseCleared, reclaimCount])
         except Exception:
             self.notify.debug('setCampaignProgress send failed av=%s' % avId)
             return False

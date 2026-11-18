@@ -210,7 +210,7 @@ class OswaldPresenceClient(DirectObject):
         self._inRange = False
 
     def _onCampaignProgressSync(
-            self, unlockedThrough=0, state=0, chaseCleared=0):
+            self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
         """Apply AI-persisted victory so trusted presence survives relog."""
         try:
             from toontown.campaign import CampaignProgressSave
@@ -218,6 +218,7 @@ class OswaldPresenceClient(DirectObject):
                 'unlockedThrough': unlockedThrough,
                 'state': state,
                 'chaseCleared': chaseCleared,
+                'reclaimCount': reclaimCount,
             })
         except Exception:
             return

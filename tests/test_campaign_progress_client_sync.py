@@ -148,6 +148,7 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertFalse(mirror['chasePending'])
         self.assertEqual(mirror['unlockedThrough'], 0)
         self.assertEqual(mirror['state'], camp.STATE_IDLE)
+        self.assertEqual(mirror['reclaimCount'], 0)
         self.assertIsNone(mirror['softNextStreet'])
 
     def test_client_mirror_mid_act_unlock(self):
@@ -158,11 +159,13 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
             'actIndex': 1,
             'state': camp.STATE_ACTIVE,
             'chaseCleared': 0,
+            'reclaimCount': 2,
         })
         self.assertFalse(mirror['victoryEpilogue'])
         self.assertFalse(mirror['betrayed'])
         self.assertEqual(mirror['softNextStreet'], camp.ACTS[1]['name'])
         self.assertIn('Punchline', mirror['softNextStreet'])
+        self.assertEqual(mirror['reclaimCount'], 2)
 
     def test_client_mirror_victory_chase_pending(self):
         save = self.save
@@ -172,10 +175,12 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
             'actIndex': 2,
             'state': camp.STATE_VICTORY,
             'chaseCleared': 0,
+            'reclaimCount': 4,
         })
         self.assertTrue(mirror['victoryEpilogue'])
         self.assertTrue(mirror['betrayed'])
         self.assertTrue(mirror['chasePending'])
+        self.assertEqual(mirror['reclaimCount'], 4)
         self.assertIsNone(mirror['softNextStreet'])
         # Hub tip must NOT claim stain washed while chase still pending.
         tip = camp.hubPlayEntryTip(
@@ -193,11 +198,13 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
             'actIndex': 2,
             'state': camp.STATE_VICTORY,
             'chaseCleared': 1,
+            'reclaimCount': 5,
         })
         self.assertTrue(mirror['victoryEpilogue'])
         self.assertTrue(mirror['betrayed'])
         self.assertFalse(mirror['chasePending'])
         self.assertEqual(mirror['chaseCleared'], 1)
+        self.assertEqual(mirror['reclaimCount'], 5)
 
     def test_soft_next_street_helper(self):
         save = self.save
@@ -224,7 +231,8 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertIn('dclass PollutionManager', dc)
         pollution_block = dc.split('dclass PollutionManager')[1].split(
             'dclass ')[0]
-        self.assertIn('setCampaignProgress(uint8, uint8, uint8)', pollution_block)
+        self.assertIn(
+            'setCampaignProgress(uint8, uint8, uint8, uint8)', pollution_block)
 
     def test_pollution_manager_client_surface(self):
         rel = 'toontown/corruption/PollutionManager.py'
@@ -236,6 +244,7 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertIn('campaignProgressSync', src)
         self.assertIn('campaignUnlockedThrough', src)
         self.assertIn('campaignChaseCleared', src)
+        self.assertIn('campaignReclaimCount', src)
 
     def test_pollution_manager_ai_push(self):
         rel = 'toontown/corruption/PollutionManagerAI.py'
@@ -247,6 +256,7 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertIn('setCampaignProgress', src)
         self.assertIn('_hydrateFromToon', src)
         self.assertIn('sendUpdateToAvatarId', src)
+        self.assertIn('reclaimCount', src)
 
     def test_director_pushes_on_hydrate_and_persist(self):
         src = _read('toontown/campaign/CampaignDirectorAI.py')
@@ -269,6 +279,7 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertIn('_chasePending', src)
         self.assertIn("mirror.get('chasePending')", src)
         self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', src)
+        self.assertIn('reclaimCount', src)
         # Preserve #332 hub breadcrumb unlock accept alongside login sync.
         self.assertIn("accept('campaignActUnlocked'", src)
         self.assertIn('_onCampaignActUnlocked', src)

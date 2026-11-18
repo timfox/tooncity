@@ -108,8 +108,9 @@ class HubStainConfrontClient(DirectObject):
         self._shown = False
 
     def _onCampaignProgressSync(
-            self, unlockedThrough=0, state=0, chaseCleared=0):
+            self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
         # Victory + uncleared chase → want confront; chase clear / replay → hide.
+        # reclaimCount accepted for campaignProgressSync arity (power path).
         try:
             victory = int(state) == int(CampaignGlobals.STATE_VICTORY)
         except Exception:

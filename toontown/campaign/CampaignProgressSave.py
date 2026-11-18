@@ -5,10 +5,11 @@ air process, so explore→fight→reclaim progress reset on logout / district
 restart. This module stores a thin per-toon blob beside other AI JSON
 saves (buildings / track records) — no DistributedToon avatar schema.
 
-Client hub tip + OswaldPresence mirror the blob after relog via a thin
-PollutionManager status push (`setCampaignProgress`); see
-`clientMirrorFromProgress`. Pure helpers are panda-free so headless tests
-can exercise sanitize / round-trip / mirror flags without Direct / Astron.
+Client hub tip + OswaldPresence + CampaignHandoff power mirror the blob
+after relog via a thin PollutionManager status push (`setCampaignProgress`
+incl. reclaimCount); see `clientMirrorFromProgress`. Pure helpers are
+panda-free so headless tests can exercise sanitize / round-trip / mirror
+flags without Direct / Astron.
 """
 
 from __future__ import annotations
@@ -215,15 +216,17 @@ def softNextStreetFromProgress(progress):
 def clientMirrorFromProgress(progress):
     """Derive client presentation flags from a sanitized progress blob.
 
-    Used after login / hydrate so PlayEntry hub tip and OswaldPresence
-    match AI-persisted victory / unlock / chaseCleared (not session-only
-    `_victoryEpilogue` / `_betrayed`).
+    Used after login / hydrate so PlayEntry hub tip, OswaldPresence, and
+    CampaignHandoff power match AI-persisted victory / unlock /
+    chaseCleared / reclaimCount (not session-only `_victoryEpilogue` /
+    `_betrayed` / `_localReclaimCount`).
     """
     blob = sanitizeProgress(progress)
     state = int(blob.get('state', CampaignGlobals.STATE_IDLE) or 0)
     chaseCleared = int(blob.get('chaseCleared', 0) or 0)
     unlockedThrough = int(blob.get('unlockedThrough', 0) or 0)
     actIndex = int(blob.get('actIndex', 0) or 0)
+    reclaimCount = int(blob.get('reclaimCount', 0) or 0)
     victory = state == int(CampaignGlobals.STATE_VICTORY)
     # Twist already landed once STATE_VICTORY — hide trusted Oswald whether
     # the betrayal chase is still pending or already washed.
@@ -233,6 +236,7 @@ def clientMirrorFromProgress(progress):
         'actIndex': actIndex,
         'state': state,
         'chaseCleared': chaseCleared,
+        'reclaimCount': reclaimCount,
         'victoryEpilogue': victory,
         'betrayed': betrayed,
         'softNextStreet': softNextStreetFromProgress(blob),
