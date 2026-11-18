@@ -208,6 +208,15 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
                 wave, self.maxWaves, zoneId=zoneId, packCount=count)
             self.__showBanner(title, mainColor, hold=hold, pop=True)
             self.__showSubBanner(tip, subColor, hold=hold)
+        # Cream edge pulse frames the announce plate (WaveCreamBurstFx).
+        try:
+            from toontown.reclaim.WaveCreamBurstFx import (
+                ensureWaveCreamBurstFxClient)
+            ensureWaveCreamBurstFxClient()
+        except Exception:
+            pass
+        messenger.send(
+            'reclaimWaveAnnounce', [self.reclaimZoneId, wave])
         self.__showStatusHud()
 
     def announceWaveCleared(self, waveIndex):

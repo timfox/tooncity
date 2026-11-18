@@ -1,9 +1,11 @@
-"""Rubber-hose cream burst when a reclaim wave clears.
+"""Rubber-hose cream juice for reclaim wave banners.
 
-Lighter cousin of the purity-restore burst: soft aspect2d cream flash,
-expanding ring, and sunny flecks. Layers with ReclaimCheer pitch swell and
-StreetColorWash — never stomps hood geom tint / fog / full purity FOV punch.
-Toontown spiritual-sequel tone only — no keyblades / no KH branding.
+Wave clear: soft aspect2d cream flash, expanding ring, and sunny flecks.
+Wave announce: cream edge-strip pulse framing the wave plate + tip flecks.
+
+Layers with ReclaimCheer pitch swell and StreetColorWash — never stomps hood
+geom tint / fog / full purity FOV punch. Toontown spiritual-sequel tone only —
+no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -25,7 +27,7 @@ from toontown.reclaim import ReclaimGlobals
 
 
 class WaveCreamBurstFxClient(DirectObject):
-    """Listens for reclaimWaveCleared and plays a short cream juice beat."""
+    """Wave-clear cream burst + wave-announce cream edge pulse."""
 
     def __init__(self):
         DirectObject.__init__(self)
@@ -33,14 +35,22 @@ class WaveCreamBurstFxClient(DirectObject):
         self._flashNP = None
         self._ringNP = None
         self._fleckNPs = []
+        self._edgeIval = None
+        self._edgeRootNP = None
+        self._edgeFleckNPs = []
         self.accept('reclaimWaveCleared', self._onWaveCleared)
+        self.accept('reclaimWaveAnnounce', self._onWaveAnnounce)
 
     def destroy(self):
         self.ignoreAll()
         self.clear()
+        self.clearEdge()
 
     def _onWaveCleared(self, zoneId=None, waveIndex=0):
         self.playBurst()
+
+    def _onWaveAnnounce(self, zoneId=None, waveIndex=0):
+        self.playEdgePulse()
 
     def playBurst(self):
         """Soft cream flash + ring + flecks (no FOV / camera — purity owns that)."""
@@ -83,6 +93,177 @@ class WaveCreamBurstFxClient(DirectObject):
             name='reclaimWaveCreamBurst',
         )
         self._ival.start()
+
+    def playEdgePulse(self):
+        """Cream border strips + tip flecks framing the wave-announce plate."""
+        if not getattr(ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_ENABLED', True):
+            return
+        self.clearEdge()
+        try:
+            parent = aspect2d  # noqa: F821
+        except Exception:
+            return
+
+        edgeRoot = self._buildEdgeRoot(parent)
+        if edgeRoot is None:
+            return
+
+        r, g, b, _a = getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_COLOR',
+            (1.0, 0.97, 0.82, 1.0))
+        peak = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_PEAK', 0.42))
+        mid = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_PULSE', 0.28))
+        inSec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_IN_SEC', 0.08))
+        holdSec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_HOLD_SEC', 0.10))
+        pulseSec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_PULSE_SEC', 0.12))
+        outSec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_OUT_SEC', 0.36))
+
+        # Rubber-hose two-beat: bright pop → soft settle pulse → fade.
+        edgePart = Sequence(
+            LerpColorScaleInterval(
+                edgeRoot, max(0.01, inSec), Vec4(1, 1, 1, peak),
+                blendType='easeOut'),
+            Wait(max(0.0, holdSec)),
+            LerpColorScaleInterval(
+                edgeRoot, max(0.01, pulseSec), Vec4(1, 1, 1, mid),
+                blendType='easeInOut'),
+            LerpColorScaleInterval(
+                edgeRoot, max(0.01, outSec), Vec4(1, 1, 1, 0),
+                blendType='easeIn'),
+        )
+        fleckParts = self._spawnEdgeFlecks(parent)
+        parts = [edgePart]
+        parts.extend(fleckParts)
+        self._edgeIval = Sequence(
+            Parallel(*parts),
+            Func(self.clearEdge),
+            name='reclaimWaveCreamEdgePulse',
+        )
+        self._edgeIval.start()
+
+    def _buildEdgeRoot(self, parent):
+        """Four cream edge strips — sunny frame, open center for the banner."""
+        try:
+            edge = float(getattr(
+                ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE', 0.28))
+            binSort = int(getattr(
+                ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_BIN', 50))
+            r, g, b, _a = getattr(
+                ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_COLOR',
+                (1.0, 0.97, 0.82, 1.0))
+            root = parent.attachNewNode('reclaim-wave-cream-edge')
+            root.setTransparency(TransparencyAttrib.MAlpha)
+            root.setColorScale(1, 1, 1, 0)
+            root.setBin('fixed', binSort)
+            root.setDepthTest(False)
+            root.setDepthWrite(False)
+            # Top / bottom / left / right — cream borders, clear middle.
+            frames = (
+                (-2.0, 2.0, 1.0 - edge, 1.25),
+                (-2.0, 2.0, -1.25, -1.0 + edge),
+                (-2.0, -1.0 + edge, -1.25, 1.25),
+                (1.0 - edge, 2.0, -1.25, 1.25),
+            )
+            for i, frame in enumerate(frames):
+                cm = CardMaker('reclaim-wave-cream-edge-%s' % i)
+                cm.setFrame(*frame)
+                strip = root.attachNewNode(cm.generate())
+                strip.setTransparency(TransparencyAttrib.MAlpha)
+                strip.setColor(r, g, b, 1)
+                strip.setBin('fixed', binSort)
+                strip.setDepthTest(False)
+                strip.setDepthWrite(False)
+            self._edgeRootNP = root
+            return root
+        except Exception:
+            self._edgeRootNP = None
+            return None
+
+    def _spawnEdgeFlecks(self, parent):
+        """Sunny cream chips near the wave plate during the edge pulse."""
+        count = int(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_COUNT', 6))
+        if count <= 0:
+            return []
+        size = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_SIZE', 0.022))
+        drift = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_DRIFT', 0.18))
+        sec = float(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_SEC', 0.28))
+        binSort = int(getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_BIN', 50)) + 1
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_COLOR',
+            (1.0, 0.96, 0.62, 0.9))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_END_COLOR',
+            (1.0, 0.92, 0.45, 0.0))
+        origin = getattr(
+            ReclaimGlobals, 'WAVE_ANNOUNCE_CREAM_EDGE_FLECK_ORIGIN',
+            (0.0, 0.0, 0.72))
+        try:
+            ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+        except Exception:
+            ox, oy, oz = 0.0, 0.0, 0.72
+
+        parts = []
+        for i in range(count):
+            try:
+                # Spread along the top banner band (not a full radial burst).
+                t = (float(i) / max(1, count - 1)) - 0.5
+                angle = (0.35 * pi) + (t * 0.9 * pi)
+                cm = CardMaker('reclaim-wave-cream-edge-fleck-%s' % i)
+                if (i % 2) == 0:
+                    cm.setFrame(-size * 1.15, size * 1.15, -size * 0.5, size * 0.5)
+                else:
+                    cm.setFrame(-size, size, -size, size)
+                fleck = parent.attachNewNode(cm.generate())
+                fleck.setTransparency(TransparencyAttrib.MAlpha)
+                fleck.setColor(r, g, b, 1)
+                fleck.setColorScale(r, g, b, 0)
+                start = Point3(
+                    ox + t * 0.55,
+                    oy,
+                    oz + 0.02 * (i % 3))
+                fleck.setPos(start)
+                fleck.setScale(0.4 + 0.08 * (i % 3))
+                fleck.setBin('fixed', binSort)
+                fleck.setDepthTest(False)
+                fleck.setDepthWrite(False)
+                self._edgeFleckNPs.append(fleck)
+            except Exception:
+                continue
+
+            end = Point3(
+                ox + cos(angle) * drift * 0.55 + t * 0.75,
+                oy,
+                oz + abs(sin(angle)) * drift + 0.04)
+            delay = 0.02 * i
+            parts.append(Sequence(
+                Wait(delay),
+                Parallel(
+                    LerpColorScaleInterval(
+                        fleck, 0.05, Vec4(r, g, b, a), blendType='easeOut'),
+                    LerpScaleInterval(fleck, 0.05, 1.0, blendType='easeOut'),
+                ),
+                Parallel(
+                    LerpPosInterval(
+                        fleck, max(0.01, sec), end, blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec), 0.1, blendType='easeIn'),
+                    LerpColorScaleInterval(
+                        fleck, max(0.01, sec), Vec4(er, eg, eb, ea),
+                        blendType='easeIn'),
+                ),
+            ))
+        return parts
 
     def _spawnFlash(self, parent, ox, oy, oz, r, g, b, binSort):
         peak = float(getattr(ReclaimGlobals, 'WAVE_CLEAR_CREAM_FLASH_PEAK', 0.34))
@@ -235,6 +416,28 @@ class WaveCreamBurstFxClient(DirectObject):
                 except Exception:
                     pass
         self._fleckNPs = []
+
+    def clearEdge(self):
+        if self._edgeIval is not None:
+            try:
+                self._edgeIval.pause()
+            except Exception:
+                pass
+            self._edgeIval = None
+        root = self._edgeRootNP
+        self._edgeRootNP = None
+        if root is not None and not root.isEmpty():
+            try:
+                root.removeNode()
+            except Exception:
+                pass
+        for np in self._edgeFleckNPs:
+            if np is not None and not np.isEmpty():
+                try:
+                    np.removeNode()
+                except Exception:
+                    pass
+        self._edgeFleckNPs = []
 
 
 _client = None
