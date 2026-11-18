@@ -518,59 +518,59 @@ SECURED_LOCK_RIM_SEC = 0.85
 SECURED_LOCK_HUD_HOLD_SEC = 1.15
 # Secured-lock purity sparkle sting — tip-near green-cream flecks + quiet
 # pitch sting when the street purity lock seals. Celebration glitter deepen
-# past #243 so street-secure payoff reads juicier again — still below cheer
+# past #261 so street-secure payoff reads juicier again — still below cheer
 # full / StreetSparkle horizon. Distinct from mid-wave warm rim-flash cream
 # (#234), wave-start sunny hose cream (#239), wave-clear mid-screen sunny
-# cream sparkle (#253), cheer flecks, and StreetSparkle horizon glitter —
+# cream sparkle (#253/#273), cheer flecks, and StreetSparkle horizon glitter —
 # tip-near green-cream lock glitter only. Toggle SECURED_LOCK_SPARKLE_ENABLED
 # = False drops flecks + sting (+ aftershock); tip/rim still fire. No KH
 # branding.
 SECURED_LOCK_SPARKLE_ENABLED = True
 SECURED_LOCK_SPARKLE_DELAY_SEC = 0.02
 SECURED_LOCK_SPARKLE_ORIGIN = (0.0, 0.0, 0.42)  # near tip / under meter
-SECURED_LOCK_SPARKLE_COUNT = 12
-SECURED_LOCK_SPARKLE_SIZE = 0.022
-SECURED_LOCK_SPARKLE_RISE = 0.40
-SECURED_LOCK_SPARKLE_SPREAD = 0.72
-SECURED_LOCK_SPARKLE_SEC = 0.40
-SECURED_LOCK_SPARKLE_POP = 1.32  # twinkle scale peak — juicier lock snap
+SECURED_LOCK_SPARKLE_COUNT = 13
+SECURED_LOCK_SPARKLE_SIZE = 0.024
+SECURED_LOCK_SPARKLE_RISE = 0.44
+SECURED_LOCK_SPARKLE_SPREAD = 0.80
+SECURED_LOCK_SPARKLE_SEC = 0.44
+SECURED_LOCK_SPARKLE_POP = 1.40  # twinkle scale peak — juicier lock snap
 SECURED_LOCK_SPARKLE_BIN = 54  # above cheer flecks (53); under purity burst
-SECURED_LOCK_SPARKLE_COLOR = (0.74, 1.0, 0.82, 0.98)  # juicier green-cream
-SECURED_LOCK_SPARKLE_END_COLOR = (0.50, 1.0, 0.68, 0.0)
+SECURED_LOCK_SPARKLE_COLOR = (0.72, 1.0, 0.80, 1.0)  # juicier green-cream
+SECURED_LOCK_SPARKLE_END_COLOR = (0.48, 1.0, 0.66, 0.0)
 # Soft cream sparkle aftershock after the further-deepened rising lock flecks —
 # juicier settle chips + optional green-cream halo (wave-clear sparkle
 # aftershock grammar, tip-near / greener — not sunny #253 mid-screen). Toggle
 # SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED = False drops residual only.
 SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED = True
-SECURED_LOCK_SPARKLE_AFTERSHOCK_DELAY_SEC = 0.14  # after sparkle start
-SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT = 5
-SECURED_LOCK_SPARKLE_AFTERSHOCK_SIZE = 0.017
-SECURED_LOCK_SPARKLE_AFTERSHOCK_DRIFT = 0.30
-SECURED_LOCK_SPARKLE_AFTERSHOCK_FALL = 0.24
-SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC = 0.34
-SECURED_LOCK_SPARKLE_AFTERSHOCK_COLOR = (0.70, 1.0, 0.80, 0.88)
-SECURED_LOCK_SPARKLE_AFTERSHOCK_END_COLOR = (0.48, 0.98, 0.66, 0.0)
+SECURED_LOCK_SPARKLE_AFTERSHOCK_DELAY_SEC = 0.13  # after sparkle start
+SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT = 6
+SECURED_LOCK_SPARKLE_AFTERSHOCK_SIZE = 0.018
+SECURED_LOCK_SPARKLE_AFTERSHOCK_DRIFT = 0.34
+SECURED_LOCK_SPARKLE_AFTERSHOCK_FALL = 0.26
+SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC = 0.38
+SECURED_LOCK_SPARKLE_AFTERSHOCK_COLOR = (0.68, 1.0, 0.78, 0.92)
+SECURED_LOCK_SPARKLE_AFTERSHOCK_END_COLOR = (0.46, 0.98, 0.64, 0.0)
 SECURED_LOCK_SPARKLE_AFTERSHOCK_BIN = 55
 SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_ENABLED = True
-SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_HALF = 0.38
-SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_START = 0.26
-SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK = 1.22
-SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_SEC = 0.30
-SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA = 0.17
-SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_COLOR = (0.76, 1.0, 0.84, 1.0)
+SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_HALF = 0.40
+SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_START = 0.28
+SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK = 1.28
+SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_SEC = 0.34
+SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK_ALPHA = 0.19
+SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_COLOR = (0.74, 1.0, 0.82, 1.0)
 # Quiet cheer-cousin pitch sting (not the full purity whistle on restore).
 SECURED_LOCK_STING_ENABLED = True
 SECURED_LOCK_STING_SFX = 'phase_3.5/audio/sfx/AV_jump_2.ogg'
-SECURED_LOCK_STING_VOLUME = 0.62
-SECURED_LOCK_STING_PITCH_START = 0.88
-SECURED_LOCK_STING_PITCH_PEAK = 1.40
-SECURED_LOCK_STING_PITCH_END = 1.12
-SECURED_LOCK_STING_SWELL_SEC = 0.12
-SECURED_LOCK_STING_SETTLE_SEC = 0.12
+SECURED_LOCK_STING_VOLUME = 0.66
+SECURED_LOCK_STING_PITCH_START = 0.86
+SECURED_LOCK_STING_PITCH_PEAK = 1.44
+SECURED_LOCK_STING_PITCH_END = 1.14
+SECURED_LOCK_STING_SWELL_SEC = 0.13
+SECURED_LOCK_STING_SETTLE_SEC = 0.13
 # Soft meter hose-pop when secured rim confirms (HUD sting cousin of tip pop).
 # Slightly juicier uniform scale — still not wave-start squash→stretch (#239).
-SECURED_LOCK_METER_POP_SCALE = 1.18
-SECURED_LOCK_METER_POP_SEC = 0.11
+SECURED_LOCK_METER_POP_SCALE = 1.20
+SECURED_LOCK_METER_POP_SEC = 0.12
 
 # Purity-complete meter hose settle cream — after restore celebration settles
 # (purityRestoreSettled), further-deepened soft tall stretch → longer settle on

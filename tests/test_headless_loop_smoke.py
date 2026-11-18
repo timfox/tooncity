@@ -1007,14 +1007,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIs(
             secured_assigns.get('SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED'),
             True)
-        # Further-deepened tip-near lock glitter past #243 stays below StreetSparkle.
+        # Further-deepened tip-near lock glitter past #261 stays below StreetSparkle.
         self.assertGreaterEqual(
-            int(secured_assigns.get('SECURED_LOCK_SPARKLE_COUNT', 0)), 11)
+            int(secured_assigns.get('SECURED_LOCK_SPARKLE_COUNT', 0)), 13)
         self.assertGreater(
-            float(secured_assigns.get('SECURED_LOCK_SPARKLE_POP', 0)), 1.24)
+            float(secured_assigns.get('SECURED_LOCK_SPARKLE_POP', 0)), 1.32)
         self.assertGreaterEqual(
             int(secured_assigns.get(
-                'SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT', 0)), 5)
+                'SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT', 0)), 6)
         secured_tip = str(secured_assigns.get('SECURED_LOCK_TIP', '')).lower()
         self.assertIn('secured', secured_tip)
         self.assertIn('ink', secured_tip)
