@@ -341,6 +341,26 @@ HANDOFF_CREAM_EDGE_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.90)
 HANDOFF_CREAM_EDGE_SPARKLE_END_COLOR = (1.0, 0.94, 0.58, 0.0)
 HANDOFF_CREAM_EDGE_SPARKLE_ORIGIN = (0.0, 0.0, 0.38)
 
+# Soft cream wash pulse after handoff cream edge / sparkle (#124/#99).
+# Perfect-dodge / melee hit / victory cream wash grammar — delayed two-beat
+# aspect2d veil on Loopy→Punchline (and act) carnival handoffs only. Soft
+# under edge strips (bin 55) / plate (60); cream / pastel only. A touch
+# quieter / shorter than victory wash (#138) — handoffs fire more often.
+# Early/mid trusted Oswald only — twist / victory / phase stay wash-free.
+# HANDOFF_CREAM_WASH_ENABLED = False drops wash only (carnival + sparkle +
+# edge remain). No keyblades / KH branding.
+HANDOFF_CREAM_WASH_ENABLED = True
+HANDOFF_CREAM_WASH_DELAY_SEC = 0.40  # after play; after edge peak (~0.20)
+HANDOFF_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+HANDOFF_CREAM_WASH_PEAK = 0.14
+HANDOFF_CREAM_WASH_MID = 0.08
+HANDOFF_CREAM_WASH_IN_SEC = 0.07
+HANDOFF_CREAM_WASH_PULSE_SEC = 0.12
+HANDOFF_CREAM_WASH_HOLD_SEC = 0.10
+HANDOFF_CREAM_WASH_OUT_SEC = 0.40  # rides with handoff glitter hang (~0.68)
+# Under cream edge (55) / plate (60); soft veil settle beat.
+HANDOFF_CREAM_WASH_BIN = 54
+
 # Campaign victory cream confetti swell (CampaignHandoffConfetti).
 # Soft rubber-hose cream burst on the purity cheer ("TOON CITY IS SAVED!")
 # only — clears before the Oswald twist / FinalePhaseFx reveal so the
