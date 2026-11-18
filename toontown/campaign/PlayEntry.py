@@ -40,6 +40,11 @@ class PlayEntryClient(DirectObject):
             ensureReclaimCheerClient()
         except Exception:
             pass
+        try:
+            from toontown.reclaim.PurityBurstFx import ensurePurityBurstFxClient
+            ensurePurityBurstFxClient()
+        except Exception:
+            pass
         taskMgr.doMethodLater(2.0, self._bootZone, 'playEntryBoot')  # noqa: F821
 
     def destroy(self):

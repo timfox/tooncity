@@ -23,7 +23,8 @@ Sections below remain **debug / magic-word** fallbacks.
    Punchline sludge green-brown, Silly hot magenta) via `HOOD_POLLUTION_BIAS`
    and `PollutionPropTint` (geom colorScale — does not stomp reclaim render bloom).
 5. At `0.0`, director announces reclaim complete and client plays a stronger purity
-   restore moment (banner + bloom + sting + `ReclaimCheer` local Happy/wave + nearby nudge).
+   restore moment (banner + bloom + sting + FOV/camera punch + rays/sparks via
+   `PurityBurstFx` + `ReclaimCheer` local Happy/wave + nearby nudge).
 
 ## Discoverable play (preferred)
 
