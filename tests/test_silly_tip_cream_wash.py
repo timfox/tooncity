@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Thin AST/unit tests for deepened Silly Overlord tip cream wash.
+"""Thin AST/unit tests for deepened Silly almost-confess tip cream wash.
 
 Loads CampaignGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-SILLY_ACT_TIP_CREAM_WASH_* deepen tunables, soft cream aftershock under the
-tip bar, rubber-hose (non-KH) wiring on tipHose='silly', and
+SILLY_ACT_TIP_CREAM_WASH_* deepen tunables past #251, soft cream aftershock
+under the tip bar, rubber-hose (non-KH) wiring on tipHose='silly', and
 SillyTipCreamWashFx module presence. Distinct from victory twist sting
 cream deepen (#244) and betrayal banner cream hose settle (#235); hose
-settle deepen (#232) stays on the tip scale path.
+settle deepen (#232 / past) stays on the tip scale path.
 
 Run from repo root:
   python3 tests/test_silly_tip_cream_wash.py
@@ -103,17 +103,29 @@ class SillyTipCreamWashDeepenTest(unittest.TestCase):
         camp = self.camp
         self.assertIs(camp.SILLY_ACT_TIP_CREAM_WASH_ENABLED, True)
         self.assertIs(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ENABLED, True)
-        # Juicier than #162 baseline (0.12 / 0.07 / 0.10 / 0.36 / no aftershock).
-        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK), 0.14)
-        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_MID), 0.08)
+        # Deepened past #251 (0.14 / 0.08 / 0.12 / 0.40 / aftershock 4).
+        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_PEAK), 0.15)
+        self.assertGreaterEqual(float(camp.SILLY_ACT_TIP_CREAM_WASH_MID), 0.09)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC), 0.12)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_HOLD_SEC), 0.14)
         self.assertGreaterEqual(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_OUT_SEC), 0.40)
-        self.assertGreater(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT, 0)
-        self.assertGreater(
-            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC), 0.0)
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_OUT_SEC), 0.44)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_PULSE_SEC), 0.13)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_DELAY_SEC), 0.62)
+        self.assertGreaterEqual(
+            int(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_COUNT), 5)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SEC), 0.36)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_SIZE), 0.016)
         self.assertTrue(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_ENABLED)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK), 1.18)
+        self.assertGreaterEqual(
+            float(camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA),
+            0.13)
         origin = camp.SILLY_ACT_TIP_CREAM_WASH_AFTERSHOCK_ORIGIN
         self.assertEqual(len(origin), 3)
         # Tip-bar residual (bottom), not betrayal / victory plate.
@@ -162,6 +174,7 @@ class SillyTipCreamWashDeepenTest(unittest.TestCase):
         self.assertNotIn('keyblade ', wash_src.replace('no keyblades', ''))
         self.assertIn('overlord', wash_src)
         self.assertIn('foreshadow', wash_src)
+        self.assertIn('almost-confess', wash_src)
         self.assertIn('aftershock', wash_src)
         self.assertIn('juicier', wash_src)
 
@@ -202,19 +215,24 @@ class SillyTipCreamWashDeepenTest(unittest.TestCase):
 
     def test_magic_words_mention_deepened_silly_tip_wash(self):
         magic_l = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('deepened soft cream wash pulse + cream aftershock', magic_l)
+        self.assertIn('deepened soft cream wash pulse', magic_l)
+        self.assertIn('cream aftershock', magic_l)
+        self.assertIn('deepened cream hose settle', magic_l)
         self.assertIn('silly act 3 tip', magic_l)
         self.assertIn('overlord foreshadow', magic_l)
+        self.assertIn('almost confess', magic_l)
 
     def test_globals_comment_kh_free_and_distinct(self):
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('silly_act_tip_cream_wash_enabled')
         self.assertGreater(idx, 0)
-        snip = src[max(0, idx - 650):idx + 900]
+        snip = src[max(0, idx - 750):idx + 1000]
         self.assertIn('no keyblades', snip)
         self.assertIn('juicier', snip)
         self.assertIn('aftershock', snip)
         self.assertIn('foreshadow', snip)
+        self.assertIn('almost-confess', snip)
+        self.assertIn('#251', snip)
         self.assertIn('#244', snip)
         self.assertIn('#235', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
