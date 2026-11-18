@@ -163,57 +163,58 @@ LOCK_CAM_TASK_PRIORITY = 50
 # Soft-lock hit assist — one-shot yaw/aim nudge on melee connect against the
 # sticky soft-lock target so combo strings stay glued without hard lock.
 # Stronger than per-tick LOCK_FACE_LERP but hard-capped; deadzone skips tiny
-# error. Deepened past #254 so soft-lock connect glue reads juicier still
-# (#204 / #254 deepen+). LOCK_HIT_ASSIST_ENABLED = False drops assist +
+# error. Deepened past #278 so soft-lock connect glue reads juicier still
+# (#204 / #254 / #278 deepen+). LOCK_HIT_ASSIST_ENABLED = False drops assist +
 # cream wash (tick nudge stays).
 LOCK_HIT_ASSIST_ENABLED = True
-LOCK_HIT_ASSIST_YAW_FRAC = 0.66
-LOCK_HIT_ASSIST_YAW_MAX_DEG = 28.0
-LOCK_HIT_ASSIST_CAM_FRAC = 0.38
+LOCK_HIT_ASSIST_YAW_FRAC = 0.70
+LOCK_HIT_ASSIST_YAW_MAX_DEG = 30.0
+LOCK_HIT_ASSIST_CAM_FRAC = 0.42
 LOCK_HIT_ASSIST_DEADZONE_DEG = 2.0
 
 # Soft-lock hit-assist cream wash — soft aspect2d veil the instant connect
-# yaw/aim nudge fires (#204 / #254 deepen+) so hit assist reads juicier still.
-# SoftLock FOV / SoftLockCycle / DodgeCancel cream wash grammar. Quieter /
-# faster than hit-spark cream wash (#147) so combo strings stay readable;
-# cream/pastel only. Distinct from soft-lock cycle reticle cream deepen
-# (#233) and hurt wash cream deepen (#247 / #263). Toggle
-# LOCK_HIT_ASSIST_CREAM_WASH_ENABLED = False drops wash (+ aftershock) only —
-# assist yaw/cam still fire.
+# yaw/aim nudge fires (#204 / #254 / #278 deepen+) so hit assist reads juicier
+# still. SoftLock FOV / SoftLockCycle / DodgeCancel cream wash grammar.
+# Quieter / faster than hit-spark cream wash (#147) so combo strings stay
+# readable; cream/pastel only. Distinct from soft-lock cycle reticle cream
+# deepen (#233), hurt wash cream deepen (#247 / #263 / #287), i-frame cream
+# wash (#296), combo edge cream (#291), and dodge-cancel cream flash (#281).
+# Toggle LOCK_HIT_ASSIST_CREAM_WASH_ENABLED = False drops wash (+ aftershock)
+# only — assist yaw/cam still fire.
 LOCK_HIT_ASSIST_CREAM_WASH_ENABLED = True
 LOCK_HIT_ASSIST_CREAM_WASH_DELAY_SEC = 0.0  # fire with nudge — no settle lag
 LOCK_HIT_ASSIST_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-LOCK_HIT_ASSIST_CREAM_WASH_PEAK = 0.092
-LOCK_HIT_ASSIST_CREAM_WASH_MID = 0.055
+LOCK_HIT_ASSIST_CREAM_WASH_PEAK = 0.098
+LOCK_HIT_ASSIST_CREAM_WASH_MID = 0.062
 LOCK_HIT_ASSIST_CREAM_WASH_IN_SEC = 0.03
-LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC = 0.075
-LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC = 0.048
-LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC = 0.24
+LOCK_HIT_ASSIST_CREAM_WASH_PULSE_SEC = 0.09
+LOCK_HIT_ASSIST_CREAM_WASH_HOLD_SEC = 0.06
+LOCK_HIT_ASSIST_CREAM_WASH_OUT_SEC = 0.28
 LOCK_HIT_ASSIST_CREAM_WASH_BIN = 26  # under cycle wash (27) / hit wash (28)
 
 # Soft-lock hit-assist cream wash aftershock — residual cream flecks + soft
-# halo after the assist flash so connect glue still reads. Deepened past #254
+# halo after the assist flash so connect glue still reads. Deepened past #278
 # (more flecks + stronger halo). Same grammar as dodge-cancel / hurt-stagger
 # cream wash aftershock, quieter because assists fire often mid-combo.
 # Cream/pastel only. Toggle
 # LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
 LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ENABLED = True
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.04  # after flash starts
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.03  # after flash starts
 LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.04)
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT = 4
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SIZE = 0.013
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DRIFT = 0.20
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_FALL = 0.13
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SEC = 0.20
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.72)
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COUNT = 5
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SIZE = 0.015
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_DRIFT = 0.22
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_FALL = 0.145
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_SEC = 0.22
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.78)
 LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
 LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_BIN = 28  # over assist wash veil (26)
 LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.36
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.38
 LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_START = 0.20
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.10
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.16
-LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.095
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.22
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.18
+LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.11
 LOCK_HIT_ASSIST_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
