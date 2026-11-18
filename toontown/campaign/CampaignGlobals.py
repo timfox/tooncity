@@ -895,6 +895,36 @@ OSWALD_BETRAYAL_CHASE_CLEAR_MSG = (
     "Oswald's stain is washed — purity holds for real this time!")
 # Tip lands slightly after spawn so the enemy is already fielded.
 OSWALD_BETRAYAL_CHASE_TIP_DELAY_SEC = 0.35
+
+# Trusted Oswald hub/street presence stub (meet the trust face before twist).
+# World placemarker + proximity greet — stub-shippable, not a full
+# DistributedNPC / companion AI. Complements tip/banner copy + betrayal
+# chase (#313); does not deepen cream FX. Hide after finale reveal /
+# chase so the trusted lead is gone once the twist lands.
+# OSWALD_PRESENCE_ENABLED = False drops world stub + greet only
+# (HUB_TIP / ACTS tips / betrayal chase remain). No keyblades / KH.
+OSWALD_PRESENCE_ENABLED = True
+OSWALD_PRESENCE_LABEL = 'Oswald'
+OSWALD_PRESENCE_PLATE = 'OSWALD'
+OSWALD_PRESENCE_HUB_GREET = (
+    'Oswald waves from the plaza — "Loopy Lane needs us first!"  |  '
+    'Hop the tunnel  |  C campaign')
+OSWALD_PRESENCE_STREET_GREET = (
+    'Oswald tips his ears — "I\'ll field the packs — stretch-punch ready!"  |  '
+    'F fight  |  Shift dodge  |  C campaign')
+# World stub placement relative to the local toon on zone enter.
+OSWALD_PRESENCE_SPAWN_FORWARD = 6.5
+OSWALD_PRESENCE_SPAWN_RIGHT = 2.25
+OSWALD_PRESENCE_MARKER_Z = 2.8
+OSWALD_PRESENCE_MARKER_SCALE = 1.2
+OSWALD_PRESENCE_INTERACT_RADIUS = 12.0
+OSWALD_PRESENCE_POLL_SEC = 0.35
+OSWALD_PRESENCE_GREET_HOLD_SEC = 3.2
+# Sunny trusted placemarker (readable on TTC / streets — not ink purple).
+OSWALD_PRESENCE_MARKER_COLOR = (0.18, 0.52, 0.92, 1.0)
+OSWALD_PRESENCE_TIP_COLOR = (0.95, 0.98, 1.0, 1.0)
+OSWALD_PRESENCE_HIDE_ON_BETRAYAL = True
+
 FINALE_BETRAYAL_SETTLE_OVERSHOOT = (0.86, 1.0, 1.22, 0.10)
 FINALE_BETRAYAL_SETTLE_REST_SEC = 0.16
 FINALE_BETRAYAL_SUB_COLOR = (1.0, 0.78, 0.62, 1.0)

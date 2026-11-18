@@ -23,9 +23,22 @@ class TTPlayground(Playground.Playground):
         taskMgr.doMethodLater(1, self.__birds, 'TT-birds')
         # Polluted Loopy / Punchline / Silly tunnel placemarkers (hub explore).
         CorruptStreetBreadcrumb.ensureCorruptStreetBreadcrumbs(self)
+        # Trusted Oswald hub presence stub (meet before twist — campaign).
+        try:
+            from toontown.campaign.OswaldPresence import (
+                refreshOswaldPresenceHub)
+            refreshOswaldPresenceHub()
+        except Exception:
+            pass
 
     def exit(self):
         CorruptStreetBreadcrumb.stopCorruptStreetBreadcrumbs()
+        try:
+            from toontown.campaign.OswaldPresence import (
+                stopOswaldPresenceClient)
+            stopOswaldPresenceClient()
+        except Exception:
+            pass
         Playground.Playground.exit(self)
         taskMgr.remove('TT-birds')
 

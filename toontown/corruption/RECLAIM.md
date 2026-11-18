@@ -57,6 +57,11 @@ Walk onto Loopy / Punchline / Silly: `PlayEntry` auto-arms melee and auto-starts
 reclaim packs. Fight with **F**, dodge with **Shift**, campaign with **C**.
 No `~spawncorrupt` required for the happy path.
 
+On the TTC hub (and campaign streets before the twist), a stub **Oswald**
+world placemarker + proximity greet (`toontown/campaign/OswaldPresence.py`)
+lets players meet the trusted reclaim lead before finale betrayal. Not a
+full NPC / companion AI — suppresses after reveal / Corrupted Oswald chase.
+
 On polluted ACTS street enter, `PlayEntry` flashes a brief rubber-hose ink **edge
 vignette** (hood-tinted) that fades as the tip bar appears
 (`ENTRY_VIGNETTE_*` in `CorruptionGlobals`). Skipped once the street is pure.
