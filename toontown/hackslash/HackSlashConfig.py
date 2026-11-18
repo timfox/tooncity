@@ -43,6 +43,16 @@ HIT_FLASH_PEAK_ALPHA = 0.38
 HIT_FLASH_IN_SEC = 0.03
 HIT_FLASH_OUT_SEC = 0.10
 
+# Mid/finisher launcher juice (upward juggle feel on the target).
+LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more
+LAUNCH_HEIGHT = (0.0, 1.6, 2.4)
+LAUNCH_UP_SEC = 0.12
+LAUNCH_DOWN_SEC = 0.18
+
+# I-frame / dodge cue after CorruptToon smacks the local toon.
+IFRAME_SEC = 0.55
+IFRAME_FLASH_ALPHA = 0.55
+
 # Squash / stretch pulses (scale xyz multipliers over short windows).
 # Read as exaggerated rubber-hose hit frames, not realistic physics.
 HOSE_SQUASH = (

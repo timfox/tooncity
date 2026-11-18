@@ -334,6 +334,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             LerpScaleInterval(target, 0.08, Point3(1.35, 1.35, 0.7)),
             LerpScaleInterval(target, 0.1, Point3(1.0, 1.0, 1.0)),
         ).start()
+        # Client-readable cue so melee can flash i-frames / dodge window.
+        messenger.send('corruptToonHitPlayer', [self])
 
     def __resumePulse(self):
         if self._pulseIval is not None and not self._defeatedHidden():
