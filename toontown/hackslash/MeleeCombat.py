@@ -1212,8 +1212,8 @@ class MeleeCombatController(DirectObject):
         self._hurtStaggerArmed = True
         self._hurtCancelOpenAt = now + max(0.0, stagger)
         self._hurtCancelUntil = self._hurtCancelOpenAt + max(0.0, window)
-        # Deepened-past cream wash + residual aftershock during stagger so
-        # smack→recovery still feels juicy before F/Shift cancel opens —
+        # Deepened-past-#263 cream wash + residual aftershock during stagger
+        # so smack→recovery still feels juicy before F/Shift cancel opens —
         # wash owns settle (distinct from dodge-cancel / i-frame cream deepen).
         self._playHurtCreamWash()
         messenger.send(
@@ -1221,9 +1221,9 @@ class MeleeCombatController(DirectObject):
             [self.avatar, max(0.0, stagger), max(0.0, window)])  # noqa: F821
 
     def _playHurtCreamWash(self):
-        """Deepened-past cream wash + wash aftershock during hurt stagger."""
+        """Deepened-past-#263 cream wash + aftershock during hurt stagger."""
         try:
-            # HurtStaggerCreamWashPulse owns deepened-past wash + aftershock.
+            # HurtStaggerCreamWashPulse owns deepened-past-#263 wash + aftershock.
             self._hurtCreamWash.play()
         except Exception:
             pass

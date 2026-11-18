@@ -51,8 +51,8 @@ class ToggleHackSlash(MagicWord):
         'juggle hangs with cream sparkle at apex + delayed cream aftershock + '
         'soft cream wash pulse, and a mid-juggle cancel window into the '
         'finisher slam; when a corrupt smacks you, brief hurt stagger with a '
-        'deepened-past cream wash pulse + cream wash aftershock then a short '
-        'recovery cancel into dodge or stretch-punch). '
+        'deepened-past-#263 cream wash pulse + cream wash aftershock then a '
+        'short recovery cancel into dodge or stretch-punch). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
