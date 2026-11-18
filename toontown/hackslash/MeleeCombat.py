@@ -1633,7 +1633,7 @@ class MeleeCombatController(DirectObject):
         self._flashNP = None
 
     def _playFinisherFovPunch(self):
-        """Quick FOV kick on the 3rd hit so finishers feel heavier."""
+        """FOV punch + rubber-hose settle on finisher slam connect."""
         # Drop any soft-lock FOV punch so finisher owns the lens cleanly.
         try:
             self._softLockReticle.cancelPendingFov()
@@ -1650,8 +1650,12 @@ class MeleeCombatController(DirectObject):
             baseFov = float(self._baseFov[0]) if hasattr(self._baseFov, '__getitem__') else float(self._baseFov)
         except Exception:
             return
-        punch = HackSlashConfig.FINISHER_FOV_PUNCH
-        peak = baseFov + punch
+        baseKey, peak, trough, rest = HackSlashConfig.finisherFovPunchKeys(
+            baseFov)
+        inSec = max(0.01, float(HackSlashConfig.FINISHER_FOV_IN_SEC))
+        outSec = max(0.01, float(HackSlashConfig.FINISHER_FOV_OUT_SEC))
+        settleSec = max(
+            0.0, float(getattr(HackSlashConfig, 'FINISHER_FOV_SETTLE_SEC', 0.0)))
 
         def setFov(v):
             try:
@@ -1659,18 +1663,38 @@ class MeleeCombatController(DirectObject):
             except Exception:
                 pass
 
-        self._fovIval = Sequence(
+        # Punch wide → drop into undershoot trough → settle back to base.
+        # Settle beat skipped when settle degrees/sec are zero (legacy punch).
+        parts = [
             LerpFunc(
                 setFov,
-                fromData=baseFov,
+                fromData=baseKey,
                 toData=peak,
-                duration=HackSlashConfig.FINISHER_FOV_IN_SEC),
-            LerpFunc(
-                setFov,
-                fromData=peak,
-                toData=baseFov,
-                duration=HackSlashConfig.FINISHER_FOV_OUT_SEC),
-            Func(self._restoreFov),
+                duration=inSec),
+        ]
+        if settleSec > 0.0 and trough < rest:
+            parts.append(
+                LerpFunc(
+                    setFov,
+                    fromData=peak,
+                    toData=trough,
+                    duration=outSec))
+            parts.append(
+                LerpFunc(
+                    setFov,
+                    fromData=trough,
+                    toData=rest,
+                    duration=settleSec))
+        else:
+            parts.append(
+                LerpFunc(
+                    setFov,
+                    fromData=peak,
+                    toData=rest,
+                    duration=outSec))
+        parts.append(Func(self._restoreFov))
+        self._fovIval = Sequence(
+            *parts,
             name=self.avatar.uniqueName('hackslashFovPunch'),
         )
         self._fovIval.start()
