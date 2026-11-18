@@ -2181,12 +2181,17 @@ BRUTE_SPIT_MELEE_INTERRUPT = True
 GAGSTER_LOB_MELEE_INTERRUPT = True
 # Overlord climax telegraphs (rain / slam / ink_surge) — same mid-telegraph
 # melee cancel as street kits so boss punish skill matches Punchline packs.
-# Smudge ink_dash/splat and Oswald betrayal kit stay commit-through (follow-ups).
-# Dedicated Overlord counter windows by move id are a separate deepen.
-# No cream / no KH.
+# Smudge ink_dash/splat stay commit-through (follow-up). Dedicated Overlord
+# counter windows by move id are a separate deepen. No cream / no KH.
 OVERLORD_RAIN_MELEE_INTERRUPT = True
 OVERLORD_SLAM_MELEE_INTERRUPT = True
 OVERLORD_INK_SURGE_MELEE_INTERRUPT = True
+# Corrupted Oswald betrayal telegraphs (betrayal_lunge / stain_burst) — same
+# mid-telegraph melee cancel as Snare / Brute spit / Gagster lob so the twist
+# chase punish skill matches Punchline kits. Shove stays hit-applied (not a
+# telegraph move). Dedicated Oswald counter windows are below. No cream / no KH.
+OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT = True
+OSWALD_STAIN_BURST_MELEE_INTERRUPT = True
 # Messenger name — DistributedCorruptToon → MeleeCombat thin hook.
 SNARE_STRING_COUNTER_EVENT = 'corruptSnareStringSnapCounter'
 
@@ -2215,6 +2220,32 @@ GAGSTER_LOB_COUNTER_DAMAGE_MULT = 1.5
 GAGSTER_LOB_COUNTER_RATE_MULT = 1.2
 GAGSTER_LOB_COUNTER_EVENT = 'corruptGagsterLobCounter'
 
+# Corrupted Oswald betrayal_lunge telegraph → dedicated counter window
+# (Snare-like). After the crimson stain-lunge telegraph reads, arm a short
+# punish→melee window. Distinct from mid-lunge interrupt cancel. Fits inside
+# the short Oswald telegraphDelay. No cream / no KH.
+OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED = True
+OSWALD_BETRAYAL_LUNGE_COUNTER_ARM_DELAY_SEC = 0.12
+OSWALD_BETRAYAL_LUNGE_COUNTER_WINDOW_SEC = 0.48
+# Planar range — lunge engage + dash slack so a readable Oswald can be punished.
+OSWALD_BETRAYAL_LUNGE_COUNTER_RANGE = 9.0
+OSWALD_BETRAYAL_LUNGE_COUNTER_DAMAGE_MULT = 1.5
+OSWALD_BETRAYAL_LUNGE_COUNTER_RATE_MULT = 1.2
+OSWALD_BETRAYAL_LUNGE_COUNTER_EVENT = 'corruptOswaldBetrayalLungeCounter'
+
+# Corrupted Oswald stain_burst telegraph → dedicated counter window
+# (Snare-like). After the close crimson burst telegraph reads, arm a short
+# punish→melee window. Distinct from mid-burst interrupt cancel. Fits inside
+# burstTelegraphDelay. No cream / no KH.
+OSWALD_STAIN_BURST_COUNTER_ENABLED = True
+OSWALD_STAIN_BURST_COUNTER_ARM_DELAY_SEC = 0.10
+OSWALD_STAIN_BURST_COUNTER_WINDOW_SEC = 0.44
+# Planar range — close burst engage + slack for a readable face-range punish.
+OSWALD_STAIN_BURST_COUNTER_RANGE = 7.0
+OSWALD_STAIN_BURST_COUNTER_DAMAGE_MULT = 1.5
+OSWALD_STAIN_BURST_COUNTER_RATE_MULT = 1.2
+OSWALD_STAIN_BURST_COUNTER_EVENT = 'corruptOswaldStainBurstCounter'
+
 
 def isMeleeInterruptibleTelegraph(archetype, move):
     """True when stretch-punch mid-telegraph should cancel this wind-up.
@@ -2224,7 +2255,9 @@ def isMeleeInterruptibleTelegraph(archetype, move):
     Gagster: gag_lob only.
     Overlord (ARCHETYPE_INK + rain/slam/ink_surge move ids): when the matching
     OVERLORD_*_MELEE_INTERRUPT flag is on — climax punish parity with street kits.
-    Smudge ink_dash/splat and Oswald betrayal kit: False (follow-up scope).
+    Oswald (ARCHETYPE_CORRUPT_OSWALD + betrayal_lunge / stain_burst): when the
+    matching OSWALD_*_MELEE_INTERRUPT flag is on — twist chase punish parity.
+    Smudge ink_dash/splat: False (follow-up scope).
     """
     aid = normalizeArchetype(archetype)
     moveName = str(move or 'smack')
@@ -2243,6 +2276,12 @@ def isMeleeInterruptibleTelegraph(archetype, move):
             return bool(OVERLORD_SLAM_MELEE_INTERRUPT)
         if moveName == 'ink_surge':
             return bool(OVERLORD_INK_SURGE_MELEE_INTERRUPT)
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        # Default attackMove is betrayal_lunge; empty/smack aliases the lunge.
+        if moveName in ('betrayal_lunge', 'smack', ''):
+            return bool(OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT)
+        if moveName == 'stain_burst':
+            return bool(OSWALD_STAIN_BURST_MELEE_INTERRUPT)
     return False
 
 
@@ -2285,6 +2324,7 @@ def isDedicatedTelegraphCounterMove(archetype, move):
     Snare: any string telegraph when SNARE_STRING_COUNTER_ENABLED.
     Brute: spit only (slam stays commit-through, no counter).
     Gagster: gag_lob only.
+    Oswald: betrayal_lunge / stain_burst when the matching COUNTER_ENABLED flag.
     Interrupt cancel (isMeleeInterruptibleTelegraph) is separate.
     """
     aid = normalizeArchetype(archetype)
@@ -2295,6 +2335,11 @@ def isDedicatedTelegraphCounterMove(archetype, move):
         return bool(BRUTE_SPIT_COUNTER_ENABLED)
     if aid == ARCHETYPE_GAGSTER and moveName == 'gag_lob':
         return bool(GAGSTER_LOB_COUNTER_ENABLED)
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        if moveName in ('betrayal_lunge', 'smack', ''):
+            return bool(OSWALD_BETRAYAL_LUNGE_COUNTER_ENABLED)
+        if moveName == 'stain_burst':
+            return bool(OSWALD_STAIN_BURST_COUNTER_ENABLED)
     return False
 
 
@@ -2361,6 +2406,72 @@ def gagsterLobCounterUntil(armedAt, window=None):
     """Absolute expiry for a lob counter window armed at armedAt."""
     if window is None:
         window = GAGSTER_LOB_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def oswaldBetrayalLungeCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after an Oswald betrayal-lunge counter."""
+    if mult is None:
+        mult = OSWALD_BETRAYAL_LUNGE_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def oswaldBetrayalLungeCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after an Oswald lunge counter."""
+    if mult is None:
+        mult = OSWALD_BETRAYAL_LUNGE_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isOswaldBetrayalLungeCounterWindowOpen(armed, until, now):
+    """True while a Corrupted Oswald betrayal-lunge counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def oswaldBetrayalLungeCounterArmAt(now, delay=None):
+    """Absolute time when the betrayal-lunge counter should arm after telegraph."""
+    if delay is None:
+        delay = OSWALD_BETRAYAL_LUNGE_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def oswaldBetrayalLungeCounterUntil(armedAt, window=None):
+    """Absolute expiry for a betrayal-lunge counter window armed at armedAt."""
+    if window is None:
+        window = OSWALD_BETRAYAL_LUNGE_COUNTER_WINDOW_SEC
+    return float(armedAt) + max(0.0, float(window))
+
+
+def oswaldStainBurstCounterOpenerDamage(baseDamage, mult=None):
+    """Rewarded stretch-punch opener damage after an Oswald stain-burst counter."""
+    if mult is None:
+        mult = OSWALD_STAIN_BURST_COUNTER_DAMAGE_MULT
+    return max(1, int(round(float(baseDamage) * float(mult))))
+
+
+def oswaldStainBurstCounterOpenerRate(baseRate, mult=None):
+    """Snappier stretch-punch opener play rate after an Oswald stain-burst counter."""
+    if mult is None:
+        mult = OSWALD_STAIN_BURST_COUNTER_RATE_MULT
+    return float(baseRate) * float(mult)
+
+
+def isOswaldStainBurstCounterWindowOpen(armed, until, now):
+    """True while a Corrupted Oswald stain-burst counter→melee window is live."""
+    return bool(armed) and float(now) < float(until)
+
+
+def oswaldStainBurstCounterArmAt(now, delay=None):
+    """Absolute time when the stain-burst counter should arm after telegraph."""
+    if delay is None:
+        delay = OSWALD_STAIN_BURST_COUNTER_ARM_DELAY_SEC
+    return float(now) + max(0.0, float(delay))
+
+
+def oswaldStainBurstCounterUntil(armedAt, window=None):
+    """Absolute expiry for a stain-burst counter window armed at armedAt."""
+    if window is None:
+        window = OSWALD_STAIN_BURST_COUNTER_WINDOW_SEC
     return float(armedAt) + max(0.0, float(window))
 
 

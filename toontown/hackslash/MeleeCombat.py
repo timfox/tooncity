@@ -168,6 +168,13 @@ class MeleeCombatController(DirectObject):
             'corruptBruteSpitCounter', self._onBruteSpitCounter)
         self.accept(
             'corruptGagsterLobCounter', self._onGagsterLobCounter)
+        # Corrupted Oswald betrayal_lunge / stain_burst → same path.
+        self.accept(
+            'corruptOswaldBetrayalLungeCounter',
+            self._onOswaldBetrayalLungeCounter)
+        self.accept(
+            'corruptOswaldStainBurstCounter',
+            self._onOswaldStainBurstCounter)
         self.accept('hackslash-hit', self._onHackSlashHit)
         self._showHint(HackSlashConfig.DEMO_HINT)
         # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
@@ -191,6 +198,8 @@ class MeleeCombatController(DirectObject):
         self.ignore('corruptSnareStringSnapCounter')
         self.ignore('corruptBruteSpitCounter')
         self.ignore('corruptGagsterLobCounter')
+        self.ignore('corruptOswaldBetrayalLungeCounter')
+        self.ignore('corruptOswaldStainBurstCounter')
         self.ignore('hackslash-hit')
         taskMgr.remove(self._taskName)  # noqa: F821
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
@@ -1240,9 +1249,29 @@ class MeleeCombatController(DirectObject):
             corrupt, windowSec,
             rangeAttr='GAGSTER_LOB_COUNTER_RANGE', defaultRange=11.0)
 
+    def _onOswaldBetrayalLungeCounter(self, corrupt=None, windowSec=None):
+        """Corrupted Oswald betrayal-lunge telegraph → rewarded counter window.
+
+        Thin corruption→hackslash hook (Snare-like). Twist chase punish parity
+        with Punchline kits. Range-gated so distant Oswald doesn't buff.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='OSWALD_BETRAYAL_LUNGE_COUNTER_RANGE', defaultRange=9.0)
+
+    def _onOswaldStainBurstCounter(self, corrupt=None, windowSec=None):
+        """Corrupted Oswald stain-burst telegraph → rewarded counter window.
+
+        Thin corruption→hackslash hook (Snare-like). Close-range burst punish.
+        Range-gated so out-of-burst Oswald doesn't buff.
+        """
+        self._armTelegraphCounterWindow(
+            corrupt, windowSec,
+            rangeAttr='OSWALD_STAIN_BURST_COUNTER_RANGE', defaultRange=7.0)
+
     def _armTelegraphCounterWindow(self, corrupt=None, windowSec=None,
                                    rangeAttr=None, defaultRange=10.5):
-        """Shared range-gated arm for Snare / Brute spit / Gagster lob counters."""
+        """Shared range-gated arm for Snare / Brute / Gagster / Oswald counters."""
         if not self.enabled:
             return
         if corrupt is not None and rangeAttr:

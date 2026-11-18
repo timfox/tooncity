@@ -122,11 +122,9 @@ class MeleeInterruptOverlordTest(unittest.TestCase):
         self.assertFalse(fn(ink, 'ink_dash'))
         self.assertFalse(fn(ink, 'ink_splat'))
         self.assertFalse(fn(ink, 'smack'))
-        # Oswald / Brute slam stay out of Overlord interrupt scope.
-        self.assertFalse(
-            fn(self.cg.ARCHETYPE_CORRUPT_OSWALD, 'betrayal_lunge'))
-        self.assertFalse(
-            fn(self.cg.ARCHETYPE_CORRUPT_OSWALD, 'stain_burst'))
+        # Brute slam stays out of Overlord interrupt scope.
+        # Oswald betrayal interrupt/counter is covered by
+        # test_melee_interrupt_oswald.py / test_oswald_counter_windows.py.
         self.assertFalse(fn(self.cg.ARCHETYPE_BRUTE, 'slam'))
         # Street kits still interruptible.
         self.assertTrue(fn(self.cg.ARCHETYPE_BRUTE, 'spit'))
