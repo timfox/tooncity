@@ -203,6 +203,9 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         oswald = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_CORRUPT_OSWALD]
         self.assertEqual(oswald.get('name'), 'Corrupted Oswald')
         self.assertGreater(float(oswald.get('chaseSpeed', 0)), 8.0)
+        # Betrayal kit stays attack identity; role AI still plain chase.
+        self.assertEqual(oswald.get('attackMove'), 'betrayal_lunge')
+        self.assertTrue(self.cg.OSWALD_BETRAYAL_KIT_ENABLED)
         # Brute hold still plants; spit projectile kit stays armed beside role AI.
         brute = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_BRUTE]
         self.assertEqual(brute.get('attackMove'), 'spit')

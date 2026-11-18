@@ -136,13 +136,13 @@ class SnareLashYankTest(unittest.TestCase):
         self.assertAlmostEqual(length, 1.0, places=5)
 
     def test_oswald_and_gagster_untouched_by_yank_gate(self):
-        # Yank is Snare-gated; Oswald chase + Gagster linger stay intact.
+        # Yank is Snare-gated; Oswald betrayal kit + Gagster linger stay intact.
         self.assertIn(
             self.cg.ARCHETYPE_CORRUPT_OSWALD, self.cg.ARCHETYPE_STATS)
-        self.assertEqual(
-            self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_CORRUPT_OSWALD].get(
-                'name'),
-            'Corrupted Oswald')
+        oswald = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_CORRUPT_OSWALD]
+        self.assertEqual(oswald.get('name'), 'Corrupted Oswald')
+        self.assertEqual(oswald.get('attackMove'), 'betrayal_lunge')
+        self.assertTrue(self.cg.OSWALD_BETRAYAL_KIT_ENABLED)
         self.assertTrue(self.cg.GAGSTER_PUDDLE_LINGER_ENABLED)
         self.assertGreater(self.cg.GAGSTER_PUDDLE_LINGER_SEC, 1.0)
 

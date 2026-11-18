@@ -110,6 +110,10 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
         self.assertGreater(float(stats['chaseSpeed']), 10.0)
         self.assertGreater(float(stats['hpScale']), 1.0)
         self.assertGreater(int(stats.get('defaultHp', 0)), 0)
+        # Betrayal kit — not default smack / crimson Ink Smudge reskin.
+        self.assertEqual(stats.get('attackMove'), 'betrayal_lunge')
+        self.assertGreater(float(stats.get('lungeDashDist', 0)), 2.0)
+        self.assertGreater(float(stats.get('burstMeleeRange', 0)), 2.0)
         tint = stats['actorTint']
         # Crimson-shadow: R dominant over B (vs street purple ink).
         self.assertGreater(float(tint[0]), float(tint[2]))
@@ -141,6 +145,7 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
             float(camp.FINALE_REVEAL_DELAY_SEC))
         self.assertIn('Oswald', camp.OSWALD_BETRAYAL_CHASE_TIP)
         self.assertIn('fight', camp.OSWALD_BETRAYAL_CHASE_TIP.lower())
+        self.assertIn('betrayal lunge', camp.OSWALD_BETRAYAL_CHASE_TIP.lower())
         self.assertIn('Corrupted Oswald', camp.OSWALD_BETRAYAL_CHASE_NAME)
         self.assertIn('chase', camp.OSWALD_BETRAYAL_CHASE_BANNER.lower())
         blob = ' '.join([
@@ -191,7 +196,8 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
                 'ensureOswaldBetrayalChaseClient',
                 'chaseEnabled',
                 'chaseDelaySec',
-                'chaseHp'):
+                'chaseHp',
+                'chaseAttackMove'):
             self.assertIn(required, names)
         src = _read(rel)
         self.assertIn('ARCHETYPE_CORRUPT_OSWALD', src)

@@ -351,6 +351,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertTrue(cg.BRUTE_SPIT_PROJECTILE_ENABLED)
         self.assertTrue(cg.BRUTE_SLAM_SECONDARY_ENABLED)
 
+        # Corrupted Oswald — betrayal lunge kit (not crimson Smudge smack).
+        oswald = cg.ARCHETYPE_STATS[cg.ARCHETYPE_CORRUPT_OSWALD]
+        self.assertEqual(oswald.get('attackMove'), 'betrayal_lunge')
+        self.assertGreater(float(oswald.get('lungeDashDist', 0)), 2.0)
+        self.assertGreater(float(oswald.get('burstMeleeRange', 0)), 2.0)
+        self.assertTrue(cg.OSWALD_BETRAYAL_KIT_ENABLED)
+        self.assertTrue(cg.OSWALD_BETRAYAL_SHOVE_ENABLED)
+
         # Gunk Gagster (#191) — distinct gag-lob puddle kit (not Smudge rename).
         gagster = cg.ARCHETYPE_STATS[cg.ARCHETYPE_GAGSTER]
         self.assertEqual(gagster.get('attackMove'), 'gag_lob')

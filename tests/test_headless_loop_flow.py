@@ -307,6 +307,9 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(brute.get('attackMove'), 'spit')
         self.assertTrue(cg.BRUTE_SPIT_PROJECTILE_ENABLED)
         self.assertTrue(cg.BRUTE_SLAM_SECONDARY_ENABLED)
+        oswald = cg.ARCHETYPE_STATS[cg.ARCHETYPE_CORRUPT_OSWALD]
+        self.assertEqual(oswald.get('attackMove'), 'betrayal_lunge')
+        self.assertTrue(cg.OSWALD_BETRAYAL_KIT_ENABLED)
 
         # Ink Overlord is finale-only (not a street ARCHETYPE_* id).
         self.assertEqual(cg.FINALE_PHASE_LOOK[1].get('id'), 'rising')

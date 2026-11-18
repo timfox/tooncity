@@ -372,7 +372,9 @@ rubber-hose Oswald stretch-punch combat only, **no keyblades**. Victory
 lands the Oswald twist tease (he caused the corruption) **plus** a short
 fightable **Corrupted Oswald** chase/arena spawn (`ARCHETYPE_CORRUPT_OSWALD`
 via `CampaignDirectorAI` / `OswaldBetrayalChase`) as the betrayal gameplay
-consequence — not cream-only. Full dialogue is out of scope here.
+consequence — not cream-only. Oswald uses a distinct betrayal attack kit
+(`betrayal_lunge` dash-then-hit, close `stain_burst` AoE, planar shove —
+not a crimson Ink Smudge smack reskin). Full dialogue is out of scope here.
 
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
    SFX, ink crown silhouette flash (`OverlordTelegraphCrownFx`), ink rain /
