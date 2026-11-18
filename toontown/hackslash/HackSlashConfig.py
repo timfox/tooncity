@@ -335,6 +335,18 @@ DODGE_DISTANCE = 6.5
 DODGE_COOLDOWN_SEC = 0.65
 DODGE_SQUASH = (0.55, 0.55, 1.45, 0.12)
 
+# Dodge → melee cancel window. Early roll is committed; late in the dash /
+# as i-frames settle, F/LMB cancels remaining recovery into a fresh stretch-
+# punch so Shift→F combo flow reads clean. Input during commitment can buffer
+# until the window opens. Toontown spiritual-sequel tone — no keyblades / KH.
+DODGE_CANCEL_ENABLED = True
+# Seconds after dodge start before cancel-into-melee opens (late in the roll).
+DODGE_CANCEL_START_SEC = 0.16
+# How long the cancel-into-melee window stays open after it opens.
+DODGE_CANCEL_WINDOW_SEC = 0.40
+# Buffer F/LMB pressed during early dodge; fire when the cancel window opens.
+DODGE_CANCEL_BUFFER = True
+
 # Dodge roll afterimage / smear trail (Shift/X i-frame roll juice).
 # Warm cartoon smear ghosts drip behind the toon — not KH blue streaks.
 DODGE_TRAIL_SPAWN_SEC = 0.045
@@ -756,5 +768,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Stretch punches: F/LMB  |  Shift/X dodge  |  soft-lock cam  |  ~melee'
+    'Stretch punches: F/LMB  |  Shift/X dodge→F  |  soft-lock cam  |  ~melee'
 )
