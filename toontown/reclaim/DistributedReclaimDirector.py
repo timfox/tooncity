@@ -475,6 +475,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         Overlay flash/ring stay on aspect2d so hood geom prop tint / fog
         grade (PollutionPropTint / PollutionManager) are never stomped.
         Camera FOV punch + rays/sparks live in PurityBurstFx (messenger).
+        StreetSparkleFx adds horizon cream glitter on purityRestoreFx
+        (composes with StreetColorWash soft-clear + wave cream burst).
         """
         if self._restoreIval is not None:
             self._restoreIval.finish()
@@ -482,6 +484,12 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         try:
             from toontown.reclaim.PurityBurstFx import ensurePurityBurstFxClient
             ensurePurityBurstFxClient()
+        except Exception:
+            pass
+        try:
+            from toontown.reclaim.StreetSparkleFx import (
+                ensureStreetSparkleFxClient)
+            ensureStreetSparkleFxClient()
         except Exception:
             pass
         messenger.send('purityRestoreFx', [self.reclaimZoneId])
