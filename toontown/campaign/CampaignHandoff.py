@@ -14,8 +14,9 @@ handoffs fire a short confetti / streamer + cream-sparkle pop
 soft cream wash pulse tuned to the carnival glitter — no KH / keyblade
 framing. Campaign victory fires a soft cream confetti swell + cream
 sparkle on the purity cheer only, framed by a victory-tuned cream edge
-and a delayed soft cream wash pulse; it clears before the Oswald twist /
-FinalePhaseFx reveal so the bittersweet sting stays intact.
+and a delayed soft cream wash pulse with a residual cream aftershock
+(flecks + soft halo); it clears before the Oswald twist / FinalePhaseFx
+reveal so the bittersweet sting stays intact.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -260,8 +261,9 @@ class CampaignHandoffClient(DirectObject):
                 playVictoryCreamEdge()
             except Exception:
                 pass
-            # Soft cream wash pulse after cream edge / sparkle (#129/#105) —
-            # melee / perfect-dodge wash grammar. Cheer-only.
+            # Soft cream wash pulse + delayed cream aftershock after cream
+            # edge / sparkle (#129/#105) — melee / perfect-dodge wash +
+            # entry / purity-complete aftershock grammar. Cheer-only.
             try:
                 playVictoryCreamWash()
             except Exception:

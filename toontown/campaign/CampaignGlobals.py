@@ -571,6 +571,33 @@ VICTORY_CREAM_WASH_OUT_SEC = 0.48  # rides with victory glitter hang
 # Under cream edge (58) / plate (60); soft veil settle beat.
 VICTORY_CREAM_WASH_BIN = 54
 
+# Delayed cream aftershock after victory cream wash (#138) / confetti swell
+# (#82). Entry / purity-complete cream aftershock grammar (#132/#136) —
+# quieter flecks settle downward with a soft cream halo under the victory
+# plate. Victory-path only; clears with wash before Oswald twist /
+# FinalePhaseFx reveal. VICTORY_CREAM_AFTERSHOCK_ENABLED = False drops
+# aftershock only (wash + swell + sparkle + edge remain). No keyblades /
+# KH branding.
+VICTORY_CREAM_AFTERSHOCK_ENABLED = True
+VICTORY_CREAM_AFTERSHOCK_DELAY_SEC = 0.22  # after wash starts
+VICTORY_CREAM_AFTERSHOCK_ORIGIN = (0.0, 0.0, 0.22)  # under victory plate
+VICTORY_CREAM_AFTERSHOCK_COUNT = 6
+VICTORY_CREAM_AFTERSHOCK_SIZE = 0.017
+VICTORY_CREAM_AFTERSHOCK_DRIFT = 0.32
+VICTORY_CREAM_AFTERSHOCK_FALL = 0.26
+VICTORY_CREAM_AFTERSHOCK_SEC = 0.36
+VICTORY_CREAM_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.82)
+VICTORY_CREAM_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+# Above wash veil (54); below cream edge (58) / plate (60).
+VICTORY_CREAM_AFTERSHOCK_BIN = 56
+VICTORY_CREAM_AFTERSHOCK_HALO_ENABLED = True
+VICTORY_CREAM_AFTERSHOCK_HALO_HALF = 0.52
+VICTORY_CREAM_AFTERSHOCK_HALO_START = 0.28
+VICTORY_CREAM_AFTERSHOCK_HALO_PEAK = 1.22
+VICTORY_CREAM_AFTERSHOCK_HALO_SEC = 0.30
+VICTORY_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.15
+VICTORY_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
+
 # Explicit Oswald twist after P2 clear (shown after purity victory flash).
 FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
 FINALE_TWIST_TEASE_COLOR = (1.0, 0.55, 0.35, 1.0)

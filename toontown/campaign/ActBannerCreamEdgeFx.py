@@ -13,14 +13,16 @@ Oswald trust settle, handoff carnival, victory cheer, and finale reveal
 also arm a delayed soft cream wash pulse (ActBannerCreamWashFx /
 OswaldTrustCreamWashFx / HandoffCreamWashFx / VictoryCreamWashFx /
 FinaleRevealCreamWashFx; melee / perfect-dodge wash twins) under this
-edge. Punchline Act 2 tip hose (#91) and Silly Act 3 tip hose (#95) arm
-their own tip washes (PunchlineTipCreamWashFx / SillyTipCreamWashFx)
-without this edge. Mirrors reclaim wave-announce cream edge (#87) —
-sunny Toontown cream only, opposite of the polluted ink edge vignette.
-Campaign-owned; no keyblades / KH branding. Oswald stays trusted
-mid-campaign (no twist spoilers on early trust cream edge / wash).
-Victory cream edge + wash clear before the Oswald twist; finale-reveal
-cream edge + wash frame residual cream aftershock only.
+edge. Victory wash also owns a delayed cream aftershock (flecks + soft
+halo; entry / purity-complete #132/#136 twin). Punchline Act 2 tip hose
+(#91) and Silly Act 3 tip hose (#95) arm their own tip washes
+(PunchlineTipCreamWashFx / SillyTipCreamWashFx) without this edge.
+Mirrors reclaim wave-announce cream edge (#87) — sunny Toontown cream
+only, opposite of the polluted ink edge vignette. Campaign-owned; no
+keyblades / KH branding. Oswald stays trusted mid-campaign (no twist
+spoilers on early trust cream edge / wash). Victory cream edge + wash +
+aftershock clear before the Oswald twist; finale-reveal cream edge +
+wash frame residual cream aftershock only.
 """
 
 from math import cos, pi, sin
