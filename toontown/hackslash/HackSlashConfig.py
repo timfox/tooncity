@@ -234,6 +234,24 @@ DODGE_TRAIL_PULSE_CREAM_END = (1.0, 0.9, 0.45, 0.0)
 DODGE_TRAIL_PULSE_INK_COLOR = (0.2, 0.06, 0.26, 0.9)
 DODGE_TRAIL_PULSE_INK_END = (0.38, 0.1, 0.42, 0.0)
 
+# Cream sparkle flecks along the dodge roll trail (while smear drips).
+# Pastel cream glitter chips that compose with smear ghosts + i-frame cream/ink
+# pulse — cream/pastel only (no ink). Toontown spiritual-sequel tone; no
+# keyblades / no KH branding.
+DODGE_TRAIL_CREAM_SPARKLE_ENABLED = True
+DODGE_TRAIL_CREAM_SPARKLE_SPAWN_SEC = 0.055
+DODGE_TRAIL_CREAM_SPARKLE_COUNT = 3
+DODGE_TRAIL_CREAM_SPARKLE_STREAK_COUNT = 2
+DODGE_TRAIL_CREAM_SPARKLE_SIZE = 0.11
+DODGE_TRAIL_CREAM_SPARKLE_STREAK_SIZE = 0.075
+DODGE_TRAIL_CREAM_SPARKLE_DRIFT = 0.6
+DODGE_TRAIL_CREAM_SPARKLE_SEC = 0.2
+DODGE_TRAIL_CREAM_SPARKLE_LIFT = -0.12
+DODGE_TRAIL_CREAM_SPARKLE_COLOR = (1.0, 0.97, 0.78, 0.92)
+DODGE_TRAIL_CREAM_SPARKLE_END = (1.0, 0.93, 0.58, 0.0)
+DODGE_TRAIL_CREAM_SPARKLE_STREAK_COLOR = (1.0, 0.98, 0.85, 0.88)
+DODGE_TRAIL_CREAM_SPARKLE_STREAK_END = (1.0, 0.9, 0.5, 0.0)
+
 # Perfect dodge — Shift/X i-frames eat a CorruptToon telegraph (or near-miss).
 # Warm cream star pop + ink flecks; not KH blue / keyblade glitter.
 PERFECT_DODGE_STAR_COUNT = 5

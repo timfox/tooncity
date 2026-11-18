@@ -3,8 +3,9 @@
 Client juice for the Shift/X i-frame roll: brief translucent smear ghosts
 (and tiny spark pops) drip behind the toon while rolling. While dodge
 i-frames are active, short cream/ink pulses pop along the trail path.
-Wired from MeleeCombat dodge start/end so hit-squash / hitstop paths stay
-untouched.
+Cream/pastel sparkle flecks also drip along the smear path (no ink) so the
+roll reads as sunny glitter beside the i-frame pulse. Wired from
+MeleeCombat dodge start/end so hit-squash / hitstop paths stay untouched.
 
 Toontown spiritual-sequel tone only — no keyblades / no KH branding.
 """
@@ -34,12 +35,15 @@ class DodgeTrailFx(object):
         self._taskName = avatar.uniqueName('hackslashDodgeTrail')
         self._ghosts = []
         self._pulses = []
+        self._creamSparkles = []
         self._nextSpawnAt = 0.0
         self._nextPulseAt = 0.0
+        self._nextCreamSparkleAt = 0.0
         self._iframeUntil = 0.0
         self._active = False
         self._spawnIndex = 0
         self._pulseIndex = 0
+        self._creamSparkleIndex = 0
 
     def start(self, iframeSec=None):
         """Begin dripping afterimages; cream/ink pulse while i-frames live."""
@@ -47,8 +51,10 @@ class DodgeTrailFx(object):
         self._active = True
         self._spawnIndex = 0
         self._pulseIndex = 0
+        self._creamSparkleIndex = 0
         self._nextSpawnAt = 0.0
         self._nextPulseAt = 0.0
+        self._nextCreamSparkleAt = 0.0
         try:
             now = globalClock.getFrameTime()  # noqa: F821
         except Exception:
@@ -58,6 +64,7 @@ class DodgeTrailFx(object):
         self._iframeUntil = now + float(iframeSec)
         self._spawnGhost(initial=True)
         self._spawnPulse()
+        self._spawnCreamSparkles()
         try:
             taskMgr.add(self._tick, self._taskName)  # noqa: F821
         except Exception:
@@ -82,7 +89,7 @@ class DodgeTrailFx(object):
                 pass
 
     def clear(self):
-        """Hard-stop and remove every ghost/spark/pulse immediately."""
+        """Hard-stop and remove every ghost/spark/pulse/cream fleck."""
         self._active = False
         self._iframeUntil = 0.0
         try:
@@ -95,6 +102,9 @@ class DodgeTrailFx(object):
         for entry in list(self._pulses):
             self._destroyPulse(entry)
         self._pulses = []
+        for entry in list(self._creamSparkles):
+            self._destroyCreamSparkle(entry)
+        self._creamSparkles = []
 
     def _tick(self, task):
         try:
@@ -114,6 +124,15 @@ class DodgeTrailFx(object):
             self._spawnPulse()
             self._nextPulseAt = now + float(
                 HackSlashConfig.DODGE_TRAIL_PULSE_SPAWN_SEC)
+
+        # Cream sparkle flecks drip while the smear trail is active.
+        if (self._active
+                and getattr(
+                    HackSlashConfig, 'DODGE_TRAIL_CREAM_SPARKLE_ENABLED', True)
+                and now >= self._nextCreamSparkleAt):
+            self._spawnCreamSparkles()
+            self._nextCreamSparkleAt = now + float(
+                HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_SPAWN_SEC)
 
         if not self._active and not iframeLive:
             return Task.done
@@ -335,6 +354,146 @@ class DodgeTrailFx(object):
             ),
         )
         return part, fleck
+
+    def _spawnCreamSparkles(self):
+        """Cream/pastel sparkle flecks along the active dodge smear trail."""
+        if not getattr(
+                HackSlashConfig, 'DODGE_TRAIL_CREAM_SPARKLE_ENABLED', True):
+            return
+        try:
+            pos = self.avatar.getPos(render)  # noqa: F821
+            heading = self.avatar.getH(render)  # noqa: F821
+        except Exception:
+            return
+
+        lift = float(HackSlashConfig.DODGE_TRAIL_LIFT)
+        origin = Point3(
+            pos[0], pos[1],
+            pos[2] + lift + float(
+                HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_LIFT))
+        sec = float(HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_SEC)
+        drift = float(HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_DRIFT)
+        parts = []
+        nodes = []
+        self._creamSparkleIndex += 1
+
+        creamCount = int(HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_COUNT)
+        streakCount = int(
+            HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_STREAK_COUNT)
+        size = float(HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_SIZE)
+        streakSize = float(
+            HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_STREAK_SIZE)
+        cr, cg, cb, ca = HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_COLOR
+        cer, ceg, ceb, cea = HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_END
+        sr, sg, sb, sa = HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_STREAK_COLOR
+        ser, seg, seb, sea = HackSlashConfig.DODGE_TRAIL_CREAM_SPARKLE_STREAK_END
+
+        # Bias flecks slightly behind the roll so they read as trail glitter.
+        rad = heading * 0.017453292519943295
+        backX = -sin(rad)
+        backY = -cos(rad)
+        trailOrigin = Point3(
+            origin[0] + backX * 0.22,
+            origin[1] + backY * 0.22,
+            origin[2])
+
+        for i in range(creamCount):
+            part, np = self._makeCreamSparkleFleck(
+                trailOrigin, i, creamCount, size, drift, sec,
+                (cr, cg, cb, ca), (cer, ceg, ceb, cea), elongated=False,
+                backX=backX, backY=backY)
+            if part is not None:
+                parts.append(part)
+                nodes.append(np)
+
+        for i in range(streakCount):
+            part, np = self._makeCreamSparkleFleck(
+                trailOrigin, i, max(1, streakCount), streakSize,
+                drift * 1.15, sec * 0.9,
+                (sr, sg, sb, sa), (ser, seg, seb, sea), elongated=True,
+                backX=backX, backY=backY)
+            if part is not None:
+                parts.append(part)
+                nodes.append(np)
+
+        if not parts:
+            return
+
+        ival = Sequence(
+            Parallel(*parts),
+            Func(self._retirePulseNodes, nodes),
+            name=self.avatar.uniqueName(
+                'hackslashDodgeTrailCreamSparkle-%s' % self._creamSparkleIndex),
+        )
+        self._creamSparkles.append({'ival': ival, 'nodes': nodes})
+        ival.start()
+
+    def _makeCreamSparkleFleck(self, origin, index, count, size, drift, sec,
+                               color, endColor, elongated=False,
+                               backX=0.0, backY=0.0):
+        """Sunny cream / pastel fleck — trail glitter, not ink / not KH."""
+        count = max(1, int(count))
+        # Phase offset from i-frame pulse flecks so both layers stay readable.
+        angle = (
+            (2.0 * pi * index) / float(count)
+            + (0.72 if elongated else 0.4)
+            + 0.09 * (self._creamSparkleIndex % 3))
+        r, g, b, a = color
+        er, eg, eb, ea = endColor
+        halfH = size * (0.35 if elongated else 1.0)
+        try:
+            cm = CardMaker('hackslash-dodge-cream-sparkle-%s-%s-%s' % (
+                self._creamSparkleIndex,
+                'streak' if elongated else 'fleck',
+                index))
+            cm.setFrame(-size, size, -halfH, halfH)
+            fleck = render.attachNewNode(cm.generate())  # noqa: F821
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, a)
+            side = -1.0 if (index % 2) else 1.0
+            fleck.setPos(
+                origin[0] + cos(angle) * 0.1 + side * 0.08,
+                origin[1] + sin(angle) * 0.1,
+                origin[2] + 0.06 * (index % 3) - 0.04)
+            fleck.setScale(0.45 + 0.1 * (index % 3))
+            fleck.setBin('transparent', 23)
+            fleck.setDepthWrite(False)
+            fleck.setBillboardPointEye()
+        except Exception:
+            return None, None
+
+        end = Point3(
+            origin[0] + cos(angle) * drift + backX * (0.2 if elongated else 0.1),
+            origin[1] + sin(angle) * drift + backY * (0.2 if elongated else 0.1),
+            origin[2] + (0.2 if elongated else -0.15) - 0.06 * (index % 3))
+        peak = (1.55 if elongated else 1.25) + 0.12 * (index % 2)
+        part = Sequence(
+            Parallel(
+                LerpScaleInterval(
+                    fleck, sec * 0.3, peak, blendType='easeOut'),
+                LerpPosInterval(
+                    fleck, sec * 0.6, end, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    fleck, sec * 0.5, Vec4(r, g, b, a), blendType='easeOut'),
+            ),
+            Parallel(
+                LerpScaleInterval(fleck, sec * 0.45, 0.04, blendType='easeIn'),
+                LerpColorScaleInterval(
+                    fleck, sec * 0.45, Vec4(er, eg, eb, ea),
+                    blendType='easeIn'),
+            ),
+        )
+        return part, fleck
+
+    def _destroyCreamSparkle(self, entry):
+        ival = entry.get('ival')
+        if ival is not None:
+            try:
+                ival.pause()
+            except Exception:
+                pass
+        self._retirePulseNodes(entry.get('nodes'))
 
     def _retirePulseNodes(self, nodes):
         for np in list(nodes or []):
