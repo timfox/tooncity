@@ -68,6 +68,8 @@ _STREET_PACK_START_KEYS = (
     'bruteFraction', 'bruteWaveStart', 'bruteName',
     'snareFraction', 'snareWaveStart', 'snareName',
     'waveScripts',
+    # Silly Overlord street reclaim uses P1 rain AI (campaign owns P2).
+    'finalePhase',
 )
 # Optional per-wave archetype scripts (tokens or ints). When present for a
 # wave, composition + pack size follow the script; otherwise fractions +
@@ -194,6 +196,8 @@ STREET_PACKS = {
             ('ink',),
             ('ink', 'ink'),
         ),
+        # P1 rising-rain combat AI (campaign phase2 owns Unleashed + adds).
+        'finalePhase': 1,
         'bannerStart': 'OSWALD: RECLAIM SILLY STREET!',
         'bannerStartSub': (
             'Explore the magenta ink — then stretch-punch '

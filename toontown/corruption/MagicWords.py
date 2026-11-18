@@ -12,6 +12,56 @@ from toontown.corruption import CorruptionGlobals
 from toontown.corruption.DistributedCorruptToonAI import DistributedCorruptToonAI
 
 
+def _spawnCorruptPack(air, toon, count=1, hpArg=0, archetype=None,
+                      finalePhase=0):
+    """Shared spawn helper for SpawnCorrupt / SpawnOverlord magic words."""
+    if archetype is None:
+        archetype = CorruptionGlobals.ARCHETYPE_INK
+    archetype = CorruptionGlobals.normalizeArchetype(archetype)
+    count = max(1, min(8, int(count)))
+    # Pass base HP; DistributedCorruptToonAI applies archetype hpScale.
+    if int(hpArg) <= 0:
+        hp = CorruptionGlobals.archetypeDefaultHp(archetype)
+    else:
+        hp = max(1, min(500, int(hpArg)))
+    finalePhase = CorruptionGlobals.normalizeFinalePhase(finalePhase)
+    stats = CorruptionGlobals.archetypeStats(archetype)
+    combat = CorruptionGlobals.overlordPhaseCombat(finalePhase)
+    if combat:
+        name = (
+            'Ink Overlord Unleashed' if finalePhase >= 2
+            else 'Ink Overlord')
+    else:
+        name = stats.get('name', 'CorruptToon')
+
+    zoneId = toon.zoneId
+    baseX, baseY, baseZ = toon.getX(), toon.getY(), toon.getZ()
+    heading = toon.getH()
+    spawned = []
+    for i in range(count):
+        spawnName = name if count == 1 else '%s %s' % (name, i + 1)
+        corrupt = DistributedCorruptToonAI(
+            air, name=spawnName, maxHp=hp, archetype=archetype,
+            finalePhase=finalePhase)
+        corrupt.hp = corrupt.maxHp
+        # Fan out a few feet in front of the toon.
+        offset = 6.0 + (i * 2.5)
+        rad = math.radians(heading)
+        x = baseX - math.sin(rad) * offset
+        y = baseY + math.cos(rad) * offset
+        corrupt.setPos(x, y, baseZ)
+        corrupt.setH(heading + 180.0)
+        corrupt.generateWithRequired(zoneId)
+        spawned.append(corrupt.doId)
+
+    phaseTag = ''
+    if finalePhase >= 1:
+        phaseTag = ' finalePhase=%s (%s)' % (
+            finalePhase, combat.get('id') if combat else '?')
+    return 'Spawned %s %s(s) in zone %s%s: %s' % (
+        len(spawned), name, zoneId, phaseTag, spawned)
+
+
 class Pollute(MagicWord):
     aliases = ['pollution', 'corruptzone']
     desc = 'Raise pollution in the invoker zone (0..1 pure to polluted).'
@@ -77,45 +127,13 @@ class SpawnCorrupt(MagicWord):
         'spawncorrupttoon', 'corrupttoon', 'spawnct',
         'spawnbrute', 'spawnsnare', 'spawnballoon',
     ]
-    desc = 'Spawn CorruptToon enemies (Smudge, Brute, or Balloon Snare).'
+    desc = 'Spawn CorruptToon enemies (Smudge, Brute, Snare, or Overlord).'
     advancedDesc = (
         'Generates DistributedCorruptToonAI in the invoker zone. '
-        'Client prefers DNA/Actor ink silhouette, else card limbs. '
-        'Ink Smudge: purple ink-fist telegraph pop + ink drip splat + impact; '
-        'hit/death play cheap purple ink splash (swarm readability); '
-        'Smudge hits also pulse soft cream wash against purple ink '
-        '(SmudgeHitCreamWashFx). '
-        'Sludge Brute (archetype=1): green spit-gob telegraph pop + '
-        'squirt SFX + ink blob; hit/death play cheap green sludge splash. '
-        'Balloon Snare (archetype=2): amber string-lash telegraph pop + '
-        'vine zip SFX; hit/death play cheap amber string-snap splash. '
-        'All archetypes: ambient idle ink drip between telegraphs layered '
-        'with soft cream / pastel contrast drips (IdleCreamDripContrastFx) + '
-        'sunny cream / pastel sparkle flecks on the cream drip path '
-        '(IdleCreamDripSparkleFx) + soft cream wash pulse + delayed cream '
-        'aftershock against ink idle drips (IdleCreamWashPulseFx) + sunny '
-        'cream / pastel rim flecks on the '
-        'ink silhouette (CorruptSilhouetteCreamRimFx) + rising cream / pastel '
-        'sparkle flecks on the silhouette cream rim '
-        '(CorruptSilhouetteCreamSparkleFx) + soft cream wash pulse + delayed '
-        'cream aftershock against the ink silhouette '
-        '(CorruptSilhouetteCreamWashFx) + short rubber-hose '
-        'ink drip on '
-        'telegraph layered with sunny cream / pastel warn flecks + delayed '
-        'cream aftershock (CorruptTelegraphCreamWarnFx) + rising cream / '
-        'pastel sparkle flecks on the warn spray '
-        '(CorruptTelegraphCreamSparkleFx) + soft cream wash pulse against '
-        'ink telegraph (CorruptTelegraphCreamWashFx); defeat layers '
-        'sunny cream / pastel flecks (CorruptDeathCreamFleckFx) on the ink '
-        'splat plus rising cream / pastel sparkle flecks '
-        '(CorruptDeathCreamSparkleFx) plus a soft cream wash pulse + delayed '
-        'cream aftershock after (CorruptDeathCreamWashFx). '
-        'Ink Overlord finale phases also play ink crown + ink rain on '
-        'phase telegraphs; hit/death play cheap magenta/crimson ink splash; '
-        'Overlord hits also pulse soft cream wash against magenta ink '
-        '(OverlordHitCreamWashFx; see campaign Silly finale). '
         'Optional count (1-8), hp (0=archetype default base), '
-        'archetype (0=Ink, 1=Brute, 2=Snare). '
+        'archetype (0=Ink, 1=Brute, 2=Snare), finalePhase (0=street, '
+        '1=Overlord P1 rain AoE, 2=Unleashed rain+slam). '
+        'Use ~spawnoverlord for a P1 Overlord shortcut. '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
@@ -124,6 +142,7 @@ class SpawnCorrupt(MagicWord):
         ('count', int, False, 1),
         ('hp', int, False, 0),
         ('archetype', int, False, CorruptionGlobals.ARCHETYPE_INK),
+        ('finalePhase', int, False, 0),
     ]
 
     def handleWord(self, invoker, avId, toon, *args):
@@ -132,35 +151,36 @@ class SpawnCorrupt(MagicWord):
         archetype = (
             int(args[2]) if len(args) > 2
             else CorruptionGlobals.ARCHETYPE_INK)
-        archetype = CorruptionGlobals.normalizeArchetype(archetype)
-        count = max(1, min(8, count))
-        # Pass base HP; DistributedCorruptToonAI applies archetype hpScale.
-        if hpArg <= 0:
-            hp = CorruptionGlobals.archetypeDefaultHp(archetype)
-        else:
-            hp = max(1, min(500, hpArg))
-        stats = CorruptionGlobals.archetypeStats(archetype)
+        finalePhase = int(args[3]) if len(args) > 3 else 0
+        return _spawnCorruptPack(
+            self.air, toon, count=count, hpArg=hpArg, archetype=archetype,
+            finalePhase=finalePhase)
 
-        zoneId = toon.zoneId
-        baseX, baseY, baseZ = toon.getX(), toon.getY(), toon.getZ()
-        heading = toon.getH()
-        spawned = []
-        for i in range(count):
-            corrupt = DistributedCorruptToonAI(
-                self.air, maxHp=hp, archetype=archetype)
-            corrupt.hp = corrupt.maxHp
-            # Fan out a few feet in front of the toon.
-            offset = 6.0 + (i * 2.5)
-            rad = math.radians(heading)
-            x = baseX - math.sin(rad) * offset
-            y = baseY + math.cos(rad) * offset
-            corrupt.setPos(x, y, baseZ)
-            corrupt.setH(heading + 180.0)
-            corrupt.generateWithRequired(zoneId)
-            spawned.append(corrupt.doId)
 
-        return 'Spawned %s %s(s) in zone %s: %s' % (
-            len(spawned), stats.get('name', 'CorruptToon'), zoneId, spawned)
+class SpawnOverlord(MagicWord):
+    aliases = ['spawnoverlord', 'spawninkoverlord', 'overlord']
+    desc = 'Spawn Ink Overlord with phase combat AI (P1 rain / P2 enrage).'
+    advancedDesc = (
+        'Shortcut for Overlord phase AI. Optional count, hp (0=90 base), '
+        'finalePhase (1=rising rain AoE, 2=unleashed rain+slam). '
+        'Defaults to P1. Pair with ~hackslash 0.')
+    execLocation = MagicWordConfig.EXEC_LOC_SERVER
+    accessLevel = 'MODERATOR'
+    affectRange = [MagicWordConfig.AFFECT_SELF]
+    arguments = [
+        ('count', int, False, 1),
+        ('hp', int, False, 90),
+        ('finalePhase', int, False, 1),
+    ]
+
+    def handleWord(self, invoker, avId, toon, *args):
+        count = int(args[0]) if args else 1
+        hpArg = int(args[1]) if len(args) > 1 else 90
+        finalePhase = int(args[2]) if len(args) > 2 else 1
+        return _spawnCorruptPack(
+            self.air, toon, count=count, hpArg=hpArg,
+            archetype=CorruptionGlobals.ARCHETYPE_INK,
+            finalePhase=finalePhase)
 
 
 def registerCorruptionMagicWords():
@@ -168,3 +188,4 @@ def registerCorruptionMagicWords():
     Pollute()
     Purify()
     SpawnCorrupt()
+    SpawnOverlord()

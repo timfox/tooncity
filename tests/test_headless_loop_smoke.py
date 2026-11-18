@@ -334,6 +334,15 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIsNotNone(cg.finalePhaseLook(2))
         self.assertEqual(
             cg.OVERLORD_TELEGRAPH_CROWN_LOOK.get('id'), 'ink-crown')
+        # Phase combat AI (beyond Smudge chase) must stay registered beside looks.
+        self.assertIn(1, cg.OVERLORD_PHASE_COMBAT)
+        self.assertIn(2, cg.OVERLORD_PHASE_COMBAT)
+        self.assertEqual(cg.OVERLORD_PHASE_COMBAT[1].get('moveMode'), 'rain')
+        self.assertEqual(cg.OVERLORD_PHASE_COMBAT[2].get('moveMode'), 'enrage')
+        self.assertIsNotNone(cg.overlordPhaseCombat(1))
+        self.assertIsNotNone(cg.overlordPhaseCombat(2))
+        self.assertEqual(cg.overlordP2AddCount(1), 0)
+        self.assertGreater(cg.overlordP2AddCount(2), 0)
 
     def test_rubber_hose_juice_modules_present(self):
         """AST-assert recent juice modules / symbols without importing Panda."""

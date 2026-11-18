@@ -1537,6 +1537,58 @@ FINALE_PHASE_LOOK = {
     },
 }
 
+# Ink Overlord AI combat (server) — phase-differentiated beyond Smudge chase.
+# Client ink-rain / crown telegraph already plays on announceAttackTelegraph;
+# these tunables make the resolve match: P1 rain AoE puddle, P2 enrage
+# rain + close slam. Radii track OVERLORD_PHASE_INK_RAIN_LOOK spread/puddle.
+# No KH branding — rubber-hose Oswald stretch-punch fight only.
+OVERLORD_PHASE_COMBAT = {
+    1: {
+        'id': 'rising-rain',
+        # Slower boss walk — telegraph rain owns the beat.
+        'chaseSpeed': 7.2,
+        # Engage rain from mid-range (matches ink-rain spread / puddle).
+        'meleeRange': 8.0,
+        'attackHitRange': 9.5,
+        'attackNearMissRange': 12.0,
+        'attackDamage': 4,
+        'telegraphDelay': 0.85,
+        'attackCooldown': 2.45,
+        # Rain hits every toon in the puddle, not just the chase target.
+        'aoe': True,
+        'moveMode': 'rain',
+    },
+    2: {
+        'id': 'unleashed-enrage',
+        # Enrage chase — closes gaps between denser rains.
+        'chaseSpeed': 11.8,
+        'meleeRange': 9.0,
+        'attackHitRange': 11.5,
+        'attackNearMissRange': 14.5,
+        'attackDamage': 6,
+        'telegraphDelay': 0.68,
+        'attackCooldown': 1.55,
+        'aoe': True,
+        'moveMode': 'enrage',
+        # Close-range slam when the player is already in the ink — faster
+        # single-target pressure between rain volleys.
+        'slamHitRange': 5.5,
+        'slamNearMissRange': 8.0,
+        'slamDamage': 5,
+        'slamTelegraphDelay': 0.38,
+        'slamCooldown': 1.15,
+        'slamMeleeRange': 5.2,
+    },
+}
+
+# P2 Smudge adds — wave 2+ while Unleashed packSize keeps Overlord(s).
+OVERLORD_P2_ADD_WAVE_START = 2
+OVERLORD_P2_ADD_COUNT = 2
+OVERLORD_P2_ADD_HP = 25
+OVERLORD_P2_ADD_NAME = 'Ink Smudge'
+OVERLORD_P2_ADD_SPACING = 3.4
+OVERLORD_P2_ADD_FORWARD = 4.5
+
 # Phase-transition sting (FOV / flash / render slam).
 FINALE_STING_FOV_PUNCH = 18.0
 FINALE_STING_FOV_IN = 0.08
@@ -1593,6 +1645,40 @@ def finalePhaseLook(phaseIndex):
     except (TypeError, ValueError):
         return None
     return FINALE_PHASE_LOOK.get(phase)
+
+
+def normalizeFinalePhase(phaseIndex):
+    """Clamp to a known Overlord phase (0 = not Overlord)."""
+    try:
+        phase = int(phaseIndex)
+    except (TypeError, ValueError):
+        return 0
+    if phase in OVERLORD_PHASE_COMBAT:
+        return phase
+    return 0
+
+
+def overlordPhaseCombat(phaseIndex):
+    """Return AI combat dict for Ink Overlord phase, or None."""
+    phase = normalizeFinalePhase(phaseIndex)
+    if phase < 1:
+        return None
+    return OVERLORD_PHASE_COMBAT.get(phase)
+
+
+def overlordP2AddCount(waveIndex, addCount=None, addWaveStart=None):
+    """Smudge add count for Unleashed wave, or 0 when adds are not active."""
+    try:
+        wave = int(waveIndex)
+    except (TypeError, ValueError):
+        return 0
+    start = (
+        OVERLORD_P2_ADD_WAVE_START
+        if addWaveStart is None else int(addWaveStart))
+    if wave < start:
+        return 0
+    count = OVERLORD_P2_ADD_COUNT if addCount is None else int(addCount)
+    return max(0, count)
 
 
 def clampPollution(level):

@@ -143,6 +143,11 @@ ACTS = (
                 ('ink', 'ink'),
                 ('ink', 'ink', 'ink'),
             ),
+            # Smudge adds on wave 2+ — arena pressure beside Unleashed AI.
+            'addWaveStart': 2,
+            'addCount': 2,
+            'addHp': 25,
+            'addName': 'Ink Smudge',
         },
     },
 )

@@ -124,6 +124,10 @@ class CampaignDirectorAI(DirectObject):
             'banner': act.get('banner'),
             'finalePhase': 0,
             'transitionSting': False,
+            'addCount': None,
+            'addWaveStart': None,
+            'addHp': None,
+            'addName': None,
         }
         if act.get('finale'):
             if self._finalePhase >= 1:
@@ -174,7 +178,11 @@ class CampaignDirectorAI(DirectObject):
             snareName=params.get('snareName'),
             waveScripts=params.get('waveScripts'),
             finalePhase=params.get('finalePhase', 0),
-            transitionSting=params.get('transitionSting', False))
+            transitionSting=params.get('transitionSting', False),
+            addCount=params.get('addCount'),
+            addWaveStart=params.get('addWaveStart'),
+            addHp=params.get('addHp'),
+            addName=params.get('addName'))
         banner = params.get('banner') or act.get('banner')
         self._tellToon(toon, banner)
         # Player-facing attach copy — melee is auto-armed by PlayEntry.
