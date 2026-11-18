@@ -1335,55 +1335,55 @@ BRUTE_TELEGRAPH_SPIT_LOOK = {
 # Cream splash + delayed cream aftershock on Sludge Brute spit impact /
 # telegraph land (after spit-gob telegraph). Sunny cream / pastel contrast
 # against green BRUTE_SPIT_BLOB_* so the tank spit reads juicy. Deepened spit-
-# land juice beyond #249 (#223 deepen): juicier splat/flecks + thicker
+# land juice beyond #264 (#249 / #223 deepen): juicier splat/flecks + thicker
 # vertical cream drip filaments (spit-gob fall read) + heavier downward
-# settle aftershock — distinct from Snare counter cream deepen (#245,
-# horizontal whip filaments), Gunk puddle cream deepen (#238, flat ground
-# bloom), and Smudge hit cream deepen (#259, radial hose smears). Same
-# residual grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_*. Client only. No
-# keyblades / KH branding.
+# settle aftershock — distinct from Snare counter cream deepen (#269 / #245,
+# horizontal whip filaments), Gunk puddle cream deepen (#276 / #238, flat
+# ground bloom), and Smudge hit cream deepen (#283 / #259, radial hose
+# smears). Same residual grammar as TELEGRAPH_CREAM_WARN_AFTERSHOCK_*.
+# Client only. No keyblades / KH branding.
 # BRUTE_SPIT_CREAM_SPLASH_ENABLED = False drops splash + aftershock.
 # BRUTE_SPIT_CREAM_AFTERSHOCK_ENABLED = False drops aftershock only.
 # BRUTE_SPIT_CREAM_SPLASH_DRIP_ENABLED = False drops drip filaments only.
 BRUTE_SPIT_CREAM_SPLASH_ENABLED = True
-BRUTE_SPIT_CREAM_SPLASH_DELAY_SEC = 0.22  # fallback; look prefers spit travel compose
-BRUTE_SPIT_CREAM_SPLASH_LIFT = 0.42  # above spit land pos (beyond #249 0.38)
+BRUTE_SPIT_CREAM_SPLASH_DELAY_SEC = 0.2  # fallback; look prefers spit travel compose
+BRUTE_SPIT_CREAM_SPLASH_LIFT = 0.46  # above spit land pos (beyond #264 0.42)
 BRUTE_SPIT_CREAM_SPLASH_BIN = 41  # above green spit blob (40)
-BRUTE_SPIT_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.98)  # sunny cream
-BRUTE_SPIT_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.82)
+BRUTE_SPIT_CREAM_SPLASH_COLOR = (1.0, 0.97, 0.82, 0.99)  # sunny cream
+BRUTE_SPIT_CREAM_SPLASH_RIM_COLOR = (1.0, 0.98, 0.88, 0.86)
 BRUTE_SPIT_CREAM_SPLASH_FLECK_COLORS = (
-    (1.0, 0.97, 0.82, 0.96),  # sunny cream
-    (1.0, 0.96, 0.62, 0.9),   # butter
-    (1.0, 0.9, 0.78, 0.86),   # soft peach pastel
-    (0.98, 0.94, 0.68, 0.84), # swamp-butter pastel — spit gob pop
+    (1.0, 0.97, 0.82, 0.97),  # sunny cream
+    (1.0, 0.96, 0.62, 0.92),  # butter
+    (1.0, 0.9, 0.78, 0.88),   # soft peach pastel
+    (0.98, 0.94, 0.68, 0.86), # swamp-butter pastel — spit gob pop
 )
 # Vertical cream drip filaments — spit-gob fall readability (not Snare
 # horizontal whip / Gunk flat puddle bloom / Smudge radial hose).
 BRUTE_SPIT_CREAM_SPLASH_DRIP_ENABLED = True
-BRUTE_SPIT_CREAM_SPLASH_DRIP_COUNT = 4  # beyond #249 (3)
-BRUTE_SPIT_CREAM_SPLASH_DRIP_HALF = 0.09
-BRUTE_SPIT_CREAM_SPLASH_DRIP_FALL = 1.1  # taller spit-gob drip (beyond #249 0.95)
-BRUTE_SPIT_CREAM_SPLASH_DRIP_SEC = 0.25
-BRUTE_SPIT_CREAM_SPLASH_DRIP_PEAK_ALPHA = 0.94
-BRUTE_SPIT_CREAM_SPLASH_DRIP_COLOR = (1.0, 0.97, 0.84, 0.94)
+BRUTE_SPIT_CREAM_SPLASH_DRIP_COUNT = 5  # beyond #264 (4)
+BRUTE_SPIT_CREAM_SPLASH_DRIP_HALF = 0.1
+BRUTE_SPIT_CREAM_SPLASH_DRIP_FALL = 1.25  # taller spit-gob drip (beyond #264 1.1)
+BRUTE_SPIT_CREAM_SPLASH_DRIP_SEC = 0.28
+BRUTE_SPIT_CREAM_SPLASH_DRIP_PEAK_ALPHA = 0.96
+BRUTE_SPIT_CREAM_SPLASH_DRIP_COLOR = (1.0, 0.97, 0.84, 0.96)
 BRUTE_SPIT_CREAM_SPLASH_LOOK = {
     'id': 'brute-spit-cream-splash',
     # lift / delaySec composed with BRUTE_SPIT_BLOB_TRAVEL when played.
     'lift': BRUTE_SPIT_CREAM_SPLASH_LIFT,
     'delaySec': BRUTE_SPIT_CREAM_SPLASH_DELAY_SEC,
-    'delayScale': 0.82,  # snappier pop as green spit blob lands (beyond #249 0.88)
-    'peakAlpha': 0.98,
-    'splatHalf': 0.34,  # juicier spit-land core vs #249 (0.3) / #223 (0.24)
-    'splatPeak': 1.88,
-    'splatSec': 0.19,
-    'rimScale': 1.42,
+    'delayScale': 0.76,  # snappier pop as green spit blob lands (beyond #264 0.82)
+    'peakAlpha': 0.99,
+    'splatHalf': 0.38,  # juicier spit-land core vs #264 (0.34) / #249 (0.3)
+    'splatPeak': 2.05,
+    'splatSec': 0.21,
+    'rimScale': 1.48,
     'splatColor': BRUTE_SPIT_CREAM_SPLASH_COLOR,
     'rimColor': BRUTE_SPIT_CREAM_SPLASH_RIM_COLOR,
-    'fleckCount': 7,  # beyond #249 (6); spit gob spray, under Overlord cream punch
-    'fleckHalf': 0.12,
-    'fleckDist': 1.15,
-    'fleckLift': 0.55,  # taller spit-gob spray (beyond #249 0.48)
-    'fleckSec': 0.26,
+    'fleckCount': 8,  # beyond #264 (7); spit gob spray, under Overlord cream punch
+    'fleckHalf': 0.13,
+    'fleckDist': 1.28,
+    'fleckLift': 0.62,  # taller spit-gob spray (beyond #264 0.55)
+    'fleckSec': 0.28,
     'fleckColors': BRUTE_SPIT_CREAM_SPLASH_FLECK_COLORS,
     'dripEnabled': BRUTE_SPIT_CREAM_SPLASH_DRIP_ENABLED,
     'dripCount': BRUTE_SPIT_CREAM_SPLASH_DRIP_COUNT,
@@ -1395,24 +1395,24 @@ BRUTE_SPIT_CREAM_SPLASH_LOOK = {
     'binSort': BRUTE_SPIT_CREAM_SPLASH_BIN,
 }
 BRUTE_SPIT_CREAM_AFTERSHOCK_ENABLED = True
-BRUTE_SPIT_CREAM_AFTERSHOCK_DELAY_SEC = 0.12
-BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT = 6  # beyond #249 (5) / #223 (3)
-BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT = 3
-BRUTE_SPIT_CREAM_AFTERSHOCK_SIZE = 0.12
-BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_SIZE = 0.15
-BRUTE_SPIT_CREAM_AFTERSHOCK_DRIFT = 0.78
-BRUTE_SPIT_CREAM_AFTERSHOCK_FALL = 0.68  # heavier downward settle (beyond #249 0.55)
-BRUTE_SPIT_CREAM_AFTERSHOCK_SEC = 0.38
-BRUTE_SPIT_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.92)
+BRUTE_SPIT_CREAM_AFTERSHOCK_DELAY_SEC = 0.1
+BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT = 7  # beyond #264 (6) / #249 (5)
+BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COUNT = 4
+BRUTE_SPIT_CREAM_AFTERSHOCK_SIZE = 0.13
+BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_SIZE = 0.16
+BRUTE_SPIT_CREAM_AFTERSHOCK_DRIFT = 0.88
+BRUTE_SPIT_CREAM_AFTERSHOCK_FALL = 0.8  # heavier downward settle (beyond #264 0.68)
+BRUTE_SPIT_CREAM_AFTERSHOCK_SEC = 0.4
+BRUTE_SPIT_CREAM_AFTERSHOCK_COLOR = (1.0, 0.96, 0.72, 0.94)
 BRUTE_SPIT_CREAM_AFTERSHOCK_END = (1.0, 0.92, 0.55, 0.0)
-BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.9)
+BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_COLOR = (1.0, 0.98, 0.82, 0.92)
 BRUTE_SPIT_CREAM_AFTERSHOCK_STREAK_END = (1.0, 0.9, 0.5, 0.0)
 BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_ENABLED = True
-BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF = 0.62  # wider spit-land halo (beyond #249 0.54)
-BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_START = 0.28
-BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK = 1.75
-BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_SEC = 0.34
-BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.28
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_HALF = 0.72  # wider spit-land halo (beyond #264 0.62)
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_START = 0.26
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK = 1.9
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_SEC = 0.36
+BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.3
 BRUTE_SPIT_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Balloon Snare string-lash — warm amber, horizontal rubber stretch, vine zip.

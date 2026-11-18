@@ -424,9 +424,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('cream bloom', reclaim_md.lower())
         corr_init = _read('toontown/corruption/__init__.py')
         self.assertIn('GagsterPuddleCreamSplashFx', corr_init)
-        # Sludge Brute spit land cream deepen beyond #249 — juicier spit
+        # Sludge Brute spit land cream deepen beyond #264 — juicier spit
         # impact (thicker vertical drip filaments + heavier aftershock;
-        # distinct from Snare #245 / Gunk #238 / Smudge #259).
+        # distinct from Snare #269 / Gunk #276 / Smudge #283).
         self.assertTrue(hasattr(cg, 'BRUTE_SPIT_CREAM_SPLASH_ENABLED'))
         self.assertTrue(hasattr(cg, 'BRUTE_SPIT_CREAM_SPLASH_LOOK'))
         self.assertTrue(hasattr(cg, 'BRUTE_SPIT_CREAM_AFTERSHOCK_ENABLED'))
@@ -436,11 +436,11 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIs(cg.BRUTE_SPIT_CREAM_SPLASH_DRIP_ENABLED, True)
         brute_cream_look = cg.BRUTE_SPIT_CREAM_SPLASH_LOOK
         self.assertEqual(brute_cream_look.get('id'), 'brute-spit-cream-splash')
-        self.assertGreaterEqual(int(brute_cream_look.get('fleckCount', 0)), 7)
+        self.assertGreaterEqual(int(brute_cream_look.get('fleckCount', 0)), 8)
         self.assertTrue(brute_cream_look.get('dripEnabled'))
-        self.assertGreaterEqual(int(brute_cream_look.get('dripCount', 0)), 4)
+        self.assertGreaterEqual(int(brute_cream_look.get('dripCount', 0)), 5)
         self.assertGreaterEqual(
-            int(cg.BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT), 6)
+            int(cg.BRUTE_SPIT_CREAM_AFTERSHOCK_COUNT), 7)
         brute_cream_id = str(brute_cream_look.get('id', '')).lower()
         self.assertNotIn('keyblade', brute_cream_id)
         self.assertNotIn('kingdom hearts', brute_cream_id)

@@ -37,7 +37,7 @@ warn aftershock grammar) and pulse SmudgeHitCreamWashFx (soft cream wash
 silhouette / death cream-wash grammar). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
 pop). Sludge Brute spit land / splash also fires BruteSpitCreamSplashFx
-(deepened cream splash beyond #249 + thicker vertical cream drip filaments
+(deepened cream splash beyond #264 + thicker vertical cream drip filaments
 + heavier downward cream aftershock — sunny cream/pastel juice on the spit
 impact; distinct from Snare counter cream whip / Gunk puddle cream bloom /
 Smudge radial hose; telegraph cream warn aftershock grammar). Sludge Brute
