@@ -10,9 +10,10 @@ Soft cream border strips + tip flecks that frame:
 
 Handoff / victory / finale-reveal cream-sparkle paths also rise cream
 sparkle flecks along the cream frame (wave-edge #113 twin). Hood handoff
-cream edge also arms a brief rubber-hose scale settle (overshoot → rest)
-after the peak so Loopy→Punchline→Silly transitions land readable —
-Oswald trust banner settle (#76) twin. Act-enter, Oswald trust settle,
+cream edge also arms a deepened rubber-hose scale settle (overshoot →
+rest → micro rebound → rest) after the peak so Loopy→Punchline→Silly
+transitions land carnival-juicy — Oswald trust banner settle (#76) twin,
+distinct from tip/title cream hose settles. Act-enter, Oswald trust settle,
 handoff carnival, victory cheer, and finale reveal also arm a delayed
 soft cream wash pulse (ActBannerCreamWashFx / OswaldTrustCreamWashFx /
 HandoffCreamWashFx / VictoryCreamWashFx / FinaleRevealCreamWashFx;
@@ -152,7 +153,7 @@ class ActBannerCreamEdgeFx(object):
         # Handoff / victory cream-sparkle banners also rise cream glitter.
         if self._cfgPrefix in _SPARKLE_CFGS:
             parts.extend(self._spawnEdgeSparkles(parent))
-        # Optional overshoot → rest scale settle (handoff cream edge settle).
+        # Optional deepened overshoot → rest → rebound settle (handoff).
         settlePart = self._settleScalePart(edgeRoot, delaySec=inSec)
         if settlePart is not None:
             parts.append(settlePart)
@@ -165,10 +166,12 @@ class ActBannerCreamEdgeFx(object):
         self._edgeIval.start()
 
     def _settleScalePart(self, edgeRoot, delaySec=0.0):
-        """Brief overshoot → rest scale settle after cream edge peak.
+        """Deepened overshoot → rest → micro rebound → rest after edge peak.
 
-        Armed when SETTLE_OVERSHOOT is configured (handoff path). Missing /
-        disabled settle returns None so other cream-edge paths stay unchanged.
+        Armed when SETTLE_OVERSHOOT is configured (handoff path). Optional
+        SETTLE_REBOUND adds a second micro bounce so Loopy→Punchline→Silly
+        handoffs read juicier. Missing / disabled settle returns None so
+        other cream-edge paths stay unchanged.
         """
         if not self._cfg('SETTLE_ENABLED', True):
             return None
@@ -190,14 +193,34 @@ class ActBannerCreamEdgeFx(object):
         except Exception:
             return None
         tag = _IVAL_BY_CFG.get(self._cfgPrefix, 'actBanner')
-        return Sequence(
+        steps = [
             Wait(max(0.0, float(delaySec))),
             LerpScaleInterval(
                 edgeRoot, max(0.01, overSec), overPt, blendType='easeOut'),
             LerpScaleInterval(
                 edgeRoot, max(0.01, restSec), restPt, blendType='easeIn'),
-            name='%sCreamEdgeSettle' % tag,
-        )
+        ]
+        # Optional micro rebound — handoff cream edge deepen only.
+        rebound = self._cfg('SETTLE_REBOUND', None)
+        if rebound:
+            try:
+                rx, ry, rz, reboundSec = rebound
+                reboundSec = float(reboundSec)
+            except Exception:
+                reboundSec = 0.0
+                rx = ry = rz = 1.0
+            if reboundSec > 0.0:
+                reboundRest = float(self._cfg('SETTLE_REBOUND_REST_SEC', 0.07))
+                reboundPt = Point3(float(rx), float(ry), float(rz))
+                steps.extend([
+                    LerpScaleInterval(
+                        edgeRoot, max(0.01, reboundSec), reboundPt,
+                        blendType='easeOut'),
+                    LerpScaleInterval(
+                        edgeRoot, max(0.01, reboundRest), restPt,
+                        blendType='easeIn'),
+                ])
+        return Sequence(*steps, name='%sCreamEdgeSettle' % tag)
 
     def _buildEdgeRoot(self, parent):
         """Four cream edge strips — sunny frame, open center for the banner."""
@@ -529,7 +552,7 @@ def clearOswaldTrustFractureCreamEdge():
 
 
 def playHandoffCreamEdge():
-    """Fire cream edge + brief settle on hood handoff carnival banners."""
+    """Fire cream edge + deepened settle on hood handoff carnival banners."""
     _sharedHandoff().play()
 
 

@@ -457,24 +457,39 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('half-truth', magic_l)
 
     def test_handoff_cream_edge_settle_tunables(self):
-        """Loopy→Punchline→Silly handoff cream edge gets brief settle."""
+        """Loopy→Punchline→Silly handoff cream edge gets deepened settle."""
         camp = self.camp
         self.assertTrue(camp.HANDOFF_CREAM_EDGE_SETTLE_ENABLED)
         over = camp.HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT
         self.assertEqual(len(over), 4)
         self.assertGreater(float(over[3]), 0.0)
+        self.assertGreaterEqual(float(over[0]), 1.08)
+        self.assertGreaterEqual(float(over[2]), 1.12)
         self.assertGreater(float(camp.HANDOFF_CREAM_EDGE_SETTLE_REST_SEC), 0.0)
+        rebound = camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND
+        self.assertEqual(len(rebound), 4)
+        self.assertGreater(float(rebound[3]), 0.0)
+        self.assertGreater(
+            float(camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC), 0.0)
+        # Distinct from tip hose (#227) and betrayal hose (#235).
+        self.assertNotEqual(
+            tuple(over),
+            tuple(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT))
+        self.assertNotEqual(
+            tuple(over),
+            tuple(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT))
         edge_src = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'ActBannerCreamEdgeFx.py'
         ).read_text(encoding='utf-8')
         self.assertIn('_settleScalePart', edge_src)
         self.assertIn('SETTLE_OVERSHOOT', edge_src)
+        self.assertIn('SETTLE_REBOUND', edge_src)
         magic_l = (
             Path(__file__).resolve().parents[1]
             / 'toontown' / 'campaign' / 'MagicWords.py'
         ).read_text(encoding='utf-8').lower()
-        self.assertIn('edge settle', magic_l)
+        self.assertIn('deepened edge settle', magic_l)
 
     def test_punchline_tip_cream_hose_settle_tunables(self):
         """#198 Punchline tip gets brief cream hose settle after trust bounce."""

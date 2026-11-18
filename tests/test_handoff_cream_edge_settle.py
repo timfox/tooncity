@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for act handoff cream edge settle.
+"""Behavioral headless tests for act handoff cream edge settle deepen.
 
 Panda-free: loads CampaignGlobals + AST-checks ActBannerCreamEdgeFx /
-CampaignHandoff wiring for Loopy→Punchline→Silly cream edge overshoot→rest.
+CampaignHandoff wiring for Loopy→Punchline→Silly cream edge overshoot→rest
+→micro rebound (#222 deepen). Distinct from Punchline tip cream hose
+(#227) and finale betrayal cream hose (#235).
 
 Run from repo root:
   python3 tests/test_handoff_cream_edge_settle.py
@@ -66,7 +68,7 @@ def _read(rel: str) -> str:
 
 
 class HandoffCreamEdgeSettleTest(unittest.TestCase):
-    """Config + AST checks for act handoff cream edge settle."""
+    """Config + AST checks for deepened act handoff cream edge settle."""
 
     @classmethod
     def setUpClass(cls):
@@ -84,21 +86,52 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
         self.assertGreater(float(ox), 1.0)
         self.assertGreater(float(oz), 1.0)
         self.assertAlmostEqual(float(oy), 1.0)
+        # Deepened vs #222 baseline (1.05 / 1.08 / 0.07).
+        self.assertGreaterEqual(float(ox), 1.08)
+        self.assertGreaterEqual(float(oz), 1.12)
+        self.assertGreaterEqual(float(over_sec), 0.08)
         rest = float(camp.HANDOFF_CREAM_EDGE_SETTLE_REST_SEC)
         self.assertGreater(rest, 0.0)
+        rebound = camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND
+        self.assertEqual(len(rebound), 4)
+        rx, ry, rz, rebound_sec = rebound
+        self.assertGreater(float(rx), 1.0)
+        self.assertGreater(float(rz), 1.0)
+        self.assertAlmostEqual(float(ry), 1.0)
+        self.assertGreater(float(rebound_sec), 0.0)
+        # Rebound is a quieter second bounce under the primary overshoot.
+        self.assertLess(float(rx), float(ox))
+        self.assertLess(float(rz), float(oz))
+        rebound_rest = float(camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC)
+        self.assertGreater(rebound_rest, 0.0)
         # Settle stays a short readable beat under the edge hang.
         total = (
             float(camp.HANDOFF_CREAM_EDGE_IN_SEC)
             + float(over_sec)
-            + rest)
-        self.assertLess(total, 0.45)
-        self.assertGreater(total, 0.15)
+            + rest
+            + float(rebound_sec)
+            + rebound_rest)
+        self.assertLess(total, 0.55)
+        self.assertGreater(total, 0.20)
+        # Distinct from Punchline tip hose (#227) and betrayal hose (#235).
+        punch_over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
+        betr_over = camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT
+        self.assertNotEqual(tuple(over), tuple(punch_over))
+        self.assertNotEqual(tuple(over), tuple(betr_over))
+        self.assertNotEqual(
+            rest, float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC))
+        self.assertNotEqual(
+            rest, float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC))
+        # Wash lands after deepened settle.
+        self.assertGreaterEqual(
+            float(camp.HANDOFF_CREAM_WASH_DELAY_SEC), 0.48)
         # No KH product nouns in the settle block comments.
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('handoff_cream_edge_settle_enabled')
         self.assertGreater(idx, 0)
-        snip = src[max(0, idx - 350):idx + 350]
+        snip = src[max(0, idx - 450):idx + 550]
         self.assertIn('no keyblades', snip)
+        self.assertIn('rebound', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
             self.assertNotIn(banned, snip)
 
@@ -107,6 +140,8 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
         self.assertIn('_settleScalePart', edge_src)
         self.assertIn('SETTLE_OVERSHOOT', edge_src)
         self.assertIn('SETTLE_REST_SEC', edge_src)
+        self.assertIn('SETTLE_REBOUND', edge_src)
+        self.assertIn('SETTLE_REBOUND_REST_SEC', edge_src)
         self.assertIn('CreamEdgeSettle', edge_src)
         tree = ast.parse(edge_src)
         method_names = []
@@ -121,13 +156,18 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
         play_src = edge_src[edge_src.find('def play('):edge_src.find('def _settleScalePart')]
         self.assertIn('_settleScalePart', play_src)
         self.assertIn('SETTLE_ENABLED', edge_src)
+        settle_src = edge_src[edge_src.find('def _settleScalePart'):]
+        settle_src = settle_src[:settle_src.find('\n    def _buildEdgeRoot')]
+        self.assertIn('SETTLE_REBOUND', settle_src)
+        self.assertIn('reboundPt', settle_src)
 
     def test_handoff_path_arms_cream_edge(self):
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('playHandoffCreamEdge', handoff_src)
-        self.assertIn('cream edge pulse with a brief', handoff_src.lower())
+        self.assertIn('deepened rubber-hose scale settle', handoff_src.lower())
+        self.assertIn('micro rebound', handoff_src.lower())
         magic_src = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('edge settle', magic_src)
+        self.assertIn('deepened edge settle', magic_src)
         self.assertIn('no keyblades', magic_src)
         self.assertNotIn('kingdom hearts', magic_src)
         self.assertNotIn('sora', magic_src)
