@@ -905,7 +905,12 @@ class MeleeCombatController(DirectObject):
         self._comboHits = 0
 
     def _playLauncher(self, target, hitIndex):
-        """Upward juggle with readable rubber-hose hang/float before fall."""
+        """Upward juggle with readable rubber-hose hang/float before fall.
+
+        Client hang juice only — CorruptToonAI hang stun is armed earlier from
+        applyHackSlashHit → requestHackSlashHit(hitIndex) so chase/attack pause
+        while cancel→slam can stick under multi-enemy pressure.
+        """
         self._clearLaunch()
         try:
             node = target

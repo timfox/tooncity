@@ -3153,13 +3153,17 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'JUGGLE_CANCEL_ENABLED',
                 'JUGGLE_CANCEL_START_SEC',
                 'JUGGLE_CANCEL_WINDOW_SEC',
-                'JUGGLE_CANCEL_BUFFER'):
+                'JUGGLE_CANCEL_BUFFER',
+                'JUGGLE_HANG_STUN_ENABLED',
+                'JUGGLE_HANG_STUN_PAD_SEC',
+                'JUGGLE_HANG_STUN_MAX_SEC'):
             self.assertIn(
                 juggle_cancel_key, config_names,
                 msg='HackSlashConfig missing juggle cancel %s' % (
                     juggle_cancel_key,))
         self.assertIs(config_assigns.get('JUGGLE_CANCEL_ENABLED'), True)
         self.assertIs(config_assigns.get('JUGGLE_CANCEL_BUFFER'), True)
+        self.assertIs(config_assigns.get('JUGGLE_HANG_STUN_ENABLED'), True)
         jc_start = config_assigns.get('JUGGLE_CANCEL_START_SEC')
         jc_window = config_assigns.get('JUGGLE_CANCEL_WINDOW_SEC')
         self.assertIsInstance(jc_start, float)
@@ -3171,7 +3175,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertAlmostEqual(jc_window, 0.45, places=2)
         for jc_helper in (
                 'juggleCancelSlamHitIndex',
-                'isJuggleCancelWindowOpen'):
+                'isJuggleCancelWindowOpen',
+                'juggleHangStunSec',
+                'isJuggleHangStunHit',
+                'isJuggleHangStunned'):
             self.assertIn(
                 jc_helper, config_funcs,
                 msg='HackSlashConfig missing helper %s' % jc_helper)
@@ -3191,10 +3198,27 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_cancelJuggleIntoSlam', melee_src)
         self.assertIn('juggleCancelSlamHitIndex', melee_src)
         self.assertIn('_armJuggleCancelWindow', melee_src)
-        self.assertIn('juggle→F slam', config_src)
+        self.assertIn('juggle hang stun→F slam', config_src)
         self.assertIn('juggleCancelSlamHitIndex', hack_init_src)
         self.assertIn('isJuggleCancelWindowOpen', hack_init_src)
+        self.assertIn('juggleHangStunSec', hack_init_src)
+        self.assertIn('isJuggleHangStunned', hack_init_src)
         self.assertIn('juggle cancel', magic_src)
+        self.assertIn('server stun', magic_src.lower())
+        # Server hang stun on CorruptToonAI — chase/attack pause during launch.
+        corrupt_ai_src = _read(
+            'toontown/corruption/DistributedCorruptToonAI.py')
+        self.assertIn('__applyJuggleHangStun', corrupt_ai_src)
+        self.assertIn('_juggleHangStunUntil', corrupt_ai_src)
+        self.assertIn('isJuggleHangStunned', corrupt_ai_src)
+        self.assertIn('JUGGLE_HANG_STUN_ENABLED', corrupt_ai_src)
+        corrupt_client_src = _read(
+            'toontown/corruption/DistributedCorruptToon.py')
+        self.assertIn(
+            "sendUpdate('requestHackSlashHit', [amount, idx])",
+            corrupt_client_src)
+        dc_src = _read('etc/toon.dc')
+        self.assertIn('requestHackSlashHit(uint16, uint8)', dc_src)
         # Demo hint stays rubber-hose (no KH product nouns in player-facing copy).
         demo_hint_node = _toplevel_value(config_tree, 'DEMO_HINT')
         demo_hint = _literal(demo_hint_node)
@@ -3202,7 +3226,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             demo_hint = ''.join(str(part) for part in demo_hint)
         self.assertIsInstance(demo_hint, str)
         hint_l = demo_hint.lower()
-        self.assertIn('juggle→f slam', hint_l)
+        self.assertIn('juggle hang stun→f slam', hint_l)
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             self.assertNotIn(banned, hint_l)
 

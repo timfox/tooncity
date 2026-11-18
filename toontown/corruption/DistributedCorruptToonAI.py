@@ -6,6 +6,7 @@ from direct.task import Task
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.HackSlashTarget import HackSlashTarget
+from toontown.hackslash import HackSlashConfig
 from toontown.toon.DistributedToonAI import DistributedToonAI
 
 
@@ -14,6 +15,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     Ink Overlord (finalePhase 1/2) uses phase combat instead of Smudge chase:
     P1 ink-rain AoE, P2 enrage rain + close slam. Street archetypes unchanged.
+
+    Air-juggle hang stuns chase/attack on the AI so cancel→slam is not just
+    client juice under multi-enemy pressure.
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedCorruptToonAI')
@@ -39,6 +43,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._stats = stats
         self._attackMove = 'smack'
         self._puddleXY = None
+        # Absolute frame-time until which chase/attack stay paused (juggle hang).
+        self._juggleHangStunUntil = 0.0
         self.finalePhase = 0
         self.setFinalePhase(finalePhase)
 
@@ -148,8 +154,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             globalClock.getFrameTime() + max(0.2, cool * 0.45))  # noqa: F821
         self.notify.debug('snare string-snap interrupt — wind-up cancelled')
 
-    def requestHackSlashHit(self, damage):
-        """Client melee RPC: SoftTarget applyHackSlashHit → AI damage."""
+    def requestHackSlashHit(self, damage, hitIndex=0):
+        """Client melee RPC: SoftTarget applyHackSlashHit → AI damage + hang stun."""
         if self._defeated:
             return
         avId = self.air.getAvatarIdFromSender()
@@ -162,7 +168,54 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         amount = max(0, min(80, int(damage)))
         if amount <= 0:
             return
+        idx = max(0, min(255, int(hitIndex)))
         self.takeHackSlashDamage(amount, attackerId=avId)
+        # Launch beats arm hang stun even if the hit finished the hostile —
+        # __defeat already stops AI; stun is a no-op after delete.
+        if not self._defeated:
+            self.__applyJuggleHangStun(idx)
+
+    def __applyJuggleHangStun(self, hitIndex):
+        """Pause chase/attack for launch hang so cancel→slam sticks."""
+        if not getattr(HackSlashConfig, 'JUGGLE_HANG_STUN_ENABLED', True):
+            return
+        if not HackSlashConfig.isJuggleHangStunHit(hitIndex):
+            return
+        sec = float(HackSlashConfig.juggleHangStunSec(hitIndex))
+        if sec <= 0.0:
+            return
+        until = globalClock.getFrameTime() + sec  # noqa: F821
+        if until > self._juggleHangStunUntil:
+            self._juggleHangStunUntil = until
+        # Cancel any in-flight telegraph so a resolving smack doesn't undermine
+        # the hang (Snare already interrupts on melee; this covers all archetypes).
+        self.__cancelAttackForJuggleHang()
+        self.notify.debug(
+            'juggle hang stun %.2fs (hitIndex=%s)' % (sec, hitIndex))
+
+    def __cancelAttackForJuggleHang(self):
+        """Drop wind-up / resolve task while juggle-hang stun is active."""
+        if not self._attacking:
+            return
+        self._attacking = False
+        self._puddleXY = None
+        try:
+            taskMgr.remove(self.uniqueName('corrupt-attack'))
+        except Exception:
+            pass
+        # Short recovery so stun end doesn't instantly re-telegraph.
+        cool = float(self._stats.get(
+            'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN))
+        self._attackReadyAt = max(
+            self._attackReadyAt,
+            globalClock.getFrameTime() + max(0.15, cool * 0.35))  # noqa: F821
+
+    def isJuggleHangStunned(self, now=None):
+        """True while air-juggle hang stun is holding chase/attack."""
+        if now is None:
+            now = globalClock.getFrameTime()  # noqa: F821
+        return HackSlashConfig.isJuggleHangStunned(
+            self._juggleHangStunUntil, now)
 
     # Alias for magic-word / future melee hit events.
     takeDamage = takeHackSlashDamage
@@ -171,6 +224,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if self._defeated or self.isDeleted():
             return Task.done
         if self._attacking:
+            return Task.again
+        # Air-juggle hang: stay put — no chase, no fresh telegraph.
+        if self.isJuggleHangStunned():
             return Task.again
 
         target = self.__findNearestToon()
@@ -461,6 +517,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return
         self._defeated = True
         self._attacking = False
+        self._juggleHangStunUntil = 0.0
         taskMgr.remove(self.uniqueName('corrupt-ai'))
         taskMgr.remove(self.uniqueName('corrupt-attack'))
         self.sendUpdate('announceDefeat', [])

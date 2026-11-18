@@ -3300,8 +3300,10 @@ dclass DistributedCorruptToon : DistributedNode {
   announceAttackHit() broadcast;
   // Telegraph resolved into dodge i-frames / near-miss — client sparkle juice.
   announceAttackDodged() broadcast;
-  // Melee SoftTarget calls applyHackSlashHit client-side; this RPC lands AI damage.
-  requestHackSlashHit(uint16) airecv clsend;
+  // Melee SoftTarget calls applyHackSlashHit client-side; this RPC lands AI
+  // damage and (hitIndex ≥ launch) arms server juggle-hang stun so chase/attack
+  // pause while cancel→slam can stick.
+  requestHackSlashHit(uint16, uint8) airecv clsend;  // damage, hitIndex
 };
 
 // Toontown spiritual-sequel slice 3 / depth D3: reclaim director + escalating waves

@@ -574,6 +574,16 @@ JUGGLE_CANCEL_WINDOW_SEC = 0.45
 # Buffer F/LMB pressed during early rise; fire when the cancel window opens.
 JUGGLE_CANCEL_BUFFER = True
 
+# Server-side stun while the launched hostile is in air-juggle hang. Client
+# hang juice alone left AI free to chase/attack, so cancel→slam felt cosmetic
+# under multi-enemy pressure. CorruptToonAI pauses chase/attack for this
+# window (armed from requestHackSlashHit hitIndex ≥ LAUNCH_HIT_INDEX).
+JUGGLE_HANG_STUN_ENABLED = True
+# Extra pad after rise+hang so F slam connects while AI is still paused.
+JUGGLE_HANG_STUN_PAD_SEC = 0.12
+# Cap so a buggy client cannot freeze AI forever (seconds).
+JUGGLE_HANG_STUN_MAX_SEC = 1.25
+
 
 def juggleCancelSlamHitIndex(comboLength=None):
     """Finisher/slam hit index for air-juggle cancel-into-slam."""
@@ -588,6 +598,53 @@ def isJuggleCancelWindowOpen(armed, openAt, until, now):
         return False
     now = float(now)
     return float(openAt) <= now < float(until)
+
+
+def isJuggleHangStunHit(hitIndex, launchHitIndex=None):
+    """True when this combo beat should arm server juggle-hang stun."""
+    if launchHitIndex is None:
+        launchHitIndex = LAUNCH_HIT_INDEX
+    try:
+        return int(hitIndex) >= int(launchHitIndex)
+    except (TypeError, ValueError):
+        return False
+
+
+def juggleHangStunSec(hitIndex, enabled=None, padSec=None, maxSec=None):
+    """AI stun seconds covering hitstop + launch rise/hang (and cancel window).
+
+    Stun arms at the hit RPC (before client hitstop + visual launch), so the
+    duration includes HITSTOP_SEC. Mid-combo also covers the cancel→slam
+    window so F slam lands while chase/attack stay paused.
+    """
+    if enabled is None:
+        enabled = JUGGLE_HANG_STUN_ENABLED
+    if not enabled:
+        return 0.0
+    if not isJuggleHangStunHit(hitIndex):
+        return 0.0
+    if padSec is None:
+        padSec = JUGGLE_HANG_STUN_PAD_SEC
+    if maxSec is None:
+        maxSec = JUGGLE_HANG_STUN_MAX_SEC
+    idx = max(0, min(int(hitIndex), len(LAUNCH_UP_SEC) - 1))
+    hitstop = float(HITSTOP_SEC[min(idx, len(HITSTOP_SEC) - 1)])
+    up = float(LAUNCH_UP_SEC[idx])
+    hang = float(LAUNCH_HANG_SEC[min(idx, len(LAUNCH_HANG_SEC) - 1)])
+    riseHang = up + hang + float(padSec)
+    # Mid-juggle: keep stun through cancel window measured from launch start.
+    if int(hitIndex) < int(COMBO_LENGTH) - 1 and JUGGLE_CANCEL_ENABLED:
+        cancelEnd = (
+            float(JUGGLE_CANCEL_START_SEC) + float(JUGGLE_CANCEL_WINDOW_SEC))
+        launchCover = max(riseHang, cancelEnd)
+    else:
+        launchCover = riseHang
+    return max(0.0, min(float(maxSec), hitstop + launchCover))
+
+
+def isJuggleHangStunned(stunUntil, now):
+    """True while a CorruptToonAI juggle-hang stun clock is live."""
+    return float(now) < float(stunUntil)
 
 
 # I-frame / dodge cue after CorruptToon smacks the local toon.
@@ -1268,6 +1325,6 @@ DEMO_HINT = (
     'Stretch punches: F/LMB  |  combo cream edge deepen  |  '
     'Shift/X dodge i-frame cream wash deepen++  |  '
     'dodge→F cream flash deepen+++  |  perfect dodge→F counter  |  '
-    'Snare string→F counter  |  juggle→F slam  |  hurt cream wash deepen++→F/Shift  |  '
+    'Snare string→F counter  |  juggle hang stun→F slam  |  hurt cream wash deepen++→F/Shift  |  '
     'Tab/` soft-lock cycle cream  |  hit soft-lock aim cream deepen+  |  ~melee'
 )

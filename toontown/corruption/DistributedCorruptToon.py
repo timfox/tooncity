@@ -2270,13 +2270,18 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         return 0
 
     def applyHackSlashHit(self, damage, hitIndex, attacker):
-        """Bridge SoftTarget/MeleeCombat → AI requestHackSlashHit RPC."""
+        """Bridge SoftTarget/MeleeCombat → AI requestHackSlashHit RPC.
+
+        hitIndex travels with damage so AI can arm juggle-hang stun on launch
+        beats (mid/finisher) — hang juice alone is client-only.
+        """
         if not self.isHackSlashAlive():
             return False
         amount = max(0, int(damage))
         if amount <= 0:
             return False
-        self.sendUpdate('requestHackSlashHit', [amount])
+        idx = max(0, min(255, int(hitIndex)))
+        self.sendUpdate('requestHackSlashHit', [amount, idx])
         self.__playHitReaction(hitIndex, attacker)
         return True
 
