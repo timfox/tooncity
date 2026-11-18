@@ -77,7 +77,7 @@ PURITY_STING_VOLUME = 0.9
 # Second cheer beat (jump) layered by ReclaimCheer client.
 PURITY_CHEER_SFX = 'phase_3.5/audio/sfx/AV_jump_2.ogg'
 
-# KH-style camera punch on purity restore (between finisher 12° and finale 18°).
+# Cartoon camera punch on purity restore (between finisher 12° and finale 18°).
 PURITY_FOV_PUNCH = 15.0
 PURITY_FOV_IN_SEC = 0.07
 PURITY_FOV_OUT_SEC = 0.38

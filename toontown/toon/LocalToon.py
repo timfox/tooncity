@@ -122,7 +122,7 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
             self.tossPieStart = None
             self.__presentingPie = 0
             self.__pieSequence = 0
-            # KH-style rubber-hose melee prototype (see toontown/hackslash/).
+            # Rubber-hose Oswald stretch-punch melee (see toontown/hackslash/).
             self.hackSlashCombat = None
             self.hackSlashDemoHostiles = []
             self.wantBattles = base.config.GetBool('want-battles', 1)
@@ -840,7 +840,7 @@ class LocalToon(DistributedToon.DistributedToon, LocalAvatar.LocalAvatar):
         self.updatePieButton()
 
     def enableHackSlashMelee(self, spawnHostiles=True):
-        """Enable real-time rubber-hose melee (KH hack-and-slash prototype)."""
+        """Enable real-time rubber-hose Oswald stretch-punch melee."""
         if self.hackSlashCombat is None:
             from toontown.hackslash.MeleeCombat import MeleeCombatController
             self.hackSlashCombat = MeleeCombatController(self)

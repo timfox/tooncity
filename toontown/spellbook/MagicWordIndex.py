@@ -826,7 +826,7 @@ class Fireworks(MagicWord):
             del self.fireworkShows[zoneId]
 
 
-# Hack-slash demo toggle lives in toontown/hackslash to keep combat merges small.
+# Rubber-hose melee toggle lives in toontown/hackslash to keep combat merges small.
 from toontown.hackslash.MagicWords import ToggleHackSlash  # noqa: F401
 
 # Instantiate all classes defined here to register them.

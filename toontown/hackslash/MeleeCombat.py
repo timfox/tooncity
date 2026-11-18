@@ -1,6 +1,6 @@
-"""Real-time rubber-hose melee controller.
+"""Real-time rubber-hose Oswald stretch-punch melee controller.
 
-Combo-ish swings with cartoon squash/stretch timing and soft targeting.
+Combo fists with cartoon squash/stretch timing and soft targeting.
 Client-local prototype — does not enter turn-based battle FSM.
 """
 
@@ -389,7 +389,7 @@ class MeleeCombatController(DirectObject):
         return Task.done
 
     def _showComboCounter(self, hits):
-        """Readable KH-style hit counter — pops on each connect, then settles."""
+        """Readable punch counter — pops on each connect, then settles."""
         text = '%d %s' % (int(hits), HackSlashConfig.COMBO_COUNTER_LABEL)
         colors = HackSlashConfig.COMBO_COUNTER_COLORS
         color = colors[min(max(0, hits - 1), len(colors) - 1)]
@@ -471,7 +471,7 @@ class MeleeCombatController(DirectObject):
         self._comboHits = 0
 
     def _playLauncher(self, target, hitIndex):
-        """Upward juggle with hang time — clearer KH-style mid/finisher pop."""
+        """Upward juggle with hang time — clearer mid/finisher stretch pop."""
         self._clearLaunch()
         try:
             node = target

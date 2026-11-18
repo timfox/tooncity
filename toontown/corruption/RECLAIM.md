@@ -95,9 +95,10 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ## Ink Overlord finale phases
 
 Silly Street campaign (`~advancecampaign force` to skip ahead, then
-`~startcampaign` on zone `2100`). Toontown spiritual-sequel framing — KH combat
-feel only, **no keyblades**. Victory leaves room for an Oswald twist tease
-(he caused the corruption); full dialogue is out of scope here.
+`~startcampaign` on zone `2100`). Toontown spiritual-sequel framing —
+rubber-hose Oswald stretch-punch combat only, **no keyblades**. Victory
+leaves room for an Oswald twist tease (he caused the corruption); full
+dialogue is out of scope here.
 
 1. **Phase 1 — Rising**: magenta telegraph squash/stretch + Silly Meter phase-one
    SFX, HUD `OVERLORD · P1 RISE`, wind-up chip `P1 MAGENTA SWELL`.

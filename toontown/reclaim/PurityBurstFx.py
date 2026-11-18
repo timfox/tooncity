@@ -2,7 +2,7 @@
 
 FOV camera punch + layered aspect2d juice on top of the director's flash/ring.
 Mirrors FinalePhaseFx / MeleeCombat finisher patterns, but warmer and cleaner
-so reclaim reads as a KH×Toontown payoff — never stomps hood geom tint/fog.
+so reclaim reads as a Toontown payoff — never stomps hood geom tint/fog.
 """
 
 from math import cos, pi, sin
@@ -132,7 +132,7 @@ class PurityBurstFxClient(DirectObject):
         self._baseFov = None
 
     def _playCameraBob(self):
-        """Brief KH-style pull-back then settle — readable without dizzying."""
+        """Brief cartoon pull-back then settle — readable without dizzying."""
         self._restoreCamera()
         try:
             cam = base.camera  # noqa: F821

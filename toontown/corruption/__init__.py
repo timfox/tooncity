@@ -1,4 +1,4 @@
-"""Corrupt toons and neighborhood pollution (KH x Toontown).
+"""Corrupt toons and neighborhood pollution (Toontown spiritual sequel).
 
 CorruptToons prefer ink-tinted Toon Actor / DNA silhouettes (card fallback),
 chase, and telegraph attacks: Ink Smudge purple melee wind-up, Sludge Brute
