@@ -12,6 +12,8 @@ from toontown.toonbase import ToontownGlobals
 HUB_ZONE = ToontownGlobals.ToontownCentral
 HUB_NAME = 'Toontown Central'
 PROTAGONIST = 'Oswald'
+# Alias used by handoff / PlayEntry celebration UX.
+RECLAIM_FACE = PROTAGONIST
 
 # Per reclaim: multiplicative bump applied to HackSlashConfig.COMBO_DAMAGE.
 POWER_BUMP_PER_RECLAIM = 0.08
@@ -33,9 +35,13 @@ ACTS = (
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
         'banner': 'Act 1 — Oswald calls for help! Corruption stains Loopy Lane!',
+        # Client celebration copy (title / Oswald tip / next-street cue).
+        'handoffTitle': 'LOOPY LANE IS PURE!',
         'handoff': (
             'Oswald cheers: Loopy Lane is pure again! '
-            'Next: Punchline Place (zone 2300).'),
+            'Next: Punchline Place.'),
+        'nextCue': 'Oswald points the tunnel → Punchline Place',
+        'nextStreet': 'Punchline Place',
     },
     {
         'id': 'punchline',
@@ -56,9 +62,12 @@ ACTS = (
         'banner': (
             'Act 2 — Oswald leads the reclaim — '
             'Punchline Place is drowning in sludge!'),
+        'handoffTitle': 'PUNCHLINE PLACE LAUGHS CLEAN!',
         'handoff': (
             'Oswald points ahead: Punchline laughs clean! '
-            'Finale awaits on Silly Street (zone 2100).'),
+            'Finale awaits on Silly Street.'),
+        'nextCue': 'Oswald steers you on → Silly Street finale',
+        'nextStreet': 'Silly Street',
     },
     {
         'id': 'finale',
@@ -76,9 +85,12 @@ ACTS = (
             'Finale Phase 1 — Oswald stands with you against '
             'the Ink Overlord on Silly Street!'),
         # Twist: trusted Oswald was the source of the neighborhood pollution.
+        'handoffTitle': 'VICTORY…?',
         'handoff': (
-            'Victory…? Oswald smiles too wide. '
+            'Oswald smiles too wide. '
             'The ink corrupting Toon City was his all along.'),
+        'nextCue': 'Oswald caused the corruption',
+        'nextStreet': None,
         'finale': True,
         # Client-readable phase index (1-based) for reclaim director / telegraphs.
         'finalePhase': 1,
