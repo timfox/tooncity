@@ -254,6 +254,19 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         play_names = _class_and_func_names(self.play_entry_tree)
         self.assertIn('PlayEntryClient', play_names)
         self.assertIn('ensurePlayEntryClient', play_names)
+        # Hub tip + soft next-street cue (discoverability without ~startcampaign).
+        play_methods = _class_method_names(
+            self.play_entry_tree, 'PlayEntryClient')
+        self.assertIn('_showHubTip', play_methods)
+        self.assertIn('_latchSoftNextCue', play_methods)
+
+        campaign_names = _class_and_func_names(self.campaign_tree)
+        self.assertIn('hubPlayEntryTip', campaign_names)
+        self.assertIn('handoffTravelHint', campaign_names)
+        hub_tip = _toplevel_value(self.campaign_tree, 'HUB_TIP')
+        self.assertIsNotNone(hub_tip)
+        hub_zone = _toplevel_value(self.campaign_tree, 'HUB_ZONE')
+        self.assertIsNotNone(hub_zone)
 
         # Static read: PlayEntry wires STREET_PACK delays for the three packs.
         play_src = _read('toontown/campaign/PlayEntry.py')
@@ -261,6 +274,23 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertIn(pack_id, play_src)
         self.assertIn('CampaignGlobals.ACTS', play_src)
         self.assertIn('requestStreetEvent', play_src)
+        self.assertIn('HUB_ZONE', play_src)
+        self.assertIn('_requestCampaign()', play_src)
+        self.assertIn('_showHubTip', play_src)
+        # Auto path prefers campaign (C) — not street-pack reclaim (R).
+        auto_idx = play_src.find('def _autoStartReclaim')
+        self.assertGreater(auto_idx, 0)
+        auto_snip = play_src[auto_idx:auto_idx + 700]
+        self.assertIn('_requestCampaign()', auto_snip)
+        self.assertNotIn('_requestReclaim()', auto_snip)
+
+        director_src = _read('toontown/campaign/CampaignDirectorAI.py')
+        self.assertIn('handoffTravelHint', director_src)
+        self.assertNotIn('~startcampaign', director_src)
+
+        pollution_src = _read('toontown/corruption/PollutionManagerAI.py')
+        self.assertIn('STATE_ACTIVE', pollution_src)
+        self.assertIn('startCampaign', pollution_src)
 
     def test_corrupt_archetypes_registered(self):
         cg = self.corruption

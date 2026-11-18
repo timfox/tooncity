@@ -29,8 +29,8 @@ class CampaignDirectorAI(DirectObject):
         if self.state == CampaignGlobals.STATE_VICTORY:
             return (
                 'Campaign VICTORY — purity restored, but Oswald caused '
-                'the corruption! Reclaims: %s. ~startcampaign to replay.'
-                % self.reclaimCount)
+                'the corruption! Reclaims: %s. Replay from %s / C on Loopy.'
+                % (self.reclaimCount, CampaignGlobals.HUB_NAME))
         act = CampaignGlobals.ACTS[min(
             self.actIndex, len(CampaignGlobals.ACTS) - 1)]
         unlocked = [
@@ -41,19 +41,17 @@ class CampaignDirectorAI(DirectObject):
         if act.get('finale'):
             phaseNote = ' | finale phase %s/2' % (self._finalePhase + 1)
         return (
-            'Campaign %s | act %s/%s (%s zone %s)%s | reclaims %s | '
-            'unlocked: %s | hub %s (%s)'
+            'Campaign %s | act %s/%s (%s)%s | reclaims %s | '
+            'unlocked: %s | hub %s'
             % (
                 CampaignGlobals.STATE_NAMES.get(self.state, '?'),
                 self.actIndex + 1,
                 len(CampaignGlobals.ACTS),
                 act['name'],
-                act['zoneId'],
                 phaseNote,
                 self.reclaimCount,
                 ', '.join(unlocked),
                 CampaignGlobals.HUB_NAME,
-                CampaignGlobals.HUB_ZONE,
             ))
 
     def startCampaign(self, toon):
@@ -69,23 +67,21 @@ class CampaignDirectorAI(DirectObject):
         act = CampaignGlobals.ACTS[self.actIndex]
         zoneId = int(toon.zoneId)
         if zoneId != int(act['zoneId']):
+            face = getattr(
+                CampaignGlobals, 'RECLAIM_FACE',
+                getattr(CampaignGlobals, 'PROTAGONIST', 'Oswald'))
             return (
-                '%s Go to %s (zone %s), then ~startcampaign again. '
-                'Hub HQ: %s (%s).'
-                % (
-                    act['banner'],
-                    act['name'],
-                    act['zoneId'],
-                    CampaignGlobals.HUB_NAME,
-                    CampaignGlobals.HUB_ZONE,
-                ))
+                '%s needs you on %s — head there and the reclaim packs '
+                'will field.' % (face, act['name']))
         return self._startActReclaim(toon, act)
 
     def advanceCampaign(self, toon, force=False):
         """Unlock / jump to the next act (moderator force for demos)."""
         self._lastToonId = getattr(toon, 'doId', None)
         if self.state == CampaignGlobals.STATE_VICTORY:
-            return 'Campaign already complete. ~startcampaign to replay.'
+            return (
+                'Campaign already complete. Head to %s / press C on Loopy '
+                'to replay.' % CampaignGlobals.HUB_NAME)
 
         nextIndex = self.actIndex + 1
         if nextIndex >= len(CampaignGlobals.ACTS):
@@ -104,14 +100,11 @@ class CampaignDirectorAI(DirectObject):
         self._finalePhase = 0
         self.state = CampaignGlobals.STATE_ACTIVE
         act = CampaignGlobals.ACTS[self.actIndex]
-        self._tellToon(
-            toon,
-            'NEXT HOOD: %s (zone %s). %s'
-            % (act['name'], act['zoneId'], act['banner']))
+        hint = CampaignGlobals.handoffTravelHint(act)
+        self._tellToon(toon, 'NEXT HOOD: %s. %s' % (act['name'], act['banner']))
         return (
-            'Advanced to act %s: %s (zone %s). Teleport there, then '
-            '~startcampaign. %s'
-            % (self.actIndex + 1, act['name'], act['zoneId'], act['banner']))
+            'Advanced to act %s: %s. %s %s'
+            % (self.actIndex + 1, act['name'], hint, act['banner']))
 
     def _actParams(self, act):
         """Resolve start() kwargs, including finale phase 2 overrides."""
@@ -182,21 +175,10 @@ class CampaignDirectorAI(DirectObject):
             transitionSting=params.get('transitionSting', False))
         banner = params.get('banner') or act.get('banner')
         self._tellToon(toon, banner)
-        phaseTag = ''
-        if params.get('finalePhase'):
-            phaseTag = ' finalePhase=%s' % params.get('finalePhase')
+        # Player-facing attach copy — melee is auto-armed by PlayEntry.
         return (
-            '%s Reclaim started in %s (zone %s, pollution %.2f, pack %s, hp %s)%s. '
-            'Enable melee with ~hackslash 0.'
-            % (
-                banner,
-                act['name'],
-                zoneId,
-                params.get('seedPollution', ReclaimGlobals.RECLAIM_START_POLLUTION),
-                params.get('packSize', ReclaimGlobals.PACK_SIZE),
-                params.get('corruptHp', '?'),
-                phaseTag,
-            ))
+            '%s Packs inbound on %s — press F to fight, Shift to dodge!'
+            % (banner, act['name']))
 
     def _stopActiveReclaim(self):
         if self._activeZoneId is None:
@@ -266,10 +248,9 @@ class CampaignDirectorAI(DirectObject):
             self._finalePhase = 0
             self._activeZoneId = None
             nxt = CampaignGlobals.ACTS[nextIndex]
-            self._tellToon(
-                toon,
-                '%s Teleport to zone %s and ~startcampaign.'
-                % (handoff, nxt['zoneId']))
+            # Discoverable handoff — street name only, no zone ids / magic words.
+            hint = CampaignGlobals.handoffTravelHint(nxt)
+            self._tellToon(toon, '%s %s' % (handoff, hint))
             messenger.send(  # noqa: F821
                 'campaignActUnlocked', [nextIndex, nxt['zoneId']])
         else:
