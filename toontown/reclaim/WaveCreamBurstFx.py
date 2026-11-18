@@ -4,7 +4,8 @@ Wave clear: soft aspect2d cream flash, expanding ring, and sunny flecks.
 Wave announce: cream edge-strip pulse framing the wave plate + tip flecks
 plus StreetSparkle-style cream sparkle flecks along the cream frame.
 Wave-clear cream shimmer hang (WaveClearCreamShimmerFx) follows this burst
-as a delayed residual layer — do not restage flash/ring there.
+as a delayed residual layer, then a quieter cream aftershock — do not
+restage flash/ring there.
 
 Layers with ReclaimCheer pitch swell and StreetColorWash — never stomps hood
 geom tint / fog / full purity FOV punch. Toontown spiritual-sequel tone only —

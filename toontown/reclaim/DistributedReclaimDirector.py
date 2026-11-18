@@ -254,7 +254,7 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
             ensureWaveCreamBurstFxClient()
         except Exception:
             pass
-        # Cream shimmer hang after the wave-clear cream burst settles.
+        # Cream shimmer hang + delayed cream aftershock after wave-clear burst.
         try:
             from toontown.reclaim.WaveClearCreamShimmerFx import (
                 ensureWaveClearCreamShimmerFxClient)
