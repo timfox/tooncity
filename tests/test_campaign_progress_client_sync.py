@@ -284,6 +284,13 @@ class CampaignProgressClientSyncTests(unittest.TestCase):
         self.assertIn("accept('campaignActUnlocked'", src)
         self.assertIn('_onCampaignActUnlocked', src)
         self.assertIn('CorruptStreetBreadcrumb', src)
+        # Sync must raise crumb unlock latch (not tip/soft-next only).
+        sync_idx = src.find('def _onCampaignProgressSync')
+        self.assertGreater(sync_idx, 0)
+        next_idx = src.find('\n    def ', sync_idx + 1)
+        sync_win = src[sync_idx:next_idx if next_idx > 0 else sync_idx + 1800]
+        self.assertIn('noteCampaignActUnlocked', sync_win)
+        self.assertIn("mirror.get('unlockedThrough'", sync_win)
 
     def test_oswald_presence_accepts_sync(self):
         rel = 'toontown/campaign/OswaldPresence.py'

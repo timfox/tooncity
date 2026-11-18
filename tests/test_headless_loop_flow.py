@@ -556,11 +556,22 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn("mode == 'dim'", crumb_src)
         self.assertIn('streetBreadcrumbDimmed', crumb_src)
         self.assertIn('unlockedThrough=unlocked', crumb_src)
+        # Login sync rehydrates unlock latch so crumbs undim after relog.
+        self.assertIn('_onCampaignProgressSync', crumb_src)
+        self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', crumb_src)
         play_src = _read('toontown/campaign/PlayEntry.py')
         self.assertIn("self.accept('campaignActUnlocked'", play_src)
         self.assertIn('_onCampaignActUnlocked', play_src)
         self.assertIn('_mirrorCampaignActUnlocked', play_src)
         self.assertIn('noteCampaignActUnlocked', play_src)
+        play_sync_idx = play_src.find('def _onCampaignProgressSync')
+        self.assertGreater(play_sync_idx, 0)
+        play_sync_next = play_src.find('\n    def ', play_sync_idx + 1)
+        play_sync = play_src[
+            play_sync_idx:(
+                play_sync_next if play_sync_next > 0
+                else play_sync_idx + 1800)]
+        self.assertIn('noteCampaignActUnlocked', play_sync)
         director_src = _read('toontown/campaign/CampaignDirectorAI.py')
         self.assertIn("'campaignActUnlocked'", director_src)
         for banned in ('keyblade', 'kingdom hearts', 'sora'):

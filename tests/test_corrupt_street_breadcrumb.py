@@ -200,6 +200,9 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         # Act-unlock soft-gate consumer (dim locked crumbs).
         self.assertIn("self.accept('campaignActUnlocked'", self.src)
         self.assertIn('unlockedThrough', self.src)
+        # Login progress sync rehydrates unlock latch after relog.
+        self.assertIn('_onCampaignProgressSync', self.src)
+        self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', self.src)
 
         # Rubber-hose placemarker copy for all three reclaim tunnels.
         for needle in (

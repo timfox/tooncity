@@ -43,7 +43,9 @@ does not rewrite those packages. Soft-gate (#317+#320): locked campaign
 acts do not get a full reclaim crumb — dim placemarkers keep explore
 visible while the progression ladder reads from the hub. Client latch
 tracks unlockedThrough via campaignActUnlocked (PlayEntry / purity
-mirror). Rubber-hose Toontown voice — no KH.
+mirror) and campaignProgressSync (login rehydrate so crumbs undim
+after relog without waiting for a live unlock). Rubber-hose Toontown
+voice — no KH.
 """
 
 from __future__ import annotations
@@ -68,7 +70,8 @@ notify = directNotify.newCategory('CorruptStreetBreadcrumb')
 _HUB_ZONE = ToontownGlobals.ToontownCentral
 
 # Session latch for campaign act unlock (soft-gate parity with R).
-# Relog sync is a separate package; default 0 = Loopy-only until unlock.
+# Raised by campaignActUnlocked and campaignProgressSync (login rehydrate).
+# Default 0 = Loopy-only until unlock / sync.
 _clientUnlockedThrough = 0
 # Live hub breadcrumb instance (set by ensureCorruptStreetBreadcrumbs).
 _activeBreadcrumb = None
@@ -551,6 +554,15 @@ class CorruptStreetBreadcrumb(DirectObject):
         self.accept('purityRestoreFx', self._onPurityRestore)
         # AI / PlayEntry purity mirror — refresh crumbs when acts unlock.
         self.accept('campaignActUnlocked', self._onCampaignActUnlocked)
+        # Login / persist push — raise latch so dim crumbs undim after relog.
+        try:
+            from toontown.campaign import CampaignGlobals
+            syncMsg = getattr(
+                CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
+                'campaignProgressSync')
+        except Exception:
+            syncMsg = 'campaignProgressSync'
+        self.accept(syncMsg, self._onCampaignProgressSync)
         self.accept('exitPlayground', self.stop)
         self._requestStreetPollution()
         self.refresh()
@@ -562,6 +574,14 @@ class CorruptStreetBreadcrumb(DirectObject):
         self.ignore('pollutionChanged')
         self.ignore('purityRestoreFx')
         self.ignore('campaignActUnlocked')
+        try:
+            from toontown.campaign import CampaignGlobals
+            syncMsg = getattr(
+                CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
+                'campaignProgressSync')
+        except Exception:
+            syncMsg = 'campaignProgressSync'
+        self.ignore(syncMsg)
         self.ignore('exitPlayground')
         self._clearMarkers()
         self._clearBirdsReturnCreamWash()
@@ -657,6 +677,18 @@ class CorruptStreetBreadcrumb(DirectObject):
             setClientUnlockedThrough(nextIndex)
             return
         noteCampaignActUnlocked(nextIndex, zoneId)
+
+    def _onCampaignProgressSync(
+            self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
+        """Rehydrate unlock latch from AI progress so hub crumbs undim on relog.
+
+        state / chaseCleared / reclaimCount accepted for campaignProgressSync
+        arity (tip / presence / power paths); crumbs only need unlock cursor.
+        """
+        if not self._active:
+            setClientUnlockedThrough(unlockedThrough)
+            return
+        noteCampaignActUnlocked(unlockedThrough)
 
     def refresh(self):
         if not self._active:
