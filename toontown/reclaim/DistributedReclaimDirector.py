@@ -177,15 +177,23 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.__showStatusHud()
 
     def announceWaveCleared(self, waveIndex):
+        # Light banner pop + cheer pitch swell (ReclaimCheer) between packs.
         self.__showBanner(
             ReclaimGlobals.BANNER_WAVE_CLEARED,
             (0.7, 0.95, 1.0, 1.0),
-            hold=1.4)
+            hold=1.4, pop=True)
         zoneId = self.reclaimZoneId or getattr(self, 'zoneId', 0)
         self.__showSubBanner(
             ReclaimGlobals.waveClearedOswaldTip(waveIndex, zoneId=zoneId),
             (0.85, 0.95, 1.0, 1.0),
             hold=1.4)
+        try:
+            from toontown.reclaim.ReclaimCheer import ensureReclaimCheerClient
+            ensureReclaimCheerClient()
+        except Exception:
+            pass
+        messenger.send(
+            'reclaimWaveCleared', [self.reclaimZoneId, int(waveIndex)])
 
     def announceReclaimComplete(self):
         self.__hideTelegraphCue()

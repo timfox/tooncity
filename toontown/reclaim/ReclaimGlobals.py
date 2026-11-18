@@ -115,6 +115,18 @@ PURITY_STING_SFX = 'phase_4/audio/sfx/AA_sound_whistle.ogg'
 PURITY_STING_VOLUME = 0.9
 # Second cheer beat (jump) layered by ReclaimCheer client.
 PURITY_CHEER_SFX = 'phase_3.5/audio/sfx/AV_jump_2.ogg'
+# Rubber-hose cheer pitch swell (SFX playRate ramp on wave clear / purity).
+# Start low → peak bright → soft settle; wave clear stays quieter than purity.
+CHEER_PITCH_START = 0.78
+CHEER_PITCH_PEAK = 1.42
+CHEER_PITCH_END = 1.06
+CHEER_PITCH_SWELL_SEC = 0.16
+CHEER_PITCH_SETTLE_SEC = 0.14
+CHEER_PITCH_VOLUME = 0.88
+CHEER_PITCH_VOLUME_WAVE = 0.7
+# Light avatar squash on wave clear (full bounce stays on purity restore).
+WAVE_CLEAR_BOUNCE_PEAK = 1.08
+WAVE_CLEAR_BOUNCE_SEC = 0.1
 
 # Cartoon camera punch on purity restore (between finisher 12° and finale 18°).
 PURITY_FOV_PUNCH = 15.0

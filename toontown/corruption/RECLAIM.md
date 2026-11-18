@@ -29,7 +29,9 @@ Sections below remain **debug / magic-word** fallbacks.
    `encntr_general_bg` bed; purity clear → bright hood bed + cheer/sting (#21).
 5. At `0.0`, director announces reclaim complete and client plays a stronger purity
    restore moment (banner + bloom + sting + FOV/camera punch + rays/sparks via
-   `PurityBurstFx` + `ReclaimCheer` local Happy/wave + nearby nudge).
+   `PurityBurstFx` + `ReclaimCheer` local Happy/wave + rubber-hose cheer pitch
+   swell + nearby nudge). Mid-reclaim wave clears fire a quieter pitch swell +
+   light bounce via `reclaimWaveCleared`.
 
 ## Discoverable play (preferred)
 
