@@ -1,10 +1,24 @@
-# Corruption → reclaim (slice 3 hookup)
+# Corruption → reclaim (slice 3)
 
-This package is the slice 2 foundation for neighborhood reclaim:
+## Loop
 
 1. `PollutionManager` holds per-zone pollution `0..1` (pure → polluted).
-2. `DistributedCorruptToon` stubs spawn in a zone (magic word `~spawncorrupt`).
-3. Defeating a corrupt toon calls `PollutionManagerAI.onCorruptToonDefeated`, which lowers that zone's scalar by `POLLUTION_PER_DEFEAT`.
-4. When pollution hits `0.0`, AI emits `pollutionReclaimed` for purity restore FX / NPC cheer (slice 3).
+2. `~startreclaim` generates a `DistributedReclaimDirector` in the invoker zone,
+   seeds partial pollution, and spawns CorruptToon packs.
+3. Melee (`~hackslash 0`) soft-targets CorruptToons; `applyHackSlashHit` →
+   `requestHackSlashHit` → AI `takeHackSlashDamage`.
+4. Defeats lower pollution via `PollutionManagerAI.onCorruptToonDefeated`.
+5. At `0.0`, director announces reclaim complete and client plays purity restore FX.
 
-Demo without melee PR: `~pollute`, `~purify`, `~spawncorrupt`. Soft-lock / hits should target `HackSlashTarget` once slice 1 merges.
+## Demo
+
+Preferred street: Toontown Central Loopy Lane (`2200`).
+
+```
+~startreclaim
+~hackslash 0
+# clear packs with F / LMB
+# optional: ~spawncorrupt 2   or   ~stopreclaim
+```
+
+Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.

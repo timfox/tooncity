@@ -2,7 +2,8 @@ from panda3d.core import (
     CardMaker, NodePath, TextNode, TransparencyAttrib, Vec4, Point3)
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed import DistributedNode
-from direct.interval.IntervalGlobal import Sequence, LerpScaleInterval, Func
+from direct.interval.IntervalGlobal import (
+    LerpColorScaleInterval, LerpScaleInterval, Parallel, Sequence, Func)
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.HackSlashTarget import HackSlashTarget
@@ -23,6 +24,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.nametagNP = None
         self.shadow = None
         self._defeatIval = None
+        self._hitIval = None
 
     def generate(self):
         self.assign(render.attachNewNode('DistributedCorruptToon'))
@@ -37,6 +39,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._defeatIval is not None:
             self._defeatIval.finish()
             self._defeatIval = None
+        if self._hitIval is not None:
+            self._hitIval.finish()
+            self._hitIval = None
         self.detachNode()
         DistributedNode.DistributedNode.disable(self)
 
@@ -120,6 +125,50 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         )
         self._defeatIval.start()
 
+    def getHackSlashName(self):
+        return self.name
+
+    def getHackSlashPos(self):
+        return self.getPos(render)
+
     def takeHackSlashDamage(self, amount, attackerId=None):
         # Damage is AI-authoritative; client prediction can land later.
         return 0
+
+    def applyHackSlashHit(self, damage, hitIndex, attacker):
+        """Bridge SoftTarget/MeleeCombat → AI requestHackSlashHit RPC."""
+        if not self.isHackSlashAlive():
+            return False
+        amount = max(0, int(damage))
+        if amount <= 0:
+            return False
+        self.sendUpdate('requestHackSlashHit', [amount])
+        self.__playHitReaction(hitIndex, attacker)
+        return True
+
+    def __playHitReaction(self, hitIndex, attacker):
+        if self._hitIval is not None:
+            self._hitIval.finish()
+        stretch = 1.12 + 0.12 * hitIndex
+        squash = 0.72 - 0.04 * hitIndex
+        target = self.geom if self.geom is not None else self
+        self._hitIval = Sequence(
+            Parallel(
+                LerpScaleInterval(target, 0.06, (stretch, stretch, squash)),
+                LerpColorScaleInterval(target, 0.06, Vec4(1.6, 0.7, 1.9, 1)),
+            ),
+            Parallel(
+                LerpScaleInterval(target, 0.1, (0.9, 0.9, 1.2)),
+                LerpColorScaleInterval(target, 0.1, Vec4(1, 1, 1, 1)),
+            ),
+            LerpScaleInterval(target, 0.08, (1, 1, 1)),
+        )
+        self._hitIval.start()
+        try:
+            away = self.getPos(render) - attacker.getPos(render)
+            away.setZ(0)
+            if away.length() > 0.01:
+                away.normalize()
+                self.setPos(self.getPos() + away * (0.7 + 0.25 * hitIndex))
+        except Exception:
+            pass

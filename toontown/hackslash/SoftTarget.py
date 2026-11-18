@@ -86,15 +86,7 @@ class SoftTargetFinder:
     def _iterCandidates(self):
         seen = set()
 
-        hostiles = getattr(self.avatar, 'hackSlashDemoHostiles', None) or []
-        for hostile in hostiles:
-            if hostile is not None:
-                key = self._key(hostile)
-                if key not in seen:
-                    seen.add(key)
-                    yield hostile
-
-        # Explicit HackSlashTarget DOs (future CorruptToon).
+        # Prefer live CorruptToon / HackSlashTarget DOs over local demo dummies.
         for obj in list(getattr(base.cr, 'doId2do', {}).values()):  # noqa: F821
             if obj is self.avatar:
                 continue
@@ -109,7 +101,15 @@ class SoftTargetFinder:
                     seen.add(key)
                     yield obj
 
-        # Street suits as stand-in hostiles until corrupt toons land.
+        hostiles = getattr(self.avatar, 'hackSlashDemoHostiles', None) or []
+        for hostile in hostiles:
+            if hostile is not None:
+                key = self._key(hostile)
+                if key not in seen:
+                    seen.add(key)
+                    yield hostile
+
+        # Street suits as stand-in hostiles when no corrupt toons are present.
         try:
             from toontown.suit.DistributedSuitBase import DistributedSuitBase
         except ImportError:

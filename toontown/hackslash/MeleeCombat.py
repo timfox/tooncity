@@ -209,7 +209,12 @@ class MeleeCombatController(DirectObject):
                 return
         landed = False
         try:
-            landed = bool(target.applyHackSlashHit(damage, hitIndex, self.avatar))
+            if hasattr(target, 'applyHackSlashHit'):
+                landed = bool(target.applyHackSlashHit(damage, hitIndex, self.avatar))
+            elif hasattr(target, 'takeHackSlashDamage'):
+                # Corruption AI-style API fallback if a target skips the client bridge.
+                attackerId = getattr(self.avatar, 'doId', None)
+                landed = bool(target.takeHackSlashDamage(damage, attackerId))
         except Exception:
             landed = False
         if landed:
