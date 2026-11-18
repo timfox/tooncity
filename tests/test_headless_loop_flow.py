@@ -2,28 +2,31 @@
 """Headless behavioral deepen: explore → fight → reclaim → Oswald twist.
 
 Panda-free proof of the multi-hood loop already shipped on develop (through
-systems waves ending at PR #369 / wave G). Complements
+systems waves ending at PR #376 / wave H). Complements
 `test_headless_loop_smoke.py` (registration / juice AST) and the focused
 wave / act-param / kit suites by chaining the spiritual-sequel loop:
 
   explore — zone messengers, Oswald plaza NPC + reclaim cheer (#354) +
             first-meet tip / oswaldMet persist (#360) + oswaldCheered
-            latch after reclaim cheer (#369), Loopy unease, hub
-            breadcrumb act-unlock dim (#332) + progress-sync rehydrate
-            (#357), chase-pending hub tip (#342)
+            latch after reclaim cheer (#369) + soft-next greets from
+            cheer/unlocks (#373), Loopy unease, hub breadcrumb act-unlock
+            dim (#332) + progress-sync rehydrate (#357), chase-pending
+            hub tip (#342)
   fight   — archetype kits, melee interrupt (#329/#348/#352/#363),
             Brute/Gagster counters (#343), Overlord rain/slam/ink_surge
             counters (#359), Smudge ink_dash/ink_splat interrupt+counters
             (#363), Oswald betrayal counters (#352), authoritative server
-            melee damage from hitIndex (#366), juggle hang stun,
-            reclaim KO fail + retry (#338), soft-lock boss priority (#339)
-            + sticky yield (#347) + cycle-with-lock prefer (#356), Overlord
-            P1 rising slam (#334) + move-id telegraph (#340) + rain linger
-            sludge (#362), boss/chase HP bar (#331)
+            melee damage from hitIndex (#366) + CampaignPower reclaimCount
+            AI table (#371), juggle hang stun, reclaim KO fail + retry
+            (#338), soft-lock boss priority (#339) + sticky yield (#347) +
+            cycle-with-lock prefer (#356) + Elite/Ambush pack prefer
+            (#375) + reclaimAmbushSpawn pressure/soft-lock cue (#372),
+            Overlord P1 rising slam (#334) + move-id telegraph (#340) +
+            rain linger sludge (#362), boss/chase HP bar (#331)
   reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
             modifiers / earlier-wave ambush + Silly between-swell
             (#345/#358) + ACTS C path elite/ambush mirror (#365) +
-            finale C phase2 elite/ambush beside Unleashed adds (#388),
+            finale C phase2 elite/ambush beside Unleashed adds (#376),
             street-clear jellybean/laff reward (#361), campaign progress
             client sync on login (#333), CampaignPower reclaimCount
             rehydrate (#349) + sync/purity dedupe (#367), SECURED
@@ -31,8 +34,8 @@ wave / act-param / kit suites by chaining the spiritual-sequel loop:
             client relay (#351)
   twist   — betrayal chase + kit + chase resume (#330) + false-clear gate
             (#341) + mid-chase HP persist (#350) + Oswald telegraph/hit AV
-            (#344) + chase-clear epilogue + hub stain (#336) + washed-plaza
-            epilogue beat (#353)
+            (#344) + chase-clear epilogue + hub stain (#336) + hub-stain
+            securedZones mirror (#374) + washed-plaza epilogue beat (#353)
 
 No Panda3D, no resources, no invented gameplay — only concrete symbols and
 pure helpers already on develop. Not a cream-FX deepen / no KH.
@@ -762,10 +765,31 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(subject(cg.ARCHETYPE_INK, name='Ink Overlord'))
         self.assertTrue(subject(cg.ARCHETYPE_INK, finalePhase=1))
         self.assertTrue(subject(cg.ARCHETYPE_INK, finalePhase=2))
+        # Elite / Ambush rename prefixes permanently prefer (#375) — mid-wave
+        # scrums must not glue onto nearer fodder (distinct from #372 pulse).
+        self.assertFalse(subject(cg.ARCHETYPE_INK, name='Ink Smudge'))
+        self.assertFalse(subject(cg.ARCHETYPE_INK, name='Elite'))
+        self.assertFalse(subject(cg.ARCHETYPE_INK, name='Ambush'))
+        self.assertTrue(subject(cg.ARCHETYPE_INK, name='Elite Ink Smudge'))
+        self.assertTrue(subject(
+            cg.ARCHETYPE_BRUTE, name='Ambush Sludge Brute'))
+        self.assertTrue(subject(cg.ARCHETYPE_INK, name='elite ink smudge'))
+        elite = ('doId', 5)
+        ambush = ('doId', 6)
+        self.assertEqual(
+            pick([(False, 2.0, smudge), (True, 11.0, elite)]),
+            elite)
+        self.assertEqual(
+            pick([(False, 1.5, smudge), (True, 10.0, ambush)]),
+            ambush)
         soft_src = _read('toontown/hackslash/SoftTarget.py')
         self.assertIn('pickSoftLockAcquire', soft_src)
         self.assertIn('isSoftLockPrioritySubject', soft_src)
         self.assertIn('TARGET_PRIORITY_ENABLED', soft_src)
+        self.assertIn('Elite / Ambush', soft_src)
+        cg_src = _read('toontown/corruption/CorruptionGlobals.py')
+        self.assertIn("startswith('elite ')", cg_src)
+        self.assertIn("startswith('ambush ')", cg_src)
         # Sticky hold yields glued adds when Overlord/Oswald is in cone (#347).
         self.assertIn('shouldStickyYieldToPriority', soft_src)
         self.assertGreater(cfg.TARGET_LOCK_HOLD_SEC, 0.0)
@@ -865,6 +889,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('hitIndex', req_snip)
         self.assertIn('counterFlags', req_snip)
         self.assertIn('meleeDamageFromHitIndex', req_snip)
+        # CampaignPower reclaimCount table push (#371) — AI hit path must
+        # scale from director reclaimCount, not process baseline alone.
+        self.assertIn('__campaignPowerDamageTable', req_snip)
+        self.assertIn('damageTable=table', req_snip)
         self.assertNotIn('min(80', req_snip)
         self.assertNotIn('damage=', req_snip.split('(', 1)[1].split(')', 1)[0])
         self.assertIn('takeHackSlashDamage(amount', req_snip)
@@ -2190,11 +2218,17 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         pollution_ai = _read('toontown/corruption/PollutionManagerAI.py')
         self.assertIn('applyBetrayalHubStain', pollution_ai)
         self.assertIn('clearBetrayalHubStain', pollution_ai)
-        # Hub stain drops campaign securedZones (parity with contested).
+        # Hub stain drops campaign securedZones (#374; contested parity) so
+        # hydrate cannot reseal TTC from a stale progress blob.
         apply_snip = pollution_ai[pollution_ai.find('def applyBetrayalHubStain'):]
         apply_snip = apply_snip[:apply_snip.find('def clearBetrayalHubStain')]
         self.assertIn('_mirrorSecuredZoneToCampaign', apply_snip)
         self.assertIn('secured=False', apply_snip)
+        hydrate_idx = director_src.find('def _hydrateFromToon')
+        self.assertGreater(hydrate_idx, 0)
+        hydrate_snip = director_src[hydrate_idx:hydrate_idx + 2400]
+        self.assertIn('mirrors secured=False', hydrate_snip)
+        self.assertIn('_syncHubStain', hydrate_snip)
 
         confront_rel = 'toontown/campaign/HubStainConfront.py'
         self.assertTrue((REPO_ROOT / confront_rel).is_file())
