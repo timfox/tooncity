@@ -27,6 +27,7 @@ from . import HitJuice
 from .CreamHangSparkleFx import CreamHangSparkleFx
 from .CreamSlamFlashFx import CreamSlamFlashFx
 from .DemoHostile import spawnDemoHostiles
+from .DodgeCancelCreamWashFx import DodgeCancelCreamWashPulse
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
 from .HitSparkFx import HitSparkFx
@@ -87,6 +88,7 @@ class MeleeCombatController(DirectObject):
         self._hurtAttackBuffered = False
         self._hurtDodgeBuffered = False
         self._hurtCreamWash = HurtStaggerCreamWashPulse()
+        self._dodgeCancelCreamWash = DodgeCancelCreamWashPulse()
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
         self._hitStop = HitStopFx(avatar)
@@ -192,6 +194,7 @@ class MeleeCombatController(DirectObject):
         self._clearJuggleCancelWindow()
         self._clearHurtRecoveryCancelWindow()
         self._clearHurtCreamWash()
+        self._clearDodgeCancelCreamWash()
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
@@ -1324,7 +1327,24 @@ class MeleeCombatController(DirectObject):
             self.avatar.setScale(1.0, 1.0, 1.0)
         except Exception:
             pass
+        # Soft cream wash flash so Shift→F cancel reads juicily — wash owns
+        # the brief flash; stretch-punch start owns the hit beat after.
+        self._playDodgeCancelCreamWash()
         messenger.send('hackslash-dodge-cancel', [self.avatar])  # noqa: F821
+
+    def _playDodgeCancelCreamWash(self):
+        """Cream wash flash the instant dodge cancels into stretch-punch."""
+        try:
+            # DodgeCancelCreamWashPulse owns the brief aspect2d cancel flash.
+            self._dodgeCancelCreamWash.play()
+        except Exception:
+            pass
+
+    def _clearDodgeCancelCreamWash(self):
+        try:
+            self._dodgeCancelCreamWash.clear()
+        except Exception:
+            pass
 
     def _flushDodgeCancelBuffer(self):
         """Fire a buffered F/LMB once the dodge → melee cancel window opens."""
