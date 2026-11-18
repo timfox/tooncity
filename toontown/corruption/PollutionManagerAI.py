@@ -225,6 +225,35 @@ class PollutionManagerAI(DistributedObjectAI):
         toon.hackSlashIFrameUntil = (
             globalClock.getFrameTime() + (durationMs / 1000.0))  # noqa: F821
 
+    def applyBetrayalHubStain(self, zoneId, level):
+        """Author hub pollution after Oswald betrayal (no recreep contested).
+
+        Clears purity lock so a previously sunny HQ can take the stain.
+        Status stays SECURED (not CONTESTED) — hub stain is campaign-
+        authored, not incomplete-reclaim re-ink.
+        """
+        zoneId = int(zoneId)
+        self._purityLocked.discard(zoneId)
+        self.streetStatus[zoneId] = CorruptionGlobals.STREET_SECURED
+        self._recreepAnnounced.discard(zoneId)
+        self._refreshRecreepTask()
+        applied = self.setPollution(zoneId, level)
+        self.notify.debug(
+            'betrayal hub stain zone %s -> %.3f' % (zoneId, applied))
+        return applied
+
+    def clearBetrayalHubStain(self, zoneId):
+        """Wash hub stain after chase clear / replay wipe."""
+        zoneId = int(zoneId)
+        applied = self.setPollution(
+            zoneId, CorruptionGlobals.POLLUTION_PURE)
+        # setPollution → pure already markStreetSecured; ensure lock.
+        if not self.isPurityLocked(zoneId):
+            self.markStreetSecured(zoneId)
+        self.notify.debug(
+            'betrayal hub stain cleared zone %s' % zoneId)
+        return applied
+
     def requestCampaignProgress(self):
         """Client login ask: hydrate + push victory / unlock / chaseCleared."""
         avId = self.air.getAvatarIdFromSender()
