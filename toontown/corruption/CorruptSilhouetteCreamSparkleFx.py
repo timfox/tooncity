@@ -5,12 +5,12 @@ purity sparkle contrast, not another ink spray. Composes lift / period with
 CorruptSilhouetteCreamRimFx.silhouetteCreamRimLook and borrows twinkle
 size/timing from IdleCreamDripSparkleFx.idleCreamDripSparkleLook so rising
 rim sparkles sit beside rim orbit flecks (#114) and idle cream drip sparkles
-(#125) without sync-locking. Soft cream wash pulses beside this sparkle
-layer (CorruptSilhouetteCreamWashFx). Wired from DistributedCorruptToon beside
-IdleInkDrip + IdleCreamDripContrast + IdleCreamDripSparkles +
-SilhouetteCreamRimFlecks + SilhouetteCreamWashPulse (start / pause / resume /
-clear together). Client only. Toontown spiritual sequel — no keyblades / no
-KH branding.
+(#125) without sync-locking. Soft cream wash pulses + delayed cream aftershock
+beside this sparkle layer (CorruptSilhouetteCreamWashFx owns residual). Wired
+from DistributedCorruptToon beside IdleInkDrip + IdleCreamDripContrast +
+IdleCreamDripSparkles + SilhouetteCreamRimFlecks + SilhouetteCreamWashPulse
+(start / pause / resume / clear together). Client only. Toontown spiritual
+sequel — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin

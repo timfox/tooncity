@@ -102,8 +102,8 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # flecks on the ink silhouette
 # (CorruptSilhouetteCreamRimFx) plus rising cream / pastel sparkle flecks
 # on the silhouette cream rim (CorruptSilhouetteCreamSparkleFx) plus soft
-# cream wash pulse against the ink silhouette (CorruptSilhouetteCreamWashFx
-# — idle / death cream-wash grammar).
+# cream wash pulse + delayed cream aftershock against the ink silhouette
+# (CorruptSilhouetteCreamWashFx — idle cream wash aftershock #177 grammar).
 # Telegraph wind-up pauses idle drips / sparkles / wash / rim flecks and plays
 # a short ink drip / splat pop (CorruptTelegraphInkFx) layered with
 # sunny cream / pastel warn flecks + delayed cream aftershock
@@ -183,10 +183,12 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ```
 ~spawncorrupt 2
 ~hackslash 0
-# Watch soft cream wash pulse against the ink silhouette
-# (CorruptSilhouetteCreamWashFx — IdleCreamWashPulseFx / CorruptDeathCreamWashFx
-# two-beat grammar, quieter ambient). Telegraph pauses wash with rim / sparkles.
-# SILHOUETTE_CREAM_WASH_ENABLED = False drops wash only.
+# Watch soft cream wash pulse against the ink silhouette, then delayed cream
+# aftershock (flecks + soft halo)
+# (CorruptSilhouetteCreamWashFx — idle cream wash aftershock #177 grammar,
+# quieter ambient). Telegraph pauses wash + aftershock with rim / sparkles.
+# SILHOUETTE_CREAM_WASH_ENABLED = False drops wash + aftershock.
+# SILHOUETTE_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
 ```
 
 ## Telegraph cream warn fleck demo
