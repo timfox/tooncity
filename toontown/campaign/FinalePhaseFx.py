@@ -4,15 +4,18 @@ FOV punch + fullscreen flash + render color slam — mirrors hackslash /
 purity-restore patterns so the phase flip reads as a boss moment.
 
 On Silly finale victory / twist, plays a short readable AV reveal sting
-(banner + FOV/flash + optional SFX) that Oswald caused the corruption.
+(banner + FOV/flash + rubber-hose Oswald silhouette shadow flash +
+optional SFX) that Oswald caused the corruption. Toontown spiritual
+sequel — no keyblades / no KH branding.
 """
 
-from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
+from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec3, Vec4
 
 from direct.interval.IntervalGlobal import (
     Func,
     LerpColorScaleInterval,
     LerpFunc,
+    LerpScaleInterval,
     Parallel,
     Sequence,
     Wait,
@@ -30,6 +33,7 @@ class FinalePhaseFxClient(DirectObject):
         DirectObject.__init__(self)
         self._ival = None
         self._flashNP = None
+        self._shadowNP = None
         self._bannerNP = None
         self._subBannerNP = None
         self._baseFov = None
@@ -141,6 +145,7 @@ class FinalePhaseFxClient(DirectObject):
 
     def _runOswaldReveal(self):
         self._clearFlash()
+        self._clearShadow()
         self._clearBanners()
         flashColor = CorruptionGlobals.OSWALD_REVEAL_FLASH_COLOR
         peak = Vec4(*CorruptionGlobals.OSWALD_REVEAL_RENDER_PEAK)
@@ -159,6 +164,8 @@ class FinalePhaseFxClient(DirectObject):
             self._flashNP = np
         except Exception:
             self._flashNP = None
+
+        self._shadowNP = self._buildOswaldShadow()
 
         self._playFovPunch(
             punch=CorruptionGlobals.OSWALD_REVEAL_FOV_PUNCH,
@@ -179,6 +186,9 @@ class FinalePhaseFxClient(DirectObject):
                 LerpColorScaleInterval(
                     self._flashNP, 0.55, Vec4(1, 1, 1, 0)),
             ))
+        shadowIval = self._buildShadowFlashInterval()
+        if shadowIval is not None:
+            parts.append(shadowIval)
         parts.append(Sequence(
             LerpColorScaleInterval(render, 0.1, peak),  # noqa: F821
             LerpColorScaleInterval(render, 0.35, hold),  # noqa: F821
@@ -203,6 +213,127 @@ class FinalePhaseFxClient(DirectObject):
             name='oswaldRevealSting',
         )
         self._ival.start()
+
+    def _buildOswaldShadow(self):
+        """Rubber-hose Oswald silhouette — tall ears, round head, drip feet.
+
+        Layered CardMaker pieces under aspect2d; reads as ink shadow of the
+        trusted lead turning into the corruption's cause. No KH props.
+        """
+        try:
+            color = getattr(
+                CampaignGlobals, 'FINALE_REVEAL_SHADOW_COLOR',
+                (0.04, 0.02, 0.06, 1.0))
+            pos = getattr(
+                CampaignGlobals, 'FINALE_REVEAL_SHADOW_POS',
+                (0.0, 0.0, -0.02))
+            scale = float(getattr(
+                CampaignGlobals, 'FINALE_REVEAL_SHADOW_SCALE', 0.55))
+            binSort = int(getattr(
+                CampaignGlobals, 'FINALE_REVEAL_SHADOW_BIN', 101))
+
+            root = aspect2d.attachNewNode('oswald-reveal-shadow')  # noqa: F821
+            root.setTransparency(TransparencyAttrib.MAlpha)
+            root.setColorScale(1, 1, 1, 0)
+            root.setBin('fixed', binSort)
+            root.setDepthTest(False)
+            root.setDepthWrite(False)
+            root.setPos(pos[0], pos[1], pos[2])
+            root.setScale(scale)
+
+            # Local-space pieces (aspect2d units before root scale).
+            # Ears first (behind), then head/body/limbs, drip last.
+            pieces = (
+                # Left ear — tall rubber hose
+                ('ear-l', -0.22, 0.55, 0.09, 0.42),
+                # Right ear
+                ('ear-r', 0.22, 0.55, 0.09, 0.42),
+                # Head
+                ('head', 0.0, 0.22, 0.28, 0.26),
+                # Torso
+                ('body', 0.0, -0.12, 0.32, 0.38),
+                # Left arm droop
+                ('arm-l', -0.38, -0.08, 0.1, 0.28),
+                # Right arm droop
+                ('arm-r', 0.38, -0.08, 0.1, 0.28),
+                # Left foot blob
+                ('foot-l', -0.16, -0.48, 0.14, 0.1),
+                # Right foot blob
+                ('foot-r', 0.16, -0.48, 0.14, 0.1),
+                # Ink drip under silhouette — cause-of-corruption read
+                ('drip', 0.0, -0.62, 0.08, 0.16),
+            )
+            for name, cx, cz, halfW, halfH in pieces:
+                cm = CardMaker('oswald-shadow-%s' % name)
+                cm.setFrame(cx - halfW, cx + halfW, cz - halfH, cz + halfH)
+                piece = root.attachNewNode(cm.generate())
+                piece.setTransparency(TransparencyAttrib.MAlpha)
+                piece.setColor(color[0], color[1], color[2], 1)
+                piece.setBin('fixed', binSort)
+                piece.setDepthTest(False)
+                piece.setDepthWrite(False)
+            return root
+        except Exception:
+            return None
+
+    def _buildShadowFlashInterval(self):
+        """Squash → stretch → settle + alpha flash for the Oswald silhouette."""
+        shadow = self._shadowNP
+        if shadow is None:
+            return None
+        try:
+            if shadow.isEmpty():
+                return None
+        except Exception:
+            return None
+
+        peakA = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_PEAK_ALPHA', 0.92))
+        fadeIn = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_FADE_IN_SEC', 0.06))
+        holdSec = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_HOLD_SEC', 0.28))
+        fadeOut = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_FADE_OUT_SEC', 0.55))
+        squash = getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_SQUASH',
+            (1.35, 1.0, 0.55))
+        stretch = getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_STRETCH',
+            (0.72, 1.0, 1.55))
+        squashSec = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_SQUASH_SEC', 0.07))
+        stretchSec = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_STRETCH_SEC', 0.12))
+        settleSec = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_SETTLE_SEC', 0.18))
+        baseScale = float(getattr(
+            CampaignGlobals, 'FINALE_REVEAL_SHADOW_SCALE', 0.55))
+
+        squashScale = Vec3(
+            baseScale * squash[0], baseScale * squash[1],
+            baseScale * squash[2])
+        stretchScale = Vec3(
+            baseScale * stretch[0], baseScale * stretch[1],
+            baseScale * stretch[2])
+        settleScale = Vec3(baseScale, baseScale, baseScale)
+
+        return Parallel(
+            Sequence(
+                LerpColorScaleInterval(
+                    shadow, fadeIn, Vec4(1, 1, 1, peakA)),
+                Wait(holdSec),
+                LerpColorScaleInterval(
+                    shadow, fadeOut, Vec4(1, 1, 1, 0)),
+                Func(self._clearShadow),
+            ),
+            Sequence(
+                LerpScaleInterval(shadow, squashSec, squashScale),
+                LerpScaleInterval(shadow, stretchSec, stretchScale),
+                LerpScaleInterval(shadow, settleSec, settleScale),
+            ),
+            name='oswaldRevealShadowFlash',
+        )
 
     def _showRevealBanners(self):
         title = getattr(
@@ -354,6 +485,15 @@ class FinalePhaseFxClient(DirectObject):
                 pass
             self._flashNP = None
 
+    def _clearShadow(self):
+        if self._shadowNP is not None:
+            try:
+                if not self._shadowNP.isEmpty():
+                    self._shadowNP.removeNode()
+            except Exception:
+                pass
+            self._shadowNP = None
+
     def _clearBanners(self):
         if self._bannerNP is not None:
             try:
@@ -379,6 +519,7 @@ class FinalePhaseFxClient(DirectObject):
             self._ival = None
         self._restoreFov()
         self._clearFlash()
+        self._clearShadow()
         self._clearBanners()
         try:
             render.clearColorScale()  # noqa: F821
