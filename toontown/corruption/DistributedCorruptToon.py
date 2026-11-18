@@ -16,6 +16,7 @@ from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphCreamWarnFx import TelegraphCreamWarnFlecks
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
+from toontown.corruption.IdleCreamDripContrastFx import IdleCreamDripContrast
 from toontown.corruption.IdleInkDripFx import IdleInkDrip
 from toontown.corruption.OverlordMagentaInkSplashFx import OverlordMagentaInkSplash
 from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
@@ -73,6 +74,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._telegraphInkDrip = None
         self._telegraphCreamWarn = None
         self._idleInkDrip = None
+        self._idleCreamDrip = None
         self._overlordCrown = None
         self._overlordInkRain = None
         self._overlordMagentaInkSplash = None
@@ -95,6 +97,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__applyArchetypeLook()
         self.__startInkPulse()
         self.__startIdleInkDrip()
+        self.__startIdleCreamDrip()
 
     def disable(self):
         self.__stopIntervals()
@@ -145,6 +148,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearIdleInkDrip()
+        self.__clearIdleCreamDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearOverlordMagentaInkSplash()
@@ -389,6 +393,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Retint ambient idle drips when archetype arrives after generate.
         if getattr(self, '_idleInkDrip', None) is not None:
             self.__startIdleInkDrip()
+        if getattr(self, '_idleCreamDrip', None) is not None:
+            self.__startIdleCreamDrip()
 
     def getArchetype(self):
         return int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
@@ -504,6 +510,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__playTelegraphSfx()
         # Pause ambient idle drips so telegraph splat/drip owns the frame.
         self.__pauseIdleInkDrip()
+        self.__pauseIdleCreamDrip()
         self.__playTelegraphInkDrip(look)
         # Cream / pastel warn flecks — contrast layer on ink drip / silhouette.
         self.__playTelegraphCreamWarn(look)
@@ -650,6 +657,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self._pulseIval.resume()
         # Ambient pollution drips resume with the idle pulse between telegraphs.
         self.__resumeIdleInkDrip()
+        self.__resumeIdleCreamDrip()
 
     def _defeatedHidden(self):
         return self.isHidden() or self.hp <= 0
@@ -966,6 +974,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearIdleInkDrip()
+        self.__clearIdleCreamDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearOverlordMagentaInkSplash()
@@ -1109,6 +1118,50 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._idleInkDrip = None
+
+    def __startIdleCreamDrip(self):
+        """Cream / pastel contrast drips layered on idle ink (client-only)."""
+        self.__clearIdleCreamDrip()
+        if self._defeatedHidden():
+            return
+        parent = self.visualRoot if self.visualRoot is not None else self
+        look, _phase = self.__finalePhaseLook()
+        drip = IdleCreamDripContrast()
+        self._idleCreamDrip = drip
+        drip.start(
+            parent,
+            archetype=self.getArchetype(),
+            finaleLook=look,
+        )
+
+    def __pauseIdleCreamDrip(self):
+        drip = getattr(self, '_idleCreamDrip', None)
+        if drip is not None:
+            try:
+                drip.pause()
+            except Exception:
+                pass
+
+    def __resumeIdleCreamDrip(self):
+        if self._defeatedHidden():
+            return
+        drip = getattr(self, '_idleCreamDrip', None)
+        if drip is None:
+            self.__startIdleCreamDrip()
+            return
+        try:
+            drip.resume()
+        except Exception:
+            self.__startIdleCreamDrip()
+
+    def __clearIdleCreamDrip(self):
+        drip = getattr(self, '_idleCreamDrip', None)
+        if drip is not None:
+            try:
+                drip.clear()
+            except Exception:
+                pass
+        self._idleCreamDrip = None
 
     def __playOverlordTelegraphCrown(self, finaleLook=None, phase=1):
         """Ink crown / silhouette flash — Overlord phase telegraphs only."""
@@ -1359,24 +1412,44 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Ink Overlord: magenta/crimson splash so boss hits read vs street Smudge.
         if self.__isInkOverlord():
             self.__pauseIdleInkDrip()
+            self.__pauseIdleCreamDrip()
             self.__playOverlordMagentaInkSplash(kind='hit')
-            Sequence(Wait(0.32), Func(self.__resumeIdleInkDrip)).start()
+            Sequence(
+                Wait(0.32),
+                Func(self.__resumeIdleInkDrip),
+                Func(self.__resumeIdleCreamDrip),
+            ).start()
         # Ink Smudge: cheap purple splash so tagged Smudges read in a swarm.
         elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_INK:
             self.__pauseIdleInkDrip()
+            self.__pauseIdleCreamDrip()
             self.__playSmudgeInkSplash(kind='hit')
             # Brief resume so idle drips return after the splash owns the frame.
-            Sequence(Wait(0.28), Func(self.__resumeIdleInkDrip)).start()
+            Sequence(
+                Wait(0.28),
+                Func(self.__resumeIdleInkDrip),
+                Func(self.__resumeIdleCreamDrip),
+            ).start()
         # Sludge Brute: cheap green splash so tagged Brutes read vs Smudges.
         elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_BRUTE:
             self.__pauseIdleInkDrip()
+            self.__pauseIdleCreamDrip()
             self.__playBruteSludgeSplash(kind='hit')
-            Sequence(Wait(0.3), Func(self.__resumeIdleInkDrip)).start()
+            Sequence(
+                Wait(0.3),
+                Func(self.__resumeIdleInkDrip),
+                Func(self.__resumeIdleCreamDrip),
+            ).start()
         # Balloon Snare: cheap amber splash so tagged Snares read vs pack.
         elif self.getArchetype() == CorruptionGlobals.ARCHETYPE_SNARE:
             self.__pauseIdleInkDrip()
+            self.__pauseIdleCreamDrip()
             self.__playSnareStringSnapSplash(kind='hit')
-            Sequence(Wait(0.26), Func(self.__resumeIdleInkDrip)).start()
+            Sequence(
+                Wait(0.26),
+                Func(self.__resumeIdleInkDrip),
+                Func(self.__resumeIdleCreamDrip),
+            ).start()
         try:
             away = self.getPos(render) - attacker.getPos(render)
             away.setZ(0)

@@ -3,15 +3,15 @@
 CorruptToons prefer ink-tinted Toon Actor / DNA silhouettes (card fallback),
 chase, and telegraph attacks: Ink Smudge purple melee wind-up, Sludge Brute
 green spit telegraph + traveling ink blob on hit, Balloon Snare amber
-string-lash + vine zip. Between telegraphs, IdleInkDripFx plays sparse
-ambient rubber-hose ink drips (archetype-tinted pollution presence).
+string-lash + vine zip. Between telegraphs, IdleInkDripFx plays sparse ambient rubber-hose ink
+drips (archetype-tinted pollution presence) layered with
+IdleCreamDripContrastFx (soft cream / pastel drips — contrast to idle ink).
 Telegraphs play CorruptTelegraphInkFx (short rubber-hose ink drip / splat
 pop) layered with CorruptTelegraphCreamWarnFx (sunny cream / pastel warn
-flecks — contrast to ink) and pause idle drips for the wind-up. Ink Smudge
-wind-ups also flash SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop).
-Ink Smudge hits and deaths also flash SmudgeInkSplashFx (cheap purple
-rubber-hose ink splash for swarm readability; composes with telegraph /
-death / idle ink looks). Sludge
+flecks — contrast to ink) and pause idle drips for the wind-up. Ink Smudge wind-ups also flash
+SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Ink Smudge hits and
+deaths also flash SmudgeInkSplashFx (cheap purple rubber-hose ink splash for
+swarm readability; composes with telegraph / death / idle ink looks). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
 pop). Sludge Brute hits and deaths also flash BruteSludgeSplashFx (cheap
 green rubber-hose sludge splash; composes with spit / death / idle looks).
