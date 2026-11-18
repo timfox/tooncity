@@ -24,6 +24,7 @@ from otp.avatar import Emote
 
 from . import HackSlashConfig
 from . import HitJuice
+from .CreamSlamFlashFx import CreamSlamFlashFx
 from .DemoHostile import spawnDemoHostiles
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
@@ -63,6 +64,7 @@ class MeleeCombatController(DirectObject):
         self._hitStop = HitStopFx(avatar)
         self._hitSpark = HitSparkFx(avatar)
         self._slamDust = SlamDustFx(avatar)
+        self._creamSlamFlash = CreamSlamFlashFx(avatar)
         # Soft-lock FOV punch defers while HitStopFx is active (#68 compose).
         self._softLockReticle = SoftLockReticleFx(
             avatar,
@@ -141,6 +143,7 @@ class MeleeCombatController(DirectObject):
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
+        self._clearCreamSlamFlash()
         self._clearSoftLockReticle()
         self._clearComboCounter()
         self._iframeUntil = 0.0
@@ -171,6 +174,10 @@ class MeleeCombatController(DirectObject):
             pass
         try:
             self._slamDust.clear()
+        except Exception:
+            pass
+        try:
+            self._creamSlamFlash.clear()
         except Exception:
             pass
         try:
@@ -442,7 +449,11 @@ class MeleeCombatController(DirectObject):
             # Squash first so hitstop freezes on the impact silhouette.
             self._playConnectImpactJuice(hitIndex, target)
             # Flash reads during the freeze; launch / hop / FOV wait for resume.
-            self._playHitFlash()
+            # Finisher swaps white HIT_FLASH for warm cream slam flash + ring.
+            if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
+                self._playCreamSlamFlash()
+            else:
+                self._playHitFlash()
             self._playHitstop(hitIndex, target=target)
         else:
             # Whiff inside a live string soft-breaks the on-screen counter.
@@ -1171,6 +1182,21 @@ class MeleeCombatController(DirectObject):
     def _clearSlamDust(self):
         try:
             self._slamDust.clear()
+        except Exception:
+            pass
+
+    def _playCreamSlamFlash(self):
+        """Warm cream aspect2d flash + ring on finisher slam — during hitstop."""
+        # Drop any mid-combo white flash so cream owns the screen punch.
+        self._clearHitFlash()
+        try:
+            self._creamSlamFlash.play()
+        except Exception:
+            pass
+
+    def _clearCreamSlamFlash(self):
+        try:
+            self._creamSlamFlash.clear()
         except Exception:
             pass
 
