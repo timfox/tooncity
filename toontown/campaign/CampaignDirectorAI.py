@@ -17,7 +17,9 @@ from toontown.campaign.OswaldBetrayalChase import (
     chaseCombatDefeated,
     chaseDelaySec,
     chaseEnabled,
+    chaseHp as chaseMaxHp,
     chaseSpawnMsg,
+    resolveChaseSpawnHp,
     spawnCorruptOswald,
 )
 from toontown.reclaim import ReclaimGlobals
@@ -44,6 +46,8 @@ class CampaignDirectorAI(DirectObject):
         self._finalePhase = 0
         # 1 after Corrupted Oswald chase clear (epilogue soft-end persist).
         self.chaseCleared = 0
+        # Remaining mid-chase Oswald HP (0 = full / unset). Survives relog.
+        self.chaseHp = 0
         self._lastToonId = None
         self._hydratedToonId = None
         self._oswaldChaseDoId = None
@@ -197,6 +201,7 @@ class CampaignDirectorAI(DirectObject):
             self.reclaimCount = 0
             self._finalePhase = 0
             self.chaseCleared = 0
+            self.chaseHp = 0
             self._cancelOswaldBetrayalChase()
             # Force-wash hub now — state is still VICTORY until ACTIVE below,
             # so syncHubStain would otherwise re-apply the betrayal fog.
@@ -447,6 +452,32 @@ class CampaignDirectorAI(DirectObject):
                 self._tellToon(toon, clearMsg)
         return wanted
 
+    def _snapshotOswaldChaseHp(self, corrupt, toon=None, persist=False):
+        """Capture live mid-chase HP so resume / relog does not full-heal.
+
+        Ignores defeated / missing bodies. Only flushes when remaining HP
+        changes (watch ticks every 0.5s — avoid thrashing the JSON save).
+        """
+        if corrupt is None or chaseCombatDefeated(corrupt):
+            return False
+        try:
+            liveHp = int(getattr(corrupt, 'hp', 0) or 0)
+        except (TypeError, ValueError):
+            liveHp = 0
+        if liveHp <= 0:
+            return False
+        # Clamp against chase max so a weird DO cannot inflate the blob.
+        _max, clamped = resolveChaseSpawnHp(remaining=liveHp, maxHp=chaseMaxHp())
+        prior = int(getattr(self, 'chaseHp', 0) or 0)
+        if clamped == prior:
+            return False
+        self.chaseHp = int(clamped)
+        if persist:
+            if toon is None:
+                toon = self._toonFromLast()
+            self._persistForToon(toon)
+        return True
+
     def _cancelOswaldBetrayalChase(self):
         if self._oswaldChaseTask is not None:
             try:
@@ -467,6 +498,8 @@ class CampaignDirectorAI(DirectObject):
         corrupt = self.air.doId2do.get(doId)
         if corrupt is None:
             return
+        # Snapshot remaining HP before tearing down (hub hop / re-schedule).
+        self._snapshotOswaldChaseHp(corrupt, persist=False)
         try:
             if not corrupt.isDeleted():
                 corrupt.requestDelete()
@@ -502,10 +535,19 @@ class CampaignDirectorAI(DirectObject):
             return Task.done
         # Prefer the toon's live zone so a hub hop still fields nearby.
         liveZone = int(getattr(toon, 'zoneId', 0) or 0) or int(zoneId)
-        corrupt = spawnCorruptOswald(self.air, toon, zoneId=liveZone)
+        # Mid-chase remaining HP from progress blob (0 / unset → full).
+        remaining = int(getattr(self, 'chaseHp', 0) or 0)
+        corrupt = spawnCorruptOswald(
+            self.air, toon, zoneId=liveZone,
+            hp=remaining if remaining > 0 else None)
         if corrupt is None:
             return Task.done
         self._oswaldChaseDoId = getattr(corrupt, 'doId', None)
+        # Keep director chaseHp aligned with what actually spawned.
+        try:
+            self.chaseHp = int(getattr(corrupt, 'hp', 0) or 0)
+        except (TypeError, ValueError):
+            pass
         self._tellToon(toon, chaseSpawnMsg())
         try:
             messenger.send(  # noqa: F821
@@ -523,8 +565,9 @@ class CampaignDirectorAI(DirectObject):
                        int(getattr(toon, 'doId', 0) or 0)],
             appendTask=True)
         self.notify.info(
-            'oswald betrayal chase spawned doId=%s zone=%s'
-            % (self._oswaldChaseDoId, liveZone))
+            'oswald betrayal chase spawned doId=%s zone=%s hp=%s/%s'
+            % (self._oswaldChaseDoId, liveZone,
+               getattr(corrupt, 'hp', '?'), getattr(corrupt, 'maxHp', '?')))
         return Task.done
 
     def __watchOswaldBetrayalChase(self, doId, toonId, task):
@@ -532,6 +575,7 @@ class CampaignDirectorAI(DirectObject):
 
         Missing / deleted DOs without ``chaseCombatDefeated`` drop live
         tracking and re-schedule so hub-hop cannot soft-end the twist.
+        Mid-fight HP is snapshotted while present so resume does not heal.
         """
         if doId <= 0:
             self._oswaldChaseWatch = None
@@ -545,13 +589,23 @@ class CampaignDirectorAI(DirectObject):
             corrupt is not None
             and not getattr(corrupt, 'isDeleted', lambda: True)())
         if present:
+            toon = self.air.doId2do.get(int(toonId)) if toonId else None
+            if toon is None:
+                toon = self._toonFromLast()
+            self._snapshotOswaldChaseHp(corrupt, toon=toon, persist=True)
             return Task.again
-        # DO gone / deleted without combat defeat — do not false-clear.
+        # DO gone / deleted without combat defeat — snapshot if body remains,
+        # then re-field without false-clearing.
+        if corrupt is not None:
+            self._snapshotOswaldChaseHp(corrupt, persist=False)
         self._oswaldChaseWatch = None
         self._oswaldChaseDoId = None
         toon = self.air.doId2do.get(int(toonId)) if toonId else None
         if toon is None:
             toon = self._toonFromLast()
+        # Flush remaining HP before resume re-schedules the spawn.
+        if int(getattr(self, 'chaseHp', 0) or 0) > 0:
+            self._persistForToon(toon)
         # Keep chaseCleared=0; re-field so the wash fight stays reachable.
         if self._pendingOswaldBetrayalChase():
             self._resumePendingOswaldBetrayalChase(toon)
@@ -566,6 +620,7 @@ class CampaignDirectorAI(DirectObject):
             toon = self._toonFromLast()
         # Persist chase-clear so relog status / epilogue know the soft-end.
         self.chaseCleared = 1
+        self.chaseHp = 0
         # Wash TTC hub stain — chase copy said "wash the stain."
         self._syncHubStain(tell=True, toon=toon)
         self._persistForToon(toon)

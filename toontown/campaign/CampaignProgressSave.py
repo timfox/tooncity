@@ -7,9 +7,10 @@ saves (buildings / track records) — no DistributedToon avatar schema.
 
 Client hub tip + OswaldPresence + CampaignHandoff power mirror the blob
 after relog via a thin PollutionManager status push (`setCampaignProgress`
-incl. reclaimCount); see `clientMirrorFromProgress`. Pure helpers are
-panda-free so headless tests can exercise sanitize / round-trip / mirror
-flags without Direct / Astron.
+incl. reclaimCount); see `clientMirrorFromProgress`. Mid-chase Corrupted
+Oswald remaining HP is stored as ``chaseHp`` so resume / relog does not
+full-heal the wash fight. Pure helpers are panda-free so headless tests
+can exercise sanitize / round-trip / mirror flags without Direct / Astron.
 """
 
 from __future__ import annotations
@@ -46,6 +47,9 @@ def defaultProgress():
         'finalePhase': 0,
         # 1 after Corrupted Oswald chase clear (epilogue soft-end).
         'chaseCleared': 0,
+        # Remaining Corrupted Oswald HP mid-chase (0 = full / unset).
+        # Resume / relog must not full-heal a damaged wash fight.
+        'chaseHp': 0,
     }
 
 
@@ -77,6 +81,11 @@ def sanitizeProgress(raw, numActs=None):
         CampaignGlobals.STATE_IDLE, CampaignGlobals.STATE_VICTORY)
     finalePhase = _int('finalePhase', 0, 0, 1)
     chaseCleared = _int('chaseCleared', 0, 0, 1)
+    # Ceiling is generous; spawn clamps against live chase maxHp.
+    chaseHp = _int('chaseHp', 0, 0, 9999)
+    # Mid-chase HP only matters while victory + uncleared chase.
+    if chaseCleared or state != int(CampaignGlobals.STATE_VICTORY):
+        chaseHp = 0
     return {
         'unlockedThrough': unlocked,
         'actIndex': actIndex,
@@ -84,6 +93,7 @@ def sanitizeProgress(raw, numActs=None):
         'state': state,
         'finalePhase': finalePhase,
         'chaseCleared': chaseCleared,
+        'chaseHp': chaseHp,
     }
 
 
@@ -92,6 +102,9 @@ def snapshotFromDirector(director):
     chaseCleared = getattr(director, 'chaseCleared', None)
     if chaseCleared is None:
         chaseCleared = getattr(director, '_chaseCleared', 0)
+    chaseHp = getattr(director, 'chaseHp', None)
+    if chaseHp is None:
+        chaseHp = getattr(director, '_chaseHp', 0)
     return sanitizeProgress({
         'unlockedThrough': getattr(director, 'unlockedThrough', 0),
         'actIndex': getattr(director, 'actIndex', 0),
@@ -99,6 +112,7 @@ def snapshotFromDirector(director):
         'state': getattr(director, 'state', CampaignGlobals.STATE_IDLE),
         'finalePhase': getattr(director, '_finalePhase', 0),
         'chaseCleared': chaseCleared,
+        'chaseHp': chaseHp,
     })
 
 
@@ -111,6 +125,7 @@ def applyProgressToDirector(director, progress):
     director.state = blob['state']
     director._finalePhase = blob['finalePhase']
     director.chaseCleared = int(blob.get('chaseCleared', 0) or 0)
+    director.chaseHp = int(blob.get('chaseHp', 0) or 0)
     return blob
 
 

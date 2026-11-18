@@ -189,6 +189,7 @@ class _FakeWatchDirector:
         self.camp = camp
         self.state = camp.STATE_VICTORY
         self.chaseCleared = 0
+        self.chaseHp = 0
         self._oswaldChaseDoId = None
         self._oswaldChaseWatch = 'watch'
         self._oswaldChaseTask = None
@@ -238,6 +239,15 @@ class _FakeWatchDirector:
             corrupt is not None
             and not getattr(corrupt, 'isDeleted', lambda: True)())
         if present:
+            # Mid-chase HP snapshot (real director persists on change).
+            try:
+                live = int(getattr(corrupt, 'hp', 0) or 0)
+            except (TypeError, ValueError):
+                live = 0
+            if live > 0 and live != int(getattr(self, 'chaseHp', 0) or 0):
+                self.chaseHp = live
+                self._persistForToon(
+                    self.air.doId2do.get(int(toonId)) if toonId else None)
             return _Task.again
         self._oswaldChaseWatch = None
         self._oswaldChaseDoId = None
@@ -255,6 +265,7 @@ class _FakeWatchDirector:
         if toon is None:
             toon = self._toonFromLast()
         self.chaseCleared = 1
+        self.chaseHp = 0
         self._syncHubStain(tell=True, toon=toon)
         self._persistForToon(toon)
         self.clearCalls.append(int(doId))
@@ -299,6 +310,9 @@ class OswaldChaseFalseClearTests(unittest.TestCase):
         self.assertEqual(director.chaseCleared, 0)
         self.assertEqual(director.resumeCalls, [])
         self.assertEqual(director.clearCalls, [])
+        # Present tick snapshots mid-chase HP (persist once on change).
+        self.assertEqual(director.chaseHp, 40)
+        self.assertEqual(director.persisted, 1)
 
         # Combat defeat → clear + hub wash + epilogue tokens.
         oswald.hp = 0
@@ -306,9 +320,10 @@ class OswaldChaseFalseClearTests(unittest.TestCase):
         self.assertEqual(
             director.watchOswaldBetrayalChase(55, 7, None), _Task.done)
         self.assertEqual(director.chaseCleared, 1)
+        self.assertEqual(director.chaseHp, 0)
         self.assertEqual(director.clearCalls, [55])
         self.assertEqual(director.hubWashCalls, 1)
-        self.assertEqual(director.persisted, 1)
+        self.assertEqual(director.persisted, 2)
         self.assertIn('oswaldBetrayalChaseCleared', director.messengerEvents)
         self.assertIn('campaignEpilogue', director.messengerEvents)
         self.assertEqual(director.resumeCalls, [])
