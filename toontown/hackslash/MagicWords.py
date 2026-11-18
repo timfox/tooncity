@@ -39,7 +39,8 @@ class ToggleHackSlash(MagicWord):
         'FOV-punches; mid/finisher air '
         'juggle hangs with cream sparkle at apex + delayed cream aftershock + '
         'soft cream wash pulse, and a mid-juggle cancel window into the '
-        'finisher slam). '
+        'finisher slam; when a corrupt smacks you, brief hurt stagger then a '
+        'short recovery cancel into dodge or stretch-punch). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
         'Does not use turn-based cog battles.'
     )
@@ -77,7 +78,8 @@ class ToggleHackSlash(MagicWord):
                 '(cream slam flash + sparkle hang + cream aftershock + cream '
                 'wash on finisher; cream sparkle + cream aftershock + cream '
                 'wash at air-juggle hang, then F in the juggle cancel window '
-                'for a finisher slam). Soft-targets '
+                'for a finisher slam; after a smack, brief stagger then F or '
+                'Shift in the recovery cancel). Soft-targets '
                 'demo hostiles (and street suits).'
             )
         return 'Stretch-punch melee OFF.'

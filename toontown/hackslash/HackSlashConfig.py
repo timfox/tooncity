@@ -366,6 +366,37 @@ def isJuggleCancelWindowOpen(armed, openAt, until, now):
 IFRAME_SEC = 0.55
 IFRAME_FLASH_ALPHA = 0.55
 
+# Hurt stagger → recovery cancel. After a CorruptToon smack, brief committed
+# stagger then a short cancel window into dodge (Shift/X) or melee (F/LMB) so
+# combat stays rubber-hose responsive — KH-feel without keyblades / KH branding.
+# Early stagger can buffer attack/dodge until the cancel window opens.
+HURT_STAGGER_ENABLED = True
+# Seconds of committed hurt stagger before cancel-into-dodge/melee opens
+# (covers squash + early stretch of PLAYER_HIT_REACT_*).
+HURT_STAGGER_SEC = 0.14
+# How long cancel-into-dodge/melee stays open after stagger settles.
+HURT_RECOVERY_CANCEL_WINDOW_SEC = 0.38
+# Buffer F/LMB or Shift/X pressed during stagger; fire when cancel opens.
+HURT_RECOVERY_CANCEL_BUFFER = True
+
+
+def isHurtRecoveryCancelWindowOpen(armed, openAt, until, now):
+    """True while a hurt-stagger recovery cancel→dodge/melee window is live."""
+    if not armed:
+        return False
+    now = float(now)
+    return float(openAt) <= now < float(until)
+
+
+def hurtStaggerTotalSec(stagger=None, window=None):
+    """Total committed stagger + recovery cancel length."""
+    if stagger is None:
+        stagger = HURT_STAGGER_SEC
+    if window is None:
+        window = HURT_RECOVERY_CANCEL_WINDOW_SEC
+    return max(0.0, float(stagger)) + max(0.0, float(window))
+
+
 # Player-initiated dodge roll (Shift; Space stays jump).
 DODGE_KEY = 'shift'
 DODGE_KEY_ALT = 'x'
@@ -842,5 +873,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 # On-screen hint while demo mode is active
 DEMO_HINT = (
     'Stretch punches: F/LMB  |  Shift/X dodge→F  |  perfect dodge→F counter  |  '
-    'juggle→F slam  |  Tab/` soft-lock cycle  |  ~melee'
+    'juggle→F slam  |  hurt→F/Shift cancel  |  Tab/` soft-lock cycle  |  ~melee'
 )
