@@ -11,7 +11,8 @@ SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Sludge Brute wind-ups
 also flash BruteSpitTelegraphFx (green rubber-hose spit-gob pop). Balloon
 Snare wind-ups also flash BalloonSnareTelegraphFx (amber rubber-hose
 string-lash pop). Ink Overlord phase telegraphs also flash
-OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette). Defeat plays
+OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
+OverlordPhaseInkRainFx (ink rain / ink fall shower). Defeat plays
 CorruptDeathPopFx (rubber-hose ink splat / balloon pop). Clearing them lowers
 per-zone pollution via PollutionManager; hitting 0.0 unlocks purity restore
 (reclaim / campaign).

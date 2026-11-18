@@ -15,6 +15,7 @@ from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
 from toontown.corruption.IdleInkDripFx import IdleInkDrip
+from toontown.corruption.OverlordPhaseInkRainFx import OverlordPhaseInkRain
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
 from toontown.corruption.SmudgeInkTelegraphFx import SmudgeInkTelegraphFist
 
@@ -67,6 +68,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._telegraphInkDrip = None
         self._idleInkDrip = None
         self._overlordCrown = None
+        self._overlordInkRain = None
         self._snareTelegraphString = None
         self._bruteTelegraphSpit = None
         self._smudgeTelegraphInk = None
@@ -133,6 +135,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
+        self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
@@ -497,9 +500,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__playSnareTelegraphString()
         else:
             self.__clearSnareTelegraphString()
-        # Overlord-only: ink crown / silhouette flash for phase telegraph read.
+        # Overlord-only: ink crown + ink rain for phase telegraph read.
         if look and phase >= 1:
             self.__playOverlordTelegraphCrown(look, phase)
+            self.__playOverlordPhaseInkRain(look, phase)
             # Phase HUD cue so P1 magenta vs P2 crimson reads mid-wind-up.
             messenger.send(  # noqa: F821
                 'finaleTelegraphCue',
@@ -507,6 +511,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                  look.get('hudColor', (1.0, 0.55, 1.0, 1.0))])
         else:
             self.__clearOverlordTelegraphCrown()
+            self.__clearOverlordPhaseInkRain()
         # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
         # wind-up reads clearly before announceAttackHit's slam lands.
         self._telegraphIval = Sequence(
@@ -542,9 +547,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
             self._telegraphIval = None
-        # Clear telegraph drip / crown / snare / spit / smudge fist so impact owns the frame.
+        # Clear telegraph drip / crown / rain / snare / spit / smudge fist so impact owns the frame.
         self.__clearTelegraphInkDrip()
         self.__clearOverlordTelegraphCrown()
+        self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
@@ -937,6 +943,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearTelegraphInkDrip()
         self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
+        self.__clearOverlordPhaseInkRain()
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
         self.__clearSmudgeTelegraphInk()
@@ -1058,6 +1065,26 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._overlordCrown = None
+
+    def __playOverlordPhaseInkRain(self, finaleLook=None, phase=1):
+        """Ink rain / ink fall shower — Overlord phase telegraphs only."""
+        self.__clearOverlordPhaseInkRain()
+        try:
+            pos = self.getPos(render)
+        except Exception:
+            return
+        rain = OverlordPhaseInkRain()
+        self._overlordInkRain = rain
+        rain.play(pos, finaleLook=finaleLook, phase=phase)
+
+    def __clearOverlordPhaseInkRain(self):
+        rain = getattr(self, '_overlordInkRain', None)
+        if rain is not None:
+            try:
+                rain.clear()
+            except Exception:
+                pass
+        self._overlordInkRain = None
 
     def __playSnareTelegraphString(self):
         """Amber string-lash telegraph pop — Balloon Snare wind-ups only."""

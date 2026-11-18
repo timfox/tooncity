@@ -536,6 +536,33 @@ OVERLORD_TELEGRAPH_CROWN_LOOK = {
     'binSort': 44,
 }
 
+# Overlord phase ink rain / ink fall — denser shower from above the boss on
+# phase telegraphs (alongside OverlordTelegraphCrownFx). Taller / wider than
+# street TELEGRAPH_INK_DRIP_*; P2 bumps dropCount via OverlordPhaseInkRainFx.
+# Client only; AI timings unchanged. No KH branding.
+OVERLORD_PHASE_INK_RAIN_LOOK = {
+    'id': 'ink-rain',
+    'lift': 5.4,
+    'fall': 4.2,
+    'spread': 1.55,
+    'dropCount': 7,
+    'dropHalf': 0.16,
+    'fallSec': 0.48,
+    'staggerSec': 0.03,
+    'peakAlpha': 0.92,
+    'dropColor': (0.28, 0.08, 0.42, 0.92),
+    'streakColor': (0.55, 0.18, 0.78, 0.88),
+    'puddleHalf': 0.55,
+    'puddleLift': 0.08,
+    'puddlePeak': 2.4,
+    'puddleDelay': 0.16,
+    'puddleInSec': 0.18,
+    'puddleHoldSec': 0.12,
+    'puddleOutSec': 0.28,
+    'puddleColor': (0.12, 0.04, 0.18, 0.7),
+    'binSort': 43,
+}
+
 # Ink Overlord finale phase looks (client-readable; AI timings unchanged).
 # Phase 1 = rising magenta swell; Phase 2 = crimson unleashed fury.
 # Keep P1/P2 telegraphs readable at a glance: color, rubber scale, SFX, HUD cue.
