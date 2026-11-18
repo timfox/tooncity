@@ -254,6 +254,25 @@ STREET_WASH_LERP_SEC = 0.32
 STREET_WASH_ADVANCE_SEC = 0.42
 STREET_WASH_CLEAR_SEC = 0.55
 
+# Full-purity / reclaim-complete street sparkle (horizon cream glitter).
+# Layers with StreetColorWash soft-clear + PurityBurstFx FOV/rays; bigger than
+# wave cream burst (#73). Sunny Toontown cream only — no KH blue / keyblades.
+STREET_SPARKLE_ENABLED = True
+STREET_SPARKLE_ORIGIN = (0.0, 0.0, -0.42)
+STREET_SPARKLE_COLOR = (1.0, 0.97, 0.82, 1.0)
+STREET_SPARKLE_BIN = 50
+STREET_SPARKLE_SHIMMER_PEAK = 0.22
+STREET_SPARKLE_SHIMMER_IN_SEC = 0.08
+STREET_SPARKLE_SHIMMER_HOLD_SEC = 0.18
+STREET_SPARKLE_SHIMMER_OUT_SEC = 0.55
+STREET_SPARKLE_COUNT = 16
+STREET_SPARKLE_SIZE = 0.022
+STREET_SPARKLE_RISE = 0.72
+STREET_SPARKLE_SPREAD = 1.35
+STREET_SPARKLE_SEC = 0.62
+STREET_SPARKLE_FLECK_COLOR = (1.0, 0.98, 0.72, 0.95)
+STREET_SPARKLE_FLECK_END_COLOR = (1.0, 0.94, 0.55, 0.0)
+
 # Reclaim-complete purity burst (HUD overlay + sting).
 # Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.
 PURITY_BURST_PEAK_ALPHA = 0.78
