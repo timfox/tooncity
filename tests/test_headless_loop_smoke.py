@@ -1334,7 +1334,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('reclaimPurityMeterWaveStartCream', wave_start_hud_src)
         self.assertIn('past #239', wave_start_hud_src)
 
-        # Purity-complete meter hose settle cream deepen past #248 —
+        # Purity-complete meter hose settle cream deepen past #266 —
         # taller stretch→settle + richer settling cream flecks / soft halo.
         for complete_settle_key in (
                 'PURITY_COMPLETE_METER_SETTLE_ENABLED',
@@ -1360,27 +1360,27 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIs(
             complete_settle_assigns.get(
                 'PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED'), True)
-        # Floors past #248 (count 6 / fall 0.11 / halo peak 1.28 / alpha 0.15).
+        # Floors past #266 (count 8 / fall 0.14 / halo peak 1.38 / alpha 0.18).
         self.assertGreaterEqual(
             int(complete_settle_assigns.get(
-                'PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT')), 8)
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_COUNT')), 10)
         self.assertGreater(
             float(complete_settle_assigns.get(
-                'PURITY_COMPLETE_METER_SETTLE_CREAM_FALL')), 0.11)
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_FALL')), 0.14)
         self.assertGreater(
             float(complete_settle_assigns.get(
-                'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK')), 1.28)
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK')), 1.38)
         self.assertGreaterEqual(
             float(complete_settle_assigns.get(
-                'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA')), 0.16)
+                'PURITY_COMPLETE_METER_SETTLE_CREAM_HALO_PEAK_ALPHA')), 0.18)
         complete_stretch = _literal(_toplevel_value(
             self.reclaim_tree, 'PURITY_COMPLETE_METER_SETTLE_STRETCH'))
         self.assertIsInstance(complete_stretch, list)
         self.assertGreaterEqual(len(complete_stretch), 3)
-        self.assertGreater(float(complete_stretch[2]), 1.34)
+        self.assertGreater(float(complete_stretch[2]), 1.36)
         self.assertGreater(
             float(complete_settle_assigns.get(
-                'PURITY_COMPLETE_METER_SETTLE_SEC')), 0.20)
+                'PURITY_COMPLETE_METER_SETTLE_SEC')), 0.24)
         self.assertIn('settleComplete', wave_start_hud_methods)
         self.assertIn('_buildCompleteSettleCreamJuice', wave_start_hud_methods)
         self.assertIn('_spawnCompleteSettleCreamFlecks', wave_start_hud_methods)
