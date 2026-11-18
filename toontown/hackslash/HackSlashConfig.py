@@ -324,6 +324,33 @@ COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.22
 COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.08
 COMBO_COUNTER_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
+# Combo-counter cream edge pop — local cream border strips framing the punch
+# counter when it ticks so the string reads clearly (KH-feel HUD readability,
+# Toontown cream only). Act-banner / wave-announce cream edge grammar, snappier
+# because ticks fire often. Soft under counter TextNode (bin 55). Toggle
+# COMBO_COUNTER_CREAM_EDGE_ENABLED = False drops the edge pop only.
+COMBO_COUNTER_CREAM_EDGE_ENABLED = True
+COMBO_COUNTER_CREAM_EDGE_COLOR = (1.0, 0.97, 0.82, 1.0)  # sunny cream
+COMBO_COUNTER_CREAM_EDGE = 0.018  # strip thickness in aspect2d units
+COMBO_COUNTER_CREAM_EDGE_HALF_W = 0.22  # local frame half-width around text
+COMBO_COUNTER_CREAM_EDGE_HALF_H = 0.08  # local frame half-height around text
+COMBO_COUNTER_CREAM_EDGE_PEAK = 0.55
+COMBO_COUNTER_CREAM_EDGE_PULSE = 0.32  # mid-beat alpha after peak
+COMBO_COUNTER_CREAM_EDGE_IN_SEC = 0.04
+COMBO_COUNTER_CREAM_EDGE_HOLD_SEC = 0.02
+COMBO_COUNTER_CREAM_EDGE_PULSE_SEC = 0.06
+COMBO_COUNTER_CREAM_EDGE_OUT_SEC = 0.14
+COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK = 1.18  # soft outward pop on the frame
+COMBO_COUNTER_CREAM_EDGE_BIN = 54  # under counter TextNode (55) / flecks (56+)
+
+
+def comboCounterCreamEdgePeakAtSec(inSec=None):
+    """Seconds from tick until cream edge pop reaches peak alpha."""
+    if inSec is None:
+        inSec = COMBO_COUNTER_CREAM_EDGE_IN_SEC
+    return max(0.0, float(inSec))
+
+
 # Mid/finisher launcher juice (upward juggle feel on the target).
 LAUNCH_HIT_INDEX = 1  # 2nd hit starts the juggle; finisher lifts more
 LAUNCH_HEIGHT = (0.0, 1.85, 3.1)
