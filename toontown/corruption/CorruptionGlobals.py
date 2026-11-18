@@ -3157,6 +3157,26 @@ def resolveBossHpBarFinalePhase(finalePhase=0, name=''):
     return 0
 
 
+def isSoftLockPrioritySubject(archetype=0, name='', finalePhase=0):
+    """True when soft-lock should prefer this hostile over pack adds.
+
+    Corrupted Oswald (archetype) and Ink Overlord (name tokens and/or
+    per-toon finalePhase). Callers must pass the hostile's own
+    finalePhase — never reclaim-director street phase alone, or P2
+    Smudge adds would steal priority from the Overlord.
+    """
+    try:
+        aid = int(archetype)
+    except (TypeError, ValueError):
+        aid = ARCHETYPE_INK
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return True
+    text = (name or '').lower()
+    if 'overlord' in text or 'unleashed' in text:
+        return True
+    return normalizeFinalePhase(finalePhase) >= 1
+
+
 def isBossOrChaseHpBarSubject(archetype=0, name='', finalePhase=0):
     """True for Ink Overlord (finale phase/name) or Corrupted Oswald chase."""
     if not BOSS_HP_BAR_ENABLED:

@@ -35,8 +35,10 @@ from .SoftTarget import (
     assistAimYawNudge,
     nextCycleIndex,
     pickCycleChoice,
+    pickSoftLockAcquire,
     shouldAssistAimOnHit,
     signedYawDeltaDeg,
+    softLockAcquireRank,
 )
 from .DemoHostile import DemoHostile
 from . import HitJuice
@@ -92,8 +94,10 @@ __all__ = [
     'assistAimYawNudge',
     'nextCycleIndex',
     'pickCycleChoice',
+    'pickSoftLockAcquire',
     'shouldAssistAimOnHit',
     'signedYawDeltaDeg',
+    'softLockAcquireRank',
     'DemoHostile',
     'HitJuice',
     'ComboCounterCreamEdgePulse',
