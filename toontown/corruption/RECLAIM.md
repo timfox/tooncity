@@ -121,6 +121,11 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 ~spawngagster         # Gunk Gagster shortcut
 ```
 
+Ink Smudge AI uses ``ink_dash`` (short planar rush then hit) by default and
+close ``ink_splat`` AoE when already in their face — Act 1 / Overlord P2-add
+swarm identity, not default smack fodder. Distinct from Oswald
+``betrayal_lunge`` / ``stain_burst`` (longer dash + shove).
+
 ## Depth D2 enemy demo
 
 ```
@@ -344,7 +349,8 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # Snare whip / Gunk bloom / Smudge radial hose.
 # Land F / LMB — cheap green sludge splash (BruteSludgeSplashFx) on each hit;
 # defeat layers a larger splash with CorruptDeathPopFx.
-# Compare ~spawncorrupt 1   (Ink Smudge: purple ink-fist telegraph + drip).
+# Compare ~spawncorrupt 1   (Ink Smudge: ink_dash / ink_splat kit + purple
+# ink-fist telegraph + drip — not stationary smack fodder).
 ```
 
 ## Balloon Snare string-lash / splash demo

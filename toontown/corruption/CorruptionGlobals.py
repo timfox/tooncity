@@ -21,17 +21,34 @@ ARCHETYPE_SNARE = 2
 ARCHETYPE_GAGSTER = 3
 ARCHETYPE_CORRUPT_OSWALD = 4
 ARCHETYPE_STATS = {
+    # Act 1 spine + Overlord P2 adds: ink-dash rush + close splat secondary
+    # so swarm pressure has move identity (not default smack fodder).
     ARCHETYPE_INK: {
         'name': 'Ink Smudge',
         'hpScale': 1.0,
         'chaseSpeed': 9.0,
-        'meleeRange': 4.5,
+        # Engage from mid-range so the ink dash can rush the gap.
+        'meleeRange': 5.8,
         'attackHitRange': 5.5,
+        'attackNearMissRange': 6.5,
         'attackDamage': 2,
         'telegraphDelay': 0.55,
         'attackCooldown': 1.75,
         'actorScale': 1.08,
         'actorTint': (0.18, 0.06, 0.28, 1.0),
+        # Swarm rush — dash then hit (default attackMove).
+        'attackMove': 'ink_dash',
+        'dashDist': 3.2,
+        'dashHitRange': 5.5,
+        'dashNearMissRange': 6.5,
+        'dashDamage': 2,
+        # Close secondary — purple ink splat AoE when already in their face.
+        'splatMeleeRange': 3.2,
+        'splatHitRange': 4.0,
+        'splatNearMissRange': 5.0,
+        'splatDamage': 3,
+        'splatTelegraphDelay': 0.42,
+        'splatCooldown': 1.55,
     },
     ARCHETYPE_BRUTE: {
         'name': 'Sludge Brute',
@@ -1811,6 +1828,76 @@ def snareLashYankPos(sx, sy, tx, ty, dist=None, stop=None):
     """Return (nx, ny) after applying :func:`snareLashYankDelta`."""
     ddx, ddy = snareLashYankDelta(sx, sy, tx, ty, dist=dist, stop=stop)
     return (float(tx) + ddx, float(ty) + ddy)
+
+
+# ---------------------------------------------------------------------------
+# Ink Smudge ink-dash + splat secondary (gameplay identity).
+# Gap scan #7: Act 1 spine + Overlord P2 adds were default smack fodder while
+# Brute/Snare/Gagster/Oswald had distinct kits. INK_SMUDGE_KIT_ENABLED = False
+# restores legacy smack. INK_SPLAT_SECONDARY_ENABLED = False keeps dash-only.
+# Wired from DistributedCorruptToonAI.__beginAttack / __resolveInk*.
+# Not cream FX deepen. No keyblades / KH branding.
+# ---------------------------------------------------------------------------
+INK_SMUDGE_KIT_ENABLED = True
+INK_DASH_ENABLED = True
+INK_SPLAT_SECONDARY_ENABLED = True
+INK_DASH_DIST = 3.2  # planar dash toward the toon on resolve (shorter than Oswald)
+INK_DASH_STOP = 0.75  # never overshoot past this gap to the toon
+INK_SPLAT_MELEE_RANGE = 3.2  # pick splat when inside this engage
+
+
+def inkSplatMeleeRange(stats=None):
+    if stats and 'splatMeleeRange' in stats:
+        return max(0.5, float(stats['splatMeleeRange']))
+    return max(0.5, float(INK_SPLAT_MELEE_RANGE))
+
+
+def inkDashDist(stats=None):
+    if stats and 'dashDist' in stats:
+        return max(0.0, float(stats['dashDist']))
+    return max(0.0, float(INK_DASH_DIST))
+
+
+def inkPickAttackMove(dist, stats=None):
+    """Choose Ink Smudge ``ink_dash`` vs close ``ink_splat``.
+
+    Dash is the default attackMove (swarm rush). Splat is the close secondary
+    when the toon is inside splatMeleeRange. Returns ``ink_dash`` when the kit
+    or splat secondary is off; ``smack`` when the whole kit is disabled.
+    """
+    if not INK_SMUDGE_KIT_ENABLED:
+        return 'smack'
+    if not INK_SPLAT_SECONDARY_ENABLED:
+        return 'ink_dash'
+    if float(dist) <= inkSplatMeleeRange(stats):
+        return 'ink_splat'
+    return 'ink_dash'
+
+
+def inkDashPos(sx, sy, tx, ty, dash=None, stop=None):
+    """Planar Smudge position after dashing toward (tx, ty).
+
+    Advances up to ``dash`` but never closer than ``stop`` to the toon so the
+    rush does not overshoot through them. Returns (sx, sy) if already inside
+    the stop gap or coincident.
+    """
+    if dash is None:
+        dash = INK_DASH_DIST
+    if stop is None:
+        stop = INK_DASH_STOP
+    dash = max(0.0, float(dash))
+    stop = max(0.0, float(stop))
+    sx = float(sx)
+    sy = float(sy)
+    dx = float(tx) - sx
+    dy = float(ty) - sy
+    planar = (dx * dx + dy * dy) ** 0.5
+    if planar <= stop or planar < 1e-6 or dash <= 0.0:
+        return (sx, sy)
+    step = min(dash, planar - stop)
+    if step <= 0.0:
+        return (sx, sy)
+    return (sx + dx / planar * step, sy + dy / planar * step)
 
 
 # ---------------------------------------------------------------------------

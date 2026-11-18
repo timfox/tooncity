@@ -342,6 +342,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             self.assertEqual(cg.archetypeDefaultName(archetype_id), expected)
             self.assertIn(archetype_id, cg.ARCHETYPE_STATS)
 
+        # Ink Smudge — ink-dash rush + close splat secondary (not smack fodder).
+        ink = cg.ARCHETYPE_STATS[cg.ARCHETYPE_INK]
+        self.assertEqual(ink.get('attackMove'), 'ink_dash')
+        self.assertGreater(float(ink.get('dashDist', 0)), 1.5)
+        self.assertGreater(float(ink.get('splatMeleeRange', 0)), 2.0)
+        self.assertTrue(cg.INK_SMUDGE_KIT_ENABLED)
+        self.assertTrue(cg.INK_SPLAT_SECONDARY_ENABLED)
+
         # Sludge Brute — traveling spit projectile + close slam secondary
         # (not instant long-range smack / tinted Smudge).
         brute = cg.ARCHETYPE_STATS[cg.ARCHETYPE_BRUTE]

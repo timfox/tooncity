@@ -25,6 +25,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     ``betrayal_lunge`` dash-then-hit plus close ``stain_burst`` AoE and a
     planar shove — not a crimson Ink Smudge smack reskin.
 
+    Ink Smudge (Act 1 spine + Overlord P2 adds) uses ``ink_dash`` rush plus
+    close ``ink_splat`` AoE secondary — swarm pressure with move identity,
+    not default smack fodder.
+
     Air-juggle hang stuns chase/attack on the AI so cancel→slam is not just
     client juice under multi-enemy pressure.
     """
@@ -320,6 +324,14 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             burstEngage = float(self._stats.get(
                 'burstMeleeRange', lungeEngage))
             return max(lungeEngage, burstEngage)
+        # Ink Smudge: ink-dash from mid-range; splat is closer.
+        if (CorruptionGlobals.normalizeArchetype(self.archetype)
+                == CorruptionGlobals.ARCHETYPE_INK):
+            dashEngage = float(self._stats.get(
+                'meleeRange', CorruptionGlobals.MELEE_RANGE))
+            splatEngage = float(self._stats.get(
+                'splatMeleeRange', dashEngage))
+            return max(dashEngage, splatEngage)
         return float(self._stats.get('meleeRange', CorruptionGlobals.MELEE_RANGE))
 
     def __findNearestToon(self):
@@ -449,6 +461,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             if aid == CorruptionGlobals.ARCHETYPE_BRUTE and move == 'spit':
                 move = CorruptionGlobals.brutePickAttackMove(
                     self.__planarDist(target), self._stats)
+            # Ink Smudge: ink-dash by default; splat when the toon is in their face.
+            elif (aid == CorruptionGlobals.ARCHETYPE_INK
+                    and move in ('ink_dash', 'smack')):
+                move = CorruptionGlobals.inkPickAttackMove(
+                    self.__planarDist(target), self._stats)
             # Corrupted Oswald: betrayal lunge by default; stain burst up close.
             elif (aid == CorruptionGlobals.ARCHETYPE_CORRUPT_OSWALD
                     and move in ('betrayal_lunge', 'smack')):
@@ -505,6 +522,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'burstTelegraphDelay',
                 self._stats.get(
                     'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
+        if move == 'ink_splat':
+            return float(self._stats.get(
+                'splatTelegraphDelay',
+                self._stats.get(
+                    'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
         return float(self._stats.get(
             'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY))
 
@@ -517,6 +539,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if move == 'stain_burst':
             return float(self._stats.get(
                 'burstCooldown',
+                self._stats.get(
+                    'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
+        if move == 'ink_splat':
+            return float(self._stats.get(
+                'splatCooldown',
                 self._stats.get(
                     'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
         return float(self._stats.get(
@@ -536,6 +563,13 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'burstNearMissRange',
                 CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
             return hit, near
+        if move == 'ink_splat':
+            hit = float(self._stats.get(
+                'splatHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
+            near = float(self._stats.get(
+                'splatNearMissRange',
+                CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+            return hit, near
         if move == 'betrayal_lunge':
             hit = float(self._stats.get(
                 'lungeHitRange',
@@ -543,6 +577,17 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                     'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE)))
             near = float(self._stats.get(
                 'lungeNearMissRange',
+                self._stats.get(
+                    'attackNearMissRange',
+                    CorruptionGlobals.ATTACK_NEAR_MISS_RANGE)))
+            return hit, near
+        if move == 'ink_dash':
+            hit = float(self._stats.get(
+                'dashHitRange',
+                self._stats.get(
+                    'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE)))
+            near = float(self._stats.get(
+                'dashNearMissRange',
                 self._stats.get(
                     'attackNearMissRange',
                     CorruptionGlobals.ATTACK_NEAR_MISS_RANGE)))
@@ -562,9 +607,17 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return int(self._stats.get(
                 'burstDamage',
                 self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
+        if move == 'ink_splat':
+            return int(self._stats.get(
+                'splatDamage',
+                self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
         if move == 'betrayal_lunge':
             return int(self._stats.get(
                 'lungeDamage',
+                self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
+        if move == 'ink_dash':
+            return int(self._stats.get(
+                'dashDamage',
                 self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
         return int(self._stats.get(
             'attackDamage', CorruptionGlobals.ATTACK_DAMAGE))
@@ -587,6 +640,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return self.__resolveOswaldStainBurst()
         if move == 'betrayal_lunge':
             return self.__resolveOswaldBetrayalLunge()
+        if move == 'ink_splat':
+            return self.__resolveInkSplat()
+        if move == 'ink_dash':
+            return self.__resolveInkDash()
         return self.__resolveSingleTargetHit(move)
 
     def __resolveBruteSpit(self):
@@ -985,6 +1042,96 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return
         dash = CorruptionGlobals.oswaldLungeDashDist(self._stats)
         nx, ny = CorruptionGlobals.oswaldLungeDashPos(sx, sy, tx, ty, dash=dash)
+        if abs(nx - sx) < 1e-6 and abs(ny - sy) < 1e-6:
+            return
+        heading = -math.degrees(math.atan2(tx - sx, ty - sy))
+        self.setPos(nx, ny, sz)
+        self.setH(heading)
+        self.sendUpdate('setXYZH', [nx, ny, sz, heading])
+
+    def __resolveInkDash(self):
+        """Swarm rush: planar ink-dash toward the toon, then single-target hit.
+
+        Act 1 / P2-add move identity — Smudge closes a short gap on resolve
+        instead of standing smack. Shorter than Oswald betrayal_lunge; no
+        shove. Falls back to single-target when the kit / dash is disabled.
+        Damage routes through ``__damageToonAndCheckReclaimKo``.
+        """
+        if not getattr(CorruptionGlobals, 'INK_SMUDGE_KIT_ENABLED', True):
+            return self.__resolveSingleTargetHit('smack')
+        if not getattr(CorruptionGlobals, 'INK_DASH_ENABLED', True):
+            return self.__resolveSingleTargetHit('ink_dash')
+        target = self.air.doId2do.get(self._targetId)
+        if target is None or not isinstance(target, DistributedToonAI):
+            return Task.done
+        if getattr(target, 'zoneId', None) != self.zoneId:
+            return Task.done
+        if getattr(target, 'hp', 1) <= 0:
+            return Task.done
+        self.__dashInkTowardTarget(target)
+        return self.__resolveSingleTargetHit('ink_dash')
+
+    def __resolveInkSplat(self):
+        """Close purple ink splat — self-centered AoE when Smudge is pressed.
+
+        Distinct from Oswald stain_burst (shove + crimson), Overlord rain
+        (wider mid-range), and Gagster lob (wind-up snapshot). Dodge out of
+        the splat radius during telegraph to escape. Damage routes through
+        ``__damageToonAndCheckReclaimKo`` only.
+        """
+        if not getattr(CorruptionGlobals, 'INK_SMUDGE_KIT_ENABLED', True):
+            return self.__resolveSingleTargetHit('smack')
+        if not getattr(
+                CorruptionGlobals, 'INK_SPLAT_SECONDARY_ENABLED', True):
+            return self.__resolveInkDash()
+        try:
+            ox = float(self.getX())
+            oy = float(self.getY())
+        except Exception:
+            return Task.done
+        hitRange, nearMiss = self.__hitRangesForMove('ink_splat')
+        dmg = self.__damageForMove('ink_splat')
+        now = globalClock.getFrameTime()  # noqa: F821
+        anyHit = False
+        anyDodge = False
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - ox
+                dy = float(target.getY()) - oy
+            except Exception:
+                continue
+            dist = math.sqrt(dx * dx + dy * dy)
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            iframes = now < iframeUntil
+            if iframes and dist <= max(hitRange, nearMiss):
+                anyDodge = True
+                continue
+            if dist > hitRange:
+                continue
+            if self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='ink_splat'):
+                anyHit = True
+        if anyHit:
+            self.sendUpdate('announceAttackHit', [])
+        elif anyDodge:
+            self.sendUpdate('announceAttackDodged', [])
+        return Task.done
+
+    def __dashInkTowardTarget(self, target):
+        """Planar dash step for ink_dash — short swarm rush toward the toon."""
+        if target is None:
+            return
+        try:
+            sx = float(self.getX())
+            sy = float(self.getY())
+            sz = float(self.getZ())
+            tx = float(target.getX())
+            ty = float(target.getY())
+        except Exception:
+            return
+        dash = CorruptionGlobals.inkDashDist(self._stats)
+        nx, ny = CorruptionGlobals.inkDashPos(sx, sy, tx, ty, dash=dash)
         if abs(nx - sx) < 1e-6 and abs(ny - sy) < 1e-6:
             return
         heading = -math.degrees(math.atan2(tx - sx, ty - sy))

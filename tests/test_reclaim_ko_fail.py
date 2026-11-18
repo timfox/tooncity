@@ -162,6 +162,7 @@ class ReclaimKoFailTests(unittest.TestCase):
                 "context='rain'",
                 "context='smack'",
                 "context='stain_burst'",
+                "context='ink_splat'",
         ):
             self.assertIn(needle, src, msg='missing KO damage path: %s' % needle)
         # takeDamage only inside the KO helper — hit resolves call the helper.

@@ -301,6 +301,9 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             self.assertEqual(cg.archetypeDefaultName(archetype_id), label)
             self.assertIn(archetype_id, cg.ARCHETYPE_STATS)
 
+        ink = cg.ARCHETYPE_STATS[cg.ARCHETYPE_INK]
+        self.assertEqual(ink.get('attackMove'), 'ink_dash')
+        self.assertTrue(cg.INK_SMUDGE_KIT_ENABLED)
         gagster = cg.ARCHETYPE_STATS[cg.ARCHETYPE_GAGSTER]
         self.assertEqual(gagster.get('attackMove'), 'gag_lob')
         brute = cg.ARCHETYPE_STATS[cg.ARCHETYPE_BRUTE]
