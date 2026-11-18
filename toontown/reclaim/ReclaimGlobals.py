@@ -53,12 +53,19 @@ BANNER_COMPLETE = 'PURITY RESTORED!'
 BANNER_COMPLETE_SUB = 'Oswald tips his ears — neighborhood cheer returns!'
 BANNER_WAVE_CLEARED = 'Wave cleared — hold the street!'
 # Player laff/KO mid-reclaim — authored fail beat (street goes contested).
+# Sub / tip cue retry without hub-hop: press R or leave+re-enter the street.
+# PlayEntry clears _reclaimLive on announceReclaimFailed so same-street R works.
 BANNER_FAILED = 'RECLAIM FAILED!'
 BANNER_FAILED_SUB = (
-    "Oswald: you got knocked out — ink's reclaiming the street!")
+    "Oswald: you got knocked out — ink's reclaiming the street! "
+    "Press R or re-enter to retry.")
 BANNER_FAILED_COLOR = (1.0, 0.42, 0.38, 1.0)
 BANNER_FAILED_SUB_COLOR = (1.0, 0.78, 0.72, 1.0)
 BANNER_FAILED_HOLD_SEC = 3.2
+# PlayEntry tip bar after KO fail (clears _reclaimLive; R / re-enter retry).
+BANNER_FAILED_RETRY_TIP = (
+    '%s: reclaim failed — press R or re-enter to retry  |  '
+    'F fight  |  C campaign')
 POLLUTION_HINT_FMT = 'Corruption  %.0f%%'
 STATUS_FMT = 'Wave %s/%s  |  Corruption %.0f%%  |  Pack %s'
 DEMO_HINT = (

@@ -106,9 +106,19 @@ class ReclaimKoFailTests(unittest.TestCase):
         self.assertIn('knocked out', sub)
         self.assertIn('ink', sub)
         self.assertIn('oswald', sub)
+        # Retry tip — press R / re-enter (clears stuck _reclaimLive path).
+        self.assertTrue(
+            'press r' in sub or 're-enter' in sub,
+            msg='BANNER_FAILED_SUB must cue press R / re-enter retry')
+        self.assertTrue(hasattr(rg, 'BANNER_FAILED_RETRY_TIP'))
+        retry = str(rg.BANNER_FAILED_RETRY_TIP).lower()
+        self.assertIn('press r', retry)
+        self.assertIn('re-enter', retry)
+        self.assertIn('retry', retry)
         for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
             self.assertNotIn(banned, title)
             self.assertNotIn(banned, sub)
+            self.assertNotIn(banned, retry)
         self.assertGreater(float(rg.BANNER_FAILED_HOLD_SEC), 0.0)
 
     def test_director_ai_ko_fail_hooks(self):
@@ -201,6 +211,50 @@ class ReclaimKoFailTests(unittest.TestCase):
         self.assertIn('streetPackUnlocked', ai)
         self.assertIn('_hydrateFromToon', ai)
 
+    def test_play_entry_clears_reclaim_live_on_fail(self):
+        """PlayEntry accepts announceReclaimFailed and drops _reclaimLive."""
+        src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn("self.accept('announceReclaimFailed'", src)
+        self.assertIn('_onReclaimFailed', src)
+        self.assertIn('def _onReclaimFailed', src)
+        # Handler clears the live latch (same as purity / zone change).
+        fail_idx = src.find('def _onReclaimFailed')
+        self.assertGreater(fail_idx, 0)
+        next_def = src.find('\n    def ', fail_idx + 1)
+        self.assertGreater(next_def, fail_idx)
+        fail_snip = src[fail_idx:next_def]
+        self.assertIn('self._reclaimLive = False', fail_snip)
+        self.assertIn('BANNER_FAILED_RETRY_TIP', fail_snip)
+        self.assertIn('_showTip', fail_snip)
+        # Accept is registered beside start/purity (not CampaignDirectorAI).
+        accept_idx = src.find("self.accept('announceReclaimFailed'")
+        self.assertGreater(accept_idx, 0)
+        self.assertLess(
+            accept_idx, src.find('def _onReclaimFailed'),
+            msg='accept must land in __init__, not only as a string in handler')
+        # R / auto still gate on _reclaimLive — clearing unblocks retry.
+        req_idx = src.find('def _requestReclaim')
+        self.assertGreater(req_idx, 0)
+        req_snip = src[req_idx:req_idx + 400]
+        self.assertIn('if self._reclaimLive:', req_snip)
+        auto_idx = src.find('def _autoStartReclaim')
+        self.assertGreater(auto_idx, 0)
+        auto_snip = src[auto_idx:auto_idx + 500]
+        self.assertIn('if self._reclaimLive:', auto_snip)
+        # No KH branding in the new fail handler.
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
+            self.assertNotIn(banned, fail_snip.lower())
+
+    def test_client_director_still_sends_fail_messenger(self):
+        """Director keeps broadcasting so PlayEntry acceptor can fire."""
+        src = _read('toontown/reclaim/DistributedReclaimDirector.py')
+        fail_idx = src.find('def announceReclaimFailed')
+        self.assertGreater(fail_idx, 0)
+        next_def = src.find('\n    def ', fail_idx + 1)
+        fail_snip = src[fail_idx:next_def]
+        self.assertIn("messenger.send(", fail_snip)
+        self.assertIn("'announceReclaimFailed'", fail_snip)
+
     def test_docs_mention_ko_fail(self):
         md = _read('toontown/corruption/RECLAIM.md')
         lower = md.lower()
@@ -210,6 +264,10 @@ class ReclaimKoFailTests(unittest.TestCase):
         # Fail step copy must stay rubber-hose (doc may say "no keyblades" elsewhere).
         step7 = lower.split('7. player knockout', 1)[-1].split('\n## ', 1)[0]
         self.assertIn('contested', step7)
+        self.assertIn('_reclaimlive', step7.replace('-', ''))
+        self.assertTrue(
+            'press r' in step7 or 're-enter' in step7 or 'retry' in step7,
+            msg='docs step 7 should mention R / re-enter retry')
         for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
             self.assertNotIn(banned, step7)
 

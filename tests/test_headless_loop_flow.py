@@ -594,11 +594,16 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             cg.ARCHETYPE_GAGSTER, 'gag_lob'))
         self.assertIn('__maybeInterruptMeleeTelegraph', corrupt_ai)
 
-        # Player KO during reclaim is an authored fail (#323/#324).
+        # Player KO during reclaim is an authored fail (#323/#324) + retry clear.
         rg = self.rg
         self.assertIn('fail', str(rg.BANNER_FAILED).lower())
         self.assertIn('knocked out', str(rg.BANNER_FAILED_SUB).lower())
         self.assertIn('Oswald', rg.BANNER_FAILED_SUB)
+        fail_sub = str(rg.BANNER_FAILED_SUB).lower()
+        self.assertTrue(
+            'press r' in fail_sub or 're-enter' in fail_sub,
+            msg='KO fail sub must cue press R / re-enter retry')
+        self.assertTrue(hasattr(rg, 'BANNER_FAILED_RETRY_TIP'))
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             self.assertNotIn(banned, str(rg.BANNER_FAILED).lower())
             self.assertNotIn(banned, str(rg.BANNER_FAILED_SUB).lower())
@@ -608,6 +613,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         client_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
         self.assertIn('announceReclaimFailed', client_src)
         self.assertIn('BANNER_FAILED', client_src)
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn("self.accept('announceReclaimFailed'", play_src)
+        self.assertIn('def _onReclaimFailed', play_src)
+        fail_h = play_src.find('def _onReclaimFailed')
+        self.assertGreater(fail_h, 0)
+        fail_body = play_src[fail_h:play_src.find('\n    def ', fail_h + 1)]
+        self.assertIn('self._reclaimLive = False', fail_body)
         # All corrupt damage paths (incl. stain_burst / ink_splat) share KO helper.
         for needle in (
                 '__damageToonAndCheckReclaimKo',

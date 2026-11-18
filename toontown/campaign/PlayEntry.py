@@ -102,6 +102,8 @@ class PlayEntryClient(DirectObject):
         self._victoryEpilogue = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
+        # KO fail (#323) — clear live latch so same-street R / re-enter retry.
+        self.accept('announceReclaimFailed', self._onReclaimFailed)
         # CampaignHandoff owns the celebration; tip bar latches the next cue.
         self.accept('purityRestoreFx', self._onPurity)
         self.accept('campaignHandoffCue', self._onHandoffCue)
@@ -582,6 +584,29 @@ class PlayEntryClient(DirectObject):
                 pass
         self._flashBanner(
             ReclaimGlobals.streetReclaimLiveFlash(zoneId, face=_face()))
+
+    def _onReclaimFailed(self, zoneId=None):
+        """KO fail plate — drop live latch so R / re-enter can retry reclaim.
+
+        Without this, `_requestReclaim` / auto-start early-return until a
+        hub hop clears `_reclaimLive` via zone change. No CampaignDirectorAI
+        edits — director already broadcasts announceReclaimFailed.
+        """
+        self._reclaimLive = False
+        face = _face()
+        tip = getattr(ReclaimGlobals, 'BANNER_FAILED_RETRY_TIP', None)
+        if tip:
+            try:
+                tip = tip % face if '%s' in tip else tip
+            except Exception:
+                tip = (
+                    '%s: reclaim failed — press R or re-enter to retry  |  '
+                    'F fight  |  C campaign' % face)
+        else:
+            tip = (
+                '%s: reclaim failed — press R or re-enter to retry  |  '
+                'F fight  |  C campaign' % face)
+        self._showTip(tip)
 
     def _latchSoftNextCue(self, tip, nextZone=None, nextStreet=None):
         """Persist next-street tip across hub / playground zone changes."""
