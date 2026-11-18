@@ -1553,7 +1553,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('playHandoffCreamEdge', handoff_src)
         self.assertIn('confetti=True', handoff_src)
-        # Act handoff cream edge settle deepen — overshoot→rest→rebound.
+        # Act handoff cream edge settle deepen past #240 — overshoot→rest→rebound.
         act_edge_methods = _class_method_names(
             _module_ast(act_edge_rel), 'ActBannerCreamEdgeFx')
         self.assertIn('_settleScalePart', act_edge_methods)
@@ -1561,8 +1561,18 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('SETTLE_OVERSHOOT', act_edge_src)
         self.assertIn('SETTLE_REBOUND', act_edge_src)
         self.assertIn('CreamEdgeSettle', act_edge_src)
+        self.assertIn('past #240', act_edge_src)
+        over = _literal(_toplevel_value(
+            self.campaign_tree, 'HANDOFF_CREAM_EDGE_SETTLE_OVERSHOOT'))
+        self.assertIsInstance(over, list)
+        self.assertGreaterEqual(len(over), 4)
+        self.assertGreaterEqual(float(over[0]), 1.10)
+        self.assertGreaterEqual(float(over[2]), 1.15)
+        wash_delay = _literal(_toplevel_value(
+            self.campaign_tree, 'HANDOFF_CREAM_WASH_DELAY_SEC'))
+        self.assertGreaterEqual(float(wash_delay), 0.54)
         magic_src_l = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('deepened edge settle', magic_src_l)
+        self.assertIn('juicier deepened edge settle', magic_src_l)
 
         # Idle cream drip sparkle (#125) — twinkle flecks on idle cream drip.
         idle_sparkle_rel = 'toontown/corruption/IdleCreamDripSparkleFx.py'
