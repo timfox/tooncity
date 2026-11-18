@@ -10,7 +10,8 @@ class ToggleHackSlash(MagicWord):
     advancedDesc = (
         'Enables the KH-style hack-and-slash prototype: press F (or LMB) to '
         'swing a short 3-hit combo with soft nearest-hostile targeting, a '
-        'subtle camera/facing nudge toward the sticky lock, hitstop, a brief '
+        'subtle camera/facing nudge toward the sticky lock (mid-combo soft '
+        'orbit/pull for readability without hard-locking), hitstop, a brief '
         'white flash on connect, and an on-screen combo counter that ticks '
         'on hits then fades when the string breaks (finisher also FOV-punches). '
         'Spawns ink demo hostiles in front of you. Toggle again to disable. '
@@ -33,7 +34,7 @@ class ToggleHackSlash(MagicWord):
         if enabled:
             return (
                 'Hack-Slash demo ON. Press F (or LMB) for melee combos. '
-                'Combo counter ticks on connect; soft-lock nudge + hit flash. '
-                'Soft-targets demo hostiles (and street suits).'
+                'Combo counter ticks on connect; soft-lock orbit mid-combo + '
+                'hit flash. Soft-targets demo hostiles (and street suits).'
             )
         return 'Hack-Slash demo OFF.'

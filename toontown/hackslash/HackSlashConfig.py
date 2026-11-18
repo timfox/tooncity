@@ -33,10 +33,20 @@ FINISHER_FOV_IN_SEC = 0.06
 FINISHER_FOV_OUT_SEC = 0.18
 
 # Soft-lock camera / facing nudge while melee is enabled (per-tick lerp).
-# Keep mild so smart-cam + locomotion stay in control.
+# Idle stays mild; mid-combo adds a soft orbit/pull for KH framing without
+# hard-locking (smart-cam + page-up/down still win).
 LOCK_FACE_LERP = 0.12
 LOCK_CAM_LERP = 0.08
 LOCK_CAM_LOOK_HEIGHT = 1.4
+# Mid-combo soft-lock boost — readable melee framing, still yields to player cam.
+LOCK_COMBO_FACE_LERP = 0.22
+LOCK_COMBO_CAM_LERP = 0.16
+LOCK_COMBO_ORBIT_LERP = 0.12
+LOCK_COMBO_ORBIT_LATERAL = 1.4
+LOCK_COMBO_ORBIT_PULL = 0.65
+LOCK_COMBO_ORBIT_LIFT = 0.28
+# After LocalAvatar.updateSmartCamera (priority 47) so the bias sticks a frame.
+LOCK_CAM_TASK_PRIORITY = 50
 
 # Brief aspect2d white flash on connect (beyond hitstop).
 HIT_FLASH_PEAK_ALPHA = 0.38
@@ -108,5 +118,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Hack-Slash: F/LMB melee  |  Shift/X dodge  |  combo counter  |  ~hackslash'
+    'Hack-Slash: F/LMB melee  |  Shift/X dodge  |  soft-lock cam  |  ~hackslash'
 )
