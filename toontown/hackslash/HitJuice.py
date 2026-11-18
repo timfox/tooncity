@@ -3,8 +3,9 @@
 Shared helpers so MeleeCombat, demo hostiles, and corrupt hit-reacts share one
 cartoon scale curve: brief flat squash → tall recover stretch → settle.
 Combo finishers use playFinisherSlam for a heavier rubber-hose slam beat.
-Launcher hang uses buildLaunchHangInterval + spawnHangSparks for a readable
-airborne float before fall.
+Launcher hang uses buildLaunchHangInterval + spawnCreamHangSparkles for a
+readable airborne float with cream sparkle before fall (spawnHangSparks stays
+as the cream-disabled fallback).
 Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks for a brief
 rubber-hose number pop (and tiny ink flecks) on each connect.
 Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
@@ -268,6 +269,154 @@ def clearHangSparks(nodes):
                 np.removeNode()
         except Exception:
             pass
+
+
+def _hangCreamTablePick(table, hitIndex):
+    """Pick a per-hit hang-cream tunable (scalar or mid/finisher tuple)."""
+    if isinstance(table, (tuple, list)):
+        if not table:
+            return 0
+        return table[min(max(0, int(hitIndex)), len(table) - 1)]
+    return table
+
+
+def spawnCreamHangSparkles(origin, hitIndex=0, parent=None,
+                           name='hackslashCreamHangSparkles'):
+    """Cream flecks + soft halo at juggle hang apex. Returns (Parallel|None, nodes).
+
+    World-space rubber-hose cream glitter meant to layer with
+    buildLaunchHangInterval — not KH glitter, and not aspect2d (CreamSlamFlashFx
+    owns the finisher screen flash). Caller owns cleanup.
+    """
+    if origin is None or not getattr(
+            HackSlashConfig, 'LAUNCH_HANG_CREAM_ENABLED', True):
+        return None, []
+
+    parentNP = parent
+    if parentNP is None:
+        try:
+            parentNP = render  # noqa: F821
+        except Exception:
+            return None, []
+
+    creamCount = int(_hangCreamTablePick(
+        HackSlashConfig.LAUNCH_HANG_CREAM_COUNT, hitIndex))
+    streakCount = int(_hangCreamTablePick(
+        HackSlashConfig.LAUNCH_HANG_CREAM_STREAK_COUNT, hitIndex))
+    if creamCount + streakCount <= 0 and not getattr(
+            HackSlashConfig, 'LAUNCH_HANG_CREAM_HALO_ENABLED', True):
+        return None, []
+
+    size = float(HackSlashConfig.LAUNCH_HANG_CREAM_SIZE)
+    streakSize = float(HackSlashConfig.LAUNCH_HANG_CREAM_STREAK_SIZE)
+    drift = float(_hangCreamTablePick(
+        HackSlashConfig.LAUNCH_HANG_CREAM_DRIFT, hitIndex))
+    lift = float(HackSlashConfig.LAUNCH_HANG_CREAM_LIFT)
+    sec = float(HackSlashConfig.LAUNCH_HANG_CREAM_SEC)
+    ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+
+    nodes = []
+    parts = []
+
+    def _spawnFleck(index, total, color, endColor, liftBias, nameSuffix,
+                    cardSize, elongated=False):
+        if total <= 0:
+            return
+        r, g, b, a = color
+        er, eg, eb, ea = endColor
+        angle = (2.0 * pi * index) / float(max(1, total)) + liftBias
+        try:
+            cm = CardMaker('%s-%s-%s' % (name, nameSuffix, index))
+            if elongated or index % 2 == 1:
+                cm.setFrame(
+                    -cardSize * 0.35, cardSize * 0.35,
+                    -cardSize * 1.35, cardSize * 1.35)
+            else:
+                cm.setFrame(
+                    -cardSize, cardSize, -cardSize * 0.85, cardSize * 0.85)
+            fleck = parentNP.attachNewNode(cm.generate())
+            fleck.setTransparency(TransparencyAttrib.MAlpha)
+            fleck.setColor(r, g, b, 1)
+            fleck.setColorScale(r, g, b, a)
+            start = Point3(
+                ox + cos(angle) * 0.22,
+                oy + sin(angle) * 0.22,
+                oz + lift * 0.2 + 0.06 * (index % 3))
+            fleck.setPos(start)
+            fleck.setScale(0.5 + 0.12 * (index % 3))
+            fleck.setBin('transparent', 23)
+            fleck.setDepthWrite(False)
+            fleck.setBillboardPointEye()
+        except Exception:
+            return
+        end = Point3(
+            start[0] + cos(angle) * drift,
+            start[1] + sin(angle) * drift,
+            start[2] + lift + 0.14 * (index % 2))
+        parts.append(Parallel(
+            LerpPosInterval(fleck, sec, end, blendType='easeOut'),
+            LerpScaleInterval(fleck, sec, 0.04, blendType='easeIn'),
+            LerpColorScaleInterval(
+                fleck, sec, Vec4(er, eg, eb, ea), blendType='easeIn'),
+        ))
+        nodes.append(fleck)
+
+    for i in range(creamCount):
+        _spawnFleck(
+            i, creamCount,
+            HackSlashConfig.LAUNCH_HANG_CREAM_COLOR,
+            HackSlashConfig.LAUNCH_HANG_CREAM_END,
+            0.22, 'cream', size)
+    for i in range(streakCount):
+        _spawnFleck(
+            i, streakCount,
+            HackSlashConfig.LAUNCH_HANG_CREAM_STREAK_COLOR,
+            HackSlashConfig.LAUNCH_HANG_CREAM_STREAK_END,
+            0.55, 'streak', streakSize, elongated=True)
+
+    if getattr(HackSlashConfig, 'LAUNCH_HANG_CREAM_HALO_ENABLED', True):
+        half = float(HackSlashConfig.LAUNCH_HANG_CREAM_HALO_HALF)
+        startScale = float(HackSlashConfig.LAUNCH_HANG_CREAM_HALO_START)
+        peakScale = float(HackSlashConfig.LAUNCH_HANG_CREAM_HALO_PEAK)
+        haloSec = float(HackSlashConfig.LAUNCH_HANG_CREAM_HALO_SEC)
+        peakA = float(HackSlashConfig.LAUNCH_HANG_CREAM_HALO_PEAK_ALPHA)
+        hr, hg, hb, _ha = HackSlashConfig.LAUNCH_HANG_CREAM_HALO_COLOR
+        try:
+            cm = CardMaker('%s-halo' % name)
+            cm.setFrame(-half, half, -half, half)
+            halo = parentNP.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(hr, hg, hb, 1)
+            halo.setColorScale(hr, hg, hb, peakA)
+            halo.setPos(ox, oy, oz + lift * 0.15)
+            halo.setScale(startScale)
+            halo.setBin('transparent', 22)
+            halo.setDepthWrite(False)
+            halo.setBillboardPointEye()
+            parts.append(Parallel(
+                LerpScaleInterval(
+                    halo, max(0.01, haloSec), peakScale, blendType='easeOut'),
+                Sequence(
+                    Wait(max(0.0, haloSec * 0.2)),
+                    LerpColorScaleInterval(
+                        halo, max(0.01, haloSec * 0.8),
+                        Vec4(hr, hg, hb, 0), blendType='easeIn'),
+                ),
+            ))
+            nodes.append(halo)
+        except Exception:
+            pass
+
+    if not parts:
+        return None, []
+    ival = Parallel(*parts, name=name)
+    ival.start()
+    return ival, nodes
+
+
+def clearCreamHangSparkles(nodes):
+    """Remove cream hang sparkle / halo CardMaker nodes."""
+    clearHangSparks(nodes)
 
 
 def playComboCounterPop(node, settleScale, name='hackslashComboHosePop'):
