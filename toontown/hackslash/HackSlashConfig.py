@@ -322,6 +322,21 @@ DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_SEC = 0.28
 DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA = 0.22
 DODGE_TRAIL_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.96, 0.78, 1.0)
 
+# Dodge-roll cream wash pulse — soft aspect2d veil after cream aftershock
+# (#126). Perfect-dodge / melee-hit cream wash grammar. Quieter than
+# perfect-dodge wash (rolls fire more often); cream/pastel only. Toggle
+# DODGE_TRAIL_CREAM_WASH_ENABLED = False drops wash only.
+DODGE_TRAIL_CREAM_WASH_ENABLED = True
+DODGE_TRAIL_CREAM_WASH_DELAY_SEC = 0.34  # after start; after aftershock (0.16)
+DODGE_TRAIL_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
+DODGE_TRAIL_CREAM_WASH_PEAK = 0.10
+DODGE_TRAIL_CREAM_WASH_MID = 0.06
+DODGE_TRAIL_CREAM_WASH_IN_SEC = 0.05
+DODGE_TRAIL_CREAM_WASH_PULSE_SEC = 0.09
+DODGE_TRAIL_CREAM_WASH_HOLD_SEC = 0.06
+DODGE_TRAIL_CREAM_WASH_OUT_SEC = 0.34
+DODGE_TRAIL_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
+
 # Perfect dodge — Shift/X i-frames eat a CorruptToon telegraph (or near-miss).
 # Warm cream star pop + ink flecks; not KH blue / keyblade glitter.
 PERFECT_DODGE_STAR_COUNT = 5
