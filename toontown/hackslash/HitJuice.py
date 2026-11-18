@@ -8,7 +8,7 @@ readable airborne float with cream sparkle before fall (spawnHangSparks stays
 as the cream-disabled fallback).
 Combo counter HUD uses playComboCounterPop + spawnComboInkFlecks +
 spawnComboCreamSparkles for a brief rubber-hose number pop with ink flecks
-and cream sparkle on each connect.
+and cream sparkle on each connect, plus a delayed cream aftershock settle.
 Soft-lock reticle uses playSoftLockReticlePop + spawnSoftLockAccents for a
 cream/ink hose pop when soft-lock acquires or snaps a corrupt target.
 Hit connect uses spawnHitSparkFlecks for short cream/ink fleck sparkles that
@@ -537,7 +537,9 @@ def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkl
     """aspect2d cream flecks + thin streaks near the combo counter tick.
 
     Layers with playComboCounterPop + spawnComboInkFlecks — warm cream glitter,
-    not KH sparkles. Returns (Parallel|None, nodes). Caller owns cleanup.
+    then a delayed cream aftershock settle (same residual grammar as perfect-
+    dodge / air-juggle cream aftershock). Cream/pastel only — not KH sparkles.
+    Returns (Interval|None, nodes). Caller owns cleanup.
     """
     if origin is None or not getattr(
             HackSlashConfig, 'COMBO_COUNTER_CREAM_ENABLED', True):
@@ -561,6 +563,7 @@ def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkl
     sec = float(HackSlashConfig.COMBO_COUNTER_CREAM_SEC)
     binSort = int(HackSlashConfig.COMBO_COUNTER_CREAM_BIN)
     ox, oy, oz = float(origin[0]), float(origin[1]), float(origin[2])
+    originPt = Point3(ox, oy, oz)
 
     nodes = []
     parts = []
@@ -624,13 +627,185 @@ def spawnComboCreamSparkles(origin, parent=None, name='hackslashComboCreamSparkl
 
     if not parts:
         return None, []
-    ival = Parallel(*parts, name=name)
+
+    immediate = Parallel(*parts)
+    aftershock = _buildComboCreamAftershock(
+        parentNP, originPt, nodes, name=name + 'Aftershock')
+    if aftershock is not None:
+        # Immediate tick glitter + delayed residual settle in parallel.
+        ival = Parallel(immediate, aftershock, name=name)
+    else:
+        ival = Parallel(immediate, name=name)
     ival.start()
     return ival, nodes
 
 
+def _buildComboCreamAftershock(parentNP, origin, nodes, name='hackslashComboCreamAftershock'):
+    """Delayed soft cream flecks (+ optional halo) after combo cream tick.
+
+    Cream/pastel only — no ink. Settles downward on aspect2d. Appends spawned
+    nodes into `nodes` so clearComboCreamSparkles retires them.
+    """
+    if not getattr(
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_AFTERSHOCK_ENABLED', True):
+        return None
+
+    delay = float(getattr(
+        HackSlashConfig, 'COMBO_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC', 0.16))
+    parts = []
+
+    if getattr(
+            HackSlashConfig,
+            'COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_ENABLED', True):
+        halo = _spawnComboCreamAftershockHalo(parentNP, origin, nodes, name)
+        if halo is not None:
+            parts.append(halo)
+
+    creamCount = int(getattr(
+        HackSlashConfig, 'COMBO_COUNTER_CREAM_AFTERSHOCK_COUNT', 2))
+    streakCount = int(getattr(
+        HackSlashConfig, 'COMBO_COUNTER_CREAM_AFTERSHOCK_STREAK_COUNT', 1))
+    for i in range(creamCount):
+        part = _spawnComboCreamAftershockSpark(
+            parentNP, origin, nodes, i, creamCount, elongated=False, name=name)
+        if part is not None:
+            parts.append(part)
+    for i in range(streakCount):
+        part = _spawnComboCreamAftershockSpark(
+            parentNP, origin, nodes, i, streakCount, elongated=True, name=name)
+        if part is not None:
+            parts.append(part)
+
+    if not parts:
+        return None
+    return Sequence(
+        Wait(max(0.0, delay)),
+        Parallel(*parts),
+        name=name,
+    )
+
+
+def _spawnComboCreamAftershockHalo(parentNP, origin, nodes, name):
+    """Soft cream halo pulse on aspect2d behind the residual flecks."""
+    half = float(HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_HALF)
+    startScale = float(
+        HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_START)
+    peakScale = float(HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK)
+    sec = float(HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_SEC)
+    peakA = float(
+        HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_PEAK_ALPHA)
+    r, g, b, _a = HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_HALO_COLOR
+    binSort = int(getattr(
+        HackSlashConfig, 'COMBO_COUNTER_CREAM_AFTERSHOCK_BIN', 58))
+    try:
+        cm = CardMaker('%s-halo' % name)
+        cm.setFrame(-half, half, -half, half)
+        halo = parentNP.attachNewNode(cm.generate())
+        halo.setTransparency(TransparencyAttrib.MAlpha)
+        halo.setColor(r, g, b, 1)
+        halo.setColorScale(r, g, b, peakA)
+        halo.setPos(origin[0], origin[1], origin[2] + 0.02)
+        halo.setScale(startScale)
+        # Under flecks so residual glitter reads on top of the soft wash.
+        halo.setBin('fixed', max(0, binSort - 1))
+        halo.setDepthWrite(False)
+    except Exception:
+        return None
+    nodes.append(halo)
+    return Parallel(
+        LerpScaleInterval(
+            halo, max(0.01, sec), peakScale, blendType='easeOut'),
+        Sequence(
+            Wait(max(0.0, sec * 0.2)),
+            LerpColorScaleInterval(
+                halo, max(0.01, sec * 0.8), Vec4(r, g, b, 0),
+                blendType='easeIn'),
+        ),
+    )
+
+
+def _spawnComboCreamAftershockSpark(parentNP, origin, nodes, index, total,
+                                    elongated=False, name='hackslashComboCreamAftershock'):
+    """Softer cream fleck / streak that settles — residual combo aftershock."""
+    count = max(1, int(total))
+    if elongated:
+        size = float(
+            HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_STREAK_SIZE)
+        r, g, b, a = (
+            HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_STREAK_COLOR)
+        er, eg, eb, ea = (
+            HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_STREAK_END)
+        nameSuffix = 'streak'
+        angleBias = 0.55
+    else:
+        size = float(HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_SIZE)
+        r, g, b, a = HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_COLOR
+        er, eg, eb, ea = HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_END
+        nameSuffix = 'cream'
+        angleBias = 0.22
+    drift = float(HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_DRIFT)
+    sec = float(HackSlashConfig.COMBO_COUNTER_CREAM_AFTERSHOCK_SEC)
+    binSort = int(getattr(
+        HackSlashConfig, 'COMBO_COUNTER_CREAM_AFTERSHOCK_BIN', 58))
+    angle = (2.0 * pi * index) / float(count) + angleBias
+    try:
+        cm = CardMaker('%s-%s-%s' % (name, nameSuffix, index))
+        if elongated:
+            cm.setFrame(
+                -size * 0.35, size * 0.35,
+                -size * 1.4, size * 1.4)
+        else:
+            cm.setFrame(-size, size, -size * 0.9, size * 0.9)
+        spark = parentNP.attachNewNode(cm.generate())
+        spark.setTransparency(TransparencyAttrib.MAlpha)
+        spark.setColor(r, g, b, 1)
+        spark.setColorScale(r, g, b, 0)
+        spark.setPos(
+            origin[0] + cos(angle) * 0.03,
+            origin[1],
+            origin[2] + 0.02 * (index % 2))
+        spark.setScale(0.35 + 0.08 * (index % 3))
+        if elongated:
+            spark.setR(angle * 57.3)
+        spark.setBin('fixed', binSort)
+        spark.setDepthWrite(False)
+    except Exception:
+        return None
+
+    # Settle downward on aspect2d — residual cream, not the tick outward glitter.
+    end = Point3(
+        origin[0] + cos(angle) * drift * 0.55,
+        origin[1],
+        origin[2] - drift * 0.7 - 0.02 * (index % 3))
+    peak = 0.55 + 0.08 * (index % 2)
+    nodes.append(spark)
+    stagger = 0.015 * (index % 3)
+    return Sequence(
+        Wait(stagger),
+        Parallel(
+            LerpColorScaleInterval(
+                spark, max(0.01, sec * 0.25), Vec4(r, g, b, a),
+                blendType='easeOut'),
+            LerpScaleInterval(
+                spark, max(0.01, sec * 0.35), peak, blendType='easeOut'),
+            LerpPosInterval(spark, sec, end, blendType='easeOut'),
+            Sequence(
+                Wait(max(0.0, sec * 0.35)),
+                Parallel(
+                    LerpColorScaleInterval(
+                        spark, max(0.01, sec * 0.65), Vec4(er, eg, eb, ea),
+                        blendType='easeIn'),
+                    LerpScaleInterval(
+                        spark, max(0.01, sec * 0.65), 0.05,
+                        blendType='easeIn'),
+                ),
+            ),
+        ),
+    )
+
+
 def clearComboCreamSparkles(nodes):
-    """Remove cream-sparkle CardMaker nodes from a combo counter tick."""
+    """Remove cream-sparkle / aftershock CardMaker nodes from a combo tick."""
     clearComboInkFlecks(nodes)
 
 
