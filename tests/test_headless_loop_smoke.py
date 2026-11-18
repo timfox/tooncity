@@ -3631,14 +3631,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_PULSE_HALO_HOLD_SEC', crumb_src)
         self.assertIn('_PULSE_HALO_REBOUND_SCALE', crumb_src)
         self.assertIn('haloRimRebound', crumb_src)
-        # Past-#268 deepen floors (brighter/wider halo / longer hold / punchier rebound).
+        # Past-#277 deepen floors (brighter/wider halo / longer hold / punchier rebound).
         self.assertIn('_PULSE_HALO_REBOUND_PEAK', crumb_src)
         self.assertRegex(
             crumb_src,
-            r'_PULSE_HALO_SCALE_PEAK\s*=\s*1\.(4[5-9]|5)')
+            r'_PULSE_HALO_SCALE_PEAK\s*=\s*1\.5[1-9]')
         self.assertRegex(
             crumb_src,
-            r'_PULSE_HALO_HOLD_SEC\s*=\s*0\.0(8[9]|9)')
+            r'_PULSE_HALO_HOLD_SEC\s*=\s*0\.09[3-9]')
         # Distinct tunnel-mouth crumb trail pulse (playground-side cue).
         self.assertIn('_startCrumbPulseLoop', crumb_src)
         self.assertIn('_CRUMB_PULSE_GAP_SEC', crumb_src)
