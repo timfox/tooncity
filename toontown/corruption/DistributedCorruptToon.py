@@ -136,7 +136,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             toon.reparentTo(self.visualRoot)
             toon.setPos(0, 0, 0)
             toon.setH(0)
-            toon.setScale(CorruptionGlobals.CORRUPT_ACTOR_SCALE)
+            look, _phase = self.__finalePhaseLook()
+            actorScale = (
+                float(look['actorScale']) if look
+                else CorruptionGlobals.CORRUPT_ACTOR_SCALE)
+            toon.setScale(actorScale)
             # Ink-black multiply — corruption read stays strong over DNA colors.
             toon.setColorScale(*CorruptionGlobals.CORRUPT_ACTOR_TINT)
             try:
@@ -238,11 +242,18 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         text = TextNode('corrupt-name')
         text.setText(self.name)
         text.setAlign(TextNode.ACenter)
-        text.setTextColor(0.9, 0.55, 1.0, 1.0)
+        look, _phase = self.__finalePhaseLook()
+        if look:
+            text.setTextColor(*look['nameColor'])
+        else:
+            text.setTextColor(0.9, 0.55, 1.0, 1.0)
         text.setShadow(0.05, 0.05)
         self.nametagNP = self.attachNewNode(text)
-        self.nametagNP.setScale(0.42)
+        tagScale = 0.52 if look else 0.42
+        self.nametagNP.setScale(tagScale)
         z = 3.6 if self._useActor else 3.35
+        if look:
+            z += 0.35 * (float(look.get('actorScale', 1.0)) - 1.0)
         self.nametagNP.setPos(0, 0, z)
         self.nametagNP.setBillboardPointEye()
 
@@ -251,16 +262,25 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             return
         if self._pulseIval is not None:
             self._pulseIval.finish()
-        hot = Vec4(*CorruptionGlobals.CORRUPT_TINT_HOT)
+        look, phase = self.__finalePhaseLook()
+        if look:
+            hot = Vec4(*look['pulseHot'])
+            amp = float(look.get('pulseAmp', 0.08))
+        else:
+            hot = Vec4(*CorruptionGlobals.CORRUPT_TINT_HOT)
+            amp = 0.06
         cool = Vec4(1.0, 1.0, 1.0, 1.0)
+        up = Point3(1.0 + amp, 1.0 + amp, 1.0 - amp * 0.8)
+        down = Point3(1.0 - amp, 1.0 - amp, 1.0 + amp)
+        beat = 0.55 if phase >= 2 else 0.7
         self._pulseIval = Sequence(
             Parallel(
-                LerpColorScaleInterval(self.visualRoot, 0.7, hot),
-                LerpScaleInterval(self.visualRoot, 0.7, Point3(1.06, 1.06, 0.94)),
+                LerpColorScaleInterval(self.visualRoot, beat, hot),
+                LerpScaleInterval(self.visualRoot, beat, up),
             ),
             Parallel(
-                LerpColorScaleInterval(self.visualRoot, 0.7, cool),
-                LerpScaleInterval(self.visualRoot, 0.7, Point3(0.96, 0.96, 1.05)),
+                LerpColorScaleInterval(self.visualRoot, beat, cool),
+                LerpScaleInterval(self.visualRoot, beat, down),
             ),
         )
         self._pulseIval.loop()
@@ -314,6 +334,20 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
     def getMaxHp(self):
         return self.maxHp
 
+    def __finalePhaseLook(self):
+        """Resolve Ink Overlord phase look from reclaim director or name."""
+        phase = 0
+        reclaim = getattr(base.cr, 'reclaimDirector', None)  # noqa: F821
+        if reclaim is not None:
+            phase = int(getattr(reclaim, 'finalePhase', 0) or 0)
+        if phase < 1:
+            name = (self.name or '').lower()
+            if 'unleashed' in name:
+                phase = 2
+            elif 'overlord' in name:
+                phase = 1
+        return CorruptionGlobals.finalePhaseLook(phase), phase
+
     def announceAttackTelegraph(self):
         """Strong wind-up: charged squash, ink flare, whoosh — dodgeable read."""
         if self._telegraphIval is not None:
@@ -324,23 +358,35 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._pulseIval is not None:
             self._pulseIval.pause()
         target = self.visualRoot if self.visualRoot is not None else self
-        charge = Vec4(*CorruptionGlobals.TELEGRAPH_CHARGE_COLOR)
-        hold = Vec4(*CorruptionGlobals.TELEGRAPH_HOLD_COLOR)
+        look, _phase = self.__finalePhaseLook()
+        if look:
+            charge = Vec4(*look['telegraphCharge'])
+            hold = Vec4(*look['telegraphHold'])
+            squash = Point3(*look['squash'])
+            stretch = Point3(*look['stretch'])
+            mid = Point3(
+                squash[0] * 0.88, squash[1] * 0.88, max(0.4, squash[2] * 1.2))
+        else:
+            charge = Vec4(*CorruptionGlobals.TELEGRAPH_CHARGE_COLOR)
+            hold = Vec4(*CorruptionGlobals.TELEGRAPH_HOLD_COLOR)
+            squash = Point3(1.85, 1.85, 0.42)
+            mid = Point3(1.65, 1.65, 0.5)
+            stretch = Point3(0.62, 0.62, 1.7)
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
         # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
         # wind-up reads clearly before announceAttackHit's slam lands.
         self._telegraphIval = Sequence(
             Parallel(
-                LerpScaleInterval(target, 0.12, Point3(1.85, 1.85, 0.42)),
+                LerpScaleInterval(target, 0.12, squash),
                 LerpColorScaleInterval(target, 0.12, charge),
             ),
             Parallel(
-                LerpScaleInterval(target, 0.18, Point3(1.65, 1.65, 0.5)),
+                LerpScaleInterval(target, 0.18, mid),
                 LerpColorScaleInterval(target, 0.18, hold),
             ),
             Parallel(
-                LerpScaleInterval(target, 0.14, Point3(0.62, 0.62, 1.7)),
+                LerpScaleInterval(target, 0.14, stretch),
                 LerpColorScaleInterval(target, 0.14, charge),
             ),
             # Linger stretched so the strike pose sticks until impact.
@@ -366,13 +412,20 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._attackHitIval is not None:
             self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
+        look, _phase = self.__finalePhaseLook()
+        if look:
+            impactScale = Point3(*look['impactScale'])
+            impactColor = Vec4(*look['impactColor'])
+        else:
+            impactScale = Point3(1.55, 1.55, 0.55)
+            impactColor = Vec4(2.2, 0.9, 2.4, 1.0)
         self.__playAttackHitSfx()
         self.__playAttackHitFlash()
         self.__playOptionalActorPose('neutral')
         self._attackHitIval = Sequence(
             Parallel(
-                LerpScaleInterval(target, 0.06, Point3(1.55, 1.55, 0.55)),
-                LerpColorScaleInterval(target, 0.06, Vec4(2.2, 0.9, 2.4, 1.0)),
+                LerpScaleInterval(target, 0.06, impactScale),
+                LerpColorScaleInterval(target, 0.06, impactColor),
             ),
             Parallel(
                 LerpScaleInterval(target, 0.1, Point3(0.85, 0.85, 1.25)),
@@ -455,7 +508,14 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             cm = CardMaker('corrupt-attack-hit-flash')
             cm.setFrame(-2, 2, -2, 2)
             np = aspect2d.attachNewNode(cm.generate())
-            color = CorruptionGlobals.ATTACK_HIT_FLASH_COLOR
+            look, _phase = self.__finalePhaseLook()
+            if look:
+                color = look['hitFlash']
+                peak = float(look.get('hitFlashPeak',
+                                      CorruptionGlobals.ATTACK_HIT_FLASH_PEAK))
+            else:
+                color = CorruptionGlobals.ATTACK_HIT_FLASH_COLOR
+                peak = CorruptionGlobals.ATTACK_HIT_FLASH_PEAK
             np.setTransparency(TransparencyAttrib.MAlpha)
             np.setColor(color[0], color[1], color[2], 1)
             np.setColorScale(1, 1, 1, 0)
@@ -463,7 +523,6 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             np.setDepthTest(False)
             np.setDepthWrite(False)
             self._attackFlashNP = np
-            peak = CorruptionGlobals.ATTACK_HIT_FLASH_PEAK
             self._attackFlashIval = Sequence(
                 LerpColorScaleInterval(
                     np, CorruptionGlobals.ATTACK_HIT_FLASH_IN,

@@ -33,6 +33,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._maxPacks = ReclaimGlobals.MAX_PACKS
         self._corruptHp = None
         self._corruptName = None
+        self.finalePhase = 0
+        self._transitionSting = False
 
     def getState(self):
         return self.state
@@ -48,6 +50,19 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
     def getPackAlive(self):
         return self.packAlive
+
+    def getFinalePhase(self):
+        return self.finalePhase
+
+    def b_setFinalePhase(self, phase):
+        self.setFinalePhase(phase)
+        self.d_setFinalePhase(phase)
+
+    def d_setFinalePhase(self, phase):
+        self.sendUpdate('setFinalePhase', [int(phase)])
+
+    def setFinalePhase(self, phase):
+        self.finalePhase = max(0, int(phase))
 
     def b_setState(self, state):
         self.setState(state)
@@ -79,10 +94,12 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
 
     def start(self, zoneId, anchorPos, anchorH=0.0,
               seedPollution=None, packSize=None, maxPacks=None,
-              corruptHp=None, corruptName=None):
+              corruptHp=None, corruptName=None,
+              finalePhase=0, transitionSting=False):
         """Seed pollution and spawn the first escalating corrupt wave.
 
-        Optional overrides support multi-act campaign difficulty.
+        Optional overrides support multi-act campaign difficulty and
+        Ink Overlord finale phase presentation (client-readable).
         """
         self.reclaimZoneId = int(zoneId)
         self._anchorPos = (
@@ -97,6 +114,7 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             ReclaimGlobals.MAX_PACKS if maxPacks is None else int(maxPacks))
         self._corruptHp = None if corruptHp is None else int(corruptHp)
         self._corruptName = corruptName
+        self._transitionSting = bool(transitionSting)
         self._clearPack(delete=True)
         self._packsSpawned = 0
         self._cancelWaveDelay()
@@ -106,12 +124,15 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             pollutionMgr.setPollution(
                 self.reclaimZoneId, self._seedPollution)
 
+        self.b_setFinalePhase(finalePhase or 0)
         self.b_setMaxWaves(self._maxPacks)
         self.b_setWaveIndex(0)
         self.b_setPackAlive(0)
         self.b_setState(ReclaimGlobals.STATE_ACTIVE)
         self._syncPollutionHint()
         self.sendUpdate('announceReclaimStart', [])
+        if self.finalePhase >= 2 and self._transitionSting:
+            self.sendUpdate('announceFinalePhaseTransition', [self.finalePhase])
         self._spawnPack()
 
         if self._tickName is None:
@@ -130,6 +151,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._clearPack(delete=True)
         self.b_setPackAlive(0)
         self.b_setWaveIndex(0)
+        self.b_setFinalePhase(0)
+        self._transitionSting = False
         self.b_setState(ReclaimGlobals.STATE_IDLE)
         self.b_setPollutionHint(CorruptionGlobals.POLLUTION_PURE)
 

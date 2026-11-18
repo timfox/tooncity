@@ -854,6 +854,13 @@ try:
 except Exception:
     pass
 
+# Ink Overlord phase-transition sting (FOV / flash / ink slam).
+try:
+    from toontown.campaign.FinalePhaseFx import ensureFinalePhaseFxClient
+    ensureFinalePhaseFxClient()
+except Exception:
+    pass
+
 # Discoverable play prompts + auto melee on campaign streets (client only).
 try:
     from toontown.campaign.PlayEntry import ensurePlayEntryClient
