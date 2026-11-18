@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for deepened wave-clear cream sparkle.
+"""Behavioral headless tests for further-deepened wave-clear cream sparkle.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-WAVE_CLEAR_CREAM_SPARKLE / AFTERSHOCK tunables, rubber-hose (non-KH) copy,
-and AST hooks on WaveClearCreamWashFx + shimmer hold wiring. Distinct from
-secured-lock green sting (#209) and purity-complete meter hose settle (#225).
+WAVE_CLEAR_CREAM_SPARKLE / AFTERSHOCK tunables past #229, rubber-hose
+(non-KH) copy, and AST hooks on WaveClearCreamWashFx + shimmer hold wiring.
+Distinct from secured-lock green sting (#243) and purity-complete meter hose
+settle cream (#248).
 
 Run from repo root:
   python3 tests/test_wave_clear_cream_sparkle.py
@@ -77,24 +78,27 @@ def _class_method_names(tree: ast.AST, class_name: str) -> set[str]:
 
 
 class WaveClearCreamSparkleTest(unittest.TestCase):
-    """Pure-Python deepened wave-clear cream sparkle wiring."""
+    """Pure-Python further-deepened wave-clear cream sparkle wiring."""
 
     @classmethod
     def setUpClass(cls):
         cls.rg = _load_reclaim_globals()
 
-    def test_sparkle_tunables_deepened_and_enabled(self):
+    def test_sparkle_tunables_deepened_past_229(self):
         rg = self.rg
         self.assertIs(rg.WAVE_CLEAR_CREAM_SPARKLE_ENABLED, True)
         self.assertIs(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_ENABLED, True)
-        # Juicier than the original quiet residual (#182 baseline was 6 / 0.24).
-        self.assertGreaterEqual(rg.WAVE_CLEAR_CREAM_SPARKLE_COUNT, 8)
-        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_RISE), 0.32)
-        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_SEC), 0.32)
-        self.assertGreater(float(rg.WAVE_CLEAR_CREAM_SPARKLE_POP), 1.10)
-        self.assertGreater(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT, 0)
-        self.assertGreater(
-            float(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC), 0.0)
+        # Juicier than #229 deepen (9 / 0.36 / 1.22 / aftershock 4).
+        self.assertGreaterEqual(rg.WAVE_CLEAR_CREAM_SPARKLE_COUNT, 10)
+        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_RISE), 0.38)
+        self.assertGreaterEqual(float(rg.WAVE_CLEAR_CREAM_SPARKLE_SEC), 0.38)
+        self.assertGreater(float(rg.WAVE_CLEAR_CREAM_SPARKLE_POP), 1.22)
+        self.assertGreaterEqual(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_COUNT, 5)
+        self.assertGreaterEqual(
+            float(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC), 0.32)
+        self.assertTrue(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_ENABLED)
+        self.assertGreaterEqual(
+            float(rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_PEAK), 1.15)
         # Still quieter than full-purity StreetSparkle horizon payoff.
         self.assertLess(
             rg.WAVE_CLEAR_CREAM_SPARKLE_COUNT, rg.STREET_SPARKLE_COUNT)
@@ -119,12 +123,21 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
         self.assertNotEqual(
             tuple(rg.WAVE_CLEAR_CREAM_SPARKLE_ORIGIN),
             tuple(rg.STREET_SPARKLE_ORIGIN))
+        # Halo stays sunny cream — not tip-near green lock halo.
+        wave_halo = rg.WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_HALO_COLOR
+        lock_halo = rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_COLOR
+        self.assertGreaterEqual(wave_halo[0], wave_halo[1])
+        self.assertGreater(lock_halo[1], lock_halo[0])
+        self.assertNotEqual(tuple(wave_halo), tuple(lock_halo))
         # Does not own purity-complete meter hose settle tunables.
         self.assertTrue(hasattr(rg, 'PURITY_COMPLETE_METER_SETTLE_ENABLED'))
+        self.assertTrue(
+            hasattr(rg, 'PURITY_COMPLETE_METER_SETTLE_CREAM_ENABLED'))
         wash_src = _read('toontown/reclaim/WaveClearCreamWashFx.py')
         self.assertNotIn('PURITY_COMPLETE_METER_SETTLE', wash_src)
         self.assertNotIn('SECURED_LOCK_SPARKLE', wash_src)
         self.assertNotIn('settleComplete', wash_src)
+        self.assertNotIn('confirmSecured', wash_src)
 
     def test_wash_fx_owns_deepened_sparkle_and_aftershock(self):
         tree = _module_ast('toontown/reclaim/WaveClearCreamWashFx.py')
@@ -144,6 +157,7 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
         self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_POP', src)
         self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK', src)
         self.assertIn('reclaim-wave-clear-cream-sparkle', src)
+        self.assertIn('#229', src)
         lower = src.lower()
         self.assertTrue(
             'no keyblade' in lower or 'no kh' in lower,
@@ -155,6 +169,7 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
         src = _read('toontown/reclaim/WaveClearCreamShimmerFx.py')
         self.assertIn('WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK', src)
         self.assertIn('WaveClearCreamWashPulse', src)
+        self.assertIn('#229', src)
         lower = src.lower()
         self.assertTrue(
             'no keyblade' in lower or 'no kh' in lower,
@@ -162,13 +177,20 @@ class WaveClearCreamSparkleTest(unittest.TestCase):
         for banned in ('kingdom hearts', 'sora', 'heartless'):
             self.assertNotIn(banned, lower)
 
-    def test_globals_comment_kh_free(self):
+    def test_globals_comment_kh_free_and_distinct(self):
         rg_src = _read('toontown/reclaim/ReclaimGlobals.py')
-        # Comment near sparkle block should ban KH framing.
+        # Comment near sparkle block should ban KH framing + cite distinct cues.
         idx = rg_src.find('WAVE_CLEAR_CREAM_SPARKLE_ENABLED')
         self.assertGreater(idx, 0)
-        snip = rg_src[max(0, idx - 600):idx + 200].lower()
+        snip = rg_src[max(0, idx - 700):idx + 200].lower()
         self.assertIn('no kh', snip)
+        self.assertIn('#229', snip)
+        self.assertTrue(
+            '#243' in snip or 'lock' in snip,
+            msg='sparkle comment should stay distinct from lock celebration')
+        self.assertTrue(
+            '#248' in snip or 'hose' in snip,
+            msg='sparkle comment should stay distinct from purity hose deepen')
         for banned in ('kingdom hearts', 'sora', 'heartless'):
             self.assertNotIn(banned, snip)
 
