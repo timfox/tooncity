@@ -27,6 +27,8 @@ from toontown.reclaim import ReclaimGlobals
 AUTO_RECLAIM_DELAY_SEC = 1.35
 # Punchline sludge street: slightly longer explore beat before packs field.
 PUNCHLINE_AUTO_RECLAIM_DELAY_SEC = 1.85
+# Silly Overlord finale: longer explore beat before Overlord packs field.
+SILLY_AUTO_RECLAIM_DELAY_SEC = 2.15
 
 
 def _face():
@@ -113,8 +115,13 @@ class PlayEntryClient(DirectObject):
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
         face = _face()
-        # Punchline STREET_PACK tip: explore → fight → reclaim; else ACTS/default.
-        if act and act.get('finale'):
+        # STREET_PACK tip (Punchline / Silly explore → fight → reclaim);
+        # finale without a pack keeps the Overlord vs line.
+        pack = ReclaimGlobals.streetPack(zoneId)
+        if pack and pack.get('playEntryTip'):
+            tip = ReclaimGlobals.streetPlayEntryTip(
+                zoneId, face=face, fallbackName=name)
+        elif act and act.get('finale'):
             tip = (
                 '%s vs the Ink Overlord on %s  |  '
                 'F fight  |  Shift dodge  |  C campaign' % (face, name))
@@ -130,11 +137,14 @@ class PlayEntryClient(DirectObject):
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
         # Auto-field reclaim waves so hostiles appear without ~spawncorrupt / R.
-        # Punchline gets a short explore beat before sludge packs inbound.
+        # Punchline / Silly get a short explore beat before packs inbound.
         self._autoReclaimZone = zoneId
         delay = AUTO_RECLAIM_DELAY_SEC
-        if ReclaimGlobals.streetPackId(zoneId) == 'punchline-sludge':
+        packId = ReclaimGlobals.streetPackId(zoneId)
+        if packId == 'punchline-sludge':
             delay = PUNCHLINE_AUTO_RECLAIM_DELAY_SEC
+        elif packId == 'silly-overlord':
+            delay = SILLY_AUTO_RECLAIM_DELAY_SEC
         taskMgr.doMethodLater(  # noqa: F821
             delay,
             self._autoStartReclaim,

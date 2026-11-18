@@ -57,8 +57,10 @@ DEMO_HINT = (
 
 # Per-street reclaim packs for auto / R / ~startreclaim (PlayEntry path).
 # Punchline is the Act 2 explore → fight → reclaim beat: denser sludge,
-# Brutes + Balloon Snares from wave 1. Campaign C still uses ACTS params;
-# this table keeps discoverable auto-reclaim matched to that hood fantasy.
+# Brutes + Balloon Snares from wave 1. Silly is the Act 3 Overlord finale
+# street (Oswald still trusted — twist stays campaign P2 reveal). Campaign C
+# still uses ACTS params; this table keeps discoverable auto-reclaim matched
+# to each hood fantasy. No keyblades / KH branding.
 # Keys match DistributedReclaimDirectorAI.start() kwargs (+ copy helpers).
 _STREET_PACK_START_KEYS = (
     'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
@@ -102,6 +104,40 @@ STREET_PACKS = {
             'PUNCHLINE RECLAIM LIVE — clear Brutes & Snares with F!'),
         'statusLabel': 'SLUDGE',
     },
+    # Act 3 — Silly Street Ink Overlord finale (third hood).
+    # Mirrors ACTS finale P1 spawn mix for auto / R / ~startreclaim.
+    # Oswald stays the trusted lead; twist is campaign P2 only.
+    ToontownGlobals.SillyStreet: {
+        'packId': 'silly-overlord',
+        'name': 'Silly Street',
+        'seedPollution': 0.75,
+        'packSize': 1,
+        'maxPacks': 2,
+        'corruptHp': 90,
+        'corruptName': 'Ink Overlord',
+        # Boss street — Overlord only (no Brute / Snare mix).
+        'bruteFraction': 0.0,
+        'snareFraction': 0.0,
+        'bannerStart': 'OSWALD: RECLAIM SILLY STREET!',
+        'bannerStartSub': (
+            'Explore the magenta ink — then stretch-punch '
+            'the Ink Overlord with Oswald!'),
+        'bannerStartColor': (1.0, 0.55, 0.95, 1.0),
+        'bannerComplete': 'SILLY STREET HOLDS THE LINE!',
+        'bannerCompleteSub': (
+            'Oswald tips his ears — neighborhood cheer returns!'),
+        'demoHint': (
+            'Oswald: stretch-punch the Ink Overlord  |  '
+            'F fight  |  C campaign'),
+        'playEntryTip': (
+            'Oswald: Silly Street finale — explore the ink  →  '
+            'F fight Overlord  →  reclaim  |  Shift dodge  |  C campaign'),
+        'autoFlash': (
+            'Oswald fields Silly Street packs — Ink Overlord inbound!'),
+        'reclaimLiveFlash': (
+            'SILLY RECLAIM LIVE — clear the Ink Overlord with F!'),
+        'statusLabel': 'OVERLORD',
+    },
 }
 # Finale pack banners keep the street reading as a boss fight.
 FINALE_PACK_BANNER = {
@@ -118,6 +154,8 @@ WAVE_BANNER_COLOR = (1.0, 0.88, 0.42, 1.0)
 WAVE_SUB_BANNER_COLOR = (1.0, 0.96, 0.82, 1.0)
 WAVE_BANNER_COLOR_PUNCHLINE = (0.72, 0.92, 0.55, 1.0)
 WAVE_SUB_BANNER_COLOR_PUNCHLINE = (0.88, 0.98, 0.78, 1.0)
+WAVE_BANNER_COLOR_SILLY = (1.0, 0.55, 0.95, 1.0)
+WAVE_SUB_BANNER_COLOR_SILLY = (1.0, 0.82, 0.98, 1.0)
 
 # Persistent reclaim purity meter (aspect2d bar: pollution → purity fill).
 # Empty bar = street still inky; fills warm as packs clear pollution.
@@ -208,13 +246,13 @@ WAVE_INBOUND_DEFAULT = 'Ink packs inbound'
 WAVE_INBOUND_BY_ZONE = {
     ToontownGlobals.LoopyLane: 'Ink packs inbound',
     ToontownGlobals.PunchlinePlace: 'Sludge packs inbound',
-    ToontownGlobals.SillyStreet: 'Ink packs inbound',
+    ToontownGlobals.SillyStreet: 'Overlord pack inbound',
 }
 WAVE_INBOUND_FINALE = {
     1: 'Overlord pack inbound',
     2: 'Unleashed pack inbound',
 }
-# Oswald tip flavor under the wave plate (Loopy / Punchline focused).
+# Oswald tip flavor under the wave plate (trusted lead until finale reveal).
 OSWALD_WAVE_TIPS_LOOPY = (
     'Oswald tips: stretch-punch those Ink Smudges!',
     'Oswald tips his ears — keep Loopy Lane laughing!',
@@ -225,6 +263,12 @@ OSWALD_WAVE_TIPS_PUNCHLINE = (
     'Oswald: Punchline Place needs that rubber-hose bounce!',
     'Oswald tips his ears — sludge packs keep coming!',
     'Oswald: last laugh for Punchline — clear this wave!',
+)
+OSWALD_WAVE_TIPS_SILLY = (
+    'Oswald stands with you — stretch-punch the Ink Overlord!',
+    'Oswald tips his ears — hold Silly Street!',
+    'Oswald: magenta swell incoming — keep punching!',
+    'Oswald cheers: final Overlord pack — reclaim Silly!',
 )
 OSWALD_WAVE_TIPS_DEFAULT = (
     'Oswald tips: stretch-punch the pack!',
@@ -251,7 +295,8 @@ def streetPackParams(zoneId):
     """Kwargs for DistributedReclaimDirectorAI.start() from STREET_PACKS.
 
     Empty dict → caller keeps ReclaimGlobals defaults (Loopy-style Smudge
-    wave 1). Punchline returns Brute + Snare mix from wave 1.
+    wave 1). Punchline returns Brute + Snare mix from wave 1. Silly returns
+    Ink Overlord-only finale spawn (no Brute / Snare).
     """
     pack = streetPack(zoneId)
     if not pack:
@@ -322,7 +367,7 @@ def streetDemoHint(zoneId, finalePhase=0):
 
 
 def streetPlayEntryTip(zoneId, face='Oswald', fallbackName='this street'):
-    """PlayEntry tip for explore → fight → reclaim (Punchline-aware)."""
+    """PlayEntry tip for explore → fight → reclaim (hood STREET_PACK aware)."""
     pack = streetPack(zoneId)
     if pack and pack.get('playEntryTip'):
         # Tips already name Oswald; keep face substitution if copy uses %s.
@@ -389,7 +434,7 @@ def waveAnnounceTitle(waveIndex, maxWaves, zoneId=None, finalePhase=0):
 
 
 def waveOswaldTip(waveIndex, maxWaves, zoneId=None, packCount=0):
-    """Oswald tip line under the wave plate (Loopy / Punchline flavor)."""
+    """Oswald tip line under the wave plate (Loopy / Punchline / Silly)."""
     wave = max(1, int(waveIndex))
     total = max(1, int(maxWaves))
     zone = int(zoneId or 0)
@@ -397,6 +442,8 @@ def waveOswaldTip(waveIndex, maxWaves, zoneId=None, packCount=0):
         tips = OSWALD_WAVE_TIPS_LOOPY
     elif zone == ToontownGlobals.PunchlinePlace:
         tips = OSWALD_WAVE_TIPS_PUNCHLINE
+    elif zone == ToontownGlobals.SillyStreet:
+        tips = OSWALD_WAVE_TIPS_SILLY
     else:
         tips = OSWALD_WAVE_TIPS_DEFAULT
     idx = min(wave - 1, len(tips) - 1)
@@ -410,21 +457,25 @@ def waveOswaldTip(waveIndex, maxWaves, zoneId=None, packCount=0):
 
 
 def waveAnnounceColors(zoneId=None):
-    """Warm rubber-hose banner colors (Punchline leans gag-green)."""
+    """Warm rubber-hose banner colors (Punchline gag-green / Silly magenta)."""
     zone = int(zoneId or 0)
     if zone == ToontownGlobals.PunchlinePlace:
         return WAVE_BANNER_COLOR_PUNCHLINE, WAVE_SUB_BANNER_COLOR_PUNCHLINE
+    if zone == ToontownGlobals.SillyStreet:
+        return WAVE_BANNER_COLOR_SILLY, WAVE_SUB_BANNER_COLOR_SILLY
     return WAVE_BANNER_COLOR, WAVE_SUB_BANNER_COLOR
 
 
 def waveClearedOswaldTip(waveIndex, zoneId=None):
-    """Brief Oswald beat between waves (Loopy / Punchline flavor)."""
+    """Brief Oswald beat between waves (Loopy / Punchline / Silly flavor)."""
     wave = int(waveIndex)
     zone = int(zoneId or 0)
     if zone == ToontownGlobals.LoopyLane:
         return 'Oswald tips his ears — next Loopy pack soon'
     if zone == ToontownGlobals.PunchlinePlace:
         return 'Oswald: Punchline pause — next sludge surge incoming'
+    if zone == ToontownGlobals.SillyStreet:
+        return 'Oswald: Silly pause — next Overlord swell incoming'
     return 'Wave %s down — next surge incoming' % wave
 
 
