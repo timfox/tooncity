@@ -274,6 +274,65 @@ SMUDGE_INK_SPLASH_LOOK = {
         'binSort': 46,
     },
 }
+
+# Sludge Brute hit/death sludge splash — cheap rubber-hose green splash so
+# tagged/popped Brutes stay scannable (client only). Composes with
+# BruteSpitTelegraphFx / CorruptDeathPopFx / IdleInkDripFx palettes via
+# BruteSludgeSplashFx.bruteSludgeSplashLook. Hit is the cheap scan cue;
+# death layers a slightly larger splash with DeathPop. Slightly bulkier than
+# SMUDGE_INK_SPLASH_LOOK to match Brute silhouette.
+BRUTE_SLUDGE_SPLASH_LOOK = {
+    'hit': {
+        'id': 'brute-hit-splash',
+        'lift': 2.25,
+        'peakAlpha': 0.95,
+        'splatHalf': 0.32,
+        'splatPeak': 1.7,
+        'splatSec': 0.2,
+        'rimScale': 1.28,
+        'smearCount': 3,
+        'smearHalf': 0.11,
+        'smearSec': 0.22,
+        'smearSpread': 0.9,
+        'fleckCount': 3,
+        'fleckHalf': 0.13,
+        'fleckDist': 1.25,
+        'fleckLift': 0.35,
+        'fleckSec': 0.24,
+        'dripCount': 2,
+        'dripHalf': 0.1,
+        'dripSpread': 0.28,
+        'dripFall': 0.85,
+        'dripSec': 0.36,
+        'dripStagger': 0.03,
+        'binSort': 45,
+    },
+    'death': {
+        'id': 'brute-death-splash',
+        'lift': 1.75,
+        'peakAlpha': 0.98,
+        'splatHalf': 0.45,
+        'splatPeak': 2.25,
+        'splatSec': 0.28,
+        'rimScale': 1.38,
+        'smearCount': 4,
+        'smearHalf': 0.14,
+        'smearSec': 0.3,
+        'smearSpread': 1.3,
+        'fleckCount': 5,
+        'fleckHalf': 0.18,
+        'fleckDist': 2.0,
+        'fleckLift': 0.65,
+        'fleckSec': 0.32,
+        'dripCount': 3,
+        'dripHalf': 0.12,
+        'dripSpread': 0.42,
+        'dripFall': 1.2,
+        'dripSec': 0.46,
+        'dripStagger': 0.04,
+        'binSort': 46,
+    },
+}
 ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
 ATTACK_HIT_FLASH_PEAK = 0.55
 ATTACK_HIT_FLASH_IN = 0.04

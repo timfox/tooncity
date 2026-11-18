@@ -11,7 +11,9 @@ SmudgeInkTelegraphFx (purple rubber-hose ink-fist pop). Ink Smudge hits and
 deaths also flash SmudgeInkSplashFx (cheap purple rubber-hose ink splash for
 swarm readability; composes with telegraph / death / idle ink looks). Sludge
 Brute wind-ups also flash BruteSpitTelegraphFx (green rubber-hose spit-gob
-pop). Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
+pop). Sludge Brute hits and deaths also flash BruteSludgeSplashFx (cheap
+green rubber-hose sludge splash; composes with spit / death / idle looks).
+Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
 rubber-hose string-lash pop). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
 OverlordPhaseInkRainFx (ink rain / ink fall shower). Defeat plays

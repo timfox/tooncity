@@ -84,7 +84,7 @@ class SpawnCorrupt(MagicWord):
         'Ink Smudge: purple ink-fist telegraph pop + ink drip splat + impact; '
         'hit/death play cheap purple ink splash (swarm readability). '
         'Sludge Brute (archetype=1): green spit-gob telegraph pop + '
-        'squirt SFX + ink blob. '
+        'squirt SFX + ink blob; hit/death play cheap green sludge splash. '
         'Balloon Snare (archetype=2): amber string-lash telegraph pop + '
         'vine zip SFX. '
         'All archetypes: ambient idle ink drip between telegraphs + '
