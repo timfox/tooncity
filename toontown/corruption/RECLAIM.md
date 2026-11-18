@@ -37,6 +37,10 @@ Walk onto Loopy / Punchline / Silly: `PlayEntry` auto-arms melee and auto-starts
 reclaim packs. Fight with **F**, dodge with **Shift**, campaign with **C**.
 No `~spawncorrupt` required for the happy path.
 
+On polluted ACTS street enter, `PlayEntry` flashes a brief rubber-hose ink **edge
+vignette** (hood-tinted) that fades as the tip bar appears
+(`ENTRY_VIGNETTE_*` in `CorruptionGlobals`). Skipped once the street is pure.
+
 ## Demo (magic words still work)
 
 Preferred street: Toontown Central Loopy Lane (`2200`).

@@ -131,6 +131,21 @@ POLLUTION_FOG_SNAP_DELTA = 0.02
 POLLUTION_HAZE_ALPHA_MAX = 0.30
 POLLUTION_HAZE_BIN = 25
 
+# Street-entry rubber-hose ink vignette (PlayEntry on polluted ACTS streets).
+# Edge darken flashes in, then fades as the tip bar appears — not a KH sting.
+ENTRY_VIGNETTE_IN_SEC = 0.10
+ENTRY_VIGNETTE_HOLD_SEC = 0.16
+ENTRY_VIGNETTE_OUT_SEC = 0.55
+ENTRY_VIGNETTE_TIP_DELAY_SEC = 0.22
+ENTRY_VIGNETTE_TIP_FADE_SEC = 0.38
+ENTRY_VIGNETTE_PEAK_ALPHA = 0.78
+ENTRY_VIGNETTE_EDGE = 0.42  # strip thickness in aspect2d units
+ENTRY_VIGNETTE_BIN = 48  # above haze (25), below handoff/celebration (60+)
+# Minimum presented pollution to fire the entry vignette (skip clean streets).
+ENTRY_VIGNETTE_MIN_POLLUTION = 0.08
+# Fallback ink when hood fog bias is unavailable.
+ENTRY_VIGNETTE_INK = (0.06, 0.02, 0.10, 1.0)
+
 # Per-street ambient corruption look (branch zone ids).
 # fog: RGB base; fogExpScale: density multiplier vs CORRUPT_FOG_EXP_MAX
 # gradeDrop: how hard render RGB falls with pollution (higher = darker channel)
@@ -519,4 +534,17 @@ def hoodPropTint(zoneId, level):
         1.0 - (1.0 - target[0]) * dens,
         1.0 - (1.0 - target[1]) * dens,
         1.0 - (1.0 - target[2]) * dens,
+    )
+
+
+def entryVignetteInk(zoneId):
+    """Near-black rubber-hose ink RGB for street-entry edge vignette."""
+    bias = hoodPollutionBias(zoneId)
+    fog = bias.get('fog', ENTRY_VIGNETTE_INK[:3])
+    # Crush fog toward ink-black so edges read as corruption, not a wash.
+    return (
+        min(0.14, float(fog[0]) * 0.45),
+        min(0.10, float(fog[1]) * 0.40),
+        min(0.14, float(fog[2]) * 0.50),
+        1.0,
     )
