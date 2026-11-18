@@ -1061,8 +1061,11 @@ SILHOUETTE_CREAM_SPARKLE_LOOK = {
 # (client only). Matches IdleCreamWashPulseFx (#146) / CorruptDeathCreamWashFx
 # (#119) two-beat grammar; quieter ambient contrast against the ink silhouette
 # cream rim + rising sparkle stack. Compose period via
-# CorruptSilhouetteCreamWashFx.silhouetteCreamWashLook → silhouetteCreamSparkleLook.
-# SILHOUETTE_CREAM_WASH_ENABLED = False drops wash only (rim / sparkles stay).
+# CorruptSilhouetteCreamWashFx.silhouetteCreamWashLook → silhouetteCreamSparkleLook;
+# delayed cream aftershock (SILHOUETTE_CREAM_WASH_AFTERSHOCK_*) settles after
+# each wash (#177 / #172 grammar). Toggle SILHOUETTE_CREAM_WASH_ENABLED /
+# SILHOUETTE_CREAM_WASH_AFTERSHOCK_ENABLED.
+# SILHOUETTE_CREAM_WASH_ENABLED = False drops wash (and therefore aftershock).
 SILHOUETTE_CREAM_WASH_ENABLED = True
 SILHOUETTE_CREAM_WASH_DELAY_SEC = 0.0  # loop settle handles spacing
 SILHOUETTE_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -1090,6 +1093,31 @@ SILHOUETTE_CREAM_WASH_LOOK = {
     'outSec': SILHOUETTE_CREAM_WASH_OUT_SEC,
     'binSort': SILHOUETTE_CREAM_WASH_BIN,
 }
+
+# Delayed cream aftershock after each silhouette cream wash pulse — residual
+# flecks settling + soft halo (CorruptSilhouetteCreamWashFx). Same grammar as
+# IDLE_CREAM_WASH_AFTERSHOCK_* (#177) / DEATH_CREAM_WASH_AFTERSHOCK_* (#172);
+# world-space settle matches TELEGRAPH_CREAM_WARN_AFTERSHOCK_* (#121). Quieter
+# than idle aftershock (ambient silhouette). SILHOUETTE_CREAM_WASH_AFTERSHOCK_ENABLED
+# = False drops aftershock only.
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_ENABLED = True
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.32  # from pulse arm
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_LIFT = 2.05  # fallback; prefers silhouetteCreamRimLook lift * 0.55
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_COUNT = 4
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_SIZE = 0.08
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_DRIFT = 0.48
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_FALL = 0.42
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_SEC = 0.30
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.58)
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_BIN = 38  # above wash (37); soft residual
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.42
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_HALO_START = 0.24
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.25
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.26
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.10
+SILHOUETTE_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Sludge Brute spit telegraph — swamp green, wider squash, squirt SFX.
 # Distinct from Ink Smudge purple melee so ranged wind-up reads at a glance.
