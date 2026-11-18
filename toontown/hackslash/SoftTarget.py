@@ -53,10 +53,15 @@ class SoftTargetFinder:
         candidates = list(self._iterCandidates())
         byKey = {self._key(t): t for t in candidates}
 
+        # Sticky soft-lock: keep the current target while alive and roughly
+        # in front / in sticky range (wider than fresh acquisition cone).
         if self._lockedKey is not None and now < self._lockedUntil:
             locked = byKey.get(self._lockedKey)
-            if locked is not None and self._isValid(locked) and self._inCone(locked):
+            if locked is not None and self._isValid(locked) and self._inStickyCone(locked):
+                # Refresh hold while the target remains sticky-valid.
+                self._lockedUntil = now + HackSlashConfig.TARGET_LOCK_HOLD_SEC
                 return locked
+            self._lockedKey = None
 
         best = None
         bestDist = HackSlashConfig.TARGET_RANGE
@@ -148,11 +153,15 @@ class SoftTargetFinder:
             return target.getHackSlashPos()
         return target.getPos(render)  # noqa: F821
 
-    def _inCone(self, target):
+    def _inCone(self, target, rangeLimit=None, halfAngle=None):
         toTarget = self._pos(target) - self.avatar.getPos(render)  # noqa: F821
         toTarget.setZ(0)
         dist = toTarget.length()
-        if dist < 0.01 or dist > HackSlashConfig.TARGET_RANGE:
+        if rangeLimit is None:
+            rangeLimit = HackSlashConfig.TARGET_RANGE
+        if halfAngle is None:
+            halfAngle = HackSlashConfig.TARGET_HALF_ANGLE_DEG
+        if dist < 0.01 or dist > rangeLimit:
             return False
 
         forward = self.avatar.getQuat(render).getForward()  # noqa: F821
@@ -163,7 +172,13 @@ class SoftTargetFinder:
         toTarget.normalize()
         dot = max(-1.0, min(1.0, forward.dot(toTarget)))
         angle = math.degrees(math.acos(dot))
-        return angle <= HackSlashConfig.TARGET_HALF_ANGLE_DEG
+        return angle <= halfAngle
+
+    def _inStickyCone(self, target):
+        return self._inCone(
+            target,
+            rangeLimit=HackSlashConfig.TARGET_STICKY_RANGE,
+            halfAngle=HackSlashConfig.TARGET_STICKY_HALF_ANGLE_DEG)
 
 
 class SuitHackSlashAdapter(HackSlashTarget):
