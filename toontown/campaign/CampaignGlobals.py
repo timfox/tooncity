@@ -200,6 +200,50 @@ HANDOFF_STREAMER_COLORS = (
     (0.65, 0.82, 1.0, 0.95),
 )
 
+# Campaign victory cream confetti swell (CampaignHandoffConfetti).
+# Soft rubber-hose cream burst on the purity cheer ("TOON CITY IS SAVED!")
+# only — clears before the Oswald twist / FinalePhaseFx reveal so the
+# bittersweet sting stays intact. Separate from carnival HANDOFF_CONFETTI_*
+# (act clears) and from the reveal shadow flash. No keyblades / KH branding.
+VICTORY_CREAM_SWELL_ENABLED = True
+VICTORY_CREAM_SWELL_ORIGIN = (0.0, 0.0, 0.36)
+VICTORY_CREAM_SWELL_BIN = 61
+# Soft cream wash flash under the victory plate (not a white slam).
+VICTORY_CREAM_FLASH_COLOR = (1.0, 0.97, 0.84, 1.0)
+VICTORY_CREAM_FLASH_PEAK = 0.28
+VICTORY_CREAM_FLASH_IN_SEC = 0.06
+VICTORY_CREAM_FLASH_HOLD_SEC = 0.08
+VICTORY_CREAM_FLASH_OUT_SEC = 0.42
+# Expanding cream ring — the "swell" read.
+VICTORY_CREAM_RING_PEAK = 2.15
+VICTORY_CREAM_RING_SEC = 0.55
+VICTORY_CREAM_RING_PEAK_ALPHA = 0.42
+VICTORY_CREAM_RING_COLOR = (1.0, 0.96, 0.78, 1.0)
+# Cream confetti chips — warmer / softer than carnival handoff palette.
+VICTORY_CREAM_CONFETTI_COUNT = 14
+VICTORY_CREAM_CONFETTI_SIZE = 0.030
+VICTORY_CREAM_CONFETTI_DRIFT = 0.78
+VICTORY_CREAM_CONFETTI_SEC = 1.05
+VICTORY_CREAM_CONFETTI_COLORS = (
+    (1.0, 0.97, 0.82, 0.95),
+    (1.0, 0.94, 0.68, 0.95),
+    (0.98, 0.92, 0.55, 0.92),
+    (1.0, 0.98, 0.90, 0.90),
+    (0.95, 0.88, 0.62, 0.92),
+    (1.0, 0.90, 0.72, 0.90),
+)
+# Soft cream streamers — fewer, slower than act-handoff carnival ribbons.
+VICTORY_CREAM_STREAMER_COUNT = 4
+VICTORY_CREAM_STREAMER_FRAME = (-0.011, 0.011, -0.10, 0.10)
+VICTORY_CREAM_STREAMER_DRIFT = 0.88
+VICTORY_CREAM_STREAMER_SEC = 1.15
+VICTORY_CREAM_STREAMER_COLORS = (
+    (1.0, 0.95, 0.62, 0.92),
+    (1.0, 0.98, 0.82, 0.90),
+    (0.98, 0.90, 0.55, 0.90),
+    (1.0, 0.92, 0.72, 0.88),
+)
+
 # Explicit Oswald twist after P2 clear (shown after purity victory flash).
 FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
 FINALE_TWIST_TEASE_COLOR = (1.0, 0.55, 0.35, 1.0)

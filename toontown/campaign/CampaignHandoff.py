@@ -9,7 +9,9 @@ PlayEntry tip/act-enter banners (tunables in CampaignGlobals). Early/mid
 trusted Oswald lead clears also settle-bounce the title and hose-pop the
 Oswald cheer/lead subtitle. Act handoffs fire a short confetti / streamer
 pop (CampaignHandoffConfetti) — carnival reclaim juice, no KH / keyblade
-framing. FinalePhaseFx twist reveal stays separate.
+framing. Campaign victory fires a soft cream confetti swell on the purity
+cheer only; it clears before the Oswald twist / FinalePhaseFx reveal so
+the bittersweet sting stays intact.
 """
 
 from panda3d.core import CardMaker, Point3, TextNode, TransparencyAttrib, Vec4
@@ -27,7 +29,9 @@ from direct.showbase.DirectObject import DirectObject
 from toontown.campaign import CampaignGlobals
 from toontown.campaign.CampaignHandoffConfetti import (
     clearHandoffConfetti,
+    clearVictoryCreamSwell,
     playHandoffConfetti,
+    playVictoryCreamSwell,
 )
 from toontown.campaign.CampaignPower import applyPowerBump
 
@@ -153,7 +157,9 @@ class CampaignHandoffClient(DirectObject):
         return None, None
 
     def _onVictory(self, reclaimCount=0):
-        # Purity cheer, then Oswald twist tease on the celebration plate.
+        # Purity cheer (+ cream confetti swell), then Oswald twist tease.
+        # Cream swell is cheer-only — twist / FinalePhaseFx reveal stay
+        # bittersweet (no carnival after the truth lands).
         face = _face()
         tease = getattr(CampaignGlobals, 'FINALE_TWIST_TEASE', '')
         teaseColor = Vec4(*getattr(
@@ -166,7 +172,8 @@ class CampaignHandoffClient(DirectObject):
                 nextCue='Purity holds — take a victory lap!',
                 color=_VICTORY_COLOR,
                 powerMult=None,
-                nextStreet=None)
+                nextStreet=None,
+                creamSwell=True)
             return
 
         self._clear()
@@ -178,6 +185,7 @@ class CampaignHandoffClient(DirectObject):
             powerMult=None,
             nextStreet=None,
             holdSec=2.4,
+            creamSwell=True,
             onDone=lambda: self._celebrate(
                 'VICTORY…?',
                 subtitle=tease,
@@ -203,7 +211,7 @@ class CampaignHandoffClient(DirectObject):
 
     def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
                    powerMult=None, nextStreet=None, holdSec=None, onDone=None,
-                   confetti=False, trustSettle=False):
+                   confetti=False, trustSettle=False, creamSwell=False):
         """Staged rubber-hose celebration: card → title pop → cue → hold."""
         self._clear()
         root = aspect2d.attachNewNode('campaign-handoff-root')  # noqa: F821
@@ -213,7 +221,16 @@ class CampaignHandoffClient(DirectObject):
         self._rootNP = root
         hold = _HOLD_SEC if holdSec is None else float(holdSec)
 
-        if confetti:
+        if creamSwell:
+            # Soft cream swell under the purity victory plate only.
+            try:
+                origin = getattr(
+                    CampaignGlobals, 'VICTORY_CREAM_SWELL_ORIGIN',
+                    (0.0, 0.0, 0.36))
+                playVictoryCreamSwell(origin=origin)
+            except Exception:
+                pass
+        elif confetti:
             # Short carnival burst beside the banner — act handoff juice only.
             try:
                 origin = getattr(
@@ -419,6 +436,10 @@ class CampaignHandoffClient(DirectObject):
             self._ival = None
         try:
             clearHandoffConfetti()
+        except Exception:
+            pass
+        try:
+            clearVictoryCreamSwell()
         except Exception:
             pass
         if self._rootNP and not self._rootNP.isEmpty():
