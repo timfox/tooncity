@@ -78,6 +78,14 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
 
     def announceReclaimStart(self):
         self.__showBanner(ReclaimGlobals.BANNER_START, (1.0, 0.92, 0.45, 1.0))
+        # Discoverable play: arm melee without demo dummies when reclaim goes live.
+        av = getattr(base, 'localAvatar', None)
+        if av is not None and hasattr(av, 'enableHackSlashMelee'):
+            try:
+                av.enableHackSlashMelee(spawnHostiles=False)
+            except Exception:
+                pass
+        messenger.send('announceReclaimStart', [])
         self.__showDemoHint()
         self.__showStatusHud()
 

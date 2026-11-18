@@ -53,6 +53,10 @@ class PollutionManager(DistributedObject.DistributedObject):
     def d_requestZonePollution(self, zoneId):
         self.sendUpdate('requestZonePollution', [zoneId])
 
+    def d_requestStreetEvent(self, eventType):
+        """0=start reclaim in this street, 1=start/resume campaign act."""
+        self.sendUpdate('requestStreetEvent', [int(eventType)])
+
     def __handleZoneChange(self, zoneId=None):
         if zoneId is None and hasattr(base, 'localAvatar'):
             zoneId = getattr(base.localAvatar, 'zoneId', None)

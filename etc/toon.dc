@@ -3282,6 +3282,8 @@ dclass DistributedSillyMeterMgr : DistributedPhaseEventMgr {
 dclass PollutionManager : DistributedObject {
   setZonePollution(uint32, uint16/1000(0-1)) broadcast;
   requestZonePollution(uint32) airecv clsend;
+  // Player-facing street loop entry (0=reclaim, 1=campaign act). No magic words required.
+  requestStreetEvent(uint8) airecv clsend;
 };
 
 dclass DistributedCorruptToon : DistributedNode {
