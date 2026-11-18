@@ -191,6 +191,11 @@ class MeleeCombatController(DirectObject):
         self.accept(
             'corruptInkSplatCounter', self._onInkSplatCounter)
         self.accept('hackslash-hit', self._onHackSlashHit)
+        # Between-wave ambush → brief soft-lock prefer pulse (Ambush names).
+        ambushMsg = getattr(
+            HackSlashConfig, 'AMBUSH_SOFT_LOCK_PREFER_MSG',
+            'reclaimAmbushSpawn')
+        self.accept(ambushMsg, self._onAmbushSpawnPrefer)
         self._showHint(HackSlashConfig.DEMO_HINT)
         # Run after smart-cam so soft-lock look/orbit bias applies for the frame.
         taskMgr.add(  # noqa: F821
@@ -221,6 +226,10 @@ class MeleeCombatController(DirectObject):
         self.ignore('corruptInkDashCounter')
         self.ignore('corruptInkSplatCounter')
         self.ignore('hackslash-hit')
+        ambushMsg = getattr(
+            HackSlashConfig, 'AMBUSH_SOFT_LOCK_PREFER_MSG',
+            'reclaimAmbushSpawn')
+        self.ignore(ambushMsg)
         taskMgr.remove(self._taskName)  # noqa: F821
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
         self._finishSwing()
@@ -347,6 +356,23 @@ class MeleeCombatController(DirectObject):
     def _hideSoftLockReticle(self):
         try:
             self._softLockReticle.hide()
+        except Exception:
+            pass
+
+    def _onAmbushSpawnPrefer(self, zoneId=0, afterWave=0, count=0):
+        """Accept reclaimAmbushSpawn → brief Ambush soft-lock prefer pulse.
+
+        Director owns the mid-fight pressure tip; this thin accept expires
+        sticky glue and scores Ambush-prefixed names as priority for a short
+        window so flanks steal focus mid-fight.
+        """
+        if not self.enabled:
+            return
+        if not getattr(
+                HackSlashConfig, 'AMBUSH_SOFT_LOCK_PREFER_ENABLED', True):
+            return
+        try:
+            self.targetFinder.pulseAmbushPrefer()
         except Exception:
             pass
 
