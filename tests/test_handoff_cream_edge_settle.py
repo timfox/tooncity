@@ -3,8 +3,8 @@
 
 Panda-free: loads CampaignGlobals + AST-checks ActBannerCreamEdgeFx /
 CampaignHandoff wiring for Loopy→Punchline→Silly cream edge overshoot→rest
-→micro rebound (#222 deepen). Distinct from Punchline tip cream hose
-(#227) and finale betrayal cream hose (#235).
+→micro rebound (past #240). Distinct from Punchline tip cream hose
+(#227/#256) and finale betrayal cream hose (#235/#260).
 
 Run from repo root:
   python3 tests/test_handoff_cream_edge_settle.py
@@ -86,24 +86,24 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
         self.assertGreater(float(ox), 1.0)
         self.assertGreater(float(oz), 1.0)
         self.assertAlmostEqual(float(oy), 1.0)
-        # Deepened vs #222 baseline (1.05 / 1.08 / 0.07).
-        self.assertGreaterEqual(float(ox), 1.08)
-        self.assertGreaterEqual(float(oz), 1.12)
-        self.assertGreaterEqual(float(over_sec), 0.08)
+        # Deepened past #240 baseline (1.08 / 1.13 / 0.09 + rebound 1.03/1.05/0.05).
+        self.assertGreaterEqual(float(ox), 1.10)
+        self.assertGreaterEqual(float(oz), 1.15)
+        self.assertGreaterEqual(float(over_sec), 0.10)
         rest = float(camp.HANDOFF_CREAM_EDGE_SETTLE_REST_SEC)
-        self.assertGreater(rest, 0.0)
+        self.assertGreaterEqual(rest, 0.09)
         rebound = camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND
         self.assertEqual(len(rebound), 4)
         rx, ry, rz, rebound_sec = rebound
-        self.assertGreater(float(rx), 1.0)
-        self.assertGreater(float(rz), 1.0)
+        self.assertGreaterEqual(float(rx), 1.04)
+        self.assertGreaterEqual(float(rz), 1.06)
         self.assertAlmostEqual(float(ry), 1.0)
-        self.assertGreater(float(rebound_sec), 0.0)
+        self.assertGreaterEqual(float(rebound_sec), 0.055)
         # Rebound is a quieter second bounce under the primary overshoot.
         self.assertLess(float(rx), float(ox))
         self.assertLess(float(rz), float(oz))
         rebound_rest = float(camp.HANDOFF_CREAM_EDGE_SETTLE_REBOUND_REST_SEC)
-        self.assertGreater(rebound_rest, 0.0)
+        self.assertGreaterEqual(rebound_rest, 0.09)
         # Settle stays a short readable beat under the edge hang.
         total = (
             float(camp.HANDOFF_CREAM_EDGE_IN_SEC)
@@ -113,7 +113,7 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
             + rebound_rest)
         self.assertLess(total, 0.55)
         self.assertGreater(total, 0.20)
-        # Distinct from Punchline tip hose (#227) and betrayal hose (#235).
+        # Distinct from Punchline tip hose (#227/#256) and betrayal hose (#235/#260).
         punch_over = camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_OVERSHOOT
         betr_over = camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT
         self.assertNotEqual(tuple(over), tuple(punch_over))
@@ -122,9 +122,10 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
             rest, float(camp.PUNCHLINE_ACT_TIP_CREAM_HOSE_SETTLE_REST_SEC))
         self.assertNotEqual(
             rest, float(camp.FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REST_SEC))
-        # Wash lands after deepened settle.
+        # Wash lands after juicier settle past #240.
         self.assertGreaterEqual(
-            float(camp.HANDOFF_CREAM_WASH_DELAY_SEC), 0.48)
+            float(camp.HANDOFF_CREAM_WASH_DELAY_SEC), 0.54)
+        self.assertGreaterEqual(float(camp.HANDOFF_CREAM_WASH_PEAK), 0.15)
         # No KH product nouns in the settle block comments.
         src = _read('toontown/campaign/CampaignGlobals.py').lower()
         idx = src.find('handoff_cream_edge_settle_enabled')
@@ -132,6 +133,7 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
         snip = src[max(0, idx - 450):idx + 550]
         self.assertIn('no keyblades', snip)
         self.assertIn('rebound', snip)
+        self.assertIn('past #240', snip)
         for banned in ('kingdom hearts', 'sora', 'key blade'):
             self.assertNotIn(banned, snip)
 
@@ -165,12 +167,15 @@ class HandoffCreamEdgeSettleTest(unittest.TestCase):
         handoff_src = _read('toontown/campaign/CampaignHandoff.py')
         self.assertIn('playHandoffCreamEdge', handoff_src)
         self.assertIn('deepened rubber-hose scale settle', handoff_src.lower())
+        self.assertIn('past #240', handoff_src.lower())
         self.assertIn('micro rebound', handoff_src.lower())
         magic_src = _read('toontown/campaign/MagicWords.py').lower()
-        self.assertIn('deepened edge settle', magic_src)
+        self.assertIn('juicier deepened edge settle', magic_src)
         self.assertIn('no keyblades', magic_src)
         self.assertNotIn('kingdom hearts', magic_src)
         self.assertNotIn('sora', magic_src)
+        wash_src = _read('toontown/campaign/HandoffCreamWashFx.py').lower()
+        self.assertIn('past #240', wash_src)
 
 
 def main() -> int:

@@ -4,12 +4,13 @@ Fullscreen soft cream veil that settles *after* hood handoff cream-sparkle
 carnival (#99) and cream edge (#124) — same PerfectDodgeCreamWashPulse /
 HitSparkCreamWashPulse / VictoryCreamWashPulse / OswaldTrustCreamWashPulse
 / FinaleRevealCreamWashPulse overlay grammar as a brief act-handoff settle
-beat. Soft under the handoff plate + edge strips; cream / pastel only (not
-ink). Wired from CampaignHandoff confetti (act handoff path only) beside
-the cream edge. Act-enter wash lives in ActBannerCreamWashFx; Punchline
-tip wash lives in PunchlineTipCreamWashFx; Silly tip wash lives in
-SillyTipCreamWashFx; Oswald trust wash (+ its own wash aftershock) lives
-in OswaldTrustCreamWashFx; finale-reveal wash lives in
+beat. Delay tracks the juicier cream edge settle past #240. Soft under the
+handoff plate + edge strips; cream / pastel only (not ink). Wired from
+CampaignHandoff confetti (act handoff path only) beside the cream edge.
+Act-enter wash lives in ActBannerCreamWashFx; Punchline tip wash lives in
+PunchlineTipCreamWashFx; Silly tip wash lives in SillyTipCreamWashFx;
+Oswald trust wash (+ its own wash aftershock) lives in
+OswaldTrustCreamWashFx; finale-reveal wash lives in
 FinaleRevealCreamWashFx; phase stays wash-free here. Client only.
 Toontown spiritual sequel — no keyblades / no KH branding.
 """
