@@ -52,6 +52,8 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         # Silly street mid-fight Unleash (HP fraction of maxHp); None = off.
         self._overlordP2HpFrac = None
         self._streetP2Promoted = False
+        # Dedup deferred KO→contested fail while attack resolve finishes.
+        self._koFailPending = False
 
     @staticmethod
     def startStreetPackForToon(air, toon, force=False):
@@ -265,11 +267,61 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
             taskMgr.doMethodLater(0.5, self.__tick, self._tickName)
 
         self.accept('pollutionReclaimed', self.__onPollutionReclaimed)
+        self._koFailPending = False
         return True
+
+    def failStreetOnKnockout(self, avId=None):
+        """Active reclaim fails when a fighter goes sad — street contested.
+
+        Smallest authored lose beat for explore→fight→reclaim: same contested
+        outcome as mid-reclaim bail (~stopreclaim), plus announceReclaimFailed
+        so the client reads KO as failure (not a silent end). Defers teardown
+        one tick so the corrupt attack resolve that caused the KO can finish.
+        """
+        if self.state != ReclaimGlobals.STATE_ACTIVE:
+            return False
+        if getattr(self, '_koFailPending', False):
+            return False
+        if avId is not None:
+            av = self.air.doId2do.get(int(avId))
+            if av is not None:
+                avZone = int(getattr(av, 'zoneId', 0) or 0)
+                if avZone and avZone != int(self.reclaimZoneId):
+                    return False
+        self._koFailPending = True
+        try:
+            self.sendUpdate('announceReclaimFailed', [])
+        except Exception:
+            self.notify.debug('announceReclaimFailed send failed')
+        # Defer stop/delete so current CorruptToonAI hit resolve can return.
+        taskMgr.doMethodLater(  # noqa: F821
+            0.05,
+            self.__deferredKnockoutFail,
+            self.uniqueName('reclaim-ko-fail'))
+        return True
+
+    def __deferredKnockoutFail(self, task):
+        """Contested bail-out after KO announce (mirrors ~stopreclaim)."""
+        self._koFailPending = False
+        if self.isDeleted():
+            return Task.done
+        zoneId = self.reclaimZoneId
+        if self.state == ReclaimGlobals.STATE_ACTIVE:
+            self.stop()
+        try:
+            if not self.isDeleted():
+                self.requestDelete()
+        except Exception:
+            pass
+        directors = getattr(self.air, 'reclaimDirectors', None)
+        if isinstance(directors, dict):
+            directors.pop(zoneId, None)
+        return Task.done
 
     def stop(self):
         # Bail-out while ACTIVE leaves the street contested so residual ink
         # can slowly re-creep. COMPLETE → IDLE keeps the secured mark.
+        # Player KO uses the same contested path via failStreetOnKnockout.
         wasActive = self.state == ReclaimGlobals.STATE_ACTIVE
         contestedZoneId = self.reclaimZoneId
         self.ignore('pollutionReclaimed')
@@ -277,6 +329,12 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         if self._tickName is not None:
             taskMgr.remove(self._tickName)
             self._tickName = None
+        koTask = self.uniqueName('reclaim-ko-fail')
+        try:
+            taskMgr.remove(koTask)  # noqa: F821
+        except Exception:
+            pass
+        self._koFailPending = False
         self._clearPack(delete=True)
         self.b_setPackAlive(0)
         self.b_setWaveIndex(0)
