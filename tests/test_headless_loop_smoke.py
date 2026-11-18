@@ -1271,8 +1271,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         wave_burst_src = _read('toontown/reclaim/WaveCreamBurstFx.py')
         self.assertIn('WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ENABLED', wave_burst_src)
 
-        # Wave-start purity meter hose pop cream deepen — sunny squash/stretch
-        # + rising cream flecks / soft halo on pack spawn (#220 deepen).
+        # Wave-start purity meter hose pop cream deepen past #239 —
+        # flatter squash / taller stretch + richer rising cream flecks / halo.
         for wave_start_key in (
                 'WAVE_START_METER_POP_ENABLED',
                 'WAVE_START_METER_POP_SQUASH',
@@ -1284,7 +1284,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'WAVE_START_METER_CREAM_COUNT',
                 'WAVE_START_METER_CREAM_RISE',
                 'WAVE_START_METER_CREAM_COLOR',
-                'WAVE_START_METER_CREAM_HALO_ENABLED'):
+                'WAVE_START_METER_CREAM_HALO_ENABLED',
+                'WAVE_START_METER_CREAM_HALO_PEAK',
+                'WAVE_START_METER_CREAM_HALO_PEAK_ALPHA'):
             self.assertIn(
                 wave_start_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % wave_start_key)
@@ -1293,6 +1295,28 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             wave_start_assigns.get('WAVE_START_METER_POP_ENABLED'), True)
         self.assertIs(
             wave_start_assigns.get('WAVE_START_METER_CREAM_ENABLED'), True)
+        # Floors past #239 (count 6 / rise 0.12 / halo peak 1.32 / alpha 0.16).
+        self.assertGreaterEqual(
+            int(wave_start_assigns.get('WAVE_START_METER_CREAM_COUNT')), 8)
+        self.assertGreater(
+            float(wave_start_assigns.get('WAVE_START_METER_CREAM_RISE')), 0.12)
+        self.assertGreater(
+            float(wave_start_assigns.get('WAVE_START_METER_CREAM_HALO_PEAK')),
+            1.32)
+        self.assertGreaterEqual(
+            float(wave_start_assigns.get(
+                'WAVE_START_METER_CREAM_HALO_PEAK_ALPHA')), 0.18)
+        wave_start_squash = _literal(_toplevel_value(
+            self.reclaim_tree, 'WAVE_START_METER_POP_SQUASH'))
+        wave_start_stretch = _literal(_toplevel_value(
+            self.reclaim_tree, 'WAVE_START_METER_POP_STRETCH'))
+        self.assertIsInstance(wave_start_squash, list)
+        self.assertIsInstance(wave_start_stretch, list)
+        self.assertLess(float(wave_start_squash[2]), 0.50)
+        self.assertGreater(float(wave_start_stretch[2]), 1.40)
+        self.assertGreater(
+            float(wave_start_assigns.get('WAVE_START_METER_POP_SETTLE_SEC')),
+            0.12)
         wave_start_hud_methods = _class_method_names(
             _module_ast('toontown/reclaim/PurityMeterHud.py'), 'PurityMeterHud')
         self.assertIn('popWaveStart', wave_start_hud_methods)
@@ -1308,6 +1332,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('WAVE_START_METER_CREAM', wave_start_hud_src)
         self.assertIn('reclaimPurityMeterWaveStartHose', wave_start_hud_src)
         self.assertIn('reclaimPurityMeterWaveStartCream', wave_start_hud_src)
+        self.assertIn('past #239', wave_start_hud_src)
 
         # Purity-complete meter hose settle cream deepen past #248 —
         # taller stretch→settle + richer settling cream flecks / soft halo.
