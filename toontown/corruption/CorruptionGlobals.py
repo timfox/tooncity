@@ -57,7 +57,8 @@ ARCHETYPE_STATS = {
         'actorTint': (0.55, 0.22, 0.08, 1.0),
     },
     # Punchline gag-lobber: stands back, telegraphs a bounce-bomb, then
-    # resolves a teal puddle trap at the target's wind-up position (AoE).
+    # resolves a teal puddle trap at the target's wind-up position (AoE
+    # land + short linger sludge hazard: tick DoT / slow while inside).
     ARCHETYPE_GAGSTER: {
         'name': 'Gunk Gagster',
         'hpScale': 1.15,
@@ -71,6 +72,11 @@ ARCHETYPE_STATS = {
         'actorScale': 1.12,
         'actorTint': (0.06, 0.32, 0.38, 1.0),  # teal gunk
         'attackMove': 'gag_lob',
+        # Lingering sludge after land — trap fantasy vs one-shot AoE.
+        'puddleLingerSec': 2.5,
+        'puddleLingerTickSec': 0.5,
+        'puddleLingerTickDamage': 1,
+        'puddleLingerSlowFactor': 0.55,
     },
 }
 
@@ -1647,6 +1653,70 @@ GAGSTER_PUDDLE_COLOR = (0.12, 0.62, 0.7, 0.88)
 GAGSTER_PUDDLE_HALF = 1.15
 GAGSTER_PUDDLE_PEAK = 2.35
 GAGSTER_PUDDLE_SEC = 0.28
+
+# Lingering sludge hazard after Gunk Gagster puddle land (gameplay trap).
+# Initial resolve stays a one-shot AoE at wind-up XY; then the puddle ticks
+# DoT and stamps a short slow while toons stay inside. Punchline identity —
+# not cream FX deepen. GAGSTER_PUDDLE_LINGER_ENABLED = False restores
+# one-shot-only land damage.
+GAGSTER_PUDDLE_LINGER_ENABLED = True
+GAGSTER_PUDDLE_LINGER_SEC = 2.5
+GAGSTER_PUDDLE_LINGER_TICK_SEC = 0.5
+GAGSTER_PUDDLE_LINGER_TICK_DAMAGE = 1
+# Planar radius fallback when archetype attackHitRange is missing.
+GAGSTER_PUDDLE_LINGER_RADIUS = 5.0
+# Client walk slow + AI stamp refresh while standing in sludge.
+GAGSTER_PUDDLE_LINGER_SLOW_FACTOR = 0.55
+GAGSTER_PUDDLE_LINGER_SLOW_SEC = 0.65
+
+
+def gagsterPuddleLingerUntil(landAt, lingerSec=None):
+    """Absolute expiry for a Gunk Gagster linger sludge hazard."""
+    if lingerSec is None:
+        lingerSec = GAGSTER_PUDDLE_LINGER_SEC
+    return float(landAt) + max(0.0, float(lingerSec))
+
+
+def gagsterPuddleLingerTickCount(lingerSec=None, tickSec=None):
+    """How many DoT ticks fit inside a linger window (excludes land hit)."""
+    if lingerSec is None:
+        lingerSec = GAGSTER_PUDDLE_LINGER_SEC
+    if tickSec is None:
+        tickSec = GAGSTER_PUDDLE_LINGER_TICK_SEC
+    linger = max(0.0, float(lingerSec))
+    tick = max(0.05, float(tickSec))
+    if linger <= 0.0:
+        return 0
+    # First tick fires after one interval; last tick must still be < until.
+    return int(linger // tick)
+
+
+def isInsideGagsterPuddle(dx, dy, radius):
+    """True when planar offset is inside the linger / land puddle radius."""
+    r = max(0.0, float(radius))
+    return (float(dx) * float(dx) + float(dy) * float(dy)) <= (r * r)
+
+
+def isGagsterPuddleSlowActive(until, now):
+    """True while an AI-stamped Gagster sludge slow window is live."""
+    return float(now) < float(until)
+
+
+def gagsterPuddleSlowUntil(now, slowSec=None):
+    """Absolute expiry for a sludge-slow refresh stamped on a tick."""
+    if slowSec is None:
+        slowSec = GAGSTER_PUDDLE_LINGER_SLOW_SEC
+    return float(now) + max(0.0, float(slowSec))
+
+
+def gagsterPuddleLingerTickDamage(stats=None):
+    """Per-tick DoT while standing in linger sludge (min 1 when enabled)."""
+    if stats is None:
+        stats = {}
+    raw = stats.get(
+        'puddleLingerTickDamage', GAGSTER_PUDDLE_LINGER_TICK_DAMAGE)
+    return max(1, int(raw))
+
 
 # Cream splash + delayed cream aftershock on Gunk Gagster puddle land /
 # splash (after telegraph puddle warn #197). Sunny cream / pastel contrast

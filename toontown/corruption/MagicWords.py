@@ -168,8 +168,7 @@ class SpawnGagster(MagicWord):
     advancedDesc = (
         'Shortcut for ARCHETYPE_GAGSTER. Optional count, hp (0=default base). '
         'Gagsters lob a delayed teal puddle trap — dodge out during telegraph; '
-        'puddle land plays deepened cream splash beyond #276 + thicker '
-        'ground bloom aftershock. '
+        'land hit leaves a short linger sludge hazard (tick DoT / walk slow). '
         'Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

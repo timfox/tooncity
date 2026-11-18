@@ -94,6 +94,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._gagLobNP = None
         self._gagPuddleIval = None
         self._gagPuddleNP = None
+        self._gagsterSludgeSlow = None
         self._deathPopSplat = None
         self._telegraphInkDrip = None
         self._telegraphCreamWarn = None
@@ -1207,7 +1208,11 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self._gagLobNP = None
 
     def __playGagPuddle(self, landPos):
-        """Flat teal puddle ring at the lob landing — trap-readable splat."""
+        """Flat teal puddle ring at the lob landing — trap-readable splat.
+
+        When linger hazard is armed, hold the ring through the sludge window
+        so the DoT / slow zone stays readable (gameplay trap, not cream FX).
+        """
         self.__clearGagPuddle()
         try:
             cm = CardMaker('gagster-gunk-puddle')
@@ -1223,24 +1228,113 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             puddle.setDepthWrite(False)
             peak = float(CorruptionGlobals.GAGSTER_PUDDLE_PEAK)
             sec = float(CorruptionGlobals.GAGSTER_PUDDLE_SEC)
+            lingerOn = bool(getattr(
+                CorruptionGlobals, 'GAGSTER_PUDDLE_LINGER_ENABLED', True))
+            lingerSec = float(getattr(
+                CorruptionGlobals, 'GAGSTER_PUDDLE_LINGER_SEC', 0.0) or 0.0)
+            if not lingerOn:
+                lingerSec = 0.0
+            bloomSec = sec * 0.45
+            fadeSec = sec * 0.55
+            holdSec = max(0.0, lingerSec)
             self._gagPuddleNP = puddle
-            self._gagPuddleIval = Sequence(
+            parts = [
                 LerpScaleInterval(
-                    puddle, sec * 0.45, Point3(peak, peak, 1.0),
+                    puddle, bloomSec, Point3(peak, peak, 1.0),
                     startScale=Point3(0.35, 0.35, 1.0)),
+            ]
+            if holdSec > 0.0:
+                parts.append(Wait(holdSec))
+            parts.extend([
                 Parallel(
-                    LerpScaleInterval(puddle, sec * 0.55, Point3(peak * 1.15, peak * 1.15, 1.0)),
-                    LerpColorScaleInterval(puddle, sec * 0.55, Vec4(1, 1, 1, 0)),
+                    LerpScaleInterval(
+                        puddle, fadeSec,
+                        Point3(peak * 1.15, peak * 1.15, 1.0)),
+                    LerpColorScaleInterval(puddle, fadeSec, Vec4(1, 1, 1, 0)),
                 ),
                 Func(self.__clearGagPuddle),
-            )
+            ])
+            self._gagPuddleIval = Sequence(*parts)
             self._gagPuddleIval.start()
             # Cream splash aftershock so the trap land reads juicy vs teal ink.
             self.__playGagsterPuddleCreamSplash(landPos)
+            # Client walk-slow while overlapping the linger sludge radius.
+            if holdSec > 0.0:
+                radius = float(CorruptionGlobals.archetypeStats(
+                    CorruptionGlobals.ARCHETYPE_GAGSTER).get(
+                        'attackHitRange',
+                        CorruptionGlobals.GAGSTER_PUDDLE_LINGER_RADIUS))
+                until = CorruptionGlobals.gagsterPuddleLingerUntil(
+                    globalClock.getFrameTime(), holdSec)  # noqa: F821
+                self.__armGagsterSludgeSlow(landPos, radius, until)
         except Exception:
             self.__clearGagPuddle()
 
+    def __armGagsterSludgeSlow(self, landPos, radius, until):
+        """Apply LocalAvatar walk-slow while standing in linger sludge."""
+        self.__clearGagsterSludgeSlow()
+        self._gagsterSludgeSlow = {
+            'pos': landPos,
+            'radius': float(radius),
+            'until': float(until),
+            'active': False,
+        }
+        taskMgr.add(  # noqa: F821
+            self.__tickGagsterSludgeSlow,
+            self.uniqueName('gagster-sludge-slow'))
+
+    def __tickGagsterSludgeSlow(self, task):
+        state = getattr(self, '_gagsterSludgeSlow', None)
+        if state is None:
+            return Task.done
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now >= float(state['until']):
+            self.__clearGagsterSludgeSlow()
+            return Task.done
+        la = getattr(base, 'localAvatar', None)  # noqa: F821
+        inside = False
+        if la is not None:
+            try:
+                if not la.isEmpty():
+                    dx = float(la.getX(render)) - float(state['pos'].getX())
+                    dy = float(la.getY(render)) - float(state['pos'].getY())
+                    inside = CorruptionGlobals.isInsideGagsterPuddle(
+                        dx, dy, state['radius'])
+            except Exception:
+                inside = False
+        if inside and not state['active']:
+            try:
+                if hasattr(la, 'setWalkSpeedSlow'):
+                    la.setWalkSpeedSlow()
+                    state['active'] = True
+            except Exception:
+                pass
+        elif (not inside) and state['active']:
+            try:
+                if hasattr(la, 'setWalkSpeedNormal'):
+                    la.setWalkSpeedNormal()
+            except Exception:
+                pass
+            state['active'] = False
+        return Task.cont
+
+    def __clearGagsterSludgeSlow(self):
+        state = getattr(self, '_gagsterSludgeSlow', None)
+        self._gagsterSludgeSlow = None
+        try:
+            taskMgr.remove(self.uniqueName('gagster-sludge-slow'))  # noqa: F821
+        except Exception:
+            pass
+        if state and state.get('active'):
+            la = getattr(base, 'localAvatar', None)  # noqa: F821
+            try:
+                if la is not None and hasattr(la, 'setWalkSpeedNormal'):
+                    la.setWalkSpeedNormal()
+            except Exception:
+                pass
+
     def __clearGagPuddle(self):
+        self.__clearGagsterSludgeSlow()
         if self._gagPuddleIval is not None:
             try:
                 self._gagPuddleIval.pause()
