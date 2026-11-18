@@ -18,9 +18,11 @@ Purity complete (after celebration settles): soft tall stretch → longer settle
 on the full meter so the finish reads clearly — not wave-start squash→stretch
 (#220) and not secured-lock green soft uniform scale (#209).
 
-Mid-wave purity pressure (director tip): warm double-pulse contested rim
-flash when purity stalls or ink pressure rises — rubber-hose urgency after
-re-creep #194 so danger reads clearly (distinct from secured-lock #209).
+Mid-wave purity pressure (director tip): deepened warm triple-pulse contested
+rim flash + local cream flecks / soft halo when purity stalls or ink pressure
+rises — rubber-hose urgency after re-creep #194 so danger reads juicier
+(distinct from secured-lock #209, wave-clear sparkle #229, complete hose
+settle #225).
 Full reclaim secured lock: brief cream/green rim confirm + soft meter hose-pop
 that purity is locked (pairs with SecuredLockSparkleFx flecks / pitch sting).
 """
@@ -76,6 +78,8 @@ class PurityMeterHud(object):
         self._creamWash = None
         self._lastPopPurity = None
         self._warnIval = None
+        self._warnCreamNPs = []
+        self._warnCreamHaloNP = None
         self._finalePhase = 0
 
     def isShown(self):
@@ -285,10 +289,13 @@ class PurityMeterHud(object):
         self._warnIval.start()
 
     def warnPressure(self):
-        """Warm double-pulse contested rim flash for mid-wave purity pressure.
+        """Deepened warm triple-pulse contested rim flash + cream flecks.
 
-        Danger blink on the meter rim only — not the secured-lock green hold
-        or whole-meter hose-pop (#209), and not wave-start sunny hose (#224).
+        Danger blink on the meter rim with local warm cream chips / soft halo
+        so mid-wave pressure reads juicier — not secured-lock green hold /
+        whole-meter hose-pop (#209), not wave-start sunny hose (#220), not
+        wave-clear mid-screen sparkle (#229), and not purity-complete hose
+        settle (#225).
         """
         if not getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_ENABLED', True):
             return
@@ -299,18 +306,18 @@ class PurityMeterHud(object):
         self._clearPressureWarn()
         warnColor = getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_COLOR',
-            (1.0, 0.55, 0.35, 0.78))
+            (1.0, 0.62, 0.42, 0.90))
         pulses = max(1, int(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_PULSES', 2)))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_PULSES', 3)))
         onSec = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_ON_SEC', 0.10))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_ON_SEC', 0.09))
         offSec = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_OFF_SEC', 0.08))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_OFF_SEC', 0.06))
         holdSec = float(getattr(
             ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_HOLD_SEC',
-            getattr(ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_SEC', 0.14)))
+            getattr(ReclaimGlobals, 'PURITY_PRESSURE_RIM_WARN_SEC', 0.16)))
         scalePeak = float(getattr(
-            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_SCALE', 1.16))
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_SCALE', 1.24))
 
         parts = []
         for i in range(pulses):
@@ -319,11 +326,23 @@ class PurityMeterHud(object):
             if i < pulses - 1:
                 parts.append(Func(self._applyRimColor))
                 parts.append(Wait(max(0.01, offSec)))
-        parts.append(Func(self._onPressureWarnDone))
-        self._warnIval = Sequence(
-            *parts,
-            name='reclaimPurityMeterPressureWarn',
-        )
+        creamPart = self._buildRimWarnCreamJuice()
+        if creamPart is not None:
+            flashCore = Sequence(*parts, name='reclaimPurityMeterPressureFlash')
+            self._warnIval = Sequence(
+                Parallel(
+                    flashCore,
+                    creamPart,
+                    name='reclaimPurityMeterPressureWarnJuice'),
+                Func(self._onPressureWarnDone),
+                name='reclaimPurityMeterPressureWarn',
+            )
+        else:
+            parts.append(Func(self._onPressureWarnDone))
+            self._warnIval = Sequence(
+                *parts,
+                name='reclaimPurityMeterPressureWarn',
+            )
         self._warnIval.start()
 
     def _buildRimWarnPulse(self, warnColor, peakSec, scalePeak):
@@ -350,6 +369,160 @@ class PurityMeterHud(object):
         except Exception:
             return colorBeat
         return Parallel(colorBeat, scaleBeat)
+
+    def _buildRimWarnCreamJuice(self):
+        """Warm cream flecks + soft halo layered on the rim flash."""
+        if not getattr(
+                ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED', True):
+            return None
+        if self._root is None or self._root.isEmpty():
+            return None
+        self._clearWarnCream()
+
+        parts = []
+        haloPart = self._spawnRimWarnCreamHalo()
+        if haloPart is not None:
+            parts.append(haloPart)
+        fleckParts = self._spawnRimWarnCreamFlecks()
+        if fleckParts:
+            parts.extend(fleckParts)
+        if not parts:
+            return None
+        return Parallel(*parts, name='reclaimPurityMeterPressureCream')
+
+    def _spawnRimWarnCreamHalo(self):
+        """Soft warm cream halo that blooms with the rim flash."""
+        if not getattr(
+                ReclaimGlobals,
+                'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_ENABLED', True):
+            return None
+        if self._root is None or self._root.isEmpty():
+            return None
+        half = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_HALF', 0.072))
+        start = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_START', 0.42))
+        peak = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK', 1.28))
+        sec = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_SEC', 0.24))
+        peakA = float(getattr(
+            ReclaimGlobals,
+            'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_PEAK_ALPHA', 0.18))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_COLOR',
+            (1.0, 0.93, 0.72, 1.0))
+        binSort = int(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_BIN', 48))
+        try:
+            cm = CardMaker('reclaim-purity-meter-pressure-halo')
+            cm.setFrame(-half, half, -half * 0.55, half * 0.55)
+            halo = self._root.attachNewNode(cm.generate())
+            halo.setTransparency(TransparencyAttrib.MAlpha)
+            halo.setColor(r, g, b, 1)
+            halo.setColorScale(r, g, b, 0)
+            halo.setPos(0, 0, 0)
+            halo.setScale(start)
+            halo.setBin('fixed', binSort)
+            halo.setDepthTest(False)
+            halo.setDepthWrite(False)
+        except Exception:
+            return None
+        self._warnCreamHaloNP = halo
+        return Sequence(
+            Parallel(
+                LerpScaleInterval(
+                    halo, max(0.01, sec * 0.45), peak, blendType='easeOut'),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.35),
+                    Vec4(r, g, b, peakA), blendType='easeOut'),
+            ),
+            Parallel(
+                LerpScaleInterval(
+                    halo, max(0.01, sec * 0.55), peak * 1.08,
+                    blendType='easeIn'),
+                LerpColorScaleInterval(
+                    halo, max(0.01, sec * 0.55),
+                    Vec4(r, g, b, 0.0), blendType='easeIn'),
+            ),
+            name='reclaimPurityMeterPressureHalo',
+        )
+
+    def _spawnRimWarnCreamFlecks(self):
+        """Warm cream chips that burst off the meter rim during pressure flash."""
+        count = int(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT', 5))
+        if count <= 0 or self._root is None or self._root.isEmpty():
+            return []
+        halfW = float(ReclaimGlobals.PURITY_METER_WIDTH) * 0.5
+        halfH = float(ReclaimGlobals.PURITY_METER_HEIGHT) * 0.5
+        pad = float(ReclaimGlobals.PURITY_METER_RIM_PAD)
+        size = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_SIZE', 0.012))
+        drift = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_DRIFT', 0.10))
+        sec = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_SEC', 0.28))
+        r, g, b, a = getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR',
+            (1.0, 0.94, 0.68, 0.92))
+        er, eg, eb, ea = getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_END_COLOR',
+            (1.0, 0.88, 0.48, 0.0))
+        fleckBin = int(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_RIM_FLASH_CREAM_BIN', 48))
+
+        parts = []
+        for i in range(count):
+            try:
+                cm = CardMaker('reclaim-purity-meter-pressure-cream-%s' % i)
+                # Alternate chip / streak so the warn cream pops.
+                if i % 2:
+                    cm.setFrame(-size * 1.35, size * 1.35, -size * 0.45, size * 0.45)
+                else:
+                    cm.setFrame(-size, size, -size, size)
+                fleck = self._root.attachNewNode(cm.generate())
+                fleck.setTransparency(TransparencyAttrib.MAlpha)
+                fleck.setColor(r, g, b, 1)
+                fleck.setColorScale(r, g, b, 0)
+                angle = (2.0 * pi * i) / float(count) + 0.22
+                # Start along the outer rim edge (not mid-screen sparkle origin).
+                start = Point3(
+                    cos(angle) * (halfW + pad * 0.6),
+                    0,
+                    sin(angle) * (halfH + pad * 0.8))
+                fleck.setPos(start)
+                fleck.setScale(0.45 + 0.1 * (i % 3))
+                fleck.setBin('fixed', fleckBin + (i % 2))
+                fleck.setDepthTest(False)
+                fleck.setDepthWrite(False)
+            except Exception:
+                continue
+
+            end = Point3(
+                start[0] + cos(angle) * drift,
+                0,
+                start[2] + sin(angle) * drift * 0.85 + 0.02)
+            peak = 1.15 + 0.08 * (i % 2)
+            parts.append(Sequence(
+                Parallel(
+                    LerpColorScaleInterval(
+                        fleck, 0.04, Vec4(r, g, b, a), blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec * 0.30), peak, blendType='easeOut'),
+                ),
+                Parallel(
+                    LerpPosInterval(
+                        fleck, max(0.01, sec * 0.70), end, blendType='easeOut'),
+                    LerpScaleInterval(
+                        fleck, max(0.01, sec * 0.70), 0.05, blendType='easeIn'),
+                    LerpColorScaleInterval(
+                        fleck, max(0.01, sec * 0.70),
+                        Vec4(er, eg, eb, ea), blendType='easeIn'),
+                ),
+            ))
+            self._warnCreamNPs.append(fleck)
+        return parts
 
     def _setRimWarnColor(self, color):
         if self._rimNP is None or self._rimNP.isEmpty():
@@ -515,6 +688,7 @@ class PurityMeterHud(object):
 
     def _onPressureWarnDone(self):
         self._warnIval = None
+        self._clearWarnCream()
         self._resetRimScale()
         self._resetRootScale()
         self._applyRimColor()
@@ -526,9 +700,27 @@ class PurityMeterHud(object):
             except Exception:
                 pass
             self._warnIval = None
+        self._clearWarnCream()
         self._resetRimScale()
         self._resetRootScale()
         self._applyRimColor()
+
+    def _clearWarnCream(self):
+        """Remove rim-flash cream flecks / halo without touching fill shimmer."""
+        if self._warnCreamHaloNP is not None:
+            try:
+                if not self._warnCreamHaloNP.isEmpty():
+                    self._warnCreamHaloNP.removeNode()
+            except Exception:
+                pass
+            self._warnCreamHaloNP = None
+        for np in self._warnCreamNPs:
+            if np is not None and not np.isEmpty():
+                try:
+                    np.removeNode()
+                except Exception:
+                    pass
+        self._warnCreamNPs = []
 
     def _isPopPlaying(self):
         return self._popIval is not None and self._popIval.isPlaying()
