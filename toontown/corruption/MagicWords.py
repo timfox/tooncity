@@ -107,8 +107,9 @@ class SpawnCorrupt(MagicWord):
         '(CorruptDeathCreamSparkleFx) plus a soft cream wash pulse after '
         '(CorruptDeathCreamWashFx). '
         'Ink Overlord finale phases also play ink crown + ink rain on '
-        'phase telegraphs; hit/death play cheap magenta/crimson ink splash '
-        '(see campaign Silly finale). '
+        'phase telegraphs; hit/death play cheap magenta/crimson ink splash; '
+        'Overlord hits also pulse soft cream wash against magenta ink '
+        '(OverlordHitCreamWashFx; see campaign Silly finale). '
         'Optional count (1-8), hp (0=archetype default base), '
         'archetype (0=Ink, 1=Brute, 2=Snare). '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')

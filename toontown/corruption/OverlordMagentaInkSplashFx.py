@@ -4,9 +4,12 @@ Cheap world-space CardMaker juice so tagged / popped Overlord stays scannable
 as boss (not a street Smudge). Composes palette / motion cues from
 OverlordTelegraphCrownFx (magenta rim/flash), OverlordPhaseInkRainFx (ink
 streaks), CorruptDeathPopFx (radial flecks), and IdleInkDripFx (soft falling
-drip). Phase charge retints P1 magenta swell vs P2 crimson fury. Wired from
-DistributedCorruptToon hit reaction + announceDefeat when a finale phase look
-is active. Toontown spiritual sequel only — no keyblades / no KH branding.
+drip). Phase charge retints P1 magenta swell vs P2 crimson fury. Hit path
+also arms OverlordHitCreamWashFx (soft cream wash pulse — cream/pastel
+contrast against magenta ink; telegraph / silhouette / death cream-wash
+grammar). Wired from DistributedCorruptToon hit reaction + announceDefeat
+when a finale phase look is active. Toontown spiritual sequel only — no
+keyblades / no KH branding.
 """
 
 from math import cos, pi, sin

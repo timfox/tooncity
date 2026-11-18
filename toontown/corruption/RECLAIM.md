@@ -119,7 +119,9 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 # Melee hits on Snare flash SnareStringSnapSplashFx (cheap amber string-snap);
 # Snare death layers splash with CorruptDeathPopFx.
 # Melee hits on Ink Overlord flash OverlordMagentaInkSplashFx (magenta /
-# crimson, phase-retinted); Overlord death layers splash with DeathPop.
+# crimson, phase-retinted) then soft cream wash pulse
+# (OverlordHitCreamWashFx — telegraph / silhouette / death cream-wash
+# grammar); Overlord death layers splash with DeathPop (+ death cream wash).
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray + CorruptDeathCreamFleckFx sunny
 # cream / pastel flecks + CorruptDeathCreamSparkleFx rising cream sparkles
@@ -315,5 +317,16 @@ dialogue is out of scope here.
 # (OverlordMagentaInkSplashFx) on each hit; P1 magenta vs P2 crimson.
 # Defeat layers a larger splash with CorruptDeathPopFx.
 # Distinct from street Smudge purple (SmudgeInkSplashFx).
+```
+
+## Ink Overlord hit cream wash pulse demo
+
+```
+# Silly finale Overlord (name contains "overlord" / reclaim finalePhase):
+~hackslash 0
+# Land F / LMB — magenta/crimson ink splash, then soft cream wash pulse
+# against magenta ink (OverlordHitCreamWashFx — telegraph / silhouette /
+# death cream-wash grammar). Hit path only; death keeps splash + death wash.
+# OVERLORD_HIT_CREAM_WASH_ENABLED = False drops wash only.
 ```
 
