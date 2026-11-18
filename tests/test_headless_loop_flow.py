@@ -320,8 +320,11 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn("accept('localAvatarZoneChange'", presence_src)
         self.assertIn('oswaldRevealBanner', presence_src)
         self.assertIn('oswaldBetrayalChase', presence_src)
-        # Stub placemarker — not a DistributedNPC companion.
-        self.assertIn('not a DistributedNPC', presence_src)
+        # NPC-style body stub — not a full DistributedNPC companion.
+        self.assertIn('full DistributedNPC', presence_src)
+        self.assertIn('CardMaker', presence_src)
+        self.assertIn('_buildNpcSilhouette', presence_src)
+        self.assertIn('_armInteract', presence_src)
         self.assertNotIn('from toontown.toon', presence_src)
         self.assertNotIn('distributednpctoon', presence_src.lower())
 

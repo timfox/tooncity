@@ -10,8 +10,9 @@ class StartCampaign(MagicWord):
     desc = 'Start or resume the multi-neighborhood reclaim campaign act.'
     advancedDesc = (
         'Uses CampaignDirector + ReclaimDirector. Oswald leads Loopy → '
-        'Punchline → Silly (hub/street presence stub greets the trusted '
-        'lead before the twist) two-phase Ink Overlord finale (act-enter banners: '
+        'Punchline → Silly (hub/street NPC-style presence stub — body + '
+        'E-talk greet — greets the trusted lead before the twist) '
+        'two-phase Ink Overlord finale (act-enter banners: '
         'cream edge + soft cream wash pulse; Punchline Act 2 tip: hose pop + '
         'juicier deepened cream hose settle past #256 (overshoot → rest → '
         'micro rebound) + soft cream wash pulse; Silly Act 3 tip: hose pop + '
