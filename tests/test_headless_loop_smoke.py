@@ -1418,6 +1418,109 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('FinisherCreamWashPulse', slam_src)
         self.assertIn('FinisherCreamWashPulse', hack_init)
 
+        # Wave-clear cream wash (#144) — soft wash after wave-clear aftershock.
+        wave_wash_rel = 'toontown/reclaim/WaveClearCreamWashFx.py'
+        _assert_module_file(wave_wash_rel)
+        wave_wash_names = _class_and_func_names(_module_ast(wave_wash_rel))
+        self.assertIn('WaveClearCreamWashPulse', wave_wash_names)
+        wave_wash_methods = _class_method_names(
+            _module_ast(wave_wash_rel), 'WaveClearCreamWashPulse')
+        self.assertIn('play', wave_wash_methods)
+        self.assertIn('clear', wave_wash_methods)
+        for wave_wash_key in (
+                'WAVE_CLEAR_CREAM_WASH_ENABLED',
+                'WAVE_CLEAR_CREAM_WASH_DELAY_SEC',
+                'WAVE_CLEAR_CREAM_WASH_COLOR',
+                'WAVE_CLEAR_CREAM_WASH_PEAK',
+                'WAVE_CLEAR_CREAM_WASH_MID',
+                'WAVE_CLEAR_CREAM_WASH_BIN'):
+            self.assertIn(
+                wave_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % wave_wash_key)
+        wave_shimmer_src = _read(shimmer_rel)
+        self.assertIn('WaveClearCreamWashPulse', wave_shimmer_src)
+
+        # Oswald trust cream wash (#145) — soft wash after trust cream edge.
+        trust_wash_rel = 'toontown/campaign/OswaldTrustCreamWashFx.py'
+        _assert_module_file(trust_wash_rel)
+        trust_wash_names = _class_and_func_names(_module_ast(trust_wash_rel))
+        self.assertIn('OswaldTrustCreamWashPulse', trust_wash_names)
+        self.assertIn('playOswaldTrustCreamWash', trust_wash_names)
+        self.assertIn('clearOswaldTrustCreamWash', trust_wash_names)
+        trust_wash_methods = _class_method_names(
+            _module_ast(trust_wash_rel), 'OswaldTrustCreamWashPulse')
+        self.assertIn('play', trust_wash_methods)
+        self.assertIn('clear', trust_wash_methods)
+        for trust_wash_key in (
+                'OSWALD_TRUST_BANNER_CREAM_WASH_ENABLED',
+                'OSWALD_TRUST_BANNER_CREAM_WASH_DELAY_SEC',
+                'OSWALD_TRUST_BANNER_CREAM_WASH_COLOR',
+                'OSWALD_TRUST_BANNER_CREAM_WASH_PEAK',
+                'OSWALD_TRUST_BANNER_CREAM_WASH_MID',
+                'OSWALD_TRUST_BANNER_CREAM_WASH_BIN'):
+            self.assertIn(
+                trust_wash_key, campaign_names,
+                msg='CampaignGlobals missing %s' % trust_wash_key)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('playOswaldTrustCreamWash', handoff_src)
+        self.assertIn('trustSettle=True', handoff_src)
+
+        # Idle cream wash (#146) — soft wash against corrupt idle ink drips.
+        idle_wash_rel = 'toontown/corruption/IdleCreamWashPulseFx.py'
+        _assert_module_file(idle_wash_rel)
+        idle_wash_names = _class_and_func_names(_module_ast(idle_wash_rel))
+        self.assertIn('IdleCreamWashPulse', idle_wash_names)
+        self.assertIn('idleCreamWashLook', idle_wash_names)
+        idle_wash_methods = _class_method_names(
+            _module_ast(idle_wash_rel), 'IdleCreamWashPulse')
+        self.assertIn('start', idle_wash_methods)
+        self.assertIn('pause', idle_wash_methods)
+        self.assertIn('resume', idle_wash_methods)
+        self.assertIn('clear', idle_wash_methods)
+        self.assertTrue(
+            hasattr(cg, 'IDLE_CREAM_WASH_LOOK'),
+            msg='CorruptionGlobals missing IDLE_CREAM_WASH_LOOK')
+        self.assertEqual(
+            cg.IDLE_CREAM_WASH_LOOK.get('id'), 'idle-cream-wash')
+        self.assertTrue(
+            hasattr(cg, 'IDLE_CREAM_WASH_ENABLED'),
+            msg='CorruptionGlobals missing IDLE_CREAM_WASH_ENABLED')
+        for idle_wash_key in (
+                'IDLE_CREAM_WASH_ENABLED',
+                'IDLE_CREAM_WASH_DELAY_SEC',
+                'IDLE_CREAM_WASH_COLOR',
+                'IDLE_CREAM_WASH_PEAK',
+                'IDLE_CREAM_WASH_MID',
+                'IDLE_CREAM_WASH_BIN'):
+            self.assertTrue(
+                hasattr(cg, idle_wash_key),
+                msg='CorruptionGlobals missing %s' % idle_wash_key)
+        self.assertIn('IdleCreamWashPulse', corrupt_src)
+        self.assertIn('__startIdleCreamWash', corrupt_src)
+
+        # Combo cream wash (#147) — soft wash after combo cream aftershock.
+        combo_wash_rel = 'toontown/hackslash/ComboCounterCreamWashFx.py'
+        _assert_module_file(combo_wash_rel)
+        combo_wash_names = _class_and_func_names(_module_ast(combo_wash_rel))
+        self.assertIn('ComboCounterCreamWashPulse', combo_wash_names)
+        combo_wash_methods = _class_method_names(
+            _module_ast(combo_wash_rel), 'ComboCounterCreamWashPulse')
+        self.assertIn('play', combo_wash_methods)
+        self.assertIn('clear', combo_wash_methods)
+        for combo_wash_key in (
+                'COMBO_COUNTER_CREAM_WASH_ENABLED',
+                'COMBO_COUNTER_CREAM_WASH_DELAY_SEC',
+                'COMBO_COUNTER_CREAM_WASH_COLOR',
+                'COMBO_COUNTER_CREAM_WASH_PEAK',
+                'COMBO_COUNTER_CREAM_WASH_MID',
+                'COMBO_COUNTER_CREAM_WASH_BIN'):
+            self.assertIn(
+                combo_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % combo_wash_key)
+        hit_juice_src = _read(hit_juice_rel)
+        self.assertIn('ComboCounterCreamWashPulse', hit_juice_src)
+        self.assertIn('ComboCounterCreamWashPulse', hack_init)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
