@@ -1173,8 +1173,10 @@ SNARE_TELEGRAPH_STRING_LOOK = {
 # CorruptDeathCreamSparkleFx — telegraph / silhouette cream sparkle grammar.
 # Toggle DEATH_CREAM_SPARKLE_ENABLED.
 # Soft cream wash (DEATH_CREAM_WASH_*) pulses after the fleck burst via
-# CorruptDeathCreamWashFx — reclaim purity-wash grammar. Toggle
-# DEATH_CREAM_WASH_ENABLED.
+# CorruptDeathCreamWashFx — reclaim purity-wash grammar; delayed cream
+# aftershock (DEATH_CREAM_WASH_AFTERSHOCK_*) settles after wash / sparkle
+# (#132 / #136 grammar). Toggle DEATH_CREAM_WASH_ENABLED /
+# DEATH_CREAM_WASH_AFTERSHOCK_ENABLED.
 DEATH_POP_SFX_VOLUME = 0.78
 DEATH_POP_LOOK = {
     ARCHETYPE_INK: {
@@ -1335,7 +1337,7 @@ DEATH_CREAM_SPARKLE_LOOK = {
 # Defeat cream wash pulse — soft aspect2d veil after DEATH_CREAM_FLECK_* burst
 # (client only). Matches reclaim PurityCompleteCreamWashFx /
 # EntryCreamWashPulseFx two-beat grammar; quieter than street purity payoff.
-# DEATH_CREAM_WASH_ENABLED = False drops wash only.
+# DEATH_CREAM_WASH_ENABLED = False drops wash (and therefore aftershock).
 DEATH_CREAM_WASH_ENABLED = True
 DEATH_CREAM_WASH_DELAY_SEC = 0.20  # after fleck burst start
 DEATH_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -1346,6 +1348,30 @@ DEATH_CREAM_WASH_PULSE_SEC = 0.10
 DEATH_CREAM_WASH_HOLD_SEC = 0.08
 DEATH_CREAM_WASH_OUT_SEC = 0.42
 DEATH_CREAM_WASH_BIN = 38  # under flecks (47); soft veil
+
+# Delayed cream aftershock after death cream wash / sparkle path — residual
+# flecks settling + soft halo (CorruptDeathCreamWashFx). Same grammar as
+# ENTRY_CREAM_WASH_AFTERSHOCK_* (#132) / PURITY_COMPLETE_CREAM_AFTERSHOCK_*
+# (#136); world-space settle matches TELEGRAPH_CREAM_WARN_AFTERSHOCK_*.
+# DEATH_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
+DEATH_CREAM_WASH_AFTERSHOCK_ENABLED = True
+DEATH_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.36  # from fleck/wash arm (~0.16 after wash)
+DEATH_CREAM_WASH_AFTERSHOCK_LIFT = 1.35  # fallback; prefers deathCreamFleckLook lift
+DEATH_CREAM_WASH_AFTERSHOCK_COUNT = 5
+DEATH_CREAM_WASH_AFTERSHOCK_SIZE = 0.12
+DEATH_CREAM_WASH_AFTERSHOCK_DRIFT = 0.65
+DEATH_CREAM_WASH_AFTERSHOCK_FALL = 0.55
+DEATH_CREAM_WASH_AFTERSHOCK_SEC = 0.34
+DEATH_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.80)
+DEATH_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+DEATH_CREAM_WASH_AFTERSHOCK_BIN = 46  # under flecks (47); soft residual
+DEATH_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+DEATH_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.50
+DEATH_CREAM_WASH_AFTERSHOCK_HALO_START = 0.28
+DEATH_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.45
+DEATH_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.30
+DEATH_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.22
+DEATH_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Overlord telegraph ink crown / silhouette flash — short rubber-hose juice
 # above the boss on announceAttackTelegraph when a finale phase look is active.

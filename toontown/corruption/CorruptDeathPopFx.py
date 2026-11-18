@@ -4,9 +4,9 @@ World-space scale-burst companion + brief CardMaker droplet spray, layered
 with CorruptDeathCreamFleckFx (sunny cream / pastel flecks — purity chips,
 not ink), CorruptDeathCreamSparkleFx (rising cream / pastel sparkle flecks
 from the fleck burst — telegraph / silhouette cream sparkle grammar), and
-CorruptDeathCreamWashFx (soft cream wash pulse after the fleck burst —
-reclaim purity-wash grammar). Wired from
-DistributedCorruptToon.announceDefeat so Ink Smudge / Sludge Brute /
+CorruptDeathCreamWashFx (soft cream wash pulse + delayed cream aftershock
+after the fleck / sparkle path — entry / purity-complete aftershock grammar).
+Wired from DistributedCorruptToon.announceDefeat so Ink Smudge / Sludge Brute /
 Balloon Snare deaths read as a Toontown gag splat — never KH / keyblade
 framing.
 """
@@ -149,14 +149,15 @@ class DeathPopSplat(object):
         except Exception:
             self._creamSparkles = None
 
-        # Soft cream wash pulse after fleck burst — reclaim purity-wash grammar.
+        # Soft cream wash + delayed cream aftershock after fleck/sparkle path.
         washHold = 0.0
         try:
             wash = DeathCreamWashPulse()
-            if wash.play() is not None:
+            if wash.play(
+                    pos=pos, parent=parentNP, archetype=archetype) is not None:
                 self._creamWash = wash
-                # Hold splat teardown beside delayed wash so clear() doesn't
-                # kill the veil mid-pulse (wash self-clears too).
+                # Hold splat teardown beside delayed wash / aftershock so
+                # clear() doesn't kill the veil or residual mid-settle.
                 washHold = (
                     float(getattr(
                         CorruptionGlobals, 'DEATH_CREAM_WASH_DELAY_SEC',
@@ -169,7 +170,19 @@ class DeathPopSplat(object):
                         CorruptionGlobals, 'DEATH_CREAM_WASH_HOLD_SEC', 0.08))
                     + float(getattr(
                         CorruptionGlobals, 'DEATH_CREAM_WASH_OUT_SEC', 0.42))
-                    + 0.02)
+                    + 0.04)
+                if getattr(
+                        CorruptionGlobals,
+                        'DEATH_CREAM_WASH_AFTERSHOCK_ENABLED', True):
+                    aftershockHold = (
+                        float(getattr(
+                            CorruptionGlobals,
+                            'DEATH_CREAM_WASH_AFTERSHOCK_DELAY_SEC', 0.36))
+                        + float(getattr(
+                            CorruptionGlobals,
+                            'DEATH_CREAM_WASH_AFTERSHOCK_SEC', 0.34))
+                        + 0.06)
+                    washHold = max(washHold, aftershockHold)
             else:
                 self._creamWash = None
         except Exception:
