@@ -145,6 +145,7 @@ from toontown.effects import DistributedFireworkShow/AI
 from toontown.estate import DistributedFireworksCannon/AI
 from toontown.corruption import PollutionManager/AI
 from toontown.corruption import DistributedCorruptToon/AI
+from toontown.reclaim import DistributedReclaimDirector/AI
 from toontown.coghq import LobbyManager/AI
 from otp.level import DistributedLevel/AI
 from otp.level import DistributedEntity/AI
@@ -3288,4 +3289,15 @@ dclass DistributedCorruptToon : DistributedNode {
   setHp(int16) required broadcast ram;
   setMaxHp(int16) required broadcast ram;
   announceDefeat() broadcast;
+  // Melee SoftTarget calls applyHackSlashHit client-side; this RPC lands AI damage.
+  requestHackSlashHit(uint16) airecv clsend;
+};
+
+// KH x Toontown slice 3: one-street reclaim director
+dclass DistributedReclaimDirector : DistributedObject {
+  setState(uint8) required broadcast ram;
+  setPollutionHint(uint16/1000(0-1)) broadcast ram;
+  announceReclaimStart() broadcast;
+  announcePackSpawn(uint8) broadcast;
+  announceReclaimComplete() broadcast;
 };

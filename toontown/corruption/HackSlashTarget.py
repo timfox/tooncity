@@ -1,7 +1,8 @@
 """Shared melee-target interface for corrupt toons (and future hostiles).
 
-Slice 1 soft-lock / hit events should prefer objects that expose this API so
-combat and corruption can merge without turn-based cog battles.
+Slice 1 SoftTarget prefers objects that expose this API. MeleeCombat calls
+`applyHackSlashHit` on the client; CorruptToon bridges that to AI via
+`requestHackSlashHit` → `takeHackSlashDamage`.
 """
 
 
@@ -20,6 +21,13 @@ class HackSlashTarget:
     def isHackSlashAlive(self):
         return self.getHackSlashHp() > 0
 
+    def getHackSlashName(self):
+        return getattr(self, 'name', 'Hostile')
+
     def takeHackSlashDamage(self, amount, attackerId=None):
         """Apply damage. AI subclasses should override and sync state."""
+        raise NotImplementedError
+
+    def applyHackSlashHit(self, damage, hitIndex, attacker):
+        """Client hit bridge used by MeleeCombat SoftTarget resolution."""
         raise NotImplementedError

@@ -838,3 +838,7 @@ for item in list(globals().values()):
 # Corruption slice words live in their own module to avoid melee PR conflicts.
 from toontown.corruption.MagicWords import registerCorruptionMagicWords
 registerCorruptionMagicWords()
+
+# Reclaim loop words (~startreclaim / ~stopreclaim).
+from toontown.reclaim.MagicWords import registerReclaimMagicWords
+registerReclaimMagicWords()

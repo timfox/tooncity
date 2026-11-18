@@ -47,6 +47,22 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.__defeat(attackerId)
         return damage
 
+    def requestHackSlashHit(self, damage):
+        """Client melee RPC: SoftTarget applyHackSlashHit → AI damage."""
+        if self._defeated:
+            return
+        avId = self.air.getAvatarIdFromSender()
+        toon = self.air.doId2do.get(avId)
+        if toon is None:
+            return
+        # Same-zone gate keeps random cross-shard smackdowns out of reclaim demos.
+        if getattr(toon, 'zoneId', None) != self.zoneId:
+            return
+        amount = max(0, min(80, int(damage)))
+        if amount <= 0:
+            return
+        self.takeHackSlashDamage(amount, attackerId=avId)
+
     # Alias for magic-word / future melee hit events.
     takeDamage = takeHackSlashDamage
 
