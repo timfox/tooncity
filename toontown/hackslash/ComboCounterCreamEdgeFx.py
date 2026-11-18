@@ -2,13 +2,13 @@
 
 Local cream border strips framing the lower-left punch counter when it
 increments — ActBannerCreamEdgeFx / wave-announce cream edge overlay
-grammar as a snappy HUD frame so combo reads clearly. Deepened so ticks
-read juicier: brighter peak / thicker strips / longer mid hold / juicier
-scale pop, plus a quiet local cream aftershock (softer flecks + soft halo)
-that settles on the counter frame. Soft under the counter TextNode;
-cream / pastel only (not ink). Distinct from soft-lock cycle reticle cream
-deepen (#233) and dodge i-frame cream wash deepen (#228) — stays on the
-local punch-counter frame, not a fullscreen wash. Wired from
+grammar as a snappy HUD frame so combo reads clearly. Deepened past #237
+so ticks read juicier still: brighter peak / thicker strips / longer mid
+hold / juicier scale pop, plus a richer local cream aftershock (more flecks
++ stronger halo) that settles on the counter frame. Soft under the counter
+TextNode; cream / pastel only (not ink). Distinct from soft-lock cycle
+reticle cream deepen (#233) and dodge i-frame cream wash deepen (#228) —
+stays on the local punch-counter frame, not a fullscreen wash. Wired from
 MeleeCombatController._showComboCounter beside hose pop + cream sparkle.
 Client only. Toontown spiritual sequel — no keyblades / no KH branding.
 """
@@ -63,22 +63,22 @@ class ComboCounterCreamEdgePulse(object):
             return None
 
         peak = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_PEAK', 0.72))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_PEAK', 0.78))
         mid = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_PULSE', 0.42))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_PULSE', 0.50))
         inSec = float(getattr(
             HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_IN_SEC', 0.04))
         holdSec = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_HOLD_SEC', 0.04))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_HOLD_SEC', 0.055))
         pulseSec = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_PULSE_SEC', 0.08))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_PULSE_SEC', 0.09))
         outSec = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_OUT_SEC', 0.18))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_OUT_SEC', 0.20))
         scalePeak = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK', 1.28))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_SCALE_PEAK', 1.36))
 
         # Rubber-hose two-beat: bright pop → soft settle pulse → fade.
-        # Deepened peak / hold so the tick reads juicier without wash spam.
+        # Deepened-past-#237 peak / hold so the tick reads juicier still.
         alphaPart = Sequence(
             LerpColorScaleInterval(
                 edgeRoot, max(0.01, inSec), Vec4(1, 1, 1, peak),
@@ -130,7 +130,7 @@ class ComboCounterCreamEdgePulse(object):
             halfH = float(getattr(
                 HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_HALF_H', 0.08))
             edge = float(getattr(
-                HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE', 0.024))
+                HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE', 0.028))
             binSort = int(getattr(
                 HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_BIN', 54))
             cream = getattr(
@@ -176,7 +176,7 @@ class ComboCounterCreamEdgePulse(object):
             return None
         delay = float(getattr(
             HackSlashConfig,
-            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC', 0.08))
+            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DELAY_SEC', 0.07))
         parts = []
 
         if getattr(
@@ -187,9 +187,9 @@ class ComboCounterCreamEdgePulse(object):
                 parts.append(halo)
 
         count = int(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT', 3))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COUNT', 4))
         sec = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SEC', 0.22))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SEC', 0.26))
         for i in range(count):
             part = self._spawnAftershockFleck(
                 parent, ox, oy, oz, i, count, sec)
@@ -206,19 +206,19 @@ class ComboCounterCreamEdgePulse(object):
     def _spawnAftershockHalo(self, parent, ox, oy, oz):
         half = float(getattr(
             HackSlashConfig,
-            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_HALF', 0.16))
+            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_HALF', 0.17))
         startScale = float(getattr(
             HackSlashConfig,
             'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_START', 0.35))
         peakScale = float(getattr(
             HackSlashConfig,
-            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK', 1.15))
+            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK', 1.25))
         sec = float(getattr(
             HackSlashConfig,
-            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_SEC', 0.18))
+            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_SEC', 0.22))
         peakA = float(getattr(
             HackSlashConfig,
-            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK_ALPHA', 0.14))
+            'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_PEAK_ALPHA', 0.18))
         r, g, b, _a = getattr(
             HackSlashConfig,
             'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_HALO_COLOR',
@@ -256,14 +256,14 @@ class ComboCounterCreamEdgePulse(object):
         """Softer cream chip that settles near the counter frame."""
         count = max(1, int(total))
         size = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SIZE', 0.010))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_SIZE', 0.012))
         drift = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DRIFT', 0.12))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_DRIFT', 0.13))
         fall = float(getattr(
-            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_FALL', 0.10))
+            HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_FALL', 0.11))
         r, g, b, a = getattr(
             HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_COLOR',
-            (1.0, 0.97, 0.78, 0.70))
+            (1.0, 0.97, 0.78, 0.78))
         er, eg, eb, ea = getattr(
             HackSlashConfig, 'COMBO_COUNTER_CREAM_EDGE_AFTERSHOCK_END_COLOR',
             (1.0, 0.93, 0.58, 0.0))
