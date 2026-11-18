@@ -45,6 +45,13 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         self.accept('pollutionChanged', self.__onPollutionChanged)
         # Overlord wind-up cue (P1 magenta vs P2 crimson) from CorruptToon AV.
         self.accept('finaleTelegraphCue', self.__onFinaleTelegraphCue)
+        # Polluted STREET_PACK enter cream shimmer (also armed via ReclaimCheer).
+        try:
+            from toontown.reclaim.EntryCreamShimmerFx import (
+                ensureEntryCreamShimmerFxClient)
+            ensureEntryCreamShimmerFxClient()
+        except Exception:
+            pass
 
     def announceGenerate(self):
         DistributedObject.DistributedObject.announceGenerate(self)
