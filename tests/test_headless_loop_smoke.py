@@ -2802,8 +2802,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         magic_src = _read('toontown/hackslash/MagicWords.py')
         self.assertIn('perfect-dodge counter', magic_src)
 
-        # Balloon Snare string-snap counter window — after amber string
-        # telegraph, short punish→melee (synergy with perfect-dodge counter).
+        # Balloon Snare string-snap counter cream deepen — juicier punish
+        # splash (whip filaments + wider aftershock; distinct from Gunk #238 /
+        # Smudge #231). Synergy with perfect-dodge counter window unchanged.
         cg_names = set(dir(self.corruption))
         for snare_counter_key in (
                 'SNARE_STRING_COUNTER_ENABLED',
@@ -2817,6 +2818,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'SNARE_STRING_COUNTER_CREAM_SPLASH_ENABLED',
                 'SNARE_STRING_COUNTER_CREAM_HIT_GRACE_SEC',
                 'SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK',
+                'SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_ENABLED',
                 'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED',
                 'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_DELAY_SEC',
                 'SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COLOR',
@@ -2833,6 +2835,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIs(
             self.corruption.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_ENABLED,
             True)
+        self.assertIs(
+            self.corruption.SNARE_STRING_COUNTER_CREAM_SPLASH_WHIP_ENABLED,
+            True)
         self.assertGreater(
             float(self.corruption.SNARE_STRING_COUNTER_ARM_DELAY_SEC), 0.0)
         self.assertGreater(
@@ -2847,6 +2852,13 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertEqual(
             self.corruption.SNARE_STRING_COUNTER_EVENT,
             'corruptSnareStringSnapCounter')
+        snare_cream_look = self.corruption.SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK
+        self.assertEqual(
+            snare_cream_look.get('id'), 'snare-string-counter-cream-splash')
+        self.assertGreaterEqual(int(snare_cream_look.get('fleckCount', 0)), 5)
+        self.assertTrue(snare_cream_look.get('whipEnabled'))
+        self.assertGreaterEqual(
+            int(self.corruption.SNARE_STRING_COUNTER_CREAM_AFTERSHOCK_COUNT), 4)
         for snare_helper in (
                 'snareStringCounterOpenerDamage',
                 'snareStringCounterOpenerRate',
@@ -2864,14 +2876,19 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('__consumeSnareStringCounterCreamSplash', corrupt_src)
         self.assertIn('__playSnareStringCounterCreamSplash', corrupt_src)
         self.assertIn('SnareStringCounterCreamSplash', corrupt_src)
-        cream_fx_src = _read(
+        cream_fx_rel = (
             'toontown/corruption/SnareStringCounterCreamSplashFx.py')
+        cream_fx_src = _read(cream_fx_rel)
         self.assertIn('class SnareStringCounterCreamSplash', cream_fx_src)
         self.assertIn('snareStringCounterCreamSplashLook', cream_fx_src)
         self.assertIn('_buildAftershock', cream_fx_src)
-        cream_look_id = str(
-            self.corruption.SNARE_STRING_COUNTER_CREAM_SPLASH_LOOK.get(
-                'id', '')).lower()
+        cream_fx_methods = _class_method_names(
+            _module_ast(cream_fx_rel), 'SnareStringCounterCreamSplash')
+        self.assertIn('play', cream_fx_methods)
+        self.assertIn('clear', cream_fx_methods)
+        self.assertIn('_spawnWhipFilament', cream_fx_methods)
+        self.assertIn('_buildAftershock', cream_fx_methods)
+        cream_look_id = str(snare_cream_look.get('id', '')).lower()
         self.assertNotIn('keyblade', cream_look_id)
         self.assertNotIn('kingdom hearts', cream_look_id)
         corrupt_ai_src = _read(
@@ -2886,6 +2903,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         reclaim_md = _read('toontown/corruption/RECLAIM.md')
         self.assertIn('string-snap counter', reclaim_md)
         self.assertIn('SnareStringCounterCreamSplashFx', reclaim_md)
+        self.assertIn('whip filament', reclaim_md.lower())
         corr_init = _read('toontown/corruption/__init__.py')
         self.assertIn('SnareStringCounterCreamSplashFx', corr_init)
 

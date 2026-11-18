@@ -330,10 +330,11 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 # arms — F / LMB for a bumped snappy punish opener (same reward path as
 # perfect-dodge counter); melee mid-telegraph interrupts the wind-up.
 # Land F / LMB — cheap amber string-snap splash (SnareStringSnapSplashFx)
-# on each hit; a successful string-snap counter punish also fires a brief
-# cream splash + delayed cream aftershock (SnareStringCounterCreamSplashFx)
-# so the rewarded window feels juicy. Defeat layers a larger splash with
-# CorruptDeathPopFx.
+# on each hit; a successful string-snap counter punish also fires a deepened
+# cream splash + horizontal cream whip filaments + delayed cream aftershock
+# (SnareStringCounterCreamSplashFx) so the rewarded window feels juicier —
+# distinct from Gunk puddle cream bloom / Smudge mid-body cream splash.
+# Defeat layers a larger splash with CorruptDeathPopFx.
 # Fast fragile zip-flier — distinct from Smudge melee and Brute spit.
 ```
 
