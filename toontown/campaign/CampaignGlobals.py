@@ -1215,3 +1215,8 @@ STATE_NAMES = {
 # CAMPAIGN_PROGRESS_ENABLED = False keeps session-only director memory.
 CAMPAIGN_PROGRESS_ENABLED = True
 CAMPAIGN_PROGRESS_FILENAME = 'campaign_progress.json'
+
+# Client login mirror — PollutionManager pushes unlockedThrough / state /
+# chaseCleared; PlayEntry + OswaldPresence accept this messenger so hub tip
+# and trusted presence match story state after relog (not session-only).
+CAMPAIGN_PROGRESS_SYNC_MSG = 'campaignProgressSync'
