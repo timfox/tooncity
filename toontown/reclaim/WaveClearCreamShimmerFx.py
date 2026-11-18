@@ -7,12 +7,12 @@ cream aftershock (softer flecks settling downward + soft halo) follows the
 hang — same residual grammar as purity-fill cream aftershock (#123) and cheer
 cream aftershock (#118). A soft cream wash pulse then settles after the
 aftershock — CheerCreamWashPulse / PurityCompleteCreamWashFx vocabulary —
-then deepened CheerCreamSparkle-style cream sparkle flecks (+ soft aftershock)
-ride the wash settle so pack clear feels juicier. Distinct from secured-lock
-green sting (#209) and purity-complete meter hose settle (#225). Layers with
-cheer pitch swell and street wash; never stomps full-purity FOV /
-StreetSparkle payoff. Toontown spiritual-sequel tone only — no keyblades /
-no KH branding.
+then further-deepened CheerCreamSparkle-style cream sparkle flecks past #229
+(+ soft aftershock) ride the wash settle so pack clear feels juicier.
+Distinct from secured-lock tip-near green sting (#243) and purity-complete
+meter hose settle cream (#248). Layers with cheer pitch swell and street
+wash; never stomps full-purity FOV / StreetSparkle payoff. Toontown
+spiritual-sequel tone only — no keyblades / no KH branding.
 """
 
 from math import cos, pi, sin
@@ -146,9 +146,9 @@ class WaveClearCreamShimmerFxClient(DirectObject):
                         ReclaimGlobals, 'WAVE_CLEAR_CREAM_WASH_DELAY_SEC', 0.40))
                     + float(getattr(
                         ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC',
-                        0.10))
+                        0.08))
                     + float(getattr(
-                        ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SEC', 0.36))
+                        ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_SEC', 0.40))
                     + 0.06)
                 sparkleAfter = sparkleBase
                 if getattr(
@@ -160,14 +160,14 @@ class WaveClearCreamShimmerFxClient(DirectObject):
                             0.40))
                         + float(getattr(
                             ReclaimGlobals, 'WAVE_CLEAR_CREAM_SPARKLE_DELAY_SEC',
-                            0.10))
+                            0.08))
                         + float(getattr(
                             ReclaimGlobals,
                             'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_DELAY_SEC',
-                            0.18))
+                            0.16))
                         + float(getattr(
                             ReclaimGlobals,
-                            'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC', 0.30))
+                            'WAVE_CLEAR_CREAM_SPARKLE_AFTERSHOCK_SEC', 0.34))
                         + 0.06)
                 sparkleHold = max(sparkleBase, sparkleAfter)
             washHold = max(washLifetime, sparkleHold)
