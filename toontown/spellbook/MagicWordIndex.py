@@ -834,3 +834,7 @@ from toontown.hackslash.MagicWords import ToggleHackSlash  # noqa: F401
 for item in list(globals().values()):
     if isinstance(item, type) and issubclass(item, MagicWord):
         i = item()
+
+# Corruption slice words live in their own module to avoid melee PR conflicts.
+from toontown.corruption.MagicWords import registerCorruptionMagicWords
+registerCorruptionMagicWords()

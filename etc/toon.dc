@@ -143,6 +143,8 @@ from toontown.estate import DistributedTrunk/AI
 from toontown.estate import DistributedPhone/AI
 from toontown.effects import DistributedFireworkShow/AI
 from toontown.estate import DistributedFireworksCannon/AI
+from toontown.corruption import PollutionManager/AI
+from toontown.corruption import DistributedCorruptToon/AI
 from toontown.coghq import LobbyManager/AI
 from otp.level import DistributedLevel/AI
 from otp.level import DistributedEntity/AI
@@ -3273,4 +3275,17 @@ dclass DistributedTrashcanZeroMgr : DistributedPhaseEventMgr {
 };
 
 dclass DistributedSillyMeterMgr : DistributedPhaseEventMgr {
+};
+
+// KH x Toontown slice 2: neighborhood pollution + corrupt toon stubs
+dclass PollutionManager : DistributedObject {
+  setZonePollution(uint32, uint16/1000(0-1)) broadcast;
+  requestZonePollution(uint32) airecv clsend;
+};
+
+dclass DistributedCorruptToon : DistributedNode {
+  setName(string) required broadcast ram;
+  setHp(int16) required broadcast ram;
+  setMaxHp(int16) required broadcast ram;
+  announceDefeat() broadcast;
 };
