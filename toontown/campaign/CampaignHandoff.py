@@ -3,6 +3,9 @@
 Act clears (Loopy → Punchline → Silly) play as a short Toontown reclaim
 celebration — Oswald as the trusted face, title pop, clear next-street cue —
 not a single toast line. Finale victory keeps the Oswald twist beat.
+
+Act handoffs also fire a short rubber-hose confetti / streamer pop
+(CampaignHandoffConfetti) — carnival reclaim juice, no KH / keyblade framing.
 """
 
 from panda3d.core import CardMaker, TextNode, TransparencyAttrib, Vec4
@@ -18,6 +21,10 @@ from direct.interval.IntervalGlobal import (
 from direct.showbase.DirectObject import DirectObject
 
 from toontown.campaign import CampaignGlobals
+from toontown.campaign.CampaignHandoffConfetti import (
+    clearHandoffConfetti,
+    playHandoffConfetti,
+)
 from toontown.campaign.CampaignPower import applyPowerBump
 
 # Celebration timing — readable rubber-hose reclaim beat, not a flash toast.
@@ -104,7 +111,8 @@ class CampaignHandoffClient(DirectObject):
                 nextCue='Scout the next polluted street',
                 color=_TITLE_COLOR,
                 powerMult=mult,
-                nextStreet=None)
+                nextStreet=None,
+                confetti=True)
             return
         title = act.get('handoffTitle') or (
             '%s IS PURE!' % act.get('name', 'Street').upper())
@@ -119,13 +127,15 @@ class CampaignHandoffClient(DirectObject):
             nextStreet = None
             nextCue = act.get('nextCue') or (
                 'Take a victory lap with %s' % face)
+        # Loopy→Punchline (and act) handoffs get the carnival confetti pop.
         self._celebrate(
             title,
             subtitle=subtitle,
             nextCue=nextCue,
             color=_TITLE_COLOR,
             powerMult=mult,
-            nextStreet=nextStreet)
+            nextStreet=nextStreet,
+            confetti=True)
 
     def _actsForZone(self, zoneId):
         zoneId = int(zoneId)
@@ -187,7 +197,8 @@ class CampaignHandoffClient(DirectObject):
             nextStreet=None)
 
     def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
-                   powerMult=None, nextStreet=None, holdSec=None, onDone=None):
+                   powerMult=None, nextStreet=None, holdSec=None, onDone=None,
+                   confetti=False):
         """Staged rubber-hose celebration: card → title pop → cue → hold."""
         self._clear()
         root = aspect2d.attachNewNode('campaign-handoff-root')  # noqa: F821
@@ -196,6 +207,16 @@ class CampaignHandoffClient(DirectObject):
         root.setColorScale(1, 1, 1, 0)
         self._rootNP = root
         hold = _HOLD_SEC if holdSec is None else float(holdSec)
+
+        if confetti:
+            # Short carnival burst beside the banner — act handoff juice only.
+            try:
+                origin = getattr(
+                    CampaignGlobals, 'HANDOFF_CONFETTI_ORIGIN',
+                    (0.0, 0.0, 0.38))
+                playHandoffConfetti(origin=origin)
+            except Exception:
+                pass
 
         try:
             cm = CardMaker('campaign-handoff-card')
@@ -309,6 +330,10 @@ class CampaignHandoffClient(DirectObject):
             except Exception:
                 pass
             self._ival = None
+        try:
+            clearHandoffConfetti()
+        except Exception:
+            pass
         if self._rootNP and not self._rootNP.isEmpty():
             self._rootNP.removeNode()
         self._rootNP = None
