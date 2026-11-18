@@ -2,23 +2,27 @@
 """Headless behavioral deepen: explore → fight → reclaim → Oswald twist.
 
 Panda-free proof of the multi-hood loop already shipped on develop (through
-systems waves ending at PR #354). Complements `test_headless_loop_smoke.py`
+systems waves ending at PR #363). Complements `test_headless_loop_smoke.py`
 (registration / juice AST) and the focused wave / act-param / kit suites by
 chaining the spiritual-sequel loop:
 
-  explore — zone messengers, Oswald plaza NPC + reclaim cheer (#354), Loopy
-            unease, hub breadcrumb act-unlock dim (#332), chase-pending hub
-            tip (#342)
-  fight   — archetype kits, melee interrupt (#329/#348/#352), Brute/Gagster
-            counters (#343), Oswald betrayal counters (#352), juggle hang
-            stun, reclaim KO fail + retry (#338), soft-lock boss priority
-            (#339) + sticky yield (#347), Overlord P1 rising slam (#334) +
-            move-id telegraph (#340), boss/chase HP bar (#331)
+  explore — zone messengers, Oswald plaza NPC + reclaim cheer (#354) +
+            first-meet tip / oswaldMet persist (#360), Loopy unease, hub
+            breadcrumb act-unlock dim (#332) + progress-sync rehydrate
+            (#357), chase-pending hub tip (#342)
+  fight   — archetype kits, melee interrupt (#329/#348/#352/#363),
+            Brute/Gagster counters (#343), Overlord rain/slam/ink_surge
+            counters (#359), Smudge ink_dash/ink_splat interrupt+counters
+            (#363), Oswald betrayal counters (#352), juggle hang stun,
+            reclaim KO fail + retry (#338), soft-lock boss priority (#339)
+            + sticky yield (#347) + cycle-with-lock prefer (#356), Overlord
+            P1 rising slam (#334) + move-id telegraph (#340) + rain linger
+            sludge (#362), boss/chase HP bar (#331)
   reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
-            modifiers / earlier-wave ambush + Silly between-swell (#345+),
-            campaign progress client sync on login (#333), CampaignPower
-            reclaimCount rehydrate (#349), campaignVictory client relay
-            (#351)
+            modifiers / earlier-wave ambush + Silly between-swell
+            (#345/#358), street-clear jellybean/laff reward (#361), campaign
+            progress client sync on login (#333), CampaignPower reclaimCount
+            rehydrate (#349), campaignVictory client relay (#351)
   twist   — betrayal chase + kit + chase resume (#330) + false-clear gate
             (#341) + mid-chase HP persist (#350) + Oswald telegraph/hit AV
             (#344) + chase-clear epilogue + hub stain (#336) + washed-plaza
@@ -497,6 +501,46 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             _module_ast(presence_rel), 'OswaldPresenceClient')
         self.assertIn('npcCheerStub', presence_accepts)
         self.assertIn('campaignVictory', presence_accepts)
+        # First-meet tip + durable oswaldMet (#360) — trust beat before twist.
+        self.assertEqual(camp.OSWALD_PRESENCE_MET_MSG, 'oswaldPresenceMet')
+        self.assertEqual(camp.OSWALD_PRESENCE_MET_SYNC_MSG, 'oswaldMetSync')
+        meet_tip = camp.OSWALD_PRESENCE_FIRST_MEET_TIP
+        self.assertIn('Oswald', meet_tip)
+        self.assertIn('met', meet_tip.lower())
+        self.assertIn('reclaim', meet_tip.lower())
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, meet_tip.lower())
+        presence_methods = _class_method_names(
+            _module_ast(presence_rel), 'OswaldPresenceClient')
+        for method in (
+                '_onOswaldPresenceMet', '_onOswaldMetSync',
+                '_requestPersistMet', '_meetOswald'):
+            self.assertIn(
+                method, presence_methods,
+                msg='OswaldPresenceClient missing %s' % method)
+        self.assertIn('firstMeetTip', presence_names)
+        self.assertIn('metMsgName', presence_names)
+        self.assertIn('d_requestOswaldMet', presence_src)
+        self.assertIn('OSWALD_PRESENCE_FIRST_MEET_TIP', presence_src)
+        default_progress = self.save.defaultProgress()
+        self.assertIn('oswaldMet', default_progress)
+        self.assertEqual(default_progress['oswaldMet'], 0)
+        self.assertEqual(
+            self.save.sanitizeProgress({'oswaldMet': 9})['oswaldMet'], 1)
+        mirror_met = self.save.clientMirrorFromProgress({
+            'unlockedThrough': 0,
+            'state': camp.STATE_IDLE,
+            'oswaldMet': 1,
+        })
+        self.assertEqual(mirror_met['oswaldMet'], 1)
+        dc = _read('etc/toon.dc')
+        pollution_block = dc.split('dclass PollutionManager')[1].split(
+            'dclass ')[0]
+        self.assertIn('requestOswaldMet() airecv clsend', pollution_block)
+        self.assertIn('setOswaldMet(uint8)', pollution_block)
+        camp_ai = _read('toontown/campaign/CampaignDirectorAI.py')
+        self.assertIn('def markOswaldMet', camp_ai)
+        self.assertIn('def _pushOswaldMetToClient', camp_ai)
         cheer_src = _read('toontown/reclaim/ReclaimCheer.py')
         self.assertIn('_nudgeOswald', cheer_src)
         self.assertIn('ensureOswaldPresenceClient', cheer_src)
@@ -814,6 +858,14 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(cg.isMeleeInterruptibleTelegraph(
             cg.ARCHETYPE_CORRUPT_OSWALD, 'stain_burst'))
         self.assertIn('__maybeInterruptMeleeTelegraph', corrupt_ai)
+        # Smudge interrupt rides the shared takeHackSlashDamage path (#363).
+        take_idx = corrupt_ai.find('def takeHackSlashDamage')
+        self.assertGreater(take_idx, 0)
+        take_snip = corrupt_ai[take_idx:corrupt_ai.find('\n    def ', take_idx + 1)]
+        self.assertIn('__maybeInterruptMeleeTelegraph', take_snip)
+        take_l = take_snip.lower()
+        self.assertIn('ink_dash', take_l)
+        self.assertIn('ink_splat', take_l)
         # Dedicated counter windows (beyond interrupt) for spit / lob /
         # Oswald / Overlord rain·slam·ink_surge / Smudge ink_dash·ink_splat.
         self.assertTrue(cg.BRUTE_SPIT_COUNTER_ENABLED)
@@ -1309,6 +1361,66 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         corrupt_ai = _read('toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('ink_surge', corrupt_ai)
         self.assertIn('overlordPickEnrageMove', corrupt_ai)
+
+        # Overlord ink-rain linger sludge (#362) — DoT/slow after rain land.
+        self.assertTrue(cg.OVERLORD_RAIN_LINGER_ENABLED)
+        self.assertGreater(float(cg.OVERLORD_RAIN_LINGER_SEC), 1.0)
+        self.assertGreater(float(cg.OVERLORD_RAIN_LINGER_TICK_SEC), 0.0)
+        self.assertLess(
+            float(cg.OVERLORD_RAIN_LINGER_TICK_SEC),
+            float(cg.OVERLORD_RAIN_LINGER_SEC))
+        self.assertGreaterEqual(int(cg.OVERLORD_RAIN_LINGER_TICK_DAMAGE), 1)
+        self.assertGreater(float(cg.OVERLORD_RAIN_LINGER_RADIUS), 0.0)
+        self.assertGreater(float(cg.OVERLORD_RAIN_LINGER_SLOW_FACTOR), 0.0)
+        self.assertLess(float(cg.OVERLORD_RAIN_LINGER_SLOW_FACTOR), 1.0)
+        land_at = 10.0
+        until = cg.overlordRainLingerUntil(land_at)
+        self.assertAlmostEqual(
+            until, land_at + cg.OVERLORD_RAIN_LINGER_SEC, places=4)
+        self.assertGreaterEqual(cg.overlordRainLingerTickCount(), 3)
+        self.assertTrue(cg.isInsideOverlordRainLinger(0.0, 0.0, 9.5))
+        self.assertFalse(cg.isInsideOverlordRainLinger(10.0, 0.0, 9.5))
+        for phase in (1, 2):
+            combat = cg.OVERLORD_PHASE_COMBAT[phase]
+            self.assertGreater(float(combat.get('rainLingerSec', 0)), 1.0)
+            self.assertGreaterEqual(
+                int(combat.get('rainLingerTickDamage', 0)), 1)
+        ai_methods = _class_method_names(
+            _module_ast('toontown/corruption/DistributedCorruptToonAI.py'),
+            'DistributedCorruptToonAI')
+        for method in (
+                '__resolveOverlordRain', '__armOverlordRainLinger',
+                '__tickOverlordRainLinger', '__clearOverlordRainLinger'):
+            self.assertIn(method, ai_methods, msg='AI missing %s' % method)
+        self.assertIn('__armOverlordRainLinger(ox, oy, hitRange)', corrupt_ai)
+        resolve_idx = corrupt_ai.find('def __resolveOverlordRain')
+        self.assertGreater(resolve_idx, 0)
+        resolve_snip = corrupt_ai[
+            resolve_idx:corrupt_ai.find('\n    def ', resolve_idx + 1)]
+        self.assertIn('__armOverlordRainLinger', resolve_snip)
+        corrupt_client = _read(
+            'toontown/corruption/DistributedCorruptToon.py')
+        client_methods = _class_method_names(
+            _module_ast('toontown/corruption/DistributedCorruptToon.py'),
+            'DistributedCorruptToon')
+        for method in (
+                '__playOverlordRainLingerPuddle',
+                '__armOverlordRainSludgeSlow',
+                '__tickOverlordRainSludgeSlow',
+                '__clearOverlordRainSludgeSlow'):
+            self.assertIn(
+                method, client_methods, msg='client missing %s' % method)
+        self.assertIn('OVERLORD_RAIN_LINGER_ENABLED', corrupt_client)
+        self.assertIn('setWalkSpeedSlow', corrupt_client)
+        linger_blob = (
+            resolve_snip + corrupt_client[
+                corrupt_client.find('def __playOverlordRainLingerPuddle'):
+                corrupt_client.find(
+                    '\n    def ',
+                    corrupt_client.find('def __playOverlordRainLingerPuddle')
+                    + 1)]).lower()
+        for banned in ('keyblade', 'kingdom hearts', 'sora'):
+            self.assertNotIn(banned, linger_blob)
 
     def test_campaign_progress_client_sync_loop(self):
         """Login sync mirrors victory / unlock / chase / reclaim so hub truth survives (#333/#349/#351)."""
