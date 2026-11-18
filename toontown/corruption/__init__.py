@@ -44,8 +44,10 @@ composes with string / death / idle looks). Gunk Gagster wind-ups also flash
 GagsterPuddleTelegraphFx (teal bounce-pie charge + cream/ink ground puddle
 warn at the lob landing). Ink Overlord phase telegraphs also flash
 OverlordTelegraphCrownFx (rubber-hose ink crown / silhouette) plus
-OverlordPhaseInkRainFx (ink rain / ink fall shower). Ink Overlord hits and
-deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
+OverlordPhaseInkRainFx (ink rain / ink fall shower) plus
+OverlordTelegraphPunchFx (ground danger-ring warn + impact punch bloom;
+phase-timed AV squash/stretch hold for fair punish windows). Ink Overlord
+hits and deaths also flash OverlordMagentaInkSplashFx (cheap magenta/crimson
 rubber-hose ink splash; phase-retinted; composes with crown / rain / death /
 idle looks — not street Smudge purple); Overlord hits also pulse
 OverlordHitCreamWashFx (soft cream wash — cream/pastel contrast against

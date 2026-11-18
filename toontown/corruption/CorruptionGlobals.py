@@ -1672,15 +1672,16 @@ DEATH_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 # Overlord telegraph ink crown / silhouette flash — short rubber-hose juice
 # above the boss on announceAttackTelegraph when a finale phase look is active.
 # Distinct from street CorruptTelegraphInkFx drips: crown silhouette reads as
-# boss wind-up. Client only; AI timings unchanged. No KH branding.
+# boss wind-up. Hold bumped so crown rides the danger-ring warn beat.
+# Client only; AI timings unchanged. No KH branding.
 OVERLORD_TELEGRAPH_CROWN_LOOK = {
     'id': 'ink-crown',
     'lift': 3.35,
     'scale': 1.0,
     'peakAlpha': 0.95,
     'fadeInSec': 0.05,
-    'holdSec': 0.18,
-    'fadeOutSec': 0.32,
+    'holdSec': 0.26,
+    'fadeOutSec': 0.28,
     'squash': (1.4, 1.0, 0.55),
     'stretch': (0.7, 1.0, 1.55),
     'squashSec': 0.06,
@@ -1708,15 +1709,86 @@ OVERLORD_PHASE_INK_RAIN_LOOK = {
     'peakAlpha': 0.92,
     'dropColor': (0.28, 0.08, 0.42, 0.92),
     'streakColor': (0.55, 0.18, 0.78, 0.88),
-    'puddleHalf': 0.55,
+    # Slightly earlier / wider puddle so rain landing reads with the danger ring.
+    'puddleHalf': 0.72,
     'puddleLift': 0.08,
-    'puddlePeak': 2.4,
-    'puddleDelay': 0.16,
-    'puddleInSec': 0.18,
-    'puddleHoldSec': 0.12,
-    'puddleOutSec': 0.28,
+    'puddlePeak': 2.65,
+    'puddleDelay': 0.10,
+    'puddleInSec': 0.14,
+    'puddleHoldSec': 0.18,
+    'puddleOutSec': 0.26,
     'puddleColor': (0.12, 0.04, 0.18, 0.7),
     'binSort': 43,
+}
+
+# Overlord telegraph punch polish — ground danger-ring warn + impact bloom
+# on announceAttackTelegraph / announceAttackHit (client only). Composes with
+# crown + ink rain; phase charge colors tint via OverlordTelegraphPunchFx.
+# AI timings unchanged. No KH branding / keyblades.
+OVERLORD_TELEGRAPH_PUNCH_ENABLED = True
+OVERLORD_TELEGRAPH_PUNCH_LOOK = {
+    'id': 'overlord-telegraph-punch',
+    # Ground warn ring — footprint scales from overlordPhaseCombat hit range.
+    'warnHalf': 2.6,
+    'warnHitRangeScale': 0.30,
+    'p2WarnScale': 1.12,
+    'p2WarnPeakScale': 1.08,
+    'warnLift': 0.09,
+    'warnPeak': 1.0,
+    'warnFillScale': 0.92,
+    'warnRimScale': 1.05,
+    'warnInSec': 0.10,
+    'warnPulseSec': 0.16,
+    'warnOutSec': 0.22,
+    'warnPeakAlpha': 0.9,
+    'warnRimPeakAlpha': 0.85,
+    'holdSec': 0.42,
+    'holdSecP1': 0.48,
+    'holdSecP2': 0.32,
+    'warnColorP1': (2.4, 0.35, 2.7, 0.55),
+    'warnColorP2': (2.7, 0.18, 0.22, 0.62),
+    'warnRimColorP1': (1.0, 0.85, 1.0, 0.75),
+    'warnRimColorP2': (1.0, 0.72, 0.55, 0.8),
+    'binSort': 42,
+    # Impact ground punch bloom — juicy land cue after the warn holds.
+    'impactHalf': 1.45,
+    'impactLift': 0.08,
+    'impactPeak': 2.75,
+    'impactInSec': 0.05,
+    'impactHoldSec': 0.06,
+    'impactOutSec': 0.22,
+    'impactPeakAlpha': 0.95,
+    'impactColorP1': (2.55, 0.55, 2.7, 0.85),
+    'impactColorP2': (2.85, 0.35, 0.2, 0.92),
+    'impactBin': 45,
+}
+
+# Client AV telegraph / impact timing defaults per Overlord phase.
+# Sum of squash+mid+stretch+hold ≈ AI telegraphDelay so stretch lingers
+# until impact cuts in (fair punish window). Miss path still recovers.
+OVERLORD_TELEGRAPH_ANIM_DEFAULTS = {
+    'p1': {
+        # Rising rain — longer hold (AI telegraphDelay 0.85).
+        'telegraphSquashSec': 0.10,
+        'telegraphMidSec': 0.14,
+        'telegraphStretchSec': 0.12,
+        'telegraphHoldSec': 0.48,
+        'telegraphRecoverSec': 0.10,
+        'impactSlamSec': 0.05,
+        'impactReboundSec': 0.09,
+        'impactSettleSec': 0.14,
+    },
+    'p2': {
+        # Unleashed — snappier wind-up (AI telegraphDelay 0.68 / slam 0.38).
+        'telegraphSquashSec': 0.08,
+        'telegraphMidSec': 0.10,
+        'telegraphStretchSec': 0.10,
+        'telegraphHoldSec': 0.34,
+        'telegraphRecoverSec': 0.08,
+        'impactSlamSec': 0.04,
+        'impactReboundSec': 0.08,
+        'impactSettleSec': 0.12,
+    },
 }
 
 # Ink Overlord finale phase looks (client-readable; AI timings unchanged).
@@ -1728,15 +1800,25 @@ FINALE_PHASE_LOOK = {
         # Magenta swell — tall rubber hose, pie whoosh wind-up.
         'telegraphCharge': (2.55, 0.28, 2.85, 1.0),
         'telegraphHold': (1.85, 0.2, 2.15, 1.0),
-        'squash': (2.35, 2.35, 0.28),
-        'mid': (2.05, 2.05, 0.42),
-        'stretch': (0.42, 0.42, 2.15),
-        'impactScale': (1.85, 1.85, 0.42),
-        'impactColor': (2.55, 0.75, 2.7, 1.0),
-        'rebound': (1.25, 0.45, 1.55, 1.0),
+        'squash': (2.45, 2.45, 0.24),
+        'mid': (2.15, 2.15, 0.38),
+        'stretch': (0.38, 0.38, 2.25),
+        # AV timing — stretch holds across most of P1 telegraphDelay (0.85).
+        'telegraphSquashSec': 0.10,
+        'telegraphMidSec': 0.14,
+        'telegraphStretchSec': 0.12,
+        'telegraphHoldSec': 0.48,
+        'telegraphRecoverSec': 0.10,
+        'impactScale': (2.05, 2.05, 0.36),
+        'impactColor': (2.65, 0.7, 2.8, 1.0),
+        'impactSlamSec': 0.05,
+        'impactReboundSec': 0.09,
+        'impactSettleSec': 0.14,
+        'impactReboundScale': (0.72, 0.72, 1.42),
+        'rebound': (1.35, 0.4, 1.65, 1.0),
         'pulseHot': (0.95, 0.15, 1.15, 1.0),
-        'hitFlash': (1.15, 0.35, 1.25, 1.0),
-        'hitFlashPeak': 0.78,
+        'hitFlash': (1.2, 0.32, 1.3, 1.0),
+        'hitFlashPeak': 0.84,
         'actorScale': 1.32,
         'actorTint': (0.32, 0.06, 0.42, 1.0),
         'nameColor': (1.0, 0.5, 1.0, 1.0),
@@ -1754,15 +1836,25 @@ FINALE_PHASE_LOOK = {
         # Crimson fury — wider squash, taller stretch, heavier slam SFX.
         'telegraphCharge': (2.9, 0.1, 0.22, 1.0),
         'telegraphHold': (2.25, 0.06, 0.14, 1.0),
-        'squash': (2.95, 2.95, 0.18),
-        'mid': (2.45, 2.45, 0.32),
-        'stretch': (0.28, 0.28, 2.75),
-        'impactScale': (2.25, 2.25, 0.32),
-        'impactColor': (2.85, 0.4, 0.22, 1.0),
-        'rebound': (1.55, 0.28, 0.22, 1.0),
+        'squash': (3.05, 3.05, 0.16),
+        'mid': (2.55, 2.55, 0.28),
+        'stretch': (0.24, 0.24, 2.85),
+        # AV timing — snappier Unleashed wind-up (telegraphDelay 0.68).
+        'telegraphSquashSec': 0.08,
+        'telegraphMidSec': 0.10,
+        'telegraphStretchSec': 0.10,
+        'telegraphHoldSec': 0.34,
+        'telegraphRecoverSec': 0.08,
+        'impactScale': (2.45, 2.45, 0.26),
+        'impactColor': (2.95, 0.35, 0.18, 1.0),
+        'impactSlamSec': 0.04,
+        'impactReboundSec': 0.08,
+        'impactSettleSec': 0.12,
+        'impactReboundScale': (0.62, 0.62, 1.55),
+        'rebound': (1.65, 0.22, 0.18, 1.0),
         'pulseHot': (1.55, 0.1, 0.16, 1.0),
-        'hitFlash': (1.25, 0.12, 0.08, 1.0),
-        'hitFlashPeak': 0.95,
+        'hitFlash': (1.32, 0.1, 0.06, 1.0),
+        'hitFlashPeak': 0.98,
         'actorScale': 1.58,
         'actorTint': (0.42, 0.05, 0.08, 1.0),
         'nameColor': (1.0, 0.28, 0.18, 1.0),
