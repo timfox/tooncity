@@ -179,6 +179,16 @@ class StreetPackActUnlockGateTests(unittest.TestCase):
         self.assertIn('force', director_src)
         # Soft-gate must not hard-brick Loopy discoverability wording.
         self.assertIn('Loopy', director_src)
+        # R must hydrate CampaignProgressSave before reading unlocks
+        # (C already does this in startCampaign; R was the soft-gate leak).
+        start_idx = director_src.find('def startStreetPackForToon')
+        self.assertGreater(start_idx, 0)
+        start_snip = director_src[start_idx:start_idx + 2200]
+        self.assertIn('_hydrateFromToon', start_snip)
+        hydrate_pos = start_snip.find('_hydrateFromToon')
+        unlock_pos = start_snip.find('unlockedThrough', hydrate_pos)
+        self.assertGreater(hydrate_pos, 0)
+        self.assertGreater(unlock_pos, hydrate_pos)
 
         pollution_src = _read(
             'toontown/corruption/PollutionManagerAI.py')
