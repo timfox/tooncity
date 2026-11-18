@@ -2,22 +2,26 @@
 """Headless behavioral deepen: explore → fight → reclaim → Oswald twist.
 
 Panda-free proof of the multi-hood loop already shipped on develop (through
-systems waves ending at PR #345). Complements `test_headless_loop_smoke.py`
+systems waves ending at PR #354). Complements `test_headless_loop_smoke.py`
 (registration / juice AST) and the focused wave / act-param / kit suites by
 chaining the spiritual-sequel loop:
 
-  explore — zone messengers, Oswald NPC stub, Loopy unease, hub breadcrumb
-            act-unlock dim (#332), chase-pending hub tip (#342)
-  fight   — archetype kits, melee interrupt (#329/#361), Brute/Gagster counters
-            (#343), juggle hang stun, reclaim KO fail + retry (#338), soft-
-            lock boss priority (#339), Overlord P1 rising slam (#334) +
+  explore — zone messengers, Oswald plaza NPC + reclaim cheer (#354), Loopy
+            unease, hub breadcrumb act-unlock dim (#332), chase-pending hub
+            tip (#342)
+  fight   — archetype kits, melee interrupt (#329/#348/#352), Brute/Gagster
+            counters (#343), Oswald betrayal counters (#352), juggle hang
+            stun, reclaim KO fail + retry (#338), soft-lock boss priority
+            (#339) + sticky yield (#347), Overlord P1 rising slam (#334) +
             move-id telegraph (#340), boss/chase HP bar (#331)
-  reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge,
-            elite modifiers / between-wave ambush (#345), campaign progress
-            client sync on login (#333)
+  reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
+            modifiers / between-wave ambush (#345), campaign progress client
+            sync on login (#333), CampaignPower reclaimCount rehydrate
+            (#349), campaignVictory client relay (#351)
   twist   — betrayal chase + kit + chase resume (#330) + false-clear gate
-            (#341) + Oswald telegraph/hit AV (#344) + chase-clear epilogue
-            + hub stain after betrayal (#336)
+            (#341) + mid-chase HP persist (#350) + Oswald telegraph/hit AV
+            (#344) + chase-clear epilogue + hub stain (#336) + washed-plaza
+            epilogue beat (#353)
 
 No Panda3D, no resources, no invented gameplay — only concrete symbols and
 pure helpers already on develop. Not a cream-FX deepen / no KH.
@@ -102,6 +106,50 @@ def _toplevel_assign_names(tree: ast.AST) -> set:
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
     return names
+
+
+def _method_body_names(rel: str, class_name: str, method_name: str) -> set:
+    """Names / attrs referenced inside one class method (AST scan)."""
+    tree = _module_ast(rel)
+    out = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef) or node.name != class_name:
+            continue
+        for item in node.body:
+            if not isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if item.name != method_name:
+                continue
+            for child in ast.walk(item):
+                if isinstance(child, ast.Name):
+                    out.add(child.id)
+                elif isinstance(child, ast.Attribute):
+                    out.add(child.attr)
+    return out
+
+
+def _accept_events(tree: ast.AST, class_name: str) -> set:
+    """Collect string / name event targets passed to self.accept in a class."""
+    events = set()
+    for node in getattr(tree, 'body', []):
+        if not isinstance(node, ast.ClassDef) or node.name != class_name:
+            continue
+        for item in ast.walk(node):
+            if not isinstance(item, ast.Call):
+                continue
+            func = item.func
+            if not (isinstance(func, ast.Attribute) and func.attr == 'accept'):
+                continue
+            if not item.args:
+                continue
+            arg0 = item.args[0]
+            if isinstance(arg0, ast.Constant) and isinstance(arg0.value, str):
+                events.add(arg0.value)
+            elif isinstance(arg0, ast.Str):  # py<3.8
+                events.add(arg0.s)
+            elif isinstance(arg0, ast.Name):
+                events.add(arg0.id)
+    return events
 
 
 def _load_panda_free_loop_modules():
@@ -232,13 +280,13 @@ def _load_soft_target_helpers():
     return soft, cfg
 
 
-def _extract_chase_combat_helpers():
-    """Compile chaseCombatDefeated without panda / DirectObject imports."""
+def _extract_chase_combat_helpers(camp, cg):
+    """Compile chase HP / defeat helpers without panda / DirectObject imports."""
     chase_rel = 'toontown/campaign/OswaldBetrayalChase.py'
     path = REPO_ROOT / chase_rel
     src = path.read_text(encoding='utf-8')
     tree = ast.parse(src, filename=chase_rel)
-    keep_funcs = {'chaseCombatDefeated'}
+    keep_funcs = {'chaseHp', 'resolveChaseSpawnHp', 'chaseCombatDefeated'}
     keep = []
     for node in tree.body:
         if isinstance(node, ast.FunctionDef) and node.name in keep_funcs:
@@ -250,7 +298,11 @@ def _extract_chase_combat_helpers():
             'missing chase helpers %s in %s' % (sorted(missing), chase_rel))
     mod = ast.Module(body=keep, type_ignores=[])
     ast.fix_missing_locations(mod)
-    ns = {}
+    # chaseHp / resolveChaseSpawnHp close over CampaignGlobals + CorruptionGlobals.
+    ns = {
+        'CampaignGlobals': camp,
+        'CorruptionGlobals': cg,
+    }
     exec(compile(mod, chase_rel, 'exec'), ns)  # noqa: S102 — test harness
     return ns
 
@@ -264,7 +316,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             _load_panda_free_loop_modules())
         cls.soft, cls.hs_cfg = _load_soft_target_helpers()
         cls.crumb = _extract_breadcrumb_unlock_helpers(cls.rg)
-        cls.chase = _extract_chase_combat_helpers()
+        cls.chase = _extract_chase_combat_helpers(cls.camp, cls.cg)
         cls.acts = list(cls.camp.ACTS)
         cls.act_by_id = {a['id']: a for a in cls.acts}
 
@@ -417,7 +469,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn("accept('localAvatarZoneChange'", presence_src)
         self.assertIn('oswaldRevealBanner', presence_src)
         self.assertIn('oswaldBetrayalChase', presence_src)
-        # Plaza NPC deepen — authored hub stand + reclaim cheer beyond
+        # Plaza NPC deepen (#354) — authored hub stand + reclaim cheer beyond
         # spawn-near-avatar CardMaker stub; still not a DistributedNPC.
         self.assertIn('full DistributedNPC', presence_src)
         self.assertIn('CardMaker', presence_src)
@@ -435,12 +487,23 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('Talk', camp.OSWALD_PRESENCE_INTERACT_PROMPT)
         self.assertGreater(float(camp.OSWALD_PRESENCE_INTERACT_RADIUS), 2.0)
         self.assertTrue(camp.OSWALD_PRESENCE_CHEER_ON_RECLAIM)
+        self.assertTrue(camp.OSWALD_PRESENCE_IDLE_BOB)
         self.assertEqual(len(camp.OSWALD_PRESENCE_HUB_POS), 4)
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_CHEER_TIP)
+        self.assertIn('clean', camp.OSWALD_PRESENCE_CHEER_TIP.lower())
+        self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')
+        presence_accepts = _accept_events(
+            _module_ast(presence_rel), 'OswaldPresenceClient')
+        self.assertIn('npcCheerStub', presence_accepts)
+        self.assertIn('campaignVictory', presence_accepts)
         cheer_src = _read('toontown/reclaim/ReclaimCheer.py')
         self.assertIn('_nudgeOswald', cheer_src)
+        self.assertIn('ensureOswaldPresenceClient', cheer_src)
+        self.assertIn('OSWALD_PRESENCE_CHEER_MSG', cheer_src)
+        self.assertIn('oswaldPresenceCheer', cheer_src)
         director_src = _read('toontown/reclaim/DistributedReclaimDirector.py')
         self.assertIn('ensureOswaldPresenceClient', director_src)
+        self.assertIn('npcCheerStub', director_src)
 
         play_src = _read('toontown/campaign/PlayEntry.py')
         self.assertIn('ensureOswaldPresenceClient', play_src)
@@ -595,14 +658,35 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('pickSoftLockAcquire', soft_src)
         self.assertIn('isSoftLockPrioritySubject', soft_src)
         self.assertIn('TARGET_PRIORITY_ENABLED', soft_src)
-        # Sticky hold yields glued adds when Overlord/Oswald is in cone.
+        # Sticky hold yields glued adds when Overlord/Oswald is in cone (#347).
         self.assertIn('shouldStickyYieldToPriority', soft_src)
+        self.assertGreater(cfg.TARGET_LOCK_HOLD_SEC, 0.0)
         self.assertTrue(
             soft.shouldStickyYieldToPriority(False, True))
         self.assertFalse(
             soft.shouldStickyYieldToPriority(True, True))
         self.assertFalse(
             soft.shouldStickyYieldToPriority(False, False))
+        self.assertFalse(
+            soft.shouldStickyYieldToPriority(False, True, enabled=False))
+        # Yield then #339 pick: nearer Smudge loses to Overlord / Oswald.
+        self.assertEqual(
+            pick([(False, 2.5, smudge), (True, 11.0, overlord)]),
+            overlord)
+        self.assertEqual(
+            pick([(False, 1.0, smudge), (True, 10.5, oswald)]),
+            oswald)
+        acquire_names = _method_body_names(
+            'toontown/hackslash/SoftTarget.py',
+            'SoftTargetFinder',
+            'acquire')
+        for need in (
+                'shouldStickyYieldToPriority', '_isPriorityTarget',
+                'pickSoftLockAcquire', '_inStickyCone',
+                'TARGET_LOCK_HOLD_SEC'):
+            self.assertIn(need, acquire_names, msg='acquire missing %s' % need)
+        cfg_src = _read('toontown/hackslash/HackSlashConfig.py')
+        self.assertIn('sticky hold yield', cfg_src.lower())
         hs_init = _read('toontown/hackslash/__init__.py')
         self.assertIn('softLockAcquireRank', hs_init)
         self.assertIn('pickSoftLockAcquire', hs_init)
@@ -998,8 +1082,24 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         power_src = _read('toontown/campaign/CampaignPower.py')
         self.assertIn('applyPowerBump', power_src)
         self.assertIn('POWER_BUMP_PER_RECLAIM', power_src)
+        self.assertIn('reclaimCount', power_src)
         self.assertGreater(self.camp.POWER_BUMP_PER_RECLAIM, 0.0)
         self.assertGreater(self.camp.POWER_BUMP_MAX, self.camp.POWER_BUMP_PER_RECLAIM)
+        # Login rehydrate (#349): Handoff silent-applies AI reclaimCount.
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('applyPowerBump', handoff_src)
+        sync_idx = handoff_src.find('def _onCampaignProgressSync')
+        self.assertGreater(sync_idx, 0)
+        sync_win = handoff_src[sync_idx:sync_idx + 500]
+        self.assertIn('reclaimCount', sync_win)
+        self.assertIn('_localReclaimCount', sync_win)
+        self.assertIn('applyPowerBump', sync_win)
+        self.assertNotIn('_celebrate', sync_win)
+        purity_idx = handoff_src.find('def _onPurityRestore')
+        self.assertGreater(purity_idx, 0)
+        purity_win = handoff_src[purity_idx:purity_idx + 400]
+        self.assertIn('_localReclaimCount += 1', purity_win)
+        self.assertIn('applyPowerBump(self._localReclaimCount)', purity_win)
 
     # --- campaign progression + Oswald twist ---
 
@@ -1114,24 +1214,33 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('overlordPickEnrageMove', corrupt_ai)
 
     def test_campaign_progress_client_sync_loop(self):
-        """Login sync mirrors victory / unlock / chase so hub truth survives (#333)."""
+        """Login sync mirrors victory / unlock / chase / reclaim so hub truth survives (#333/#349/#351)."""
         camp, save = self.camp, self.save
         self.assertEqual(
             camp.CAMPAIGN_PROGRESS_SYNC_MSG, 'campaignProgressSync')
+        self.assertEqual(camp.CAMPAIGN_VICTORY_MSG, 'campaignVictory')
         fresh = save.clientMirrorFromProgress(save.defaultProgress())
         self.assertFalse(fresh['victoryEpilogue'])
         self.assertFalse(fresh['betrayed'])
         self.assertFalse(fresh['chasePending'])
         self.assertEqual(fresh['unlockedThrough'], 0)
+        self.assertEqual(fresh['reclaimCount'], 0)
         self.assertIsNone(fresh['softNextStreet'])
+        # Persist blob carries reclaimCount + mid-chase HP fields.
+        default = save.defaultProgress()
+        self.assertIn('reclaimCount', default)
+        self.assertIn('chaseHp', default)
+        self.assertEqual(default['chaseHp'], 0)
 
         mid = save.clientMirrorFromProgress({
             'unlockedThrough': 1,
             'actIndex': 1,
             'state': camp.STATE_ACTIVE,
+            'reclaimCount': 3,
             'chaseCleared': 0,
         })
         self.assertEqual(mid['unlockedThrough'], 1)
+        self.assertEqual(mid['reclaimCount'], 3)
         self.assertIn('Punchline', mid['softNextStreet'] or '')
 
         pending = save.clientMirrorFromProgress({
@@ -1139,10 +1248,22 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             'actIndex': 2,
             'state': camp.STATE_VICTORY,
             'chaseCleared': 0,
+            'reclaimCount': 4,
+            'chaseHp': 37,
         })
         self.assertTrue(pending['victoryEpilogue'])
         self.assertTrue(pending['betrayed'])
         self.assertTrue(pending['chasePending'])
+        self.assertEqual(pending['reclaimCount'], 4)
+        # clientMirror is presentation-only — chaseHp stays on the persist blob.
+        sanitized = save.sanitizeProgress({
+            'unlockedThrough': 2,
+            'actIndex': 2,
+            'state': camp.STATE_VICTORY,
+            'chaseCleared': 0,
+            'chaseHp': 37,
+        })
+        self.assertEqual(sanitized['chaseHp'], 37)
         tip = camp.hubPlayEntryTip(
             victory=pending['victoryEpilogue'],
             chasePending=pending['chasePending'])
@@ -1155,9 +1276,16 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             'actIndex': 2,
             'state': camp.STATE_VICTORY,
             'chaseCleared': 1,
+            'chaseHp': 37,
         })
         self.assertTrue(cleared['victoryEpilogue'])
         self.assertFalse(cleared['chasePending'])
+        cleared_blob = save.sanitizeProgress({
+            'state': camp.STATE_VICTORY,
+            'chaseCleared': 1,
+            'chaseHp': 37,
+        })
+        self.assertEqual(cleared_blob['chaseHp'], 0)
         washed = camp.hubPlayEntryTip(
             victory=cleared['victoryEpilogue'],
             chasePending=cleared['chasePending'])
@@ -1184,6 +1312,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             'dclass ')[0]
         self.assertIn(
             'setCampaignProgress(uint8, uint8, uint8, uint8)', pollution_block)
+        self.assertIn('reclaimCount', pollution_block)
         self.assertIn('announceCampaignVictory(uint8)', pollution_block)
 
         play_src = _read('toontown/campaign/PlayEntry.py')
@@ -1215,17 +1344,51 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         director_src = _read('toontown/campaign/CampaignDirectorAI.py')
         self.assertIn('_pushProgressToClient', director_src)
         self.assertIn('_pushVictoryToClient', director_src)
+        # campaignVictory relay (#351): both finale victory branches push.
+        victory_marker = "messenger.send('campaignVictory'"
+        first_vic = director_src.find(victory_marker)
+        self.assertGreater(first_vic, 0)
+        second_vic = director_src.find(victory_marker, first_vic + len(victory_marker))
+        self.assertGreater(second_vic, first_vic)
+        for idx in (first_vic, second_vic):
+            window = director_src[idx:idx + 280]
+            self.assertIn('_pushVictoryToClient', window)
         pollution_ai = _read('toontown/corruption/PollutionManagerAI.py')
         self.assertIn('pushCampaignProgressToAvatar', pollution_ai)
         self.assertIn('pushCampaignVictoryToAvatar', pollution_ai)
         self.assertIn('requestCampaignProgress', pollution_ai)
+        push_idx = pollution_ai.find('def pushCampaignProgressToAvatar')
+        self.assertGreater(push_idx, 0)
+        push_win = pollution_ai[push_idx:push_idx + 2200]
+        self.assertIn("blob.get('reclaimCount'", push_win)
+        self.assertIn(
+            '[unlocked, state, chaseCleared, reclaimCount]', push_win)
         pollution_client = _read('toontown/corruption/PollutionManager.py')
         self.assertIn('setCampaignProgress', pollution_client)
         self.assertIn('announceCampaignVictory', pollution_client)
+        self.assertIn('campaignReclaimCount', pollution_client)
         self.assertIn('d_requestCampaignProgress', pollution_client)
+        set_idx = pollution_client.find('def setCampaignProgress')
+        self.assertGreater(set_idx, 0)
+        set_win = pollution_client[set_idx:set_idx + 900]
+        self.assertIn('reclaimCount', set_win)
+        # Live victory acceptors (#351) — not AI-local messenger only.
+        for rel, class_name in (
+                ('toontown/campaign/PlayEntry.py', 'PlayEntryClient'),
+                ('toontown/campaign/OswaldPresence.py', 'OswaldPresenceClient'),
+                ('toontown/campaign/OswaldBetrayalChase.py',
+                 'OswaldBetrayalChaseClient'),
+                ('toontown/campaign/FinalePhaseFx.py', 'FinalePhaseFxClient'),
+                ('toontown/campaign/CampaignHandoff.py',
+                 'CampaignHandoffClient')):
+            events = _accept_events(_module_ast(rel), class_name)
+            self.assertIn(
+                'campaignVictory', events,
+                msg='%s.%s must accept campaignVictory' % (rel, class_name))
         # Sync path copy only — PlayEntry module still mentions "no kh" in docs.
         sync_blob = ' '.join([
             camp.CAMPAIGN_PROGRESS_SYNC_MSG,
+            camp.CAMPAIGN_VICTORY_MSG,
             tip,
             camp.HUB_CHASE_PENDING_TIP,
             mid.get('softNextStreet') or '',
@@ -1336,8 +1499,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         for sym in (
                 'spawnCorruptOswald', 'OswaldBetrayalChaseClient',
                 'ensureOswaldBetrayalChaseClient', 'chaseAttackMove',
-                'chaseCombatDefeated', 'epilogueEnabled', 'epilogueTitle',
-                'epilogueCue'):
+                'chaseHp', 'resolveChaseSpawnHp', 'chaseCombatDefeated',
+                'epilogueEnabled', 'epilogueTitle', 'epilogueCue'):
             self.assertIn(sym, chase_names)
         chase_src = _read(chase_rel)
         self.assertIn('ARCHETYPE_CORRUPT_OSWALD', chase_src)
@@ -1345,6 +1508,46 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('campaignEpilogue', chase_src)
         self.assertIn('_fireEpilogue', chase_src)
         self.assertIn("corrupt._stats['attackMove']", chase_src)
+        self.assertIn('resolveChaseSpawnHp', chase_src)
+        self.assertIn('announceCampaignVictory', chase_src)
+
+        # Mid-chase HP persist (#350) — resume / relog must not full-heal.
+        resolve = self.chase['resolveChaseSpawnHp']
+        max_hp = self.chase['chaseHp']()
+        self.assertGreater(max_hp, 10)
+        self.assertEqual(resolve(None), (max_hp, max_hp))
+        self.assertEqual(resolve(0), (max_hp, max_hp))
+        mid_hp = max(1, max_hp // 2)
+        self.assertEqual(resolve(mid_hp), (max_hp, mid_hp))
+        self.assertEqual(resolve(max_hp + 50), (max_hp, max_hp))
+        self.assertEqual(resolve(1), (max_hp, 1))
+        save = self.save
+        mid_blob = save.sanitizeProgress({
+            'unlockedThrough': 2,
+            'actIndex': 2,
+            'state': camp.STATE_VICTORY,
+            'chaseCleared': 0,
+            'chaseHp': mid_hp,
+        })
+        self.assertEqual(mid_blob['chaseHp'], mid_hp)
+        # Director snapshots live HP and passes remaining into spawn.
+        director_src = _read('toontown/campaign/CampaignDirectorAI.py')
+        self.assertIn('_snapshotOswaldChaseHp', director_src)
+        self.assertIn('resolveChaseSpawnHp', director_src)
+        self.assertIn('self.chaseHp', director_src)
+        snap = director_src[director_src.find('def _snapshotOswaldChaseHp'):]
+        snap = snap[:snap.find('\n    def ', 1)]
+        self.assertIn('resolveChaseSpawnHp', snap)
+        self.assertIn('self.chaseHp', snap)
+        spawn = director_src[director_src.find(
+            'def __spawnOswaldBetrayalChase'):]
+        spawn = spawn[:spawn.find('\n    def ', 1)]
+        self.assertIn('chaseHp', spawn)
+        self.assertIn('spawnCorruptOswald', spawn)
+        self.assertIn('remaining if remaining > 0 else None', spawn)
+        save_src = _read('toontown/campaign/CampaignProgressSave.py')
+        self.assertIn("'chaseHp'", save_src)
+        self.assertIn('director.chaseHp', save_src)
 
         # Zone leave / DO despawn must NOT false-clear the chase (#341).
         defeated = self.chase['chaseCombatDefeated']
@@ -1362,7 +1565,6 @@ class HeadlessLoopFlowTest(unittest.TestCase):
 
         # Director schedules chase after finale; PlayEntry/Handoff accept clear.
         # Pending chase (victory + chaseCleared=0) must resume on hydrate / C (#330).
-        director_src = _read('toontown/campaign/CampaignDirectorAI.py')
         director_methods = _class_method_names(
             _module_ast('toontown/campaign/CampaignDirectorAI.py'),
             'CampaignDirectorAI')
@@ -1370,6 +1572,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('_resumePendingOswaldBetrayalChase', director_methods)
         self.assertIn('_pendingOswaldBetrayalChase', director_methods)
         self.assertIn('_scheduleOswaldBetrayalChase', director_methods)
+        self.assertIn('_snapshotOswaldChaseHp', director_methods)
         self.assertIn('__finishOswaldBetrayalChaseClear', director_methods)
         self.assertIn('OSWALD_BETRAYAL_CHASE_RESUME_MSG', director_src)
         self.assertIn('campaignEpilogue', director_src)
@@ -1381,11 +1584,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         watch = watch[:watch.find('def __finishOswaldBetrayalChaseClear')]
         self.assertIn('chaseCombatDefeated', watch)
         self.assertIn('_resumePendingOswaldBetrayalChase', watch)
+        self.assertIn('_snapshotOswaldChaseHp', watch)
         self.assertNotIn('self.chaseCleared = 1', watch)
         finish = director_src[
             director_src.find('def __finishOswaldBetrayalChaseClear'):]
         finish = finish[:finish.find('def __onNeighborhoodReclaimed')]
         self.assertIn('self.chaseCleared = 1', finish)
+        self.assertIn('self.chaseHp = 0', finish)
         self.assertIn('_syncHubStain', finish)
         self.assertIn('oswaldBetrayalChaseCleared', finish)
         self.assertIn('campaignEpilogue', finish)
@@ -1548,20 +1753,42 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'HubStainConfrontClient', 'ensureHubStainConfrontClient',
                 'refreshHubStainConfront', 'stopHubStainConfront'):
             self.assertIn(sym, confront_names)
-        # Washed-plaza epilogue beat after chase clear (beyond plate + tip).
+        # Washed-plaza epilogue beat after chase clear (#353) — beyond plate + tip.
         self.assertTrue(camp.HUB_EPILOGUE_BEAT_ENABLED)
         self.assertTrue(
             stain.hubEpilogueBeatWanted(camp.STATE_VICTORY, chaseCleared=1))
         self.assertFalse(
             stain.hubEpilogueBeatWanted(camp.STATE_VICTORY, chaseCleared=0))
+        self.assertFalse(
+            stain.hubEpilogueBeatWanted(camp.STATE_ACTIVE, chaseCleared=1))
+        # Complementary: pending stains; cleared washes confront + shows beat.
+        self.assertTrue(stain.hubStainWanted(camp.STATE_VICTORY, chaseCleared=0))
+        self.assertFalse(stain.hubStainWanted(camp.STATE_VICTORY, chaseCleared=1))
+        self.assertIn('washed', camp.HUB_EPILOGUE_BEAT_LABEL.lower())
+        self.assertIn('Oswald', camp.HUB_EPILOGUE_BEAT_ABSENCE)
+        self.assertIn('plaza', camp.HUB_EPILOGUE_BEAT_TIP.lower())
+        self.assertIn('absence', camp.HUB_EPILOGUE_BEAT_TIP.lower())
+        self.assertIn('Loopy', camp.HUB_EPILOGUE_BEAT_TIP)
+        self.assertNotEqual(
+            camp.HUB_EPILOGUE_BEAT_LABEL, camp.HUB_STAIN_CONFRONT_LABEL)
+        self.assertNotIn(
+            'wash the betrayal chase', camp.HUB_EPILOGUE_BEAT_TIP.lower())
+        self.assertGreater(float(camp.HUB_EPILOGUE_BEAT_FORWARD), 0.0)
         epi_rel = 'toontown/campaign/HubEpilogueBeat.py'
         self.assertTrue((REPO_ROOT / epi_rel).is_file())
         epi_names = _class_and_func_names(_module_ast(epi_rel))
         for sym in (
                 'HubEpilogueBeatClient', 'ensureHubEpilogueBeatClient',
                 'refreshHubEpilogueBeat', 'stopHubEpilogueBeat',
-                'clearHubEpilogueBeat'):
+                'clearHubEpilogueBeat', 'epilogueBeatEnabled',
+                'epilogueBeatLabel', 'epilogueBeatAbsence', 'epilogueBeatTip'):
             self.assertIn(sym, epi_names)
+        epi_src = _read(epi_rel)
+        self.assertIn('hubEpilogueBeatWanted', epi_src)
+        self.assertIn('hubStainCleared', epi_src)
+        self.assertIn('oswaldBetrayalChaseCleared', epi_src)
+        self.assertIn('campaignEpilogue', epi_src)
+        self.assertIn('campaignProgressSync', epi_src)
         tt = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('refreshHubStainConfront', tt)
         self.assertIn('stopHubStainConfront', tt)
@@ -1569,6 +1796,18 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('stopHubEpilogueBeat', tt)
         # Trusted Oswald stub wiring must survive hub-stain mount.
         self.assertIn('refreshOswaldPresenceHub', tt)
+        handoff_src = _read('toontown/campaign/CampaignHandoff.py')
+        self.assertIn('_refreshHubEpilogueBeat', handoff_src)
+        self.assertIn('refreshHubEpilogueBeat', handoff_src)
+        self.assertIn('_showEpilogueHandoff', handoff_src)
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn('ensureHubEpilogueBeatClient', play_src)
+        self.assertIn('refreshHubEpilogueBeat', play_src)
+        self.assertIn('clearHubEpilogueBeat', play_src)
+        # Confront clear stays separate from washed-plaza beat module.
+        confront_src = _read('toontown/campaign/HubStainConfront.py')
+        self.assertIn('_onHubStainCleared', confront_src)
+        self.assertNotIn('HubEpilogueBeat', confront_src)
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             blob = ' '.join([
                 camp.HUB_STAIN_MSG,
