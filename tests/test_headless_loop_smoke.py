@@ -3449,8 +3449,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('FINALE_BETRAYAL_SETTLE_OVERSHOOT', handoff_src)
         self.assertIn('FINALE_BETRAYAL_CREAM_HOSE_SETTLE_OVERSHOOT', handoff_src)
         self.assertIn('FINALE_BETRAYAL_CREAM_HOSE_SETTLE_REBOUND', handoff_src)
-        # Deepened victory/confetti Oswald twist cream sting — juicier chips
-        # + soft cream aftershock on betrayal (distinct from #240 / #235).
+        # Deepened victory/confetti Oswald twist cream sting past #244 —
+        # juicier chips + micro cream pop rebound + richer soft cream
+        # aftershock on betrayal (distinct from #240 / #235 / #260).
         for twist_key in (
                 'VICTORY_TWIST_CONFETTI_ENABLED',
                 'VICTORY_TWIST_CONFETTI_COUNT',
@@ -3458,6 +3459,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'VICTORY_TWIST_CONFETTI_COLORS',
                 'VICTORY_TWIST_CONFETTI_DELAY_SEC',
                 'VICTORY_TWIST_CONFETTI_POP',
+                'VICTORY_TWIST_CONFETTI_POP_REBOUND',
                 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED',
                 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT'):
             self.assertIn(
@@ -3475,6 +3477,13 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('_spawnAftershockHalo', twist_methods)
         twist_src = _read(twist_rel)
         self.assertIn('VICTORY_TWIST_CONFETTI_POP', twist_src)
+        self.assertIn('VICTORY_TWIST_CONFETTI_POP_REBOUND', twist_src)
+        twist_count = campaign_assigns.get('VICTORY_TWIST_CONFETTI_COUNT')
+        if isinstance(twist_count, int):
+            self.assertGreaterEqual(twist_count, 13)
+        twist_pop = campaign_assigns.get('VICTORY_TWIST_CONFETTI_POP')
+        if isinstance(twist_pop, float):
+            self.assertGreater(twist_pop, 1.65)
         self.assertIn('playVictoryTwistConfettiSting', handoff_src)
         self.assertIn('clearVictoryTwistConfettiSting', handoff_src)
         finale_fx_src = _read('toontown/campaign/FinalePhaseFx.py')
@@ -3484,6 +3493,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('micro rebound', camp_magic_l)
         self.assertIn(
             'deepened victory/confetti twist cream sting', camp_magic_l)
+        self.assertIn('micro cream pop', camp_magic_l)
         betrayal_cue = campaign_assigns.get('FINALE_BETRAYAL_HANDOFF_CUE') or ''
         if isinstance(betrayal_cue, list):
             betrayal_cue = ''.join(str(part) for part in betrayal_cue)

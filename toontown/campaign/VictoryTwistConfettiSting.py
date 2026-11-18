@@ -2,12 +2,13 @@
 
 After Silly finale purity cheer (#82 cream swell clears) and the betrayal
 handoff banner (#212) hose-pops the twist copy, this fires a juicier,
-bittersweet confetti sting — cream + warm coral chips with a soft cream
-aftershock so the hollow cheer that Oswald caused the corruption lands
-readable. Not a second triumphant carnival; not the sunny victory cream
-swell. Distinct from act handoff cream edge settle deepen (#240) and
-betrayal banner cream hose deepen (#235). Toontown spiritual-sequel tone
-only — no keyblades / KH branding.
+bittersweet confetti sting past #244 — cream + warm coral chips with a
+micro cream pop rebound and richer soft cream aftershock so the hollow
+cheer that Oswald caused the corruption lands readable. Not a second
+triumphant carnival; not the sunny victory cream swell. Distinct from act
+handoff cream edge settle deepen (#240) and betrayal banner cream hose
+deepen (#235 / #260). Toontown spiritual-sequel tone only — no keyblades
+/ KH branding.
 """
 
 from math import cos, pi, sin
@@ -29,7 +30,7 @@ from toontown.campaign import CampaignGlobals
 
 
 class VictoryTwistConfettiSting(object):
-    """Owns one deepened bittersweet confetti cream sting under the twist plate."""
+    """Owns one deepened (past #244) bittersweet confetti cream sting."""
 
     def __init__(self):
         self._ival = None
@@ -157,7 +158,11 @@ class VictoryTwistConfettiSting(object):
         fall = float(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_FALL', 0.22))
         pop = float(getattr(
-            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_POP', 1.58))
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_POP', 1.72))
+        rebound = float(getattr(
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_POP_REBOUND', 1.22))
+        reboundSec = float(getattr(
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_POP_REBOUND_SEC', 0.05))
         angle = (2.0 * pi * index) / float(max(1, total)) + 0.42
         wide = (index % 2) == 0
         try:
@@ -191,9 +196,11 @@ class VictoryTwistConfettiSting(object):
             oy,
             start[2] + abs(sin(angle)) * drift * 0.45 - fall)
         chipDelay = 0.016 * (index % 4)
-        # Juicier cream snap: taller squash pop, then stretch into settle.
+        # Juicier cream snap past #244: squash → stretch → micro rebound → settle.
         squashPt = Point3(pop, 1, max(0.35, 2.0 - pop * 0.65))
         stretchPt = Point3(max(0.55, 2.05 - pop * 0.55), 1, pop * 0.84)
+        reboundPt = Point3(
+            max(0.7, rebound), 1, max(0.7, rebound * 0.92))
         return Sequence(
             Wait(chipDelay),
             Parallel(
@@ -204,6 +211,8 @@ class VictoryTwistConfettiSting(object):
             ),
             LerpScaleInterval(
                 bit, 0.08, stretchPt, blendType='easeOut'),
+            LerpScaleInterval(
+                bit, max(0.01, reboundSec), reboundPt, blendType='easeOut'),
             Parallel(
                 LerpPosInterval(bit, sec, end, blendType='easeOut'),
                 LerpScaleInterval(
@@ -265,8 +274,10 @@ class VictoryTwistConfettiSting(object):
                 LerpColorScaleInterval(
                     streak, 0.06, Vec4(r, g, b, a), blendType='easeOut'),
                 LerpScaleInterval(
-                    streak, 0.06, Point3(1.28, 1, 1.48), blendType='easeOut'),
+                    streak, 0.06, Point3(1.36, 1, 1.58), blendType='easeOut'),
             ),
+            LerpScaleInterval(
+                streak, 0.04, Point3(1.12, 1, 1.22), blendType='easeOut'),
             Parallel(
                 LerpPosInterval(streak, sec, end, blendType='easeOut'),
                 LerpScaleInterval(
@@ -277,14 +288,14 @@ class VictoryTwistConfettiSting(object):
         )
 
     def _buildAftershock(self, parentNP, ox, oy, oz):
-        """Quieter cream settle flecks (+ optional halo) after sting body."""
+        """Richer cream settle flecks (+ optional halo) after sting body."""
         if not getattr(
                 CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_ENABLED',
                 True):
             return None
         delay = float(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_DELAY_SEC',
-            0.22))
+            0.18))
         parts = []
 
         if getattr(
@@ -295,9 +306,9 @@ class VictoryTwistConfettiSting(object):
                 parts.append(halo)
 
         count = int(getattr(
-            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT', 5))
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_COUNT', 7))
         sec = float(getattr(
-            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_SEC', 0.34))
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_SEC', 0.40))
         for i in range(count):
             part = self._spawnAftershockFleck(
                 parentNP, ox, oy, oz, i, count, sec)
@@ -314,22 +325,22 @@ class VictoryTwistConfettiSting(object):
     def _spawnAftershockHalo(self, parentNP, ox, oy, oz):
         half = float(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_HALF',
-            0.40))
+            0.46))
         startScale = float(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_START',
-            0.26))
+            0.24))
         peakScale = float(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK',
-            1.16))
+            1.30))
         sec = float(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_SEC',
-            0.28))
+            0.34))
         peakA = float(getattr(
             CampaignGlobals,
-            'VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK_ALPHA', 0.13))
+            'VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_PEAK_ALPHA', 0.16))
         r, g, b, _a = getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_HALO_COLOR',
-            (1.0, 0.94, 0.78, 1.0))
+            (1.0, 0.93, 0.76, 1.0))
         binSort = int(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_BIN', 60))
         try:
@@ -363,17 +374,17 @@ class VictoryTwistConfettiSting(object):
         """Softer cream chip that settles downward — residual sting aftershock."""
         count = max(1, int(total))
         size = float(getattr(
-            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_SIZE', 0.016))
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_SIZE', 0.019))
         drift = float(getattr(
-            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_DRIFT', 0.30))
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_DRIFT', 0.36))
         fall = float(getattr(
-            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_FALL', 0.24))
+            CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_FALL', 0.28))
         r, g, b, a = getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_COLOR',
-            (1.0, 0.96, 0.78, 0.80))
+            (1.0, 0.96, 0.78, 0.88))
         er, eg, eb, ea = getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_END_COLOR',
-            (1.0, 0.90, 0.55, 0.0))
+            (1.0, 0.88, 0.52, 0.0))
         binSort = int(getattr(
             CampaignGlobals, 'VICTORY_TWIST_CONFETTI_AFTERSHOCK_BIN', 60))
         angle = (2.0 * pi * index) / float(count) + 0.41
