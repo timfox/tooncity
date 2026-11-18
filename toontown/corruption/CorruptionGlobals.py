@@ -74,6 +74,19 @@ HOOD_POLLUTION_BIAS = {
 
 _DEFAULT_HOOD_BIAS = HOOD_POLLUTION_BIAS[2200]
 
+# Telegraph / impact presentation (client AV punch; AI timings unchanged).
+TELEGRAPH_CHARGE_COLOR = (2.15, 0.25, 2.4, 1.0)
+TELEGRAPH_HOLD_COLOR = (1.55, 0.2, 1.85, 1.0)
+ATTACK_HIT_FLASH_COLOR = (1.0, 0.55, 1.0, 1.0)
+ATTACK_HIT_FLASH_PEAK = 0.55
+ATTACK_HIT_FLASH_IN = 0.04
+ATTACK_HIT_FLASH_OUT = 0.14
+# Existing Toontown SFX — wind-up whoosh + collision thud.
+TELEGRAPH_SFX = 'phase_3.5/audio/sfx/AA_pie_throw_only.ogg'
+ATTACK_HIT_SFX = 'phase_3.5/audio/sfx/AV_collision.ogg'
+TELEGRAPH_SFX_VOLUME = 0.55
+ATTACK_HIT_SFX_VOLUME = 0.75
+
 
 def clampPollution(level):
     """Clamp a pollution scalar into [0, 1]."""

@@ -1,9 +1,9 @@
 """Corrupt toons and neighborhood pollution (KH x Toontown).
 
 CorruptToons prefer ink-tinted Toon Actor / DNA silhouettes (card fallback),
-chase, telegraph ink attacks, and take melee damage. Clearing them lowers
-per-zone pollution via PollutionManager; hitting 0.0 unlocks purity restore
-(reclaim / campaign directors).
+chase, telegraph ink attacks (charged wind-up + impact flash/SFX), and take
+melee damage. Clearing them lowers per-zone pollution via PollutionManager;
+hitting 0.0 unlocks purity restore (reclaim / campaign directors).
 
 Pollution fog / color grade / street-prop tint are hood-biased (Loopy purple
 ink, Punchline sludge green, Silly hot magenta) via CorruptionGlobals bias

@@ -4,7 +4,8 @@ from panda3d.core import (
 from direct.directnotify import DirectNotifyGlobal
 from direct.distributed import DistributedNode
 from direct.interval.IntervalGlobal import (
-    LerpColorScaleInterval, LerpScaleInterval, Parallel, Sequence, Func)
+    LerpColorScaleInterval, LerpScaleInterval, Parallel, Sequence, Func,
+    Wait)
 
 from toontown.corruption import CorruptionGlobals
 from toontown.corruption.HackSlashTarget import HackSlashTarget
@@ -37,7 +38,12 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._hitIval = None
         self._pulseIval = None
         self._telegraphIval = None
+        self._attackHitIval = None
+        self._attackFlashNP = None
+        self._attackFlashIval = None
         self._purityFlashIval = None
+        self._telegraphSfx = None
+        self._attackHitSfx = None
 
     def generate(self):
         self.assign(render.attachNewNode('DistributedCorruptToon'))
@@ -85,11 +91,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
     def __stopIntervals(self):
         for attr in ('_defeatIval', '_hitIval', '_pulseIval',
-                     '_telegraphIval', '_purityFlashIval'):
+                     '_telegraphIval', '_attackHitIval',
+                     '_attackFlashIval', '_purityFlashIval'):
             ival = getattr(self, attr, None)
             if ival is not None:
                 ival.finish()
                 setattr(self, attr, None)
+        self.__clearAttackFlash()
 
     def __buildGeom(self):
         self.visualRoot = self.attachNewNode('corrupt-visual')
@@ -307,34 +315,77 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         return self.maxHp
 
     def announceAttackTelegraph(self):
-        """AI wind-up: stretch / ink flare so standing still is punishable."""
+        """Strong wind-up: charged squash, ink flare, whoosh — dodgeable read."""
         if self._telegraphIval is not None:
             self._telegraphIval.finish()
+        if self._attackHitIval is not None:
+            self._attackHitIval.finish()
+            self._attackHitIval = None
         if self._pulseIval is not None:
             self._pulseIval.pause()
         target = self.visualRoot if self.visualRoot is not None else self
+        charge = Vec4(*CorruptionGlobals.TELEGRAPH_CHARGE_COLOR)
+        hold = Vec4(*CorruptionGlobals.TELEGRAPH_HOLD_COLOR)
+        self.__playOptionalActorPose('angry')
+        self.__playTelegraphSfx()
+        # Hold the charged pose across most of ATTACK_TELEGRAPH_DELAY so the
+        # wind-up reads clearly before announceAttackHit's slam lands.
         self._telegraphIval = Sequence(
             Parallel(
-                LerpScaleInterval(target, 0.22, Point3(1.55, 1.55, 0.55)),
-                LerpColorScaleInterval(target, 0.22, Vec4(1.9, 0.35, 2.2, 1.0)),
+                LerpScaleInterval(target, 0.12, Point3(1.85, 1.85, 0.42)),
+                LerpColorScaleInterval(target, 0.12, charge),
             ),
             Parallel(
-                LerpScaleInterval(target, 0.18, Point3(0.75, 0.75, 1.45)),
-                LerpColorScaleInterval(target, 0.18, Vec4(0.7, 0.2, 1.0, 1.0)),
+                LerpScaleInterval(target, 0.18, Point3(1.65, 1.65, 0.5)),
+                LerpColorScaleInterval(target, 0.18, hold),
             ),
-            LerpScaleInterval(target, 0.12, Point3(1.0, 1.0, 1.0)),
+            Parallel(
+                LerpScaleInterval(target, 0.14, Point3(0.62, 0.62, 1.7)),
+                LerpColorScaleInterval(target, 0.14, charge),
+            ),
+            # Linger stretched so the strike pose sticks until impact.
+            # On miss (no announceAttackHit), ease back and resume ink pulse.
+            Wait(0.12),
+            Parallel(
+                LerpScaleInterval(target, 0.1, Point3(1.0, 1.0, 1.0)),
+                LerpColorScaleInterval(target, 0.1, Vec4(1, 1, 1, 1)),
+            ),
             Func(self.__resumePulse),
         )
         self._telegraphIval.start()
 
     def announceAttackHit(self):
-        # Brief slam cue after AI damage lands.
+        """Impact feedback when AI damage lands — slam, flash, thud."""
+        # Pause (don't finish) so telegraph's miss-recovery Funcs don't snap.
+        if self._telegraphIval is not None:
+            try:
+                self._telegraphIval.pause()
+            except Exception:
+                pass
+            self._telegraphIval = None
+        if self._attackHitIval is not None:
+            self._attackHitIval.finish()
         target = self.visualRoot if self.visualRoot is not None else self
-        Sequence(
-            LerpScaleInterval(target, 0.08, Point3(1.35, 1.35, 0.7)),
-            LerpScaleInterval(target, 0.1, Point3(1.0, 1.0, 1.0)),
-        ).start()
-        # Client-readable cue so melee can flash i-frames / dodge window.
+        self.__playAttackHitSfx()
+        self.__playAttackHitFlash()
+        self.__playOptionalActorPose('neutral')
+        self._attackHitIval = Sequence(
+            Parallel(
+                LerpScaleInterval(target, 0.06, Point3(1.55, 1.55, 0.55)),
+                LerpColorScaleInterval(target, 0.06, Vec4(2.2, 0.9, 2.4, 1.0)),
+            ),
+            Parallel(
+                LerpScaleInterval(target, 0.1, Point3(0.85, 0.85, 1.25)),
+                LerpColorScaleInterval(target, 0.1, Vec4(1.1, 0.55, 1.35, 1.0)),
+            ),
+            Parallel(
+                LerpScaleInterval(target, 0.12, Point3(1.0, 1.0, 1.0)),
+                LerpColorScaleInterval(target, 0.12, Vec4(1, 1, 1, 1)),
+            ),
+            Func(self.__resumePulse),
+        )
+        self._attackHitIval.start()
+        # Client-readable cue so melee can flash i-frames / dodge window (#12).
         messenger.send('corruptToonHitPlayer', [self])
 
     def __resumePulse(self):
@@ -343,6 +394,103 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
 
     def _defeatedHidden(self):
         return self.isHidden() or self.hp <= 0
+
+    def __ensureSfx(self):
+        if self._telegraphSfx is None:
+            try:
+                self._telegraphSfx = base.loader.loadSfx(
+                    CorruptionGlobals.TELEGRAPH_SFX)
+            except Exception:
+                self._telegraphSfx = False
+        if self._attackHitSfx is None:
+            try:
+                self._attackHitSfx = base.loader.loadSfx(
+                    CorruptionGlobals.ATTACK_HIT_SFX)
+            except Exception:
+                self._attackHitSfx = False
+
+    def __playTelegraphSfx(self):
+        self.__ensureSfx()
+        sfx = self._telegraphSfx
+        if not sfx:
+            return
+        try:
+            sfx.setVolume(CorruptionGlobals.TELEGRAPH_SFX_VOLUME)
+            base.playSfx(sfx, node=self)
+        except Exception:
+            try:
+                base.playSfx(sfx)
+            except Exception:
+                pass
+
+    def __playAttackHitSfx(self):
+        self.__ensureSfx()
+        sfx = self._attackHitSfx
+        if not sfx:
+            return
+        try:
+            sfx.setVolume(CorruptionGlobals.ATTACK_HIT_SFX_VOLUME)
+            base.playSfx(sfx, node=self)
+        except Exception:
+            try:
+                base.playSfx(sfx)
+            except Exception:
+                pass
+
+    def __playOptionalActorPose(self, animName):
+        if not self._useActor or self.toonActor is None:
+            return
+        try:
+            self.toonActor.play(animName)
+        except Exception:
+            try:
+                self.toonActor.loop(animName)
+            except Exception:
+                pass
+
+    def __playAttackHitFlash(self):
+        """Brief ink flash so corrupt smacks read without a combat HUD."""
+        self.__clearAttackFlash()
+        try:
+            cm = CardMaker('corrupt-attack-hit-flash')
+            cm.setFrame(-2, 2, -2, 2)
+            np = aspect2d.attachNewNode(cm.generate())
+            color = CorruptionGlobals.ATTACK_HIT_FLASH_COLOR
+            np.setTransparency(TransparencyAttrib.MAlpha)
+            np.setColor(color[0], color[1], color[2], 1)
+            np.setColorScale(1, 1, 1, 0)
+            np.setBin('fixed', 58)
+            np.setDepthTest(False)
+            np.setDepthWrite(False)
+            self._attackFlashNP = np
+            peak = CorruptionGlobals.ATTACK_HIT_FLASH_PEAK
+            self._attackFlashIval = Sequence(
+                LerpColorScaleInterval(
+                    np, CorruptionGlobals.ATTACK_HIT_FLASH_IN,
+                    Vec4(1, 1, 1, peak)),
+                LerpColorScaleInterval(
+                    np, CorruptionGlobals.ATTACK_HIT_FLASH_OUT,
+                    Vec4(1, 1, 1, 0)),
+                Func(self.__clearAttackFlash),
+            )
+            self._attackFlashIval.start()
+        except Exception:
+            self.__clearAttackFlash()
+
+    def __clearAttackFlash(self):
+        if self._attackFlashIval is not None:
+            try:
+                self._attackFlashIval.pause()
+            except Exception:
+                pass
+            self._attackFlashIval = None
+        if self._attackFlashNP is not None:
+            try:
+                if not self._attackFlashNP.isEmpty():
+                    self._attackFlashNP.removeNode()
+            except Exception:
+                pass
+            self._attackFlashNP = None
 
     def announceDefeat(self):
         if self._defeatIval is not None:
@@ -353,6 +501,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._telegraphIval is not None:
             self._telegraphIval.finish()
             self._telegraphIval = None
+        if self._attackHitIval is not None:
+            self._attackHitIval.finish()
+            self._attackHitIval = None
+        self.__clearAttackFlash()
         target = self.visualRoot if self.visualRoot is not None else self
         # Satisfying ink splat + purity reclaim flash tied to pollution drop.
         self._defeatIval = Sequence(
