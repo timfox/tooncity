@@ -561,7 +561,7 @@ HIT_SPARK_CREAM_AFTERSHOCK_HALO_COLOR = (1.0, 0.96, 0.78, 1.0)
 # Hit-connect cream wash pulse — soft aspect2d veil after cream spark aftershock
 # (#96). Perfect-dodge / entry / purity cream wash grammar. Quieter than
 # perfect-dodge wash (hits fire more often); cream/pastel only. Toggle
-# HIT_SPARK_CREAM_WASH_ENABLED = False drops wash only.
+# HIT_SPARK_CREAM_WASH_ENABLED = False drops wash (+ wash aftershock).
 HIT_SPARK_CREAM_WASH_ENABLED = True
 HIT_SPARK_CREAM_WASH_DELAY_SEC = 0.36  # after play; after aftershock (0.18)
 HIT_SPARK_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
@@ -572,6 +572,31 @@ HIT_SPARK_CREAM_WASH_PULSE_SEC = 0.09
 HIT_SPARK_CREAM_WASH_HOLD_SEC = 0.06
 HIT_SPARK_CREAM_WASH_OUT_SEC = 0.34
 HIT_SPARK_CREAM_WASH_BIN = 28  # soft veil under soft-lock pulse (25+) / HUD
+
+# Hit-connect cream wash aftershock — residual cream flecks + soft halo after
+# the wash pulse (#134). Same grammar as PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_*
+# (#171) / ENTRY_CREAM_WASH_AFTERSHOCK_* (#132); quieter than perfect-dodge
+# wash aftershock and world-space spark aftershock (#96) — hits fire more
+# often. Cream/pastel only. Toggle
+# HIT_SPARK_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_ENABLED = True
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.22  # after wash starts
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.08)
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_COUNT = 4
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_SIZE = 0.012
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_DRIFT = 0.22
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_FALL = 0.18
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_SEC = 0.28
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.70)
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_BIN = 30  # over wash veil (28)
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.40
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_START = 0.22
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.05
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.24
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.09
+HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 # Combo-finisher slam — bigger rubber-hose than HIT_IMPACT row 2 so the last
 # stretch-punch reads as a readable slam (flat pancake → tall spring → settle).

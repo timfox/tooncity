@@ -2,9 +2,10 @@
 
 Client juice when a stretch-punch lands: short cream spark streaks + ink
 flecks burst at the hit, then a delayed cream spark aftershock, then a soft
-cream wash pulse — layered with the existing impact squash silhouette.
-Cream aftershock + wash are pastel-only (no ink). Toontown spiritual-sequel
-tone only — no keyblades / no KH branding.
+cream wash pulse + residual cream wash aftershock — layered with the
+existing impact squash silhouette. Cream aftershock + wash + wash aftershock
+are pastel-only (no ink). Toontown spiritual-sequel tone only — no keyblades /
+no KH branding.
 """
 
 from math import cos, pi, sin
@@ -27,7 +28,7 @@ from .HitSparkCreamWashFx import HitSparkCreamWashPulse
 
 
 class HitSparkFx(object):
-    """Owns spark burst + cream aftershock + cream wash pulse."""
+    """Owns spark burst + cream aftershock + cream wash + wash aftershock."""
 
     def __init__(self, avatar):
         self.avatar = avatar
@@ -38,7 +39,7 @@ class HitSparkFx(object):
         self._creamWash = None
 
     def play(self, origin=None, hitIndex=0, parent=None):
-        """Spawn cream/ink flecks + cream aftershock + delayed cream wash.
+        """Spawn cream/ink flecks + cream aftershock + delayed cream wash aftershock.
 
         Returns started Sequence or None. `origin` is render-space; defaults
         to the local avatar at HIT_SPARK_LIFT.
@@ -95,19 +96,17 @@ class HitSparkFx(object):
         else:
             burst = Wait(fleckSec + 0.02)
 
-        # Soft cream wash pulse after cream aftershock — perfect-dodge grammar.
+        # Soft cream wash pulse + wash aftershock — perfect-dodge grammar (#171).
         washHold = 0.0
         try:
             wash = HitSparkCreamWashPulse()
             if wash.play() is not None:
                 self._creamWash = wash
-                # Hold teardown beside delayed wash so clear() doesn't
-                # kill the veil mid-pulse (wash self-clears too).
-                washHold = (
+                # Hold teardown beside delayed wash + residual aftershock so
+                # clear() doesn't kill the veil/flecks mid-pulse (wash
+                # self-clears too).
+                washDuration = (
                     float(getattr(
-                        HackSlashConfig, 'HIT_SPARK_CREAM_WASH_DELAY_SEC',
-                        0.36))
-                    + float(getattr(
                         HackSlashConfig, 'HIT_SPARK_CREAM_WASH_IN_SEC',
                         0.05))
                     + float(getattr(
@@ -118,8 +117,27 @@ class HitSparkFx(object):
                         0.06))
                     + float(getattr(
                         HackSlashConfig, 'HIT_SPARK_CREAM_WASH_OUT_SEC',
-                        0.34))
-                    + 0.02)
+                        0.34)))
+                aftershockTail = 0.0
+                if getattr(
+                        HackSlashConfig,
+                        'HIT_SPARK_CREAM_WASH_AFTERSHOCK_ENABLED', True):
+                    aftershockTail = (
+                        float(getattr(
+                            HackSlashConfig,
+                            'HIT_SPARK_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                            0.22))
+                        + float(getattr(
+                            HackSlashConfig,
+                            'HIT_SPARK_CREAM_WASH_AFTERSHOCK_SEC',
+                            0.28))
+                        + 0.05)
+                washHold = (
+                    float(getattr(
+                        HackSlashConfig, 'HIT_SPARK_CREAM_WASH_DELAY_SEC',
+                        0.36))
+                    + max(washDuration, aftershockTail)
+                    + 0.04)
             else:
                 self._creamWash = None
         except Exception:
@@ -138,7 +156,7 @@ class HitSparkFx(object):
         return self._ival
 
     def clear(self):
-        """Stop burst/aftershock/wash and remove every fleck/halo/wash node."""
+        """Stop burst/aftershock/wash/wash-aftershock; remove fleck/halo/wash nodes."""
         if self._ival is not None:
             try:
                 self._ival.pause()

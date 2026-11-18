@@ -1164,7 +1164,7 @@ class MeleeCombatController(DirectObject):
                 pass
 
     def _playHitSpark(self, hitIndex, target=None):
-        """Flecks + cream aftershock + cream wash — layers with squash."""
+        """Flecks + cream aftershock + cream wash aftershock — with squash."""
         origin = None
         lift = float(HackSlashConfig.HIT_SPARK_LIFT)
         if target is not None:
@@ -1177,7 +1177,8 @@ class MeleeCombatController(DirectObject):
             except Exception:
                 origin = None
         try:
-            # HitSparkFx owns aftershock + HitSparkCreamWashPulse.
+            # HitSparkFx owns spark aftershock + HitSparkCreamWashPulse
+            # (wash + residual wash aftershock).
             self._hitSpark.play(origin=origin, hitIndex=hitIndex)
         except Exception:
             pass
