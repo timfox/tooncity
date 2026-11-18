@@ -14,6 +14,7 @@ from direct.interval.IntervalGlobal import (
     Sequence,
     Wait,
 )
+from direct.interval.LerpInterval import LerpFunc
 from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 
@@ -36,7 +37,10 @@ class MeleeCombatController(DirectObject):
         self.busy = False
         self._swingIval = None
         self._hoseIval = None
+        self._hitstopIval = None
+        self._fovIval = None
         self._origScale = None
+        self._baseFov = None
         self.targetFinder = SoftTargetFinder(avatar)
         self._hintNP = None
         self._lockHintNP = None
@@ -68,6 +72,8 @@ class MeleeCombatController(DirectObject):
         taskMgr.remove(self._taskName)  # noqa: F821
         self._finishSwing()
         self._restoreScale()
+        self._clearHitstop()
+        self._restoreFov()
         self.targetFinder.clear()
         self._hideHint()
         self._hideLockHint()
@@ -219,6 +225,115 @@ class MeleeCombatController(DirectObject):
             landed = False
         if landed:
             messenger.send('hackslash-hit', [self.avatar, target, damage, hitIndex])  # noqa: F821
+            self._playHitstop(hitIndex)
+            if hitIndex >= HackSlashConfig.COMBO_LENGTH - 1:
+                self._playFinisherFovPunch()
+
+    def _playHitstop(self, hitIndex):
+        """Brief attack freeze so contacts read as rubber-hose impacts."""
+        self._clearHitstop()
+        stopSec = HackSlashConfig.HITSTOP_SEC[
+            min(hitIndex, len(HackSlashConfig.HITSTOP_SEC) - 1)]
+        # Pause the swing / hose intervals so the hit silhouette sticks.
+        try:
+            if self._swingIval:
+                self._swingIval.pause()
+        except Exception:
+            pass
+        try:
+            if self._hoseIval:
+                self._hoseIval.pause()
+        except Exception:
+            pass
+        name = self.avatar.uniqueName('hackslashHitstop')
+        taskMgr.remove(name)  # noqa: F821
+        taskMgr.doMethodLater(stopSec, self._resumeAfterHitstop, name)  # noqa: F821
+
+    def _resumeAfterHitstop(self, task):
+        try:
+            if self._swingIval:
+                self._swingIval.resume()
+        except Exception:
+            pass
+        try:
+            if self._hoseIval:
+                self._hoseIval.resume()
+        except Exception:
+            pass
+        return Task.done
+
+    def _clearHitstop(self):
+        name = self.avatar.uniqueName('hackslashHitstop')
+        try:
+            taskMgr.remove(name)  # noqa: F821
+        except Exception:
+            pass
+        try:
+            if self._swingIval:
+                self._swingIval.resume()
+        except Exception:
+            pass
+        try:
+            if self._hoseIval:
+                self._hoseIval.resume()
+        except Exception:
+            pass
+
+    def _playFinisherFovPunch(self):
+        """Quick FOV kick on the 3rd hit so finishers feel heavier."""
+        self._restoreFov()
+        try:
+            lens = base.camLens  # noqa: F821
+        except Exception:
+            return
+        try:
+            self._baseFov = lens.getFov()
+            baseFov = float(self._baseFov[0]) if hasattr(self._baseFov, '__getitem__') else float(self._baseFov)
+        except Exception:
+            return
+        punch = HackSlashConfig.FINISHER_FOV_PUNCH
+        peak = baseFov + punch
+
+        def setFov(v):
+            try:
+                lens.setFov(v)
+            except Exception:
+                pass
+
+        self._fovIval = Sequence(
+            LerpFunc(
+                setFov,
+                fromData=baseFov,
+                toData=peak,
+                duration=HackSlashConfig.FINISHER_FOV_IN_SEC),
+            LerpFunc(
+                setFov,
+                fromData=peak,
+                toData=baseFov,
+                duration=HackSlashConfig.FINISHER_FOV_OUT_SEC),
+            Func(self._restoreFov),
+            name=self.avatar.uniqueName('hackslashFovPunch'),
+        )
+        self._fovIval.start()
+
+    def _restoreFov(self):
+        if self._fovIval:
+            try:
+                self._fovIval.pause()
+            except Exception:
+                pass
+            self._fovIval = None
+        if self._baseFov is None:
+            return
+        try:
+            lens = base.camLens  # noqa: F821
+            if hasattr(self._baseFov, '__getitem__'):
+                lens.setFov(self._baseFov[0], self._baseFov[1])
+            else:
+                lens.setFov(self._baseFov)
+        except Exception:
+            pass
+        self._baseFov = None
 
     def _inHitRange(self, target):
         dist = self.targetFinder._distance(target)
