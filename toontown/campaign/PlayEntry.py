@@ -67,7 +67,7 @@ class PlayEntryClient(DirectObject):
         act = self._actForZone(zoneId)
         name = act['name'] if act else 'this street'
         self._showTip(
-            'CORRUPTION on %s — Press F to fight  |  R reclaim  |  C campaign'
+            'CORRUPTION on %s — F fight  |  Shift dodge  |  R reclaim  |  C campaign'
             % name)
         self.accept('r', self._requestReclaim)
         self.accept('c', self._requestCampaign)
