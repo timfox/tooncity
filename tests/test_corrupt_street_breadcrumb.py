@@ -3,7 +3,8 @@
 
 Loads pure helpers from CorruptStreetBreadcrumb via AST extraction (no
 Panda3D). Covers streetNeedsBreadcrumb pollution/seed rules used by hub
-discoverability (#192) and placemarker notice-pulse timing.
+discoverability (#192), placemarker notice-pulse timing (#211), and the
+distinct tunnel-mouth crumb-trail pulse.
 
 Run from repo root:
   python3 tests/test_corrupt_street_breadcrumb.py
@@ -26,10 +27,12 @@ def _extract_pure_helpers():
     path = REPO_ROOT / BREADCRUMB_REL
     src = path.read_text(encoding='utf-8')
     tree = ast.parse(src, filename=BREADCRUMB_REL)
-    # placemarkerPulseParams closes over module pulse constants — bind them.
+    # Pulse helpers close over module constants — bind them.
     const_names = {
         '_PULSE_PEAK', '_PULSE_HALF_SEC', '_PULSE_BEATS', '_PULSE_GAP_SEC',
         '_MARKER_SCALE',
+        '_CRUMB_PULSE_PEAK', '_CRUMB_PULSE_HALF_SEC', '_CRUMB_PULSE_GAP_SEC',
+        '_CRUMB_STAGGER_SEC', '_CRUMB_COUNT', '_CRUMB_SCALE',
     }
     keep = []
     for node in tree.body:
@@ -39,7 +42,9 @@ def _extract_pure_helpers():
                     keep.append(node)
                     break
         elif isinstance(node, ast.FunctionDef) and node.name in (
-                'streetNeedsBreadcrumb', 'placemarkerPulseParams'):
+                'streetNeedsBreadcrumb',
+                'placemarkerPulseParams',
+                'streetBreadcrumbPulseParams'):
             keep.append(node)
     if not any(
             isinstance(n, ast.FunctionDef) and n.name == 'streetNeedsBreadcrumb'
@@ -49,11 +54,21 @@ def _extract_pure_helpers():
             isinstance(n, ast.FunctionDef) and n.name == 'placemarkerPulseParams'
             for n in keep):
         raise AssertionError('placemarkerPulseParams not found in %s' % BREADCRUMB_REL)
+    if not any(
+            isinstance(n, ast.FunctionDef)
+            and n.name == 'streetBreadcrumbPulseParams'
+            for n in keep):
+        raise AssertionError(
+            'streetBreadcrumbPulseParams not found in %s' % BREADCRUMB_REL)
     mod = ast.Module(body=keep, type_ignores=[])
     ast.fix_missing_locations(mod)
     ns = {}
     exec(compile(mod, BREADCRUMB_REL, 'exec'), ns)  # noqa: S102 — test harness
-    return ns['streetNeedsBreadcrumb'], ns['placemarkerPulseParams']
+    return (
+        ns['streetNeedsBreadcrumb'],
+        ns['placemarkerPulseParams'],
+        ns['streetBreadcrumbPulseParams'],
+    )
 
 
 class CorruptStreetBreadcrumbTest(unittest.TestCase):
@@ -63,9 +78,10 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
     def setUpClass(cls):
         # Store on the class dict under a private name so Python does not
         # bind the helper as an instance method (which would shift args).
-        needs, pulse = _extract_pure_helpers()
+        needs, pulse, crumb_pulse = _extract_pure_helpers()
         cls._needs = staticmethod(needs)
         cls._pulse = staticmethod(pulse)
+        cls._crumb_pulse = staticmethod(crumb_pulse)
         cls.src = (REPO_ROOT / BREADCRUMB_REL).read_text(encoding='utf-8')
         cls.tree = ast.parse(cls.src, filename=BREADCRUMB_REL)
 
@@ -95,6 +111,7 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'reclaimStreetEntries',
                 'streetNeedsBreadcrumb',
                 'placemarkerPulseParams',
+                'streetBreadcrumbPulseParams',
                 'CorruptStreetBreadcrumb',
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
@@ -115,6 +132,15 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 '_PULSE_HIGHLIGHT',
                 '_PULSE_GAP_SEC'):
             self.assertIn(needle, self.src, msg='missing pulse cue %s' % needle)
+        # Distinct tunnel-mouth crumb trail pulse (not placemarker #211).
+        for needle in (
+                '_attachCrumbTrail',
+                '_startCrumbPulseLoop',
+                '_buildCrumbPulseIval',
+                'streetBreadcrumbPulseParams',
+                '_CRUMB_PULSE_GAP_SEC',
+                'corruptStreetCrumbTrail'):
+            self.assertIn(needle, self.src, msg='missing crumb pulse %s' % needle)
         # No KH branding / magic-word discoverability.
         src_l = self.src.lower()
         self.assertNotIn('keyblade', src_l)
@@ -133,6 +159,23 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         self.assertGreaterEqual(params['gapSec'], 2.0)
         self.assertLessEqual(params['gapSec'], 8.0)
         self.assertGreater(params['baseScale'], 0.5)
+
+    def test_street_breadcrumb_pulse_params_distinct(self):
+        placemarker = self._pulse()
+        crumb = self._crumb_pulse()
+        self.assertGreater(crumb['peak'], 1.0)
+        self.assertLess(crumb['peak'], 1.6)
+        self.assertGreater(crumb['halfSec'], 0.04)
+        self.assertLessEqual(crumb['halfSec'], 0.30)
+        self.assertGreaterEqual(crumb['count'], 2)
+        self.assertLessEqual(crumb['count'], 5)
+        self.assertGreaterEqual(crumb['staggerSec'], 0.05)
+        self.assertLess(crumb['staggerSec'], 0.4)
+        self.assertGreater(crumb['baseScale'], 0.2)
+        # Crumb trail is snappier / denser than overhead placemarker pulse.
+        self.assertLess(crumb['gapSec'], placemarker['gapSec'])
+        self.assertLess(crumb['halfSec'], placemarker['halfSec'])
+        self.assertNotEqual(crumb['peak'], placemarker['peak'])
 
     def test_tt_playground_wires_breadcrumbs(self):
         playground = (
