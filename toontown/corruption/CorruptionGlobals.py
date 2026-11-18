@@ -266,6 +266,37 @@ BRUTE_SPIT_BLOB_SCALE = 0.55
 BRUTE_SPIT_BLOB_TRAVEL = 0.28
 BRUTE_SPIT_BLOB_Z = 2.4
 
+# Sludge Brute telegraph spit-gob pop — short rubber-hose green spit charge on
+# announceAttackTelegraph (client only). Distinct from hit-time BRUTE_SPIT_BLOB_*
+# travel and from generic TELEGRAPH_INK_DRIP sludge drips: forward spit silhouette.
+BRUTE_TELEGRAPH_SPIT_LOOK = {
+    'id': 'sludge-spit-gob',
+    'lift': 2.55,
+    'scale': 1.0,
+    'peakAlpha': 0.97,
+    'fadeInSec': 0.04,
+    'holdSec': 0.16,
+    'fadeOutSec': 0.24,
+    'squash': (1.65, 1.0, 0.42),
+    'stretch': (0.55, 1.0, 2.15),
+    'squashSec': 0.05,
+    'stretchSec': 0.12,
+    'settleSec': 0.14,
+    'wobbleDeg': 12.0,
+    'gobHalf': 0.38,
+    'rimScale': 1.28,
+    'hotHalf': 0.14,
+    'gobColor': (0.22, 0.85, 0.28, 1.0),
+    'rimColor': (0.55, 1.2, 0.42, 1.0),
+    'flashColor': (0.55, 1.35, 0.4, 1.0),
+    'dropletCount': 4,
+    'dropletHalf': 0.1,
+    'dropletSec': 0.3,
+    'dropletSpread': 1.05,
+    'dropletColor': (0.35, 0.95, 0.3, 0.9),
+    'binSort': 44,
+}
+
 # Balloon Snare string-lash — warm amber, horizontal rubber stretch, vine zip.
 # Reads opposite Brute spit (tall green) and Smudge melee (purple squash).
 SNARE_TELEGRAPH_CHARGE_COLOR = (2.35, 1.45, 0.35, 1.0)
