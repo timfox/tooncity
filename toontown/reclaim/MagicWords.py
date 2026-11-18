@@ -56,32 +56,28 @@ class StartReclaim(MagicWord):
         'settling pure-cream flecks past #266 so the finish reads juicier '
         'still (taller stretch + deeper downward cream, not wave-start '
         'rising squash hose, lock soft green scale, mid-wave rim, or '
-        'wave-clear sparkle). Pair with '
+        'wave-clear sparkle). Soft-gates Punchline / Silly STREET_PACKS '
+        'behind campaign act unlock (Loopy stays open); pass "force" to '
+        'bypass for demos. Pair with '
         '~hackslash 0 for melee without demo dummies.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'
     affectRange = [MagicWordConfig.AFFECT_SELF]
-    arguments = []
+    arguments = [
+        ('force', str, ''),
+    ]
 
     def handleWord(self, invoker, avId, toon, *args):
+        forceToken = ''
+        if args:
+            forceToken = str(args[0]).strip().lower()
+        force = forceToken in ('force', '1', 'true', 'yes')
         zoneId = toon.zoneId
-        directors = _directors(self.air)
-        existing = directors.get(zoneId)
-        if existing is not None and not existing.isDeleted():
-            if existing.state == ReclaimGlobals.STATE_ACTIVE:
-                return 'Reclaim already active in zone %s.' % zoneId
-            existing.requestDelete()
-            directors.pop(zoneId, None)
-
-        director = DistributedReclaimDirectorAI(self.air, zoneId=zoneId)
-        director.generateWithRequired(zoneId)
-        directors[zoneId] = director
-        packKwargs = ReclaimGlobals.streetPackParams(zoneId)
-        director.start(
-            zoneId,
-            (toon.getX(), toon.getY(), toon.getZ()),
-            toon.getH(),
-            **packKwargs)
+        msg = DistributedReclaimDirectorAI.startStreetPackForToon(
+            self.air, toon, force=force)
+        # Enrich started replies with pack scalars for moderator demos.
+        if not str(msg).startswith('Reclaim started'):
+            return msg
         pack = ReclaimGlobals.streetPack(zoneId) or {}
         packId = pack.get('packId') or 'default'
         seed = pack.get(

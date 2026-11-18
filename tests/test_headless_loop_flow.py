@@ -458,12 +458,18 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(self.camp.STATE_VICTORY, 2)
         self.assertEqual(self.camp.STATE_NAMES[self.camp.STATE_VICTORY], 'victory')
 
-        # Pollution manager prefers live campaign when attaching street events.
+        # Pollution manager R path delegates soft-gate + campaign prefer.
         pollution_src = _read('toontown/corruption/PollutionManagerAI.py')
+        self.assertIn('startStreetPackForToon', pollution_src)
         self.assertIn('startCampaign', pollution_src)
-        self.assertIn('STATE_ACTIVE', pollution_src)
         self.assertIn('markStreetSecured', pollution_src)
         self.assertIn('markStreetContested', pollution_src)
+        reclaim_director_src = _read(
+            'toontown/reclaim/DistributedReclaimDirectorAI.py')
+        self.assertIn('startStreetPackForToon', reclaim_director_src)
+        self.assertIn('streetPackUnlocked', reclaim_director_src)
+        self.assertIn('STATE_ACTIVE', reclaim_director_src)
+        self.assertIn('unlockedThrough', reclaim_director_src)
 
     def test_oswald_twist_hooks_and_fx_modules(self):
         camp = self.camp
