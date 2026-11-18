@@ -32,6 +32,17 @@ FINISHER_FOV_PUNCH = 12.0
 FINISHER_FOV_IN_SEC = 0.06
 FINISHER_FOV_OUT_SEC = 0.18
 
+# Soft-lock camera / facing nudge while melee is enabled (per-tick lerp).
+# Keep mild so smart-cam + locomotion stay in control.
+LOCK_FACE_LERP = 0.12
+LOCK_CAM_LERP = 0.08
+LOCK_CAM_LOOK_HEIGHT = 1.4
+
+# Brief aspect2d white flash on connect (beyond hitstop).
+HIT_FLASH_PEAK_ALPHA = 0.38
+HIT_FLASH_IN_SEC = 0.03
+HIT_FLASH_OUT_SEC = 0.10
+
 # Squash / stretch pulses (scale xyz multipliers over short windows).
 # Read as exaggerated rubber-hose hit frames, not realistic physics.
 HOSE_SQUASH = (
@@ -54,4 +65,6 @@ DEMO_HOSTILE_HP = 40
 DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
-DEMO_HINT = 'Hack-Slash demo: press F (or LMB) to melee  |  ~hackslash to toggle'
+DEMO_HINT = (
+    'Hack-Slash: F/LMB melee  |  soft-lock cam nudge  |  hit flash  |  ~hackslash'
+)
