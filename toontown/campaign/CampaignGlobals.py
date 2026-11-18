@@ -299,6 +299,30 @@ VICTORY_CREAM_STREAMER_COLORS = (
     (1.0, 0.92, 0.72, 0.88),
 )
 
+# Cream sparkle flecks layered on victory cream confetti swell (#82).
+# Soft cream/pastel glitter above cream chips/streamers on the purity cheer
+# only — same family as hood handoff cream sparkle (#99), scaled for the
+# wider victory swell. Clears with the swell before Oswald twist /
+# FinalePhaseFx reveal. No keyblades / KH branding.
+VICTORY_CREAM_SPARKLE_ENABLED = True
+VICTORY_CREAM_SPARKLE_COUNT = 10
+VICTORY_CREAM_SPARKLE_STREAK_COUNT = 5
+VICTORY_CREAM_SPARKLE_SIZE = 0.018
+VICTORY_CREAM_SPARKLE_STREAK_SIZE = 0.013
+VICTORY_CREAM_SPARKLE_DRIFT = 0.58
+VICTORY_CREAM_SPARKLE_SEC = 0.88
+# Above swell chips (bin+2) / streamers (bin+1) so glitter reads on top.
+VICTORY_CREAM_SPARKLE_BIN = 65
+# Cream / soft pastel only — matches victory swell warmth.
+VICTORY_CREAM_SPARKLE_COLORS = (
+    (1.0, 0.97, 0.84, 0.95),
+    (1.0, 0.94, 0.70, 0.92),
+    (0.98, 0.92, 0.58, 0.90),
+    (1.0, 0.98, 0.90, 0.90),
+    (0.96, 0.88, 0.64, 0.88),
+    (1.0, 0.90, 0.74, 0.90),
+)
+
 # Explicit Oswald twist after P2 clear (shown after purity victory flash).
 FINALE_TWIST_TEASE = 'Victory…? Oswald caused the corruption.'
 FINALE_TWIST_TEASE_COLOR = (1.0, 0.55, 0.35, 1.0)
