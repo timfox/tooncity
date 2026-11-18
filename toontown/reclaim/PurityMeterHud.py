@@ -984,9 +984,9 @@ class PurityMeterHud(object):
         popParts = []
         if self._root is not None and not self._root.isEmpty():
             popScale = float(getattr(
-                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SCALE', 1.18))
+                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SCALE', 1.20))
             popSec = float(getattr(
-                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SEC', 0.11))
+                ReclaimGlobals, 'SECURED_LOCK_METER_POP_SEC', 0.12))
             try:
                 baseScale = self._root.getScale()
                 try:

@@ -2,10 +2,10 @@
 """Behavioral headless tests for further-deepened secured-lock sparkle sting.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-SECURED_LOCK_SPARKLE / AFTERSHOCK / STING tunables past #243, rubber-hose
+SECURED_LOCK_SPARKLE / AFTERSHOCK / STING tunables past #261, rubber-hose
 (non-KH) copy, and AST hooks on SecuredLockSparkleFx + reclaim director /
 meter confirm. Distinct from wave-hose cream deepen (#239), wave-clear
-sparkle (#253), and rim-flash cream (#234).
+sparkle (#253/#273), and rim-flash cream (#234).
 
 Run from repo root:
   python3 tests/test_secured_lock_sparkle_sting.py
@@ -92,25 +92,25 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
     def setUpClass(cls):
         cls.rg = _load_reclaim_globals()
 
-    def test_sparkle_sting_tunables_deepened_past_243(self):
+    def test_sparkle_sting_tunables_deepened_past_261(self):
         rg = self.rg
         self.assertIs(rg.SECURED_LOCK_SPARKLE_ENABLED, True)
         self.assertIs(rg.SECURED_LOCK_STING_ENABLED, True)
         self.assertIs(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_ENABLED, True)
-        # Juicier than #243 deepen (10 / 0.34 / 1.24 / aftershock 4 / halo 1.16).
-        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_COUNT, 11)
-        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_RISE), 0.38)
-        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_SEC), 0.38)
-        self.assertGreater(float(rg.SECURED_LOCK_SPARKLE_POP), 1.24)
-        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT, 5)
+        # Juicier than #261 deepen (12 / 0.40 / 1.32 / aftershock 5 / halo 1.22).
+        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_COUNT, 13)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_RISE), 0.42)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_SPARKLE_SEC), 0.42)
+        self.assertGreater(float(rg.SECURED_LOCK_SPARKLE_POP), 1.32)
+        self.assertGreaterEqual(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_COUNT, 6)
         self.assertGreaterEqual(
-            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC), 0.32)
+            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_SEC), 0.36)
         self.assertTrue(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_ENABLED)
         self.assertGreaterEqual(
-            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK), 1.18)
+            float(rg.SECURED_LOCK_SPARKLE_AFTERSHOCK_HALO_PEAK), 1.24)
         self.assertGreater(rg.SECURED_LOCK_STING_VOLUME, 0.0)
         self.assertLess(rg.SECURED_LOCK_STING_VOLUME, rg.PURITY_STING_VOLUME)
-        self.assertGreaterEqual(float(rg.SECURED_LOCK_METER_POP_SCALE), 1.15)
+        self.assertGreaterEqual(float(rg.SECURED_LOCK_METER_POP_SCALE), 1.18)
         # Green-cream lock glitter — greener than sunny wave-clear cream.
         sparkle = rg.SECURED_LOCK_SPARKLE_COLOR
         wave = rg.WAVE_CLEAR_CREAM_SPARKLE_COLOR
@@ -158,7 +158,7 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         self.assertIn('reclaimSecuredLockSparkle', src)
         self.assertIn('reclaimSecuredLockSparkleAftershock', src)
         self.assertIn('reclaimSecuredLockSting', src)
-        self.assertIn('#243', src)
+        self.assertIn('#261', src)
         self.assertIn('#253', src)
         lower = src.lower()
         self.assertIn('no kh', lower)
@@ -224,7 +224,7 @@ class SecuredLockSparkleStingTest(unittest.TestCase):
         self.assertGreater(idx, 0)
         snip = rg_src[max(0, idx - 700):idx + 200].lower()
         self.assertIn('no kh', snip)
-        self.assertIn('#243', snip)
+        self.assertIn('#261', snip)
         self.assertTrue(
             '#253' in snip or 'wave-clear' in snip,
             msg='lock sparkle comment should stay distinct from wave-clear')
