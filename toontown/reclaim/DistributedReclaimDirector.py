@@ -459,7 +459,8 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         if self._purityMeter is not None:
             self._purityMeter.update(
                 self.pollutionHint, finalePhase=self.finalePhase)
-        # Rubber-hose cream wash on street geom + soft veil as purity fills.
+        # Rubber-hose cream wash on street geom + soft veil as purity fills
+        # (StreetColorWash also owns delayed cream aftershock on advances).
         if self._streetWash is not None and self.state == ReclaimGlobals.STATE_ACTIVE:
             self._streetWash.setActive(True, zoneId=zoneId)
             self._streetWash.update(zoneId, self.pollutionHint)
