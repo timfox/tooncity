@@ -14,6 +14,7 @@ from toontown.corruption.BalloonSnareTelegraphFx import BalloonSnareTelegraphStr
 from toontown.corruption.BruteSpitTelegraphFx import BruteSpitTelegraphGob
 from toontown.corruption.CorruptTelegraphInkFx import TelegraphInkDrip
 from toontown.corruption.HackSlashTarget import HackSlashTarget
+from toontown.corruption.IdleInkDripFx import IdleInkDrip
 from toontown.corruption.OverlordTelegraphCrownFx import OverlordTelegraphCrown
 from toontown.corruption.SmudgeInkTelegraphFx import SmudgeInkTelegraphFist
 
@@ -64,6 +65,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._stringLashNP = None
         self._deathPopSplat = None
         self._telegraphInkDrip = None
+        self._idleInkDrip = None
         self._overlordCrown = None
         self._snareTelegraphString = None
         self._bruteTelegraphSpit = None
@@ -80,6 +82,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.reparentTo(render)
         self.__applyArchetypeLook()
         self.__startInkPulse()
+        self.__startIdleInkDrip()
 
     def disable(self):
         self.__stopIntervals()
@@ -128,6 +131,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSpitBlob()
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
+        self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
@@ -364,6 +368,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
     def setArchetype(self, archetype):
         self.archetype = int(archetype)
         self.__applyArchetypeLook()
+        # Retint ambient idle drips when archetype arrives after generate.
+        if getattr(self, '_idleInkDrip', None) is not None:
+            self.__startIdleInkDrip()
 
     def getArchetype(self):
         return int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
@@ -472,6 +479,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             stretch = Point3(0.62, 0.62, 1.7)
         self.__playOptionalActorPose('angry')
         self.__playTelegraphSfx()
+        # Pause ambient idle drips so telegraph splat/drip owns the frame.
+        self.__pauseIdleInkDrip()
         self.__playTelegraphInkDrip(look)
         # Ink Smudge-only: purple ink-fist telegraph pop for melee wind-up read.
         if (not look) and (not isBrute) and (not isSnare):
@@ -610,6 +619,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
     def __resumePulse(self):
         if self._pulseIval is not None and not self._defeatedHidden():
             self._pulseIval.resume()
+        # Ambient pollution drips resume with the idle pulse between telegraphs.
+        self.__resumeIdleInkDrip()
 
     def _defeatedHidden(self):
         return self.isHidden() or self.hp <= 0
@@ -924,6 +935,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearSpitBlob()
         self.__clearStringLash()
         self.__clearTelegraphInkDrip()
+        self.__clearIdleInkDrip()
         self.__clearOverlordTelegraphCrown()
         self.__clearSnareTelegraphString()
         self.__clearBruteTelegraphSpit()
@@ -982,6 +994,50 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             except Exception:
                 pass
         self._telegraphInkDrip = None
+
+    def __startIdleInkDrip(self):
+        """Ambient pollution drips between telegraphs (client-only presence)."""
+        self.__clearIdleInkDrip()
+        if self._defeatedHidden():
+            return
+        parent = self.visualRoot if self.visualRoot is not None else self
+        look, _phase = self.__finalePhaseLook()
+        drip = IdleInkDrip()
+        self._idleInkDrip = drip
+        drip.start(
+            parent,
+            archetype=self.getArchetype(),
+            finaleLook=look,
+        )
+
+    def __pauseIdleInkDrip(self):
+        drip = getattr(self, '_idleInkDrip', None)
+        if drip is not None:
+            try:
+                drip.pause()
+            except Exception:
+                pass
+
+    def __resumeIdleInkDrip(self):
+        if self._defeatedHidden():
+            return
+        drip = getattr(self, '_idleInkDrip', None)
+        if drip is None:
+            self.__startIdleInkDrip()
+            return
+        try:
+            drip.resume()
+        except Exception:
+            self.__startIdleInkDrip()
+
+    def __clearIdleInkDrip(self):
+        drip = getattr(self, '_idleInkDrip', None)
+        if drip is not None:
+            try:
+                drip.clear()
+            except Exception:
+                pass
+        self._idleInkDrip = None
 
     def __playOverlordTelegraphCrown(self, finaleLook=None, phase=1):
         """Ink crown / silhouette flash — Overlord phase telegraphs only."""

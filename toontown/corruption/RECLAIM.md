@@ -86,9 +86,11 @@ Manual pollution tools still work: `~pollute`, `~purify`, `~spawncorrupt`.
 ~spawncorrupt 2
 ~hackslash 0
 # CorruptToons prefer ink-tinted Toon Actor silhouettes (DNA clone of you
-# when available), else improved card limbs. Chase AI unchanged; telegraph
-# wind-up plays a short ink drip / splat pop (CorruptTelegraphInkFx) plus
-# squash/SFX so wind-ups read without a combat HUD; impact flash on hit.
+# when available), else improved card limbs. Chase AI unchanged; between
+# telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
+# presence. Telegraph wind-up pauses idle drips and plays a short ink
+# drip / splat pop (CorruptTelegraphInkFx) plus squash/SFX so wind-ups
+# read without a combat HUD; impact flash on hit.
 # Ink Smudge also flashes purple ink-fist telegraph pop (SmudgeInkTelegraphFx).
 # Melee (F / LMB) splat-defeats them (CorruptDeathPopFx scale burst +
 # ink/sludge/balloon droplet spray); purity pop + pollution drop.
