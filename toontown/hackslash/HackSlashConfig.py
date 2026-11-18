@@ -601,48 +601,49 @@ HURT_RECOVERY_CANCEL_WINDOW_SEC = 0.38
 HURT_RECOVERY_CANCEL_BUFFER = True
 
 # Hurt-stagger cream wash pulse — soft aspect2d veil during committed stagger
-# (#199 / #215) so the smack still reads juicy before F/Shift cancel opens.
-# Hit / perfect-dodge / soft-lock FOV cream wash grammar. Deepened so getting
-# hit and recovering reads juicier: brighter peak + longer mid hold. Quieter
-# than hit-connect wash (smacks fire often); peaks before HURT_STAGGER_SEC.
-# Cream/pastel only. Distinct from dodge-cancel cream flash deepen (#242) —
-# fires on smack stagger, not Shift→F cancel — and from i-frame cream wash
-# deepen (#228) — settles during hurt lockout, not mid-roll invuln. Toggle
+# (#199 / #215 / #247) so the smack still reads juicy before F/Shift cancel
+# opens. Hit / perfect-dodge / soft-lock FOV cream wash grammar. Deepened past
+# #247 so getting hit and recovering reads juicier still: brighter peak +
+# longer mid hold + richer residual. Quieter than hit-connect wash (smacks
+# fire often); peaks before HURT_STAGGER_SEC. Cream/pastel only. Distinct from
+# dodge-cancel cream flash deepen (#242 / #257) — fires on smack stagger, not
+# Shift→F cancel — and from i-frame cream wash deepen (#228) — settles during
+# hurt lockout, not mid-roll invuln. Toggle
 # HURT_STAGGER_CREAM_WASH_ENABLED = False drops wash (+ wash aftershock).
 HURT_STAGGER_CREAM_WASH_ENABLED = True
 HURT_STAGGER_CREAM_WASH_DELAY_SEC = 0.04  # early in stagger; before cancel open
 HURT_STAGGER_CREAM_WASH_COLOR = (1.0, 0.97, 0.82)  # sunny cream
-HURT_STAGGER_CREAM_WASH_PEAK = 0.095
-HURT_STAGGER_CREAM_WASH_MID = 0.055
+HURT_STAGGER_CREAM_WASH_PEAK = 0.098
+HURT_STAGGER_CREAM_WASH_MID = 0.065
 HURT_STAGGER_CREAM_WASH_IN_SEC = 0.04
-HURT_STAGGER_CREAM_WASH_PULSE_SEC = 0.09
-HURT_STAGGER_CREAM_WASH_HOLD_SEC = 0.07
-HURT_STAGGER_CREAM_WASH_OUT_SEC = 0.34
+HURT_STAGGER_CREAM_WASH_PULSE_SEC = 0.10
+HURT_STAGGER_CREAM_WASH_HOLD_SEC = 0.085
+HURT_STAGGER_CREAM_WASH_OUT_SEC = 0.38
 HURT_STAGGER_CREAM_WASH_BIN = 27  # under hit wash (28) / soft-lock pulse
 
 # Hurt-stagger cream wash aftershock — residual cream flecks + soft halo after
 # the wash pulse. Same grammar as HIT_SPARK_CREAM_WASH_AFTERSHOCK_* (#174) /
-# PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_* (#171); deepened so recovery still
-# reads after the veil (more flecks + stronger halo), quieter + earlier so
-# flecks settle near cancel open. Cream/pastel only. Toggle
+# PERFECT_DODGE_CREAM_WASH_AFTERSHOCK_* (#171); deepened past #247 so recovery
+# still reads after the veil (more flecks + stronger halo), quieter + earlier
+# so flecks settle near cancel open. Cream/pastel only. Toggle
 # HURT_STAGGER_CREAM_WASH_AFTERSHOCK_ENABLED = False drops aftershock only.
 HURT_STAGGER_CREAM_WASH_AFTERSHOCK_ENABLED = True
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.10  # after wash starts
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DELAY_SEC = 0.09  # after wash starts
 HURT_STAGGER_CREAM_WASH_AFTERSHOCK_ORIGIN = (0.0, 0.0, -0.08)
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT = 4
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SIZE = 0.013
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DRIFT = 0.22
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_FALL = 0.18
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SEC = 0.28
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.72)
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT = 5
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SIZE = 0.015
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_DRIFT = 0.26
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_FALL = 0.20
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_SEC = 0.32
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COLOR = (1.0, 0.97, 0.78, 0.78)
 HURT_STAGGER_CREAM_WASH_AFTERSHOCK_END_COLOR = (1.0, 0.93, 0.58, 0.0)
 HURT_STAGGER_CREAM_WASH_AFTERSHOCK_BIN = 29  # over hurt wash veil (27)
 HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_ENABLED = True
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.40
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_START = 0.24
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.12
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.24
-HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.10
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_HALF = 0.44
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_START = 0.28
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK = 1.25
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_SEC = 0.28
+HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_PEAK_ALPHA = 0.12
 HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_COLOR = (1.0, 0.97, 0.82, 1.0)
 
 
@@ -1253,6 +1254,6 @@ DEMO_HINT = (
     'Stretch punches: F/LMB  |  combo cream edge  |  '
     'Shift/X dodge i-frame cream wash  |  '
     'dodge→F cream flash deepen+  |  perfect dodge→F counter  |  '
-    'Snare string→F counter  |  juggle→F slam  |  hurt cream wash deepen→F/Shift  |  '
+    'Snare string→F counter  |  juggle→F slam  |  hurt cream wash deepen+→F/Shift  |  '
     'Tab/` soft-lock cycle cream  |  hit soft-lock aim cream deepen  |  ~melee'
 )
