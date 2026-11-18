@@ -2748,6 +2748,49 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('dodgeCancelCreamWashPeakAtSec', hack_init)
         self.assertIn('dodgeCancelCreamWashAftershockAtSec', hack_init)
 
+        # Hurt-stagger cream wash deepen (#215 deepen) — juicier smack→recovery
+        # wash + residual aftershock. Distinct from dodge-cancel flash (#242) /
+        # i-frame cream (#228).
+        hurt_wash_rel = 'toontown/hackslash/HurtStaggerCreamWashFx.py'
+        _assert_module_file(hurt_wash_rel)
+        hurt_wash_names = _class_and_func_names(_module_ast(hurt_wash_rel))
+        self.assertIn('HurtStaggerCreamWashPulse', hurt_wash_names)
+        hurt_wash_methods = _class_method_names(
+            _module_ast(hurt_wash_rel), 'HurtStaggerCreamWashPulse')
+        self.assertIn('play', hurt_wash_methods)
+        self.assertIn('clear', hurt_wash_methods)
+        self.assertIn('_buildAftershock', hurt_wash_methods)
+        self.assertIn('_spawnAftershockHalo', hurt_wash_methods)
+        self.assertIn('_spawnAftershockFleck', hurt_wash_methods)
+        for hurt_wash_key in (
+                'HURT_STAGGER_CREAM_WASH_ENABLED',
+                'HURT_STAGGER_CREAM_WASH_PEAK',
+                'HURT_STAGGER_CREAM_WASH_HOLD_SEC',
+                'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_COUNT',
+                'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_BIN'):
+            self.assertIn(
+                hurt_wash_key, config_names,
+                msg='HackSlashConfig missing %s' % hurt_wash_key)
+        hurt_wash_funcs = _class_and_func_names(config_tree)
+        self.assertIn('hurtStaggerCreamWashPeakAtSec', hurt_wash_funcs)
+        self.assertIn('hurtStaggerCreamWashAftershockAtSec', hurt_wash_funcs)
+        hurt_wash_assigns = _assign_map(config_tree)
+        self.assertGreaterEqual(
+            hurt_wash_assigns.get('HURT_STAGGER_CREAM_WASH_PEAK'), 0.095)
+        self.assertGreaterEqual(
+            hurt_wash_assigns.get('HURT_STAGGER_CREAM_WASH_HOLD_SEC'), 0.07)
+        self.assertIs(
+            hurt_wash_assigns.get(
+                'HURT_STAGGER_CREAM_WASH_AFTERSHOCK_ENABLED'),
+            True)
+        self.assertIn('HurtStaggerCreamWashPulse', melee_src)
+        self.assertIn('_playHurtCreamWash', melee_src)
+        self.assertIn('HurtStaggerCreamWashPulse', hack_init)
+        self.assertIn('hurtStaggerCreamWashPeakAtSec', hack_init)
+        self.assertIn('hurtStaggerCreamWashAftershockAtSec', hack_init)
+
         # Perfect-dodge counter → melee — rewarded cancel window after perfect
         # dodge into a bumped/snappy stretch-punch opener (builds on #186).
         for pd_counter_key in (
