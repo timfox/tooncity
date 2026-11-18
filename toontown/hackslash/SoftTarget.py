@@ -2,11 +2,59 @@
 
 Prefers HackSlashTarget implementers (demo hostiles / CorruptToon),
 then falls back to street suits as stand-ins for the prototype.
+
+Includes manual soft-lock cycle (next/prev) so players can switch focus
+among sticky-range hostiles during stretch-punch melee — KH-feel targeting
+without KH branding / keyblades.
 """
 
 import math
 
 from . import HackSlashConfig
+
+
+def nextCycleIndex(count, currentIndex, direction=1):
+    """Return the next wraparound index for soft-lock target cycle.
+
+    Pure helper (no Panda) so headless tests can cover cycle math.
+    ``currentIndex`` may be None when nothing is locked yet — then we
+    land on 0 for next / last for prev.
+    """
+    if count <= 0:
+        return None
+    step = 1 if int(direction) >= 0 else -1
+    if currentIndex is None:
+        return 0 if step > 0 else (count - 1)
+    if count == 1:
+        return 0
+    return (int(currentIndex) + step) % count
+
+
+def pickCycleChoice(orderedKeys, currentKey, direction=1):
+    """Pick the next/prev key from an angle-sorted soft-lock candidate list.
+
+    ``orderedKeys`` is already sorted (e.g. by signed yaw then distance).
+    Returns (newKey, snapped) where snapped is True when the lock key
+    actually changes. Empty list → (None, False). Sole matching lock →
+    same key with snapped False (no juice spam).
+    """
+    if not orderedKeys:
+        return None, False
+    try:
+        currentIndex = orderedKeys.index(currentKey) if currentKey in orderedKeys else None
+    except (ValueError, TypeError):
+        currentIndex = None
+    newIndex = nextCycleIndex(len(orderedKeys), currentIndex, direction=direction)
+    if newIndex is None:
+        return None, False
+    newKey = orderedKeys[newIndex]
+    # First acquire onto a candidate counts as a snap; sole already-locked
+    # target does not (avoids re-pop spam when only one hostile is in range).
+    if currentIndex is None:
+        snapped = newKey is not None
+    else:
+        snapped = newKey != currentKey
+    return newKey, bool(snapped)
 
 
 class HackSlashTarget:
@@ -55,6 +103,55 @@ class SoftTargetFinder:
 
     def getLockedKey(self):
         return self._lockedKey
+
+    def cycle(self, direction=1, now=None):
+        """Manually switch soft-lock to the next/prev sticky-range hostile.
+
+        Candidates are ordered by signed yaw around the avatar (then
+        distance) so Tab/` reads as orbiting focus, not a random hop.
+        Sets ``_snapped`` when the lock key changes so reticle/FOV juice
+        fires the same path as a fresh acquire.
+        """
+        if now is None:
+            now = globalClock.getFrameTime()  # noqa: F821
+
+        self._snapped = False
+        scored = []
+        byKey = {}
+        for target in self._iterCandidates():
+            if not self._isValid(target):
+                continue
+            if not self._inCone(
+                    target,
+                    rangeLimit=HackSlashConfig.TARGET_CYCLE_RANGE,
+                    halfAngle=HackSlashConfig.TARGET_CYCLE_HALF_ANGLE_DEG):
+                continue
+            key = self._key(target)
+            byKey[key] = target
+            scored.append((self._signedAngleDeg(target), self._distance(target), key))
+
+        if not scored:
+            self._lockedKey = None
+            self._lockedUntil = 0.0
+            return None
+
+        scored.sort(key=lambda row: (row[0], row[1], str(row[2])))
+        orderedKeys = [row[2] for row in scored]
+        # Fresh Tab with nothing locked: land on nearest sticky hostile
+        # (direction still used once a lock exists for orbit next/prev).
+        if self._lockedKey not in byKey:
+            nearestIdx = min(range(len(scored)), key=lambda i: scored[i][1])
+            newKey = orderedKeys[nearestIdx]
+            snapped = newKey is not None
+        else:
+            newKey, snapped = pickCycleChoice(
+                orderedKeys, self._lockedKey, direction=direction)
+        chosen = byKey.get(newKey) if newKey is not None else None
+        self._lockedKey = newKey
+        self._lockedUntil = (
+            now + HackSlashConfig.TARGET_LOCK_HOLD_SEC if chosen is not None else 0.0)
+        self._snapped = bool(snapped and chosen is not None)
+        return chosen
 
     def acquire(self, now=None):
         if now is None:
@@ -194,6 +291,26 @@ class SoftTargetFinder:
             target,
             rangeLimit=HackSlashConfig.TARGET_STICKY_RANGE,
             halfAngle=HackSlashConfig.TARGET_STICKY_HALF_ANGLE_DEG)
+
+    def _signedAngleDeg(self, target):
+        """Signed yaw (degrees) from avatar forward to target on the XY plane.
+
+        Negative = left, positive = right. Used to order soft-lock cycle
+        candidates so next/prev orbit around Oswald.
+        """
+        toTarget = self._pos(target) - self.avatar.getPos(render)  # noqa: F821
+        toTarget.setZ(0)
+        if toTarget.length() < 0.01:
+            return 0.0
+        toTarget.normalize()
+        forward = self.avatar.getQuat(render).getForward()  # noqa: F821
+        forward.setZ(0)
+        if forward.length() < 0.01:
+            return 0.0
+        forward.normalize()
+        crossZ = forward.getX() * toTarget.getY() - forward.getY() * toTarget.getX()
+        dot = max(-1.0, min(1.0, forward.dot(toTarget)))
+        return math.degrees(math.atan2(crossZ, dot))
 
 
 class SuitHackSlashAdapter(HackSlashTarget):

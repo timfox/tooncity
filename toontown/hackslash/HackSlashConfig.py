@@ -13,6 +13,18 @@ TARGET_LOCK_HOLD_SEC = 3.5
 TARGET_STICKY_RANGE = 18.0
 TARGET_STICKY_HALF_ANGLE_DEG = 95.0
 
+# Soft-lock target cycle — manual next/prev among sticky-range hostiles so
+# players can switch focus mid rubber-hose melee (KH-feel targeting without
+# KH branding / keyblades). Tab next, ` (backquote, beside Tab) prev.
+# Uses sticky cone so mid-fight switches stay readable. Cooldown stops key
+# repeat spam from double-firing snaps.
+TARGET_CYCLE_ENABLED = True
+TARGET_CYCLE_NEXT_KEY = 'tab'
+TARGET_CYCLE_PREV_KEY = '`'
+TARGET_CYCLE_COOLDOWN_SEC = 0.12
+TARGET_CYCLE_RANGE = 18.0
+TARGET_CYCLE_HALF_ANGLE_DEG = 95.0
+
 # Combo: 3 stretch punches, cartoon cadence with overshoot on the finisher.
 COMBO_LENGTH = 3
 COMBO_WINDOW_SEC = 0.55
@@ -768,5 +780,5 @@ DEMO_HOSTILE_NAME = 'Corrupt Dummy'
 
 # On-screen hint while demo mode is active
 DEMO_HINT = (
-    'Stretch punches: F/LMB  |  Shift/X dodge→F  |  soft-lock cam  |  ~melee'
+    'Stretch punches: F/LMB  |  Shift/X dodge→F  |  Tab/` soft-lock cycle  |  ~melee'
 )
