@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Behavioral headless tests for mid-wave purity pressure tip.
+"""Behavioral headless tests for mid-wave purity pressure tip / rim flash.
 
 Imports ReclaimGlobals with a ToontownGlobals stub (no Panda3D). Asserts
-isMidWavePressureContext / purityPressureReason / tip copy, plus AST hooks
-on DistributedReclaimDirector + PurityMeterHud.
+isMidWavePressureContext / purityPressureReason / tip copy, deepened rim
+flash cream tunables, plus AST hooks on DistributedReclaimDirector +
+PurityMeterHud. Distinct from wave-clear sparkle (#229) and purity-complete
+meter hose settle (#225).
 
 Run from repo root:
   python3 tests/test_purity_pressure_tip.py
@@ -158,27 +160,65 @@ class PurityPressureTipTest(unittest.TestCase):
         self.assertIn('warnPressure', methods)
         self.assertIn('_clearPressureWarn', methods)
         self.assertIn('_buildRimWarnPulse', methods)
+        self.assertIn('_buildRimWarnCreamJuice', methods)
+        self.assertIn('_spawnRimWarnCreamFlecks', methods)
+        self.assertIn('_spawnRimWarnCreamHalo', methods)
+        self.assertIn('_clearWarnCream', methods)
         self.assertIn('_setRimWarnColor', methods)
         self.assertIn('_resetRimScale', methods)
         src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('PURITY_PRESSURE_RIM_WARN', src)
         self.assertIn('PURITY_PRESSURE_RIM_FLASH', src)
+        self.assertIn('PURITY_PRESSURE_RIM_FLASH_CREAM', src)
         self.assertIn('reclaimPurityMeterPressureWarn', src)
-        # Danger flash stays distinct from secured-lock celebration.
-        self.assertNotIn('SECURED_LOCK_RIM_COLOR', src.split('def warnPressure')[1].split('def confirmSecured')[0])
+        self.assertIn('reclaimPurityMeterPressureCream', src)
+        # Danger flash stays distinct from secured-lock celebration /
+        # wave-clear sparkle / complete hose settle (warn body only).
+        warn_snip = src.split('def warnPressure')[1].split(
+            'def _buildRimWarnPulse')[0]
+        cream_snip = src.split('def _buildRimWarnCreamJuice')[1].split(
+            'def _setRimWarnColor')[0]
+        for snip in (warn_snip, cream_snip):
+            self.assertNotIn('SECURED_LOCK_RIM_COLOR', snip)
+            self.assertNotIn('SECURED_LOCK_SPARKLE', snip)
+            self.assertNotIn('WAVE_CLEAR_CREAM_SPARKLE', snip)
+            self.assertNotIn('PURITY_COMPLETE_METER_SETTLE', snip)
+            self.assertNotIn('settleComplete', snip)
 
     def test_rim_flash_tunables_are_warm_danger_not_secured_green(self):
         rg = self.rg
         self.assertTrue(rg.PURITY_PRESSURE_RIM_FLASH_ENABLED)
-        self.assertGreaterEqual(int(rg.PURITY_PRESSURE_RIM_FLASH_PULSES), 2)
+        self.assertTrue(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED)
+        # Deepened juice: triple pulse + juicier rim nudge (#213 deepen).
+        self.assertGreaterEqual(int(rg.PURITY_PRESSURE_RIM_FLASH_PULSES), 3)
         warn = rg.PURITY_PRESSURE_RIM_WARN_COLOR
         lock = rg.SECURED_LOCK_RIM_COLOR
         # Warm/orange warn vs green secured — channels must not match.
         self.assertGreater(float(warn[0]), float(warn[1]))
         self.assertGreater(float(lock[1]), float(lock[0]))
         self.assertNotEqual(warn, lock)
-        self.assertGreater(float(rg.PURITY_PRESSURE_RIM_FLASH_SCALE), 1.0)
+        self.assertGreaterEqual(float(rg.PURITY_PRESSURE_RIM_FLASH_SCALE), 1.20)
         self.assertLess(float(rg.PURITY_PRESSURE_RIM_FLASH_HOLD_SEC), 0.5)
+        # Local cream flecks stay warm cream (not secured green glitter).
+        cream = rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR
+        self.assertGreater(float(cream[0]), 0.9)
+        self.assertGreater(float(cream[1]), float(cream[2]))
+        self.assertGreaterEqual(int(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT), 4)
+        self.assertTrue(rg.PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_ENABLED)
+        # Distinct from wave-clear mid-screen sparkle and complete hose settle.
+        self.assertNotEqual(
+            rg.PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR,
+            rg.WAVE_CLEAR_CREAM_SPARKLE_COLOR)
+        self.assertNotEqual(
+            rg.PURITY_PRESSURE_RIM_WARN_COLOR,
+            rg.PURITY_COMPLETE_METER_SETTLE_RIM_COLOR)
+
+    def test_magic_word_mentions_rim_flash_cream(self):
+        src = _read('toontown/reclaim/MagicWords.py').lower()
+        self.assertIn('cream flecks', src)
+        self.assertIn('rim', src)
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'heartless'):
+            self.assertNotIn(banned, src)
 
 
 def main() -> int:

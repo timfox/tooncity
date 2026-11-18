@@ -3183,7 +3183,11 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'PURITY_PRESSURE_RIM_FLASH_ENABLED',
                 'PURITY_PRESSURE_RIM_FLASH_PULSES',
                 'PURITY_PRESSURE_RIM_FLASH_HOLD_SEC',
-                'PURITY_PRESSURE_RIM_FLASH_SCALE'):
+                'PURITY_PRESSURE_RIM_FLASH_SCALE',
+                'PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED',
+                'PURITY_PRESSURE_RIM_FLASH_CREAM_COUNT',
+                'PURITY_PRESSURE_RIM_FLASH_CREAM_COLOR',
+                'PURITY_PRESSURE_RIM_FLASH_CREAM_HALO_ENABLED'):
             self.assertIn(
                 pressure_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % pressure_key)
@@ -3217,13 +3221,25 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             _module_ast('toontown/reclaim/PurityMeterHud.py'), 'PurityMeterHud')
         self.assertIn('warnPressure', pressure_hud_methods)
         self.assertIn('_buildRimWarnPulse', pressure_hud_methods)
+        self.assertIn('_buildRimWarnCreamJuice', pressure_hud_methods)
+        self.assertIn('_spawnRimWarnCreamFlecks', pressure_hud_methods)
+        self.assertIn('_spawnRimWarnCreamHalo', pressure_hud_methods)
+        self.assertIn('_clearWarnCream', pressure_hud_methods)
         self.assertIs(
             pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_ENABLED'), True)
+        self.assertIs(
+            pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_CREAM_ENABLED'),
+            True)
         self.assertGreaterEqual(
-            int(pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_PULSES', 0)), 2)
+            int(pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_PULSES', 0)), 3)
+        self.assertGreaterEqual(
+            float(pressure_assigns.get('PURITY_PRESSURE_RIM_FLASH_SCALE', 0)),
+            1.20)
         pressure_hud_src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('PURITY_PRESSURE_RIM_FLASH', pressure_hud_src)
+        self.assertIn('PURITY_PRESSURE_RIM_FLASH_CREAM', pressure_hud_src)
         self.assertIn('_buildRimWarnPulse', pressure_hud_src)
+        self.assertIn('_buildRimWarnCreamJuice', pressure_hud_src)
 
 
 def main() -> int:
