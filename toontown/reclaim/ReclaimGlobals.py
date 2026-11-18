@@ -220,10 +220,28 @@ PURITY_METER_LABEL_COLOR = (1.0, 0.96, 0.78, 1.0)
 PURITY_METER_PCT_COLOR = (1.0, 1.0, 0.9, 1.0)
 PURITY_METER_PCT_POLLUTED = (0.85, 0.55, 0.95, 1.0)
 PURITY_METER_PCT_PURE = (0.55, 0.95, 0.65, 1.0)
-# Rubber-hose pop when a pack reclaim bumps purity.
+# Rubber-hose tick/fill pop when a pack reclaim bumps purity.
+# Fill: flat squash → tall stretch (X may briefly overshoot purity) → settle.
+# Pct text gets a matching uniform hose tick; cream flecks pop at the fill tip.
 PURITY_METER_POP_THRESHOLD = 0.04
+PURITY_METER_POP_SQUASH = (0.92, 1.0, 0.55, 0.05)   # sx, sy, sz multipliers, sec
+PURITY_METER_POP_STRETCH = (1.06, 1.0, 1.62, 0.07)
+PURITY_METER_POP_SETTLE_SEC = 0.10
+# Legacy single-beat Z peak kept for callers / docs; hose sequence supersedes it.
 PURITY_METER_POP_SEC = 0.09
 PURITY_METER_POP_SCALE_Z = 1.55
+# Pct TextNode tick (multipliers of PURITY_METER_PCT_SCALE).
+PURITY_METER_PCT_POP_SQUASH = (1.45, 1.0, 0.58, 0.05)
+PURITY_METER_PCT_POP_STRETCH = (0.78, 1.0, 1.42, 0.07)
+PURITY_METER_PCT_POP_SETTLE_SEC = 0.09
+# Sunny cream flecks at the advancing fill tip (purity, not ink).
+PURITY_METER_TICK_FLECK_COUNT = 4
+PURITY_METER_TICK_FLECK_SIZE = 0.014
+PURITY_METER_TICK_FLECK_DRIFT = 0.085
+PURITY_METER_TICK_FLECK_SEC = 0.18
+PURITY_METER_TICK_FLECK_COLOR = (1.0, 0.96, 0.62, 0.95)
+PURITY_METER_TICK_FLECK_END_COLOR = (1.0, 0.92, 0.45, 0.0)
+PURITY_METER_TICK_FLECK_BIN = 48
 
 # Reclaim-complete purity burst (HUD overlay + sting).
 # Overlay lives on aspect2d so hood geom tint / fog grade stay untouched.
