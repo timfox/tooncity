@@ -2017,6 +2017,99 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         death_pop_src = _read('toontown/corruption/CorruptDeathPopFx.py')
         self.assertIn('DeathCreamWashPulse', death_pop_src)
 
+        # (#173 was prior headless smoke through #172 — no new juice symbols.)
+
+        # Melee hit cream wash aftershock (#174) — residual after hit wash pulse.
+        hit_wash_methods = _class_method_names(
+            _module_ast(hit_wash_rel), 'HitSparkCreamWashPulse')
+        self.assertIn('_buildAftershock', hit_wash_methods)
+        self.assertIn('_spawnAftershockHalo', hit_wash_methods)
+        self.assertIn('_spawnAftershockFleck', hit_wash_methods)
+        for hit_as_key in (
+                'HIT_SPARK_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'HIT_SPARK_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                'HIT_SPARK_CREAM_WASH_AFTERSHOCK_COUNT',
+                'HIT_SPARK_CREAM_WASH_AFTERSHOCK_COLOR',
+                'HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'HIT_SPARK_CREAM_WASH_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                hit_as_key, config_names,
+                msg='HackSlashConfig missing %s' % hit_as_key)
+        hit_wash_src = _read(hit_wash_rel)
+        self.assertIn('HIT_SPARK_CREAM_WASH_AFTERSHOCK_ENABLED', hit_wash_src)
+        hit_spark_src = _read('toontown/hackslash/HitSparkFx.py')
+        self.assertIn('HitSparkCreamWashPulse', hit_spark_src)
+
+        # Purity-complete aftershock cream wash (#175) — settle wash after aftershock.
+        purity_as_wash_rel = (
+            'toontown/reclaim/PurityCompleteAftershockCreamWashFx.py')
+        _assert_module_file(purity_as_wash_rel)
+        purity_as_wash_names = _class_and_func_names(
+            _module_ast(purity_as_wash_rel))
+        self.assertIn(
+            'PurityCompleteAftershockCreamWashPulse', purity_as_wash_names)
+        purity_as_wash_methods = _class_method_names(
+            _module_ast(purity_as_wash_rel),
+            'PurityCompleteAftershockCreamWashPulse')
+        self.assertIn('play', purity_as_wash_methods)
+        self.assertIn('clear', purity_as_wash_methods)
+        for purity_as_wash_key in (
+                'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_ENABLED',
+                'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_DELAY_SEC',
+                'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_COLOR',
+                'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_PEAK',
+                'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_MID',
+                'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_BIN'):
+            self.assertIn(
+                purity_as_wash_key, reclaim_names,
+                msg='ReclaimGlobals missing %s' % purity_as_wash_key)
+        purity_wash_src = _read(purity_wash_rel)
+        self.assertIn(
+            'PurityCompleteAftershockCreamWashPulse', purity_wash_src)
+        self.assertIn(
+            'PURITY_COMPLETE_AFTERSHOCK_CREAM_WASH_DELAY_SEC', purity_wash_src)
+
+        # Finale reveal cream wash aftershock (#176) — residual after reveal wash.
+        finale_wash_methods = _class_method_names(
+            _module_ast(finale_wash_rel), 'FinaleRevealCreamWashPulse')
+        self.assertIn('_buildAftershock', finale_wash_methods)
+        self.assertIn('_spawnAftershockHalo', finale_wash_methods)
+        self.assertIn('_spawnAftershockFleck', finale_wash_methods)
+        for finale_as_key in (
+                'FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                'FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_COUNT',
+                'FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_COLOR',
+                'FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_HALO_COLOR'):
+            self.assertIn(
+                finale_as_key, campaign_names,
+                msg='CampaignGlobals missing %s' % finale_as_key)
+        finale_wash_src = _read(finale_wash_rel)
+        self.assertIn(
+            'FINALE_REVEAL_CREAM_WASH_AFTERSHOCK_ENABLED', finale_wash_src)
+
+        # Corrupt idle cream wash aftershock (#177) — residual after idle wash.
+        idle_wash_methods = _class_method_names(
+            _module_ast(idle_wash_rel), 'IdleCreamWashPulse')
+        self.assertIn('_buildAftershock', idle_wash_methods)
+        self.assertIn('_spawnAftershockHalo', idle_wash_methods)
+        self.assertIn('_spawnAftershockFleck', idle_wash_methods)
+        for idle_as_key in (
+                'IDLE_CREAM_WASH_AFTERSHOCK_ENABLED',
+                'IDLE_CREAM_WASH_AFTERSHOCK_DELAY_SEC',
+                'IDLE_CREAM_WASH_AFTERSHOCK_COUNT',
+                'IDLE_CREAM_WASH_AFTERSHOCK_COLOR',
+                'IDLE_CREAM_WASH_AFTERSHOCK_HALO_ENABLED',
+                'IDLE_CREAM_WASH_AFTERSHOCK_HALO_COLOR'):
+            self.assertTrue(
+                hasattr(cg, idle_as_key),
+                msg='CorruptionGlobals missing %s' % idle_as_key)
+        idle_wash_src = _read(idle_wash_rel)
+        self.assertIn('IDLE_CREAM_WASH_AFTERSHOCK_ENABLED', idle_wash_src)
+        corrupt_src = _read('toontown/corruption/DistributedCorruptToon.py')
+        self.assertIn('IdleCreamWashPulse', corrupt_src)
+
 
 def main() -> int:
     suite = unittest.defaultTestLoader.loadTestsFromTestCase(HeadlessLoopSmokeTest)
