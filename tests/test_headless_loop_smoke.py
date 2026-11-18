@@ -40,6 +40,7 @@ EXPECTED_ARCHETYPE_NAMES = {
     'Ink Smudge',
     'Sludge Brute',
     'Balloon Snare',
+    'Gunk Gagster',
 }
 
 
@@ -320,7 +321,8 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         for archetype_id, expected in (
                 (cg.ARCHETYPE_INK, 'Ink Smudge'),
                 (cg.ARCHETYPE_BRUTE, 'Sludge Brute'),
-                (cg.ARCHETYPE_SNARE, 'Balloon Snare')):
+                (cg.ARCHETYPE_SNARE, 'Balloon Snare'),
+                (cg.ARCHETYPE_GAGSTER, 'Gunk Gagster')):
             self.assertEqual(cg.archetypeDefaultName(archetype_id), expected)
             self.assertIn(archetype_id, cg.ARCHETYPE_STATS)
 
@@ -585,6 +587,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         acts = [_literal(elt) for elt in acts_node.elts]
         punchline = next(a for a in acts if a.get('id') == 'punchline')
         entry_tip = punchline.get('entryTip') or ''
+        self.assertIn('Gunk Gagsters', entry_tip)
         self.assertIn('Sludge Brutes', entry_tip)
         self.assertIn('Balloon Snares', entry_tip)
         self.assertIn('Oswald', entry_tip)

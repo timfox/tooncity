@@ -72,6 +72,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._bruteHitSfx = None
         self._snareTelegraphSfx = None
         self._snareHitSfx = None
+        self._gagsterTelegraphSfx = None
+        self._gagsterHitSfx = None
         # Finale Overlord phase SFX caches keyed by phase index.
         self._finaleTelegraphSfx = {}
         self._finaleHitSfx = {}
@@ -79,6 +81,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._spitBlobNP = None
         self._stringLashIval = None
         self._stringLashNP = None
+        self._gagLobIval = None
+        self._gagLobNP = None
+        self._gagPuddleIval = None
+        self._gagPuddleNP = None
         self._deathPopSplat = None
         self._telegraphInkDrip = None
         self._telegraphCreamWarn = None
@@ -160,7 +166,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         for attr in ('_defeatIval', '_hitIval', '_pulseIval',
                      '_telegraphIval', '_attackHitIval',
                      '_attackFlashIval', '_purityFlashIval',
-                     '_spitBlobIval', '_stringLashIval'):
+                     '_spitBlobIval', '_stringLashIval',
+                     '_gagLobIval', '_gagPuddleIval'):
             ival = getattr(self, attr, None)
             if ival is not None:
                 ival.finish()
@@ -168,6 +175,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self.__clearAttackFlash()
         self.__clearSpitBlob()
         self.__clearStringLash()
+        self.__clearGagLob()
+        self.__clearGagPuddle()
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearTelegraphCreamSparkle()
@@ -442,7 +451,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         return int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
 
     def __applyArchetypeLook(self):
-        """Scale/tint for Smudge / Brute / Snare (finale phase look still wins)."""
+        """Scale/tint for Smudge / Brute / Snare / Gagster (finale look wins)."""
         look, _phase = self.__finalePhaseLook()
         stats = CorruptionGlobals.archetypeStats(self.archetype)
         scale = (
@@ -498,13 +507,19 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
             == CorruptionGlobals.ARCHETYPE_SNARE)
 
+    def __isGunkGagster(self):
+        """True when this enemy should use Gunk Gagster gag-lob / puddle AV."""
+        return (
+            int(getattr(self, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
+            == CorruptionGlobals.ARCHETYPE_GAGSTER)
+
     def __isInkOverlord(self):
         """True when finale phase look is active (Ink Overlord boss)."""
         look, phase = self.__finalePhaseLook()
         return bool(look) and int(phase) >= 1
 
     def announceAttackTelegraph(self):
-        """Strong wind-up: charged squash, ink/spit/lash flare — dodgeable."""
+        """Strong wind-up: charged squash, ink/spit/lash/lob flare — dodgeable."""
         if self._telegraphIval is not None:
             self._telegraphIval.finish()
         if self._attackHitIval is not None:
@@ -516,6 +531,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         look, phase = self.__finalePhaseLook()
         isBrute = self.__isBruteSpit()
         isSnare = self.__isBalloonSnare()
+        isGagster = self.__isGunkGagster()
         if look:
             charge = Vec4(*look['telegraphCharge'])
             hold = Vec4(*look['telegraphHold'])
@@ -541,6 +557,13 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             squash = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_SQUASH)
             mid = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_MID)
             stretch = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_STRETCH)
+        elif isGagster:
+            # Teal gag-lob wind-up — crouch then upward toss stretch.
+            charge = Vec4(*CorruptionGlobals.GAGSTER_TELEGRAPH_CHARGE_COLOR)
+            hold = Vec4(*CorruptionGlobals.GAGSTER_TELEGRAPH_HOLD_COLOR)
+            squash = Point3(*CorruptionGlobals.GAGSTER_TELEGRAPH_SQUASH)
+            mid = Point3(*CorruptionGlobals.GAGSTER_TELEGRAPH_MID)
+            stretch = Point3(*CorruptionGlobals.GAGSTER_TELEGRAPH_STRETCH)
         else:
             # Ink Smudge melee telegraph — purple charge (unchanged).
             charge = Vec4(*CorruptionGlobals.TELEGRAPH_CHARGE_COLOR)
@@ -566,7 +589,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         # Soft cream wash pulse against ink telegraph (silhouette / idle wash vocab).
         self.__playTelegraphCreamWash(look)
         # Ink Smudge-only: purple ink-fist telegraph pop for melee wind-up read.
-        if (not look) and (not isBrute) and (not isSnare):
+        if (not look) and (not isBrute) and (not isSnare) and (not isGagster):
             self.__playSmudgeTelegraphInk()
         else:
             self.__clearSmudgeTelegraphInk()
@@ -619,7 +642,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._telegraphIval.start()
 
     def announceAttackHit(self):
-        """Impact feedback when AI damage lands — slam, flash, thud/spit/lash."""
+        """Impact feedback when AI damage lands — slam, flash, thud/spit/lash/lob."""
         # Pause (don't finish) so telegraph's miss-recovery Funcs don't snap.
         if self._telegraphIval is not None:
             try:
@@ -643,6 +666,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         look, _phase = self.__finalePhaseLook()
         isBrute = self.__isBruteSpit()
         isSnare = self.__isBalloonSnare()
+        isGagster = self.__isGunkGagster()
         if look:
             impactScale = Point3(*look['impactScale'])
             impactColor = Vec4(*look['impactColor'])
@@ -656,6 +680,10 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             impactScale = Point3(2.15, 0.55, 0.7)
             impactColor = Vec4(2.4, 1.55, 0.4, 1.0)
             rebound = Vec4(1.35, 0.85, 0.35, 1.0)
+        elif isGagster:
+            impactScale = Point3(1.45, 1.45, 0.7)
+            impactColor = Vec4(0.45, 2.15, 2.35, 1.0)
+            rebound = Vec4(0.45, 1.15, 1.25, 1.0)
         else:
             impactScale = Point3(1.55, 1.55, 0.55)
             impactColor = Vec4(2.2, 0.9, 2.4, 1.0)
@@ -666,6 +694,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             self.__playSpitBlob()
         elif isSnare:
             self.__playStringLash()
+        elif isGagster:
+            self.__playGagLob()
         self.__playOptionalActorPose('neutral')
         self._attackHitIval = Sequence(
             Parallel(
@@ -757,6 +787,18 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                     CorruptionGlobals.SNARE_ATTACK_HIT_SFX)
             except Exception:
                 self._snareHitSfx = False
+        if self._gagsterTelegraphSfx is None:
+            try:
+                self._gagsterTelegraphSfx = base.loader.loadSfx(
+                    CorruptionGlobals.GAGSTER_TELEGRAPH_SFX)
+            except Exception:
+                self._gagsterTelegraphSfx = False
+        if self._gagsterHitSfx is None:
+            try:
+                self._gagsterHitSfx = base.loader.loadSfx(
+                    CorruptionGlobals.GAGSTER_ATTACK_HIT_SFX)
+            except Exception:
+                self._gagsterHitSfx = False
 
     def __loadFinalePhaseSfx(self, cache, phase, path):
         """Lazy-load a finale-phase SFX into the given cache dict."""
@@ -783,6 +825,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         elif self.__isBalloonSnare() and self._snareTelegraphSfx:
             sfx = self._snareTelegraphSfx
             volume = CorruptionGlobals.SNARE_TELEGRAPH_SFX_VOLUME
+        elif self.__isGunkGagster() and self._gagsterTelegraphSfx:
+            sfx = self._gagsterTelegraphSfx
+            volume = CorruptionGlobals.GAGSTER_TELEGRAPH_SFX_VOLUME
         else:
             sfx = self._telegraphSfx
             volume = CorruptionGlobals.TELEGRAPH_SFX_VOLUME
@@ -812,6 +857,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         elif self.__isBalloonSnare() and self._snareHitSfx:
             sfx = self._snareHitSfx
             volume = CorruptionGlobals.SNARE_ATTACK_HIT_SFX_VOLUME
+        elif self.__isGunkGagster() and self._gagsterHitSfx:
+            sfx = self._gagsterHitSfx
+            volume = CorruptionGlobals.GAGSTER_ATTACK_HIT_SFX_VOLUME
         else:
             sfx = self._attackHitSfx
             volume = CorruptionGlobals.ATTACK_HIT_SFX_VOLUME
@@ -855,6 +903,9 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             elif self.__isBalloonSnare():
                 color = CorruptionGlobals.SNARE_HIT_FLASH_COLOR
                 peak = CorruptionGlobals.SNARE_HIT_FLASH_PEAK
+            elif self.__isGunkGagster():
+                color = CorruptionGlobals.GAGSTER_HIT_FLASH_COLOR
+                peak = CorruptionGlobals.GAGSTER_HIT_FLASH_PEAK
             else:
                 color = CorruptionGlobals.ATTACK_HIT_FLASH_COLOR
                 peak = CorruptionGlobals.ATTACK_HIT_FLASH_PEAK
@@ -1008,6 +1059,115 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
                 pass
             self._stringLashNP = None
 
+    def __playGagLob(self):
+        """Teal gunk pie arcs from Gagster toward the local toon, then puddles."""
+        self.__clearGagLob()
+        try:
+            start = self.getPos(render)
+            start.setZ(start.getZ() + CorruptionGlobals.GAGSTER_LOB_Z)
+            end = start + Point3(0, 7, -1.5)
+            la = getattr(base, 'localAvatar', None)
+            if la is not None and not la.isEmpty():
+                end = la.getPos(render)
+                end.setZ(end.getZ() + 0.35)
+            mid = Point3(
+                (start.getX() + end.getX()) * 0.5,
+                (start.getY() + end.getY()) * 0.5,
+                max(start.getZ(), end.getZ()) + CorruptionGlobals.GAGSTER_LOB_ARC_Z)
+            cm = CardMaker('gagster-gunk-lob')
+            half = CorruptionGlobals.GAGSTER_LOB_SCALE
+            cm.setFrame(-half, half, -half, half)
+            blob = render.attachNewNode(cm.generate())
+            blob.setPos(start)
+            blob.setBillboardPointEye()
+            blob.setTransparency(TransparencyAttrib.MAlpha)
+            color = CorruptionGlobals.GAGSTER_LOB_COLOR
+            blob.setColor(color[0], color[1], color[2], color[3])
+            blob.setBin('fixed', 40)
+            blob.setDepthWrite(False)
+            travel = float(CorruptionGlobals.GAGSTER_LOB_TRAVEL)
+            halfTravel = travel * 0.5
+            self._gagLobNP = blob
+            self._gagLobIval = Sequence(
+                Parallel(
+                    LerpPosInterval(blob, halfTravel, mid, blendType='easeOut'),
+                    LerpScaleInterval(
+                        blob, halfTravel, Point3(1.15, 1.15, 1.15),
+                        startScale=Point3(0.55, 0.55, 0.55)),
+                ),
+                Parallel(
+                    LerpPosInterval(blob, halfTravel, end, blendType='easeIn'),
+                    LerpScaleInterval(blob, halfTravel, Point3(1.45, 1.45, 0.7)),
+                ),
+                Func(self.__clearGagLob),
+                Func(self.__playGagPuddle, end),
+            )
+            self._gagLobIval.start()
+        except Exception:
+            self.__clearGagLob()
+
+    def __clearGagLob(self):
+        if self._gagLobIval is not None:
+            try:
+                self._gagLobIval.pause()
+            except Exception:
+                pass
+            self._gagLobIval = None
+        if self._gagLobNP is not None:
+            try:
+                if not self._gagLobNP.isEmpty():
+                    self._gagLobNP.removeNode()
+            except Exception:
+                pass
+            self._gagLobNP = None
+
+    def __playGagPuddle(self, landPos):
+        """Flat teal puddle ring at the lob landing — trap-readable splat."""
+        self.__clearGagPuddle()
+        try:
+            cm = CardMaker('gagster-gunk-puddle')
+            half = float(CorruptionGlobals.GAGSTER_PUDDLE_HALF)
+            cm.setFrame(-half, half, -half, half)
+            puddle = render.attachNewNode(cm.generate())
+            puddle.setPos(landPos)
+            puddle.setP(-90)
+            puddle.setTransparency(TransparencyAttrib.MAlpha)
+            color = CorruptionGlobals.GAGSTER_PUDDLE_COLOR
+            puddle.setColor(color[0], color[1], color[2], color[3])
+            puddle.setBin('fixed', 38)
+            puddle.setDepthWrite(False)
+            peak = float(CorruptionGlobals.GAGSTER_PUDDLE_PEAK)
+            sec = float(CorruptionGlobals.GAGSTER_PUDDLE_SEC)
+            self._gagPuddleNP = puddle
+            self._gagPuddleIval = Sequence(
+                LerpScaleInterval(
+                    puddle, sec * 0.45, Point3(peak, peak, 1.0),
+                    startScale=Point3(0.35, 0.35, 1.0)),
+                Parallel(
+                    LerpScaleInterval(puddle, sec * 0.55, Point3(peak * 1.15, peak * 1.15, 1.0)),
+                    LerpColorScaleInterval(puddle, sec * 0.55, Vec4(1, 1, 1, 0)),
+                ),
+                Func(self.__clearGagPuddle),
+            )
+            self._gagPuddleIval.start()
+        except Exception:
+            self.__clearGagPuddle()
+
+    def __clearGagPuddle(self):
+        if self._gagPuddleIval is not None:
+            try:
+                self._gagPuddleIval.pause()
+            except Exception:
+                pass
+            self._gagPuddleIval = None
+        if self._gagPuddleNP is not None:
+            try:
+                if not self._gagPuddleNP.isEmpty():
+                    self._gagPuddleNP.removeNode()
+            except Exception:
+                pass
+            self._gagPuddleNP = None
+
     def announceDefeat(self):
         if self._defeatIval is not None:
             self._defeatIval.finish()
@@ -1026,9 +1186,17 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if self._stringLashIval is not None:
             self._stringLashIval.finish()
             self._stringLashIval = None
+        if self._gagLobIval is not None:
+            self._gagLobIval.finish()
+            self._gagLobIval = None
+        if self._gagPuddleIval is not None:
+            self._gagPuddleIval.finish()
+            self._gagPuddleIval = None
         self.__clearAttackFlash()
         self.__clearSpitBlob()
         self.__clearStringLash()
+        self.__clearGagLob()
+        self.__clearGagPuddle()
         self.__clearTelegraphInkDrip()
         self.__clearTelegraphCreamWarn()
         self.__clearTelegraphCreamSparkle()

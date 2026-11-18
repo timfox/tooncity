@@ -120,7 +120,9 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         cg = self.cg
         # Brute tankiness is applied later via hpScale — packSlotHp must not
         # pre-multiply archetype scale.
-        for arch in (cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE, cg.ARCHETYPE_SNARE):
+        for arch in (
+                cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE, cg.ARCHETYPE_SNARE,
+                cg.ARCHETYPE_GAGSTER):
             self.assertEqual(
                 rg.packSlotHp(arch, 30, 2), rg.waveCorruptHp(30, 2))
 
@@ -163,13 +165,17 @@ class ReclaimWaveLogicTest(unittest.TestCase):
                 bruteFraction=pack['bruteFraction'],
                 bruteWaveStart=pack['bruteWaveStart'],
                 snareFraction=pack['snareFraction'],
-                snareWaveStart=pack['snareWaveStart'])
+                snareWaveStart=pack['snareWaveStart'],
+                gagsterFraction=pack['gagsterFraction'],
+                gagsterWaveStart=pack['gagsterWaveStart'])
             for slot in range(pack['packSize'])]
-        # packSize=4, brute 0.4 → 2 rear brutes; snare 0.25 → 1 front snare.
+        # packSize=4: snare front, gagster mid, brute rear (+1 smudge).
+        # brute 0.3 → 1; snare 0.2 → 1; gagster 0.3 → 1.
         self.assertEqual(
             picks,
-            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_INK,
-             cg.ARCHETYPE_BRUTE, cg.ARCHETYPE_BRUTE])
+            [cg.ARCHETYPE_SNARE, cg.ARCHETYPE_GAGSTER,
+             cg.ARCHETYPE_INK, cg.ARCHETYPE_BRUTE])
+        self.assertIn(cg.ARCHETYPE_GAGSTER, picks)
 
     def test_pick_loopy_street_pack_wave_rules(self):
         rg = self.rg
@@ -242,6 +248,8 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertEqual(punch['corruptHp'], 40)
         self.assertEqual(punch['bruteWaveStart'], 1)
         self.assertEqual(punch['snareWaveStart'], 1)
+        self.assertEqual(punch['gagsterWaveStart'], 1)
+        self.assertEqual(punch['gagsterFraction'], 0.3)
         self.assertIn('waveScripts', punch)
 
         silly = rg.streetPackParams(SILLY)
@@ -249,6 +257,7 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertEqual(silly['corruptHp'], 90)
         self.assertEqual(silly['bruteFraction'], 0.0)
         self.assertEqual(silly['snareFraction'], 0.0)
+        self.assertEqual(silly['gagsterFraction'], 0.0)
         self.assertIn('waveScripts', silly)
 
     def test_normalize_wave_script_tokens(self):
@@ -259,8 +268,11 @@ class ReclaimWaveLogicTest(unittest.TestCase):
         self.assertEqual(rg.normalizeWaveScriptToken('sludge'), cg.ARCHETYPE_BRUTE)
         self.assertEqual(rg.normalizeWaveScriptToken('snare'), cg.ARCHETYPE_SNARE)
         self.assertEqual(rg.normalizeWaveScriptToken('balloon'), cg.ARCHETYPE_SNARE)
+        self.assertEqual(rg.normalizeWaveScriptToken('gagster'), cg.ARCHETYPE_GAGSTER)
+        self.assertEqual(rg.normalizeWaveScriptToken('gunk'), cg.ARCHETYPE_GAGSTER)
         self.assertEqual(rg.normalizeWaveScriptToken(1), cg.ARCHETYPE_BRUTE)
         self.assertEqual(rg.normalizeWaveScriptToken('2'), cg.ARCHETYPE_SNARE)
+        self.assertEqual(rg.normalizeWaveScriptToken('3'), cg.ARCHETYPE_GAGSTER)
         self.assertEqual(rg.normalizeWaveScriptToken('nope'), cg.ARCHETYPE_INK)
 
     def test_resolve_wave_script_sequence_and_dict(self):
@@ -322,13 +334,18 @@ class ReclaimWaveLogicTest(unittest.TestCase):
 
         self.assertEqual(loopy_w1, [cg.ARCHETYPE_INK] * 3)
         self.assertEqual(punch_w1[0], cg.ARCHETYPE_SNARE)
+        self.assertEqual(punch_w1[1], cg.ARCHETYPE_GAGSTER)
         self.assertEqual(punch_w1[-1], cg.ARCHETYPE_BRUTE)
+        self.assertIn(cg.ARCHETYPE_GAGSTER, punch_w1)
         self.assertEqual(silly_w1, [cg.ARCHETYPE_INK])
 
         # Loopy introduces Brute on wave 2; Punchline already mixed on wave 1.
         loopy_w2 = rg.resolveWaveScript(loopy, 2)
         self.assertIn(cg.ARCHETYPE_BRUTE, loopy_w2)
         self.assertNotEqual(loopy_w1, punch_w1)
+        # Gunk Gagster stays Punchline-forward (not Loopy tutorial).
+        self.assertNotIn(cg.ARCHETYPE_GAGSTER, loopy_w1)
+        self.assertNotIn(cg.ARCHETYPE_GAGSTER, loopy_w2)
 
         silly_w2 = rg.resolveWaveScript(silly, 2)
         self.assertEqual(silly_w2, [cg.ARCHETYPE_INK, cg.ARCHETYPE_INK])

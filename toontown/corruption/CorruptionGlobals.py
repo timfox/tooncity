@@ -12,10 +12,12 @@ POLLUTION_SCALE = 1000
 CORRUPT_TOON_DEFAULT_HP = 30
 CORRUPT_TOON_DEFAULT_NAME = 'Corrupt Toon'
 
-# Archetypes — Smudge melee, Brute spit tank, Balloon Snare zip/lash.
+# Archetypes — Smudge melee, Brute spit tank, Balloon Snare zip/lash,
+# Gunk Gagster gag-lob puddle (Punchline fourth).
 ARCHETYPE_INK = 0
 ARCHETYPE_BRUTE = 1
 ARCHETYPE_SNARE = 2
+ARCHETYPE_GAGSTER = 3
 ARCHETYPE_STATS = {
     ARCHETYPE_INK: {
         'name': 'Ink Smudge',
@@ -54,6 +56,22 @@ ARCHETYPE_STATS = {
         'actorScale': 0.82,
         'actorTint': (0.55, 0.22, 0.08, 1.0),
     },
+    # Punchline gag-lobber: stands back, telegraphs a bounce-bomb, then
+    # resolves a teal puddle trap at the target's wind-up position (AoE).
+    ARCHETYPE_GAGSTER: {
+        'name': 'Gunk Gagster',
+        'hpScale': 1.15,
+        'chaseSpeed': 7.4,
+        'meleeRange': 8.5,  # lob engage — stands off like a gag thrower
+        'attackHitRange': 5.0,  # puddle radius around lobbed landing
+        'attackNearMissRange': 7.5,
+        'attackDamage': 3,
+        'telegraphDelay': 0.78,
+        'attackCooldown': 2.15,
+        'actorScale': 1.12,
+        'actorTint': (0.06, 0.32, 0.38, 1.0),  # teal gunk
+        'attackMove': 'gag_lob',
+    },
 }
 
 
@@ -89,6 +107,7 @@ ARCHETYPE_NAMES = {
     ARCHETYPE_INK: 'Ink Smudge',
     ARCHETYPE_BRUTE: 'Sludge Brute',
     ARCHETYPE_SNARE: 'Balloon Snare',
+    ARCHETYPE_GAGSTER: 'Gunk Gagster',
 }
 
 # Defeating one corrupt toon reduces local pollution by this amount.
@@ -237,7 +256,8 @@ HOOD_POLLUTION_BIAS = {
 _DEFAULT_HOOD_BIAS = HOOD_POLLUTION_BIAS[2200]
 
 # Telegraph / impact presentation (client AV punch; AI timings unchanged).
-# Ink Smudge = purple melee; Sludge Brute = green spit; Balloon Snare = amber lash.
+# Ink Smudge = purple melee; Sludge Brute = green spit; Balloon Snare = amber
+# lash; Gunk Gagster = teal gag-lob puddle.
 TELEGRAPH_CHARGE_COLOR = (2.15, 0.25, 2.4, 1.0)
 TELEGRAPH_HOLD_COLOR = (1.55, 0.2, 1.85, 1.0)
 
@@ -637,6 +657,21 @@ TELEGRAPH_INK_DRIP_LOOK = {
         'dripColor': (0.88, 0.45, 0.12, 0.95),
         'streakColor': (1.05, 0.65, 0.22, 0.9),
     },
+    ARCHETYPE_GAGSTER: {
+        'id': 'teal-gunk-drip',
+        'lift': 2.25,
+        'splatHalf': 0.44,
+        'splatPeak': 1.9,
+        'splatSec': 0.22,
+        'splatColor': (0.22, 0.82, 0.88, 0.92),
+        'dripCount': 4,
+        'dripHalf': 0.17,
+        'dripSpread': 0.65,
+        'dripFall': 1.35,
+        'dripSec': 0.4,
+        'dripColor': (0.12, 0.62, 0.7, 0.95),
+        'streakColor': (0.35, 0.95, 0.98, 0.9),
+    },
 }
 
 # Telegraph cream / pastel warn flecks — sunny purity chips layered on
@@ -823,6 +858,21 @@ IDLE_INK_DRIP_LOOK = {
         'dripStagger': 0.04,
         'dripColor': (0.72, 0.36, 0.1, 0.5),
         'streakColor': (0.88, 0.5, 0.16, 0.42),
+        'binSort': 39,
+    },
+    ARCHETYPE_GAGSTER: {
+        'id': 'teal-gunk-idle',
+        'lift': 2.15,
+        'periodSec': 2.05,
+        'settleSec': 0.5,
+        'dripCount': 2,
+        'dripHalf': 0.12,
+        'dripSpread': 0.42,
+        'dripFall': 1.0,
+        'dripSec': 0.58,
+        'dripStagger': 0.06,
+        'dripColor': (0.1, 0.48, 0.55, 0.55),
+        'streakColor': (0.22, 0.72, 0.78, 0.48),
         'binSort': 39,
     },
 }
@@ -1221,6 +1271,31 @@ SNARE_TELEGRAPH_STRING_LOOK = {
     'binSort': 43,
 }
 
+# Gunk Gagster gag-lob — teal bounce-bomb wind-up, arcing pie lob, puddle splat.
+# Reads apart from Brute spit (green linear), Snare lash (amber horizontal),
+# and Smudge melee (purple squash).
+GAGSTER_TELEGRAPH_CHARGE_COLOR = (0.35, 2.05, 2.25, 1.0)
+GAGSTER_TELEGRAPH_HOLD_COLOR = (0.25, 1.55, 1.75, 1.0)
+GAGSTER_TELEGRAPH_SQUASH = (1.35, 1.35, 0.55)  # wind-up crouch before lob
+GAGSTER_TELEGRAPH_MID = (0.85, 0.85, 1.45)
+GAGSTER_TELEGRAPH_STRETCH = (0.7, 0.7, 1.85)  # toss stretch upward
+GAGSTER_TELEGRAPH_SFX = 'phase_3.5/audio/sfx/AA_pie_throw_only.ogg'
+GAGSTER_TELEGRAPH_SFX_VOLUME = 0.7
+GAGSTER_ATTACK_HIT_SFX = 'phase_3.5/audio/sfx/AA_pie_throw_only.ogg'
+GAGSTER_ATTACK_HIT_SFX_VOLUME = 0.82
+GAGSTER_HIT_FLASH_COLOR = (0.35, 0.95, 1.05, 1.0)
+GAGSTER_HIT_FLASH_PEAK = 0.6
+# Client-only arcing gunk pie that lob-lands as a puddle ring on hit resolve.
+GAGSTER_LOB_COLOR = (0.15, 0.78, 0.85, 0.94)
+GAGSTER_LOB_SCALE = 0.48
+GAGSTER_LOB_TRAVEL = 0.34
+GAGSTER_LOB_ARC_Z = 3.8
+GAGSTER_LOB_Z = 2.3
+GAGSTER_PUDDLE_COLOR = (0.12, 0.62, 0.7, 0.88)
+GAGSTER_PUDDLE_HALF = 1.15
+GAGSTER_PUDDLE_PEAK = 2.35
+GAGSTER_PUDDLE_SEC = 0.28
+
 # Defeat pop juice — rubber-hose ink splat / balloon pop on announceDefeat.
 # Per-archetype palette so Smudge (purple), Brute (green), Snare (amber) read.
 # Cream fleck burst (DEATH_CREAM_FLECK_*) layers sunny purity chips on top via
@@ -1309,6 +1384,31 @@ DEATH_POP_LOOK = {
         'dropletColor': (0.9, 0.48, 0.12, 0.95),
         'sfx': 'phase_3/audio/sfx/GUI_balloon_popup.ogg',
         'sfxVolume': 0.85,
+    },
+    ARCHETYPE_GAGSTER: {
+        'id': 'gunk-pie-splat',
+        'burstScale': (1.85, 1.85, 1.65),
+        'pancakeScale': (2.45, 2.45, 0.1),
+        'vanishScale': (0.02, 0.02, 0.02),
+        'burstSec': 0.07,
+        'pancakeSec': 0.13,
+        'vanishSec': 0.19,
+        'burstColor': (0.55, 2.15, 2.35, 1.0),
+        'pancakeColor': (0.35, 1.55, 1.75, 1.0),
+        'fadeColor': (0.55, 1.25, 1.35, 0.0),
+        'lift': 1.4,
+        'ringHalf': 0.95,
+        'ringPeak': 2.8,
+        'ringSec': 0.34,
+        'ringColor': (0.18, 0.72, 0.78, 0.9),
+        'dropletCount': 8,
+        'dropletHalf': 0.3,
+        'dropletDist': 2.55,
+        'dropletLift': 1.05,
+        'dropletSec': 0.36,
+        'dropletColor': (0.15, 0.62, 0.7, 0.95),
+        'sfx': 'phase_3.5/audio/sfx/AA_pie_throw_only.ogg',
+        'sfxVolume': 0.78,
     },
 }
 

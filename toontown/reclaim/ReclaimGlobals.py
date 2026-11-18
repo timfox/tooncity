@@ -30,6 +30,10 @@ SMUDGE_NAME = 'Ink Smudge'
 SNARE_WAVE_START = 2
 SNARE_FRACTION = 0.22
 SNARE_NAME = 'Balloon Snare'
+# Gunk Gagster gag-lob puddle — Punchline-forward; default reclaim keeps 0.
+GAGSTER_WAVE_START = 2
+GAGSTER_FRACTION = 0.0
+GAGSTER_NAME = 'Gunk Gagster'
 
 # Director FSM states (mirrored on client for banner / HUD).
 STATE_IDLE = 0
@@ -58,15 +62,16 @@ DEMO_HINT = (
 # Per-street reclaim packs for auto / R / ~startreclaim (PlayEntry path).
 # Loopy is the Act 1 tutorial street: Ink Smudge wave 1, later Brutes.
 # Punchline is the Act 2 explore → fight → reclaim beat: denser sludge,
-# Brutes + Balloon Snares from wave 1. Silly is the Act 3 Overlord finale
-# street (Oswald still trusted — twist stays campaign P2 reveal). Campaign C
-# still uses ACTS params; this table keeps discoverable auto-reclaim matched
-# to each hood fantasy. No keyblades / KH branding.
+# Gunk Gagsters + Brutes + Balloon Snares from wave 1. Silly is the Act 3
+# Overlord finale street (Oswald still trusted — twist stays campaign P2
+# reveal). Campaign C still uses ACTS params; this table keeps discoverable
+# auto-reclaim matched to each hood fantasy. No keyblades / KH branding.
 # Keys match DistributedReclaimDirectorAI.start() kwargs (+ copy helpers).
 _STREET_PACK_START_KEYS = (
     'seedPollution', 'packSize', 'maxPacks', 'corruptHp', 'corruptName',
     'bruteFraction', 'bruteWaveStart', 'bruteName',
     'snareFraction', 'snareWaveStart', 'snareName',
+    'gagsterFraction', 'gagsterWaveStart', 'gagsterName',
     'waveScripts',
     # Silly Overlord street reclaim uses P1 rain AI (campaign owns P2).
     'finalePhase',
@@ -74,7 +79,8 @@ _STREET_PACK_START_KEYS = (
 # Optional per-wave archetype scripts (tokens or ints). When present for a
 # wave, composition + pack size follow the script; otherwise fractions +
 # WAVE_SIZE_BONUS keep the legacy escalate path. Tokens are Toontown-tone
-# aliases for Ink Smudge / Sludge Brute / Balloon Snare — no KH branding.
+# aliases for Ink Smudge / Sludge Brute / Balloon Snare / Gunk Gagster —
+# no KH branding.
 WAVE_SCRIPT_TOKENS = {
     'ink': 0,
     'smudge': 0,
@@ -88,6 +94,11 @@ WAVE_SCRIPT_TOKENS = {
     'balloon': 2,
     'balloon_snare': 2,
     'balloon-snare': 2,
+    'gagster': 3,
+    'gunk': 3,
+    'gunk_gagster': 3,
+    'gunk-gagster': 3,
+    'gag': 3,
 }
 STREET_PACKS = {
     # Act 1 — Loopy Lane ink street (first hood / melee tutorial).
@@ -136,7 +147,8 @@ STREET_PACKS = {
         'statusLabel': 'INK',
     },
     # Act 2 — Punchline Place sludge street (second hood).
-    # Scripted beats: Snare-front opener → Snare swarm → Brute pair → elite.
+    # Scripted beats: Snare-front + Gagster lob → Gagster swarm → Brute pair
+    # → elite mix. Gunk Gagster is a real fourth archetype (not a Smudge rename).
     ToontownGlobals.PunchlinePlace: {
         'packId': 'punchline-sludge',
         'name': 'Punchline Place',
@@ -144,38 +156,41 @@ STREET_PACKS = {
         'packSize': 4,
         'maxPacks': 4,
         'corruptHp': 40,
-        'corruptName': 'Gunk Gagster',
-        'bruteFraction': 0.4,
+        'corruptName': 'Ink Smudge',
+        'bruteFraction': 0.3,
         'bruteWaveStart': 1,
         'bruteName': 'Sludge Brute',
-        'snareFraction': 0.25,
+        'snareFraction': 0.2,
         'snareWaveStart': 1,
         'snareName': 'Balloon Snare',
+        'gagsterFraction': 0.3,
+        'gagsterWaveStart': 1,
+        'gagsterName': 'Gunk Gagster',
         'waveScripts': (
-            ('snare', 'ink', 'ink', 'brute'),
-            ('snare', 'snare', 'ink', 'brute', 'ink'),
-            ('snare', 'ink', 'brute', 'brute', 'ink'),
-            ('snare', 'snare', 'ink', 'brute', 'snare', 'ink'),
+            ('snare', 'gagster', 'ink', 'brute'),
+            ('snare', 'gagster', 'gagster', 'brute', 'ink'),
+            ('snare', 'gagster', 'brute', 'brute', 'ink'),
+            ('snare', 'gagster', 'gagster', 'brute', 'snare', 'ink'),
         ),
         'bannerStart': 'OSWALD: RECLAIM PUNCHLINE PLACE!',
         'bannerStartSub': (
             'Explore the sludge street — then stretch-punch '
-            'Brutes & Balloon Snares!'),
+            'Gunk Gagsters, Brutes & Balloon Snares!'),
         'bannerStartColor': (0.72, 0.92, 0.55, 1.0),
         'bannerComplete': 'PUNCHLINE PLACE LAUGHS CLEAN!',
         'bannerCompleteSub': (
             'Oswald tips his ears — Silly Street finale awaits!'),
         'demoHint': (
-            'Oswald: dodge Brute spit, snip Balloon Snares  |  '
+            'Oswald: dodge Gagster lobs & Brute spit, snip Snares  |  '
             'F fight  |  C campaign'),
         'playEntryTip': (
             'Oswald: Punchline Place — explore the sludge  →  '
             'F fight packs  →  reclaim  |  Shift dodge  |  C campaign'),
         'autoFlash': (
             'Oswald fields Punchline sludge packs — '
-            'Brutes & Balloon Snares!'),
+            'Gunk Gagsters, Brutes & Balloon Snares!'),
         'reclaimLiveFlash': (
-            'PUNCHLINE RECLAIM LIVE — clear Brutes & Snares with F!'),
+            'PUNCHLINE RECLAIM LIVE — clear Gagsters, Brutes & Snares with F!'),
         'statusLabel': 'SLUDGE',
     },
     # Act 3 — Silly Street Ink Overlord finale (third hood).
@@ -189,9 +204,10 @@ STREET_PACKS = {
         'maxPacks': 2,
         'corruptHp': 90,
         'corruptName': 'Ink Overlord',
-        # Boss street — Overlord only (no Brute / Snare mix).
+        # Boss street — Overlord only (no Brute / Snare / Gagster mix).
         'bruteFraction': 0.0,
         'snareFraction': 0.0,
+        'gagsterFraction': 0.0,
         'waveScripts': (
             ('ink',),
             ('ink', 'ink'),
@@ -807,7 +823,7 @@ OSWALD_WAVE_TIPS_LOOPY = (
     'Oswald cheers: one more pack and Loopy is pure!',
 )
 OSWALD_WAVE_TIPS_PUNCHLINE = (
-    'Oswald tips: dodge Brute spit, snip Balloon Snares!',
+    'Oswald tips: dodge Gagster lobs & Brute spit, snip Balloon Snares!',
     'Oswald: Punchline Place needs that rubber-hose bounce!',
     'Oswald tips his ears — sludge packs keep coming!',
     'Oswald: last laugh for Punchline — clear this wave!',
@@ -857,10 +873,10 @@ def streetPackParams(zoneId):
 
 
 def normalizeWaveScriptToken(token):
-    """Map a waveScripts entry to ARCHETYPE_INK / BRUTE / SNARE.
+    """Map a waveScripts entry to ARCHETYPE_INK / BRUTE / SNARE / GAGSTER.
 
     Accepts ints, numeric strings, or Toontown-tone aliases
-    (ink/smudge, brute/sludge, snare/balloon). Unknown → Ink Smudge.
+    (ink/smudge, brute/sludge, snare/balloon, gagster/gunk). Unknown → Ink.
     """
     from toontown.corruption import CorruptionGlobals
     if token is None:
@@ -1109,13 +1125,14 @@ def waveCorruptHp(baseHp, waveIndex):
 
 def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
                       bruteWaveStart=None, snareFraction=None,
-                      snareWaveStart=None, waveScript=None):
-    """Choose Smudge (0), Brute (1), or Balloon Snare (2) for one pack slot.
+                      snareWaveStart=None, gagsterFraction=None,
+                      gagsterWaveStart=None, waveScript=None):
+    """Choose Smudge (0), Brute (1), Snare (2), or Gagster (3) for one slot.
 
     Prefer an explicit waveScript slot when present. Otherwise keep wave-1 /
     zero-fraction packs as pure Ink Smudge so Loopy demos stay familiar.
-    Brutes take rear slots; Snares take front slots so zip-lash reads
-    before tank spit.
+    Slot layout: Snares front (zip-lash), Gagsters mid (gag-lob), Brutes
+    rear (tank spit).
     """
     from toontown.corruption import CorruptionGlobals
     wave = max(1, int(waveIndex))
@@ -1137,6 +1154,11 @@ def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
         SNARE_WAVE_START if snareWaveStart is None else int(snareWaveStart))
     snareFrac = (
         SNARE_FRACTION if snareFraction is None else float(snareFraction))
+    gagsterStart = (
+        GAGSTER_WAVE_START if gagsterWaveStart is None
+        else int(gagsterWaveStart))
+    gagsterFrac = (
+        GAGSTER_FRACTION if gagsterFraction is None else float(gagsterFraction))
 
     bruteSlots = 0
     if wave >= bruteStart and bruteFrac > 0.0:
@@ -1146,11 +1168,18 @@ def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
     if wave >= snareStart and snareFrac > 0.0:
         snareSlots = max(1, int(round(count * snareFrac)))
         snareSlots = min(snareSlots, count)
+    gagsterSlots = 0
+    if wave >= gagsterStart and gagsterFrac > 0.0:
+        gagsterSlots = max(1, int(round(count * gagsterFrac)))
+        gagsterSlots = min(gagsterSlots, count)
     # Leave at least one Smudge when the pack has room.
-    if bruteSlots + snareSlots >= count and count > 1:
-        overflow = bruteSlots + snareSlots - (count - 1)
+    if bruteSlots + snareSlots + gagsterSlots >= count and count > 1:
+        overflow = bruteSlots + snareSlots + gagsterSlots - (count - 1)
         while overflow > 0 and snareSlots > 0:
             snareSlots -= 1
+            overflow -= 1
+        while overflow > 0 and gagsterSlots > 0:
+            gagsterSlots -= 1
             overflow -= 1
         while overflow > 0 and bruteSlots > 0:
             bruteSlots -= 1
@@ -1160,11 +1189,18 @@ def pickPackArchetype(waveIndex, slotIndex, packCount, bruteFraction=None,
         return CorruptionGlobals.ARCHETYPE_BRUTE
     if snareSlots and slot < snareSlots:
         return CorruptionGlobals.ARCHETYPE_SNARE
+    # Mid band between snare front and brute rear for Gagster lobs.
+    midStart = snareSlots
+    midEnd = count - bruteSlots
+    midRoom = max(0, midEnd - midStart)
+    gagsterSlots = min(gagsterSlots, midRoom)
+    if gagsterSlots and slot >= midStart and slot < midStart + gagsterSlots:
+        return CorruptionGlobals.ARCHETYPE_GAGSTER
     return CorruptionGlobals.ARCHETYPE_INK
 
 
 def packSlotName(archetype, smudgeName=None, bruteName=None, snareName=None,
-                 slotIndex=0, packCount=1):
+                 gagsterName=None, slotIndex=0, packCount=1):
     """Display name for a pack slot (numbered when pack has multiples)."""
     from toontown.corruption import CorruptionGlobals
     arch = CorruptionGlobals.normalizeArchetype(archetype)
@@ -1172,6 +1208,8 @@ def packSlotName(archetype, smudgeName=None, bruteName=None, snareName=None,
         base = bruteName or BRUTE_NAME
     elif arch == CorruptionGlobals.ARCHETYPE_SNARE:
         base = snareName or SNARE_NAME
+    elif arch == CorruptionGlobals.ARCHETYPE_GAGSTER:
+        base = gagsterName or GAGSTER_NAME
     else:
         base = smudgeName or SMUDGE_NAME
     if packCount > 1 and int(slotIndex) > 0:
