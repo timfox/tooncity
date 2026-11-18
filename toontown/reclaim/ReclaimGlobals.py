@@ -305,18 +305,40 @@ WAVE_ANNOUNCE_CREAM_EDGE_WASH_HOLD_SEC = 0.06
 WAVE_ANNOUNCE_CREAM_EDGE_WASH_OUT_SEC = 0.34
 WAVE_ANNOUNCE_CREAM_EDGE_WASH_BIN = 48  # soft veil under edge (50) / flecks (51) / sparkles (52)
 
-# Wave-start purity meter hose pop — brief rubber-hose squash→stretch→settle on
-# the whole meter when a pack wave begins so wave begin reads clearly.
-# Distinct from mid-wave rim-only danger flash (#213) and secured-lock green
-# hold + soft uniform scale (#209). Sunny cream rim accent only; no KH branding.
+# Wave-start purity meter hose pop — deepened rubber-hose squash→stretch→settle
+# on the whole meter when a pack wave begins so wave begin reads juicier.
+# Distinct from mid-wave warm rim-flash cream warn (#213 / deepen #234),
+# wave-clear mid-screen cream sparkle (#229), purity-complete hose settle
+# (#225), and secured-lock green hold + soft uniform scale (#209). Sunny cream
+# rim + local cream flecks / soft halo only; no KH branding.
 # Toggle WAVE_START_METER_POP_ENABLED = False drops meter pop only (announce
-# plate / cream edge still fire).
+# plate / cream edge still fire). WAVE_START_METER_CREAM_ENABLED = False drops
+# flecks + halo only (hose + rim still fire).
 WAVE_START_METER_POP_ENABLED = True
-WAVE_START_METER_POP_SQUASH = (0.88, 1.0, 0.62, 0.05)  # sx, sy, sz, sec
-WAVE_START_METER_POP_STRETCH = (1.10, 1.0, 1.28, 0.07)
-WAVE_START_METER_POP_SETTLE_SEC = 0.10
-WAVE_START_METER_RIM_COLOR = (1.0, 0.94, 0.55, 0.78)  # sunny cream, not warn/lock
-WAVE_START_METER_RIM_SEC = 0.22
+WAVE_START_METER_POP_SQUASH = (0.82, 1.0, 0.52, 0.05)  # sx, sy, sz, sec — juicier flat
+WAVE_START_METER_POP_STRETCH = (1.14, 1.0, 1.38, 0.08)  # taller rubber-hose overshoot
+WAVE_START_METER_POP_SETTLE_SEC = 0.12
+WAVE_START_METER_RIM_COLOR = (1.0, 0.96, 0.62, 0.88)  # creamier sunny, not warn/lock
+WAVE_START_METER_RIM_SEC = 0.28
+# Sunny cream flecks + soft halo layered on the wave-start hose pop — rising
+# chips off the meter (not warm radial pressure rim cream #234, not mid-screen
+# wave-clear sparkle #229). Toggle WAVE_START_METER_CREAM_ENABLED = False.
+WAVE_START_METER_CREAM_ENABLED = True
+WAVE_START_METER_CREAM_COUNT = 6
+WAVE_START_METER_CREAM_SIZE = 0.013
+WAVE_START_METER_CREAM_RISE = 0.12
+WAVE_START_METER_CREAM_SPREAD = 0.22
+WAVE_START_METER_CREAM_SEC = 0.30
+WAVE_START_METER_CREAM_COLOR = (1.0, 0.98, 0.72, 0.94)
+WAVE_START_METER_CREAM_END_COLOR = (1.0, 0.94, 0.55, 0.0)
+WAVE_START_METER_CREAM_BIN = 48  # over meter rim (45); under fill shimmer (49)
+WAVE_START_METER_CREAM_HALO_ENABLED = True
+WAVE_START_METER_CREAM_HALO_HALF = 0.078
+WAVE_START_METER_CREAM_HALO_START = 0.40
+WAVE_START_METER_CREAM_HALO_PEAK = 1.32
+WAVE_START_METER_CREAM_HALO_SEC = 0.26
+WAVE_START_METER_CREAM_HALO_PEAK_ALPHA = 0.16
+WAVE_START_METER_CREAM_HALO_COLOR = (1.0, 0.97, 0.78, 1.0)
 
 # Persistent reclaim purity meter (aspect2d bar: pollution → purity fill).
 # Empty bar = street still inky; fills warm as packs clear pollution.

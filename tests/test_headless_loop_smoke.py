@@ -1218,30 +1218,43 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         wave_burst_src = _read('toontown/reclaim/WaveCreamBurstFx.py')
         self.assertIn('WAVE_ANNOUNCE_CREAM_EDGE_SPARKLE_ENABLED', wave_burst_src)
 
-        # Wave-start purity meter hose pop — sunny squash/stretch on pack spawn.
+        # Wave-start purity meter hose pop cream deepen — sunny squash/stretch
+        # + rising cream flecks / soft halo on pack spawn (#220 deepen).
         for wave_start_key in (
                 'WAVE_START_METER_POP_ENABLED',
                 'WAVE_START_METER_POP_SQUASH',
                 'WAVE_START_METER_POP_STRETCH',
                 'WAVE_START_METER_POP_SETTLE_SEC',
                 'WAVE_START_METER_RIM_COLOR',
-                'WAVE_START_METER_RIM_SEC'):
+                'WAVE_START_METER_RIM_SEC',
+                'WAVE_START_METER_CREAM_ENABLED',
+                'WAVE_START_METER_CREAM_COUNT',
+                'WAVE_START_METER_CREAM_RISE',
+                'WAVE_START_METER_CREAM_COLOR',
+                'WAVE_START_METER_CREAM_HALO_ENABLED'):
             self.assertIn(
                 wave_start_key, reclaim_names,
                 msg='ReclaimGlobals missing %s' % wave_start_key)
         wave_start_assigns = _assign_map(self.reclaim_tree)
         self.assertIs(
             wave_start_assigns.get('WAVE_START_METER_POP_ENABLED'), True)
+        self.assertIs(
+            wave_start_assigns.get('WAVE_START_METER_CREAM_ENABLED'), True)
         wave_start_hud_methods = _class_method_names(
             _module_ast('toontown/reclaim/PurityMeterHud.py'), 'PurityMeterHud')
         self.assertIn('popWaveStart', wave_start_hud_methods)
+        self.assertIn('_buildWaveStartCreamJuice', wave_start_hud_methods)
+        self.assertIn('_spawnWaveStartCreamFlecks', wave_start_hud_methods)
+        self.assertIn('_spawnWaveStartCreamHalo', wave_start_hud_methods)
         self.assertIn('_resetRootScale', wave_start_hud_methods)
         wave_start_director_src = _read(
             'toontown/reclaim/DistributedReclaimDirector.py')
         self.assertIn('popWaveStart', wave_start_director_src)
         wave_start_hud_src = _read('toontown/reclaim/PurityMeterHud.py')
         self.assertIn('WAVE_START_METER_POP', wave_start_hud_src)
+        self.assertIn('WAVE_START_METER_CREAM', wave_start_hud_src)
         self.assertIn('reclaimPurityMeterWaveStartHose', wave_start_hud_src)
+        self.assertIn('reclaimPurityMeterWaveStartCream', wave_start_hud_src)
 
         # Purity-complete meter hose settle — stretch→settle after celebration.
         for complete_settle_key in (
