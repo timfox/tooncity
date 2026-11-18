@@ -61,6 +61,8 @@ class MeleeCombatController(DirectObject):
         self._comboHits = 0
         self._comboNP = None
         self._comboIval = None
+        self._comboFleckIval = None
+        self._comboFleckNodes = []
         self.targetFinder = SoftTargetFinder(avatar)
         self._hintNP = None
         self._lockHintNP = None
@@ -409,7 +411,7 @@ class MeleeCombatController(DirectObject):
         return Task.done
 
     def _showComboCounter(self, hits):
-        """Readable punch counter — pops on each connect, then settles."""
+        """Readable punch counter — rubber-hose squash/stretch pop on connect."""
         text = '%d %s' % (int(hits), HackSlashConfig.COMBO_COUNTER_LABEL)
         colors = HackSlashConfig.COMBO_COUNTER_COLORS
         color = colors[min(max(0, hits - 1), len(colors) - 1)]
@@ -440,25 +442,32 @@ class MeleeCombatController(DirectObject):
             except Exception:
                 pass
             self._comboIval = None
+        self._clearComboFlecks()
         baseScale = HackSlashConfig.COMBO_COUNTER_BASE_SCALE
-        popScale = HackSlashConfig.COMBO_COUNTER_POP_SCALE
         # Slight size climb so long strings stay readable as a reward.
         grow = min(0.04, 0.008 * max(0, hits - 1))
         settle = baseScale + grow
-        peak = popScale + grow
-        self._comboIval = Sequence(
-            LerpScaleInterval(
-                self._comboNP, HackSlashConfig.COMBO_COUNTER_POP_SEC, peak),
-            LerpScaleInterval(
-                self._comboNP, HackSlashConfig.COMBO_COUNTER_SETTLE_SEC, settle),
-            name=self.avatar.uniqueName('hackslashComboPop'),
-        )
-        self._comboIval.start()
+        self._comboIval = HitJuice.playComboCounterPop(
+            self._comboNP, settle,
+            name=self.avatar.uniqueName('hackslashComboPop'))
+        try:
+            fleckOrigin = self._comboNP.getPos()
+            parent = aspect2d  # noqa: F821
+        except Exception:
+            fleckOrigin = None
+            parent = None
+        if fleckOrigin is not None:
+            fleckIval, flecks = HitJuice.spawnComboInkFlecks(
+                fleckOrigin, parent=parent,
+                name=self.avatar.uniqueName('hackslashComboFlecks'))
+            self._comboFleckIval = fleckIval
+            self._comboFleckNodes = flecks
 
     def _fadeComboCounter(self):
         if self._comboNP is None or self._comboNP.isEmpty():
             self._comboHits = 0
             return
+        self._clearComboFlecks()
         if self._comboIval:
             try:
                 self._comboIval.pause()
@@ -474,8 +483,19 @@ class MeleeCombatController(DirectObject):
         self._comboIval.start()
         self._comboHits = 0
 
+    def _clearComboFlecks(self):
+        if self._comboFleckIval is not None:
+            try:
+                self._comboFleckIval.pause()
+            except Exception:
+                pass
+            self._comboFleckIval = None
+        HitJuice.clearComboInkFlecks(self._comboFleckNodes)
+        self._comboFleckNodes = []
+
     def _clearComboCounter(self):
         taskMgr.remove(self.avatar.uniqueName('hackslashComboBreak'))  # noqa: F821
+        self._clearComboFlecks()
         if self._comboIval:
             try:
                 self._comboIval.pause()
