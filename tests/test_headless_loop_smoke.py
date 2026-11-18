@@ -561,7 +561,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         # Phase combat AI (beyond Smudge chase) must stay registered beside looks.
         self.assertIn(1, cg.OVERLORD_PHASE_COMBAT)
         self.assertIn(2, cg.OVERLORD_PHASE_COMBAT)
-        self.assertEqual(cg.OVERLORD_PHASE_COMBAT[1].get('moveMode'), 'rain')
+        self.assertEqual(cg.OVERLORD_PHASE_COMBAT[1].get('moveMode'), 'rising')
         self.assertEqual(cg.OVERLORD_PHASE_COMBAT[2].get('moveMode'), 'enrage')
         self.assertIsNotNone(cg.overlordPhaseCombat(1))
         self.assertIsNotNone(cg.overlordPhaseCombat(2))
@@ -3215,8 +3215,9 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             'toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('__maybeInterruptMeleeTelegraph', corrupt_ai_src)
         self.assertIn('isMeleeInterruptibleTelegraph', corrupt_ai_src)
-        self.assertIn('SNARE_STRING_COUNTER_INTERRUPT', corrupt_ai_src)
         cg_src = _read('toontown/corruption/CorruptionGlobals.py')
+        # Flag lives in CorruptionGlobals; AI routes through the helper.
+        self.assertIn('SNARE_STRING_COUNTER_INTERRUPT', cg_src)
         self.assertIn('BRUTE_SPIT_MELEE_INTERRUPT', cg_src)
         self.assertIn('GAGSTER_LOB_MELEE_INTERRUPT', cg_src)
         self.assertIn('isMeleeInterruptibleTelegraph', cg_src)

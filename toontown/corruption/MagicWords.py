@@ -137,7 +137,7 @@ class SpawnCorrupt(MagicWord):
         'Generates DistributedCorruptToonAI in the invoker zone. '
         'Optional count (1-8), hp (0=archetype default base), '
         'archetype (0=Ink, 1=Brute, 2=Snare, 3=Gagster, 4=Corrupted Oswald), '
-        'finalePhase (0=street, 1=Overlord P1 rain AoE, 2=Unleashed rain+surge+slam). '
+        'finalePhase (0=street, 1=Overlord P1 rain+slam, 2=Unleashed rain+surge+slam). '
         'Use ~spawngagster / ~spawnoverlord / ~spawncorruptedoswald for shortcuts. '
         'Defeat lowers zone pollution. Pair with ~hackslash 0 for melee.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
@@ -188,10 +188,10 @@ class SpawnGagster(MagicWord):
 
 class SpawnOverlord(MagicWord):
     aliases = ['spawnoverlord', 'spawninkoverlord', 'overlord']
-    desc = 'Spawn Ink Overlord with phase combat AI (P1 rain / P2 enrage).'
+    desc = 'Spawn Ink Overlord with phase combat AI (P1 rain+slam / P2 enrage).'
     advancedDesc = (
         'Shortcut for Overlord phase AI. Optional count, hp (0=90 base), '
-        'finalePhase (1=rising rain AoE, 2=unleashed rain+surge+slam). '
+        'finalePhase (1=rising rain+slam, 2=unleashed rain+surge+slam). '
         'Defaults to P1. Pair with ~hackslash 0.')
     execLocation = MagicWordConfig.EXEC_LOC_SERVER
     accessLevel = 'MODERATOR'

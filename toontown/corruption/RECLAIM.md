@@ -402,8 +402,11 @@ not a crimson Ink Smudge smack reskin). Full dialogue is out of scope here.
    stretch hold tracks telegraphDelay — distinct from Brute spit cream drip
    / Snare whip / Smudge hose / Gunk puddle bloom),
    HUD `OVERLORD · P1 RISE`, wind-up chip `P1 MAGENTA SWELL`.
-   **AI**: slower chase + mid-range **ink-rain AoE** (`OVERLORD_PHASE_COMBAT[1]`)
-   matching the rain puddle / spread — not Smudge melee smack.
+   **AI**: slower chase + mid-range **ink-rain AoE** plus close-range **slam**
+   when the player is already in the ink (`OVERLORD_PHASE_COMBAT[1]` two-note
+   Rising kit — second pressure beyond rain-only before Unleash) matching the
+   rain puddle / spread — not Smudge melee smack. Mid-range surge stays on
+   Unleashed only.
 2. Clear packs → purity beat → director restarts **Phase 2**.
 3. **Phase 2 — Unleashed**: crimson telegraphs (wider squash / taller stretch) +
    phase-two SFX, hotter crown flash, denser ink rain, snappier cream

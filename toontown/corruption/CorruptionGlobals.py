@@ -2957,14 +2957,14 @@ FINALE_PHASE_LOOK = {
 
 # Ink Overlord AI combat (server) — phase-differentiated beyond Smudge chase.
 # Client ink-rain / crown telegraph already plays on announceAttackTelegraph;
-# these tunables make the resolve match: P1 rain AoE puddle, P2 enrage
-# rain + mid ink_surge + close slam (three-note Unleashed kit). Radii track
-# OVERLORD_PHASE_INK_RAIN_LOOK spread/puddle.
-# No KH branding — rubber-hose Oswald stretch-punch fight only.
+# these tunables make the resolve match: P1 rising rain + close slam
+# (two-note Rising kit), P2 enrage rain + mid ink_surge + close slam
+# (three-note Unleashed kit). Radii track OVERLORD_PHASE_INK_RAIN_LOOK
+# spread/puddle. No KH branding — rubber-hose Oswald stretch-punch fight only.
 OVERLORD_PHASE_COMBAT = {
     1: {
         'id': 'rising-rain',
-        # Slower boss walk — telegraph rain owns the beat.
+        # Slower boss walk — telegraph rain owns the mid-range beat.
         'chaseSpeed': 7.2,
         # Engage rain from mid-range (matches ink-rain spread / puddle).
         'meleeRange': 8.0,
@@ -2975,7 +2975,16 @@ OVERLORD_PHASE_COMBAT = {
         'attackCooldown': 2.45,
         # Rain hits every toon in the puddle, not just the chase target.
         'aoe': True,
-        'moveMode': 'rain',
+        'moveMode': 'rising',
+        # Close-range slam — second Rising pressure beyond rain-only so Silly
+        # climax is not one-note before HP-threshold Unleash. Slower / softer
+        # than P2 slam; no ink_surge on P1 (surge stays Unleashed-only).
+        'slamHitRange': 4.6,
+        'slamNearMissRange': 6.8,
+        'slamDamage': 3,
+        'slamTelegraphDelay': 0.55,
+        'slamCooldown': 1.65,
+        'slamMeleeRange': 4.4,
     },
     2: {
         'id': 'unleashed-enrage',
@@ -3011,7 +3020,14 @@ OVERLORD_PHASE_COMBAT = {
 }
 
 # ---------------------------------------------------------------------------
-# Overlord P2 ink surge — third Unleashed pressure pattern (gap scan #8).
+# Overlord P1 Rising slam — second Rising pressure beyond rain (TC-342).
+# P1 was rain-only; close slam gives a two-note kit before Unleash. Soft /
+# slow vs P2 slam. OVERLORD_P1_SLAM_ENABLED = False restores rain-only.
+# ---------------------------------------------------------------------------
+OVERLORD_P1_SLAM_ENABLED = True
+
+# ---------------------------------------------------------------------------
+# Overlord P2 ink surge — third Unleashed pressure pattern (#327).
 # P2 was two-note (rain AoE / close slam). Mid-range ink_surge dashes then
 # lands a self-centered AoE so climax combat reads three notes. Not cream FX.
 # OVERLORD_INK_SURGE_ENABLED = False restores legacy rain-or-slam picker.
@@ -3220,7 +3236,7 @@ def overlordPhaseCombat(phaseIndex):
 
 
 def overlordSlamMeleeRange(stats=None):
-    """Close slam engage for Unleashed Overlord."""
+    """Close slam engage for Rising / Unleashed Overlord."""
     if stats and 'slamMeleeRange' in stats:
         return max(0.5, float(stats['slamMeleeRange']))
     if stats and 'slamHitRange' in stats:
@@ -3247,11 +3263,25 @@ def overlordSurgeStop(stats=None):
     return max(0.0, float(OVERLORD_INK_SURGE_STOP))
 
 
+def overlordPickRisingMove(dist, stats=None):
+    """Choose Rising move: close slam, else rain.
+
+    Two-note P1 kit (TC-342 / gap scan #8). Soft close slam between rain
+    volleys so Silly climax is not rain-only before HP-threshold Unleash.
+    With slam disabled, stays on rain. Never picks ink_surge (P2 only).
+    """
+    if not OVERLORD_P1_SLAM_ENABLED:
+        return 'rain'
+    if float(dist) <= overlordSlamMeleeRange(stats):
+        return 'slam'
+    return 'rain'
+
+
 def overlordPickEnrageMove(dist, stats=None):
     """Choose Unleashed move: close slam, mid ink_surge, else rain.
 
-    Three-note P2 kit (gap scan #8). With surge disabled, falls back to
-    rain-or-slam. P1 callers should not use this — they stay on rain.
+    Three-note P2 kit (#327). With surge disabled, falls back to
+    rain-or-slam. Rising P1 uses ``overlordPickRisingMove`` instead.
     """
     slamRange = overlordSlamMeleeRange(stats)
     if float(dist) <= slamRange:

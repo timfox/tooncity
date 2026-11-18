@@ -14,9 +14,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     """Hostile corrupt toon: chase, telegraphed smack, defeat → pollution reclaim.
 
     Ink Overlord (finalePhase 1/2) uses phase combat instead of Smudge chase:
-    P1 ink-rain AoE, P2 enrage rain + mid ink_surge + close slam. Street
-    archetypes use role AI (Gagster kite, Brute hold, Snare flank) so
-    wave-script pack intent survives after combat starts — not all
+    P1 ink-rain AoE + close slam, P2 enrage rain + mid ink_surge + close
+    slam. Street archetypes use role AI (Gagster kite, Brute hold, Snare
+    flank) so wave-script pack intent survives after combat starts — not all
     nearest-chase.
 
     Sludge Brute fires a traveling spit projectile (trail + land splash) from
@@ -504,12 +504,14 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.uniqueName('corrupt-attack'))
 
     def __pickOverlordMove(self, target):
-        """P1 always rains; P2 picks slam / ink_surge / rain by range."""
+        """P1 picks slam / rain; P2 picks slam / ink_surge / rain by range."""
         mode = str(self._stats.get('moveMode', 'rain'))
-        if mode != 'enrage':
-            return 'rain'
         dist = self.__planarDist(target)
-        return CorruptionGlobals.overlordPickEnrageMove(dist, self._stats)
+        if mode == 'enrage':
+            return CorruptionGlobals.overlordPickEnrageMove(dist, self._stats)
+        if mode == 'rising':
+            return CorruptionGlobals.overlordPickRisingMove(dist, self._stats)
+        return 'rain'
 
     def __telegraphDelayForMove(self, move):
         if move == 'slam':

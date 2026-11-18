@@ -59,7 +59,7 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertIsNotNone(p2)
         self.assertEqual(p1['id'], 'rising-rain')
         self.assertEqual(p2['id'], 'unleashed-enrage')
-        self.assertEqual(p1['moveMode'], 'rain')
+        self.assertEqual(p1['moveMode'], 'rising')
         self.assertEqual(p2['moveMode'], 'enrage')
         self.assertTrue(p1['aoe'])
         self.assertTrue(p2['aoe'])
@@ -69,10 +69,13 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertGreater(p2['attackHitRange'], p1['attackHitRange'])
         self.assertLess(p2['attackCooldown'], p1['attackCooldown'])
         self.assertLess(p2['telegraphDelay'], p1['telegraphDelay'])
-        # Slam kit only on Unleashed.
+        # Both phases carry slam; surge stays Unleashed-only.
+        self.assertIn('slamHitRange', p1)
+        self.assertIn('slamDamage', p1)
         self.assertIn('slamHitRange', p2)
         self.assertIn('slamDamage', p2)
-        self.assertNotIn('slamHitRange', p1)
+        self.assertNotIn('surgeMaxRange', p1)
+        self.assertIn('surgeMaxRange', p2)
 
     def test_finale_phase_look_has_telegraph_punch_timing(self):
         """P1/P2 looks carry AV telegraph + impact punch timing keys."""
@@ -162,6 +165,7 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         pick_end = pick.find('\n    def ', 1)
         pick_body = pick if pick_end < 0 else pick[:pick_end]
         self.assertIn('overlordPickEnrageMove', pick_body)
+        self.assertIn('overlordPickRisingMove', pick_body)
         resolve = src[src.find('def __resolveAttack'):]
         resolve_end = resolve.find('\n    def ', 1)
         resolve_body = resolve if resolve_end < 0 else resolve[:resolve_end]
@@ -203,11 +207,18 @@ class OverlordPhaseCombatTests(unittest.TestCase):
         self.assertGreater(p2['attackNearMissRange'], p1['attackNearMissRange'])
         self.assertGreater(p2['meleeRange'], p1['meleeRange'])
         # Slam kit is close pressure between rain volleys — shorter than rain.
+        self.assertLess(p1['slamHitRange'], p1['attackHitRange'])
+        self.assertLess(p1['slamMeleeRange'], p1['meleeRange'])
+        self.assertLess(p1['slamTelegraphDelay'], p1['telegraphDelay'])
         self.assertLess(p2['slamHitRange'], p2['attackHitRange'])
         self.assertLess(p2['slamMeleeRange'], p2['meleeRange'])
         self.assertLess(p2['slamTelegraphDelay'], p2['telegraphDelay'])
         self.assertLess(p2['slamCooldown'], p2['attackCooldown'])
         self.assertGreater(p2['slamDamage'], 0)
+        # Rising slam is softer / slower than Unleashed slam.
+        self.assertLess(p1['slamDamage'], p2['slamDamage'])
+        self.assertGreater(p1['slamTelegraphDelay'], p2['slamTelegraphDelay'])
+        self.assertLess(p1['slamHitRange'], p2['slamHitRange'])
 
     def test_p2_ink_surge_third_pressure_note(self):
         """Unleashed mid-range ink_surge sits between slam and rain."""
