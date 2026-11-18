@@ -31,6 +31,7 @@ from .ComboCounterCreamEdgeFx import ComboCounterCreamEdgePulse
 from .DodgeCancelCreamWashFx import DodgeCancelCreamWashPulse
 from .DodgePerfectFx import DodgePerfectFx
 from .DodgeTrailFx import DodgeTrailFx
+from .HitAssistCreamWashFx import HitAssistCreamWashPulse
 from .HitSparkFx import HitSparkFx
 from .HitStopFx import HitStopFx
 from .HurtStaggerCreamWashFx import HurtStaggerCreamWashPulse
@@ -90,6 +91,7 @@ class MeleeCombatController(DirectObject):
         self._hurtDodgeBuffered = False
         self._hurtCreamWash = HurtStaggerCreamWashPulse()
         self._dodgeCancelCreamWash = DodgeCancelCreamWashPulse()
+        self._hitAssistCreamWash = HitAssistCreamWashPulse()
         self._dodgeTrail = DodgeTrailFx(avatar)
         self._dodgePerfect = DodgePerfectFx(avatar)
         self._hitStop = HitStopFx(avatar)
@@ -197,6 +199,7 @@ class MeleeCombatController(DirectObject):
         self._clearHurtRecoveryCancelWindow()
         self._clearHurtCreamWash()
         self._clearDodgeCancelCreamWash()
+        self._clearHitAssistCreamWash()
         self._clearPerfectDodge()
         self._clearHitSpark()
         self._clearSlamDust()
@@ -656,7 +659,9 @@ class MeleeCombatController(DirectObject):
 
         Fires only when the hit target matches the current soft-lock key.
         Caps keep it a rubber-hose assist — never a hard snap. Page-up/down
-        still owns camera angles.
+        still owns camera angles. When a real yaw nudge lands, HitAssistCreamWashPulse
+        plays a quiet cream flash + aftershock so soft-lock glue reads juicier
+        (distinct from cycle reticle cream #233 and hurt wash cream #247).
         """
         if not getattr(HackSlashConfig, 'LOCK_HIT_ASSIST_ENABLED', True):
             return
@@ -672,6 +677,7 @@ class MeleeCombatController(DirectObject):
         except Exception:
             return
 
+        nudged = False
         # Soft heads-up: close a capped fraction of remaining yaw error.
         try:
             av = self.avatar
@@ -683,8 +689,13 @@ class MeleeCombatController(DirectObject):
             nudge = assistAimYawNudge(delta)
             if abs(nudge) > 1e-6:
                 av.setH(render, curH + nudge)  # noqa: F821
+                nudged = True
         except Exception:
             pass
+
+        # Quiet cream flash only when assist actually glued facing.
+        if nudged:
+            self._playHitAssistCreamWash()
 
         # Yield to explicit page-up / page-down camera angles.
         if getattr(self.avatar, 'isPageUp', 0) or getattr(self.avatar, 'isPageDown', 0):
@@ -714,6 +725,20 @@ class MeleeCombatController(DirectObject):
                 curHpr[1] + pitchDelta,
                 curHpr[2],
             )
+        except Exception:
+            pass
+
+    def _playHitAssistCreamWash(self):
+        """Soft cream wash flash + aftershock when soft-lock aim nudge lands."""
+        try:
+            # HitAssistCreamWashPulse owns deepened assist cream + residual aftershock.
+            self._hitAssistCreamWash.play()
+        except Exception:
+            pass
+
+    def _clearHitAssistCreamWash(self):
+        try:
+            self._hitAssistCreamWash.clear()
         except Exception:
             pass
 
