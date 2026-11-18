@@ -3098,6 +3098,119 @@ def normalizeFinalePhase(phaseIndex):
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Boss / chase HP bar (client HUD) — Ink Overlord + Corrupted Oswald only.
+# Readable life bar from synced setHp/setMaxHp. Not cream FX deepen; no KH.
+# BOSS_HP_BAR_ENABLED = False hides the bar without touching combat AI.
+# ---------------------------------------------------------------------------
+BOSS_HP_BAR_ENABLED = True
+BOSS_HP_BAR_POS = (0.0, 0.0, 0.82)  # above purity meter (z 0.50)
+BOSS_HP_BAR_WIDTH = 0.78
+BOSS_HP_BAR_HEIGHT = 0.042
+BOSS_HP_BAR_RIM_PAD = 0.014
+BOSS_HP_BAR_BIN = 52  # over purity meter (45); under flash bins ~56+
+BOSS_HP_BAR_LABEL_SCALE = 0.042
+BOSS_HP_BAR_LABEL_Z = 0.062
+BOSS_HP_BAR_PCT_SCALE = 0.036
+BOSS_HP_BAR_PCT_Z = -0.002
+BOSS_HP_BAR_TRACK_COLOR = (0.10, 0.04, 0.12, 0.88)
+BOSS_HP_BAR_RIM_COLOR = (0.55, 0.22, 0.55, 0.72)
+BOSS_HP_BAR_LABEL_COLOR = (1.0, 0.92, 0.95, 1.0)
+BOSS_HP_BAR_PCT_COLOR = (1.0, 0.96, 0.9, 1.0)
+# Fill / rim by subject — Overlord phase look + Oswald betrayal stain.
+BOSS_HP_BAR_FILL_OVERLORD_P1 = (0.95, 0.28, 0.95, 0.96)
+BOSS_HP_BAR_FILL_OVERLORD_P2 = (0.95, 0.22, 0.16, 0.98)
+BOSS_HP_BAR_FILL_OSWALD = (0.92, 0.28, 0.22, 0.96)
+BOSS_HP_BAR_RIM_OVERLORD_P1 = (1.0, 0.55, 1.0, 0.72)
+BOSS_HP_BAR_RIM_OVERLORD_P2 = (1.0, 0.32, 0.22, 0.78)
+BOSS_HP_BAR_RIM_OSWALD = (1.0, 0.42, 0.3, 0.75)
+BOSS_HP_BAR_DEFAULT_OVERLORD_LABEL = 'Ink Overlord'
+BOSS_HP_BAR_DEFAULT_OSWALD_LABEL = 'Corrupted Oswald'
+
+
+def resolveBossHpBarFinalePhase(finalePhase=0, name=''):
+    """Resolve Overlord phase from reclaim director phase and/or name."""
+    phase = normalizeFinalePhase(finalePhase)
+    if phase >= 1:
+        return phase
+    text = (name or '').lower()
+    if 'unleashed' in text:
+        return 2
+    if 'overlord' in text:
+        return 1
+    return 0
+
+
+def isBossOrChaseHpBarSubject(archetype=0, name='', finalePhase=0):
+    """True for Ink Overlord (finale phase/name) or Corrupted Oswald chase."""
+    if not BOSS_HP_BAR_ENABLED:
+        return False
+    try:
+        aid = int(archetype)
+    except (TypeError, ValueError):
+        aid = ARCHETYPE_INK
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return True
+    return resolveBossHpBarFinalePhase(finalePhase, name) >= 1
+
+
+def bossHpBarRatio(hp, maxHp):
+    """Clamped 0..1 life fraction for the boss/chase bar fill."""
+    try:
+        cur = float(hp)
+        ceiling = float(maxHp)
+    except (TypeError, ValueError):
+        return 0.0
+    if ceiling <= 0.0:
+        return 0.0
+    return max(0.0, min(1.0, cur / ceiling))
+
+
+def bossHpBarLabel(name='', archetype=0, finalePhase=0):
+    """Readable bar title — prefers live name, else archetype/overlord default."""
+    text = str(name or '').strip()
+    if text:
+        return text
+    try:
+        aid = int(archetype)
+    except (TypeError, ValueError):
+        aid = ARCHETYPE_INK
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return BOSS_HP_BAR_DEFAULT_OSWALD_LABEL
+    phase = resolveBossHpBarFinalePhase(finalePhase, name)
+    if phase >= 1:
+        return BOSS_HP_BAR_DEFAULT_OVERLORD_LABEL
+    return CORRUPT_TOON_DEFAULT_NAME
+
+
+def bossHpBarFillColor(archetype=0, finalePhase=0, name=''):
+    """Fill RGBA for the active boss/chase subject."""
+    try:
+        aid = int(archetype)
+    except (TypeError, ValueError):
+        aid = ARCHETYPE_INK
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return BOSS_HP_BAR_FILL_OSWALD
+    phase = resolveBossHpBarFinalePhase(finalePhase, name)
+    if phase >= 2:
+        return BOSS_HP_BAR_FILL_OVERLORD_P2
+    return BOSS_HP_BAR_FILL_OVERLORD_P1
+
+
+def bossHpBarRimColor(archetype=0, finalePhase=0, name=''):
+    """Outer rim RGBA matching fill subject."""
+    try:
+        aid = int(archetype)
+    except (TypeError, ValueError):
+        aid = ARCHETYPE_INK
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return BOSS_HP_BAR_RIM_OSWALD
+    phase = resolveBossHpBarFinalePhase(finalePhase, name)
+    if phase >= 2:
+        return BOSS_HP_BAR_RIM_OVERLORD_P2
+    return BOSS_HP_BAR_RIM_OVERLORD_P1
+
+
 def overlordPhaseCombat(phaseIndex):
     """Return AI combat dict for Ink Overlord phase, or None."""
     phase = normalizeFinalePhase(phaseIndex)
