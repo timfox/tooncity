@@ -70,7 +70,10 @@ def _extract_pure_helpers():
                     keep.append(node)
                     break
         elif isinstance(node, ast.FunctionDef) and node.name in (
+                '_streetLooksPolluted',
+                '_streetActUnlocked',
                 'streetNeedsBreadcrumb',
+                'streetBreadcrumbDimmed',
                 'placemarkerPulseParams',
                 'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
@@ -78,6 +81,10 @@ def _extract_pure_helpers():
                 'playgroundFogEdgePulseParams',
                 'playgroundFogEdgeCreamParams'):
             keep.append(node)
+    if not any(
+            isinstance(n, ast.FunctionDef) and n.name == '_streetLooksPolluted'
+            for n in keep):
+        raise AssertionError('_streetLooksPolluted not found in %s' % BREADCRUMB_REL)
     if not any(
             isinstance(n, ast.FunctionDef) and n.name == 'streetNeedsBreadcrumb'
             for n in keep):
@@ -178,6 +185,8 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
         for expected in (
                 'reclaimStreetEntries',
                 'streetNeedsBreadcrumb',
+                'streetBreadcrumbDimmed',
+                'noteCampaignActUnlocked',
                 'placemarkerPulseParams',
                 'placemarkerPulseCreamParams',
                 'streetBreadcrumbPulseParams',
@@ -188,6 +197,9 @@ class CorruptStreetBreadcrumbTest(unittest.TestCase):
                 'ensureCorruptStreetBreadcrumbs',
                 'stopCorruptStreetBreadcrumbs'):
             self.assertIn(expected, names, msg='missing %s' % expected)
+        # Act-unlock soft-gate consumer (dim locked crumbs).
+        self.assertIn("self.accept('campaignActUnlocked'", self.src)
+        self.assertIn('unlockedThrough', self.src)
 
         # Rubber-hose placemarker copy for all three reclaim tunnels.
         for needle in (
