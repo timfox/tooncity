@@ -634,8 +634,9 @@ class MeleeCombatController(DirectObject):
             name=self.avatar.uniqueName('hackslashLaunchHang'))
 
         def startCreamHangSparkle():
-            # World-space cream flecks + halo at apex — HitJuice hang still
-            # owns hover/squash; CreamSlamFlashFx stays aspect2d on connect.
+            # World-space cream flecks + halo at apex, then delayed cream
+            # aftershock — HitJuice hang still owns hover/squash;
+            # CreamSlamFlashFx stays aspect2d on connect.
             try:
                 parent = render  # noqa: F821
             except Exception:
