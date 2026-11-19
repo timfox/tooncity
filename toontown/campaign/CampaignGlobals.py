@@ -1612,6 +1612,23 @@ STATE_NAMES = {
     STATE_VICTORY: 'victory',
 }
 
+
+def campaignChasePending(state, chaseCleared=0):
+    """True while STATE_VICTORY and Corrupted Oswald chase is not cleared.
+
+    Thin progress-field helper for hub tip / breadcrumb honesty — victory
+    with chaseCleared=0 must not invite reclaim-with-Oswald.
+    """
+    try:
+        victory = int(state) == int(STATE_VICTORY)
+    except (TypeError, ValueError):
+        victory = state == STATE_VICTORY
+    try:
+        cleared = int(chaseCleared or 0)
+    except (TypeError, ValueError):
+        cleared = 0
+    return bool(victory and cleared == 0)
+
 # Per-avatar act unlock persistence (CampaignProgressSave / AI dataFolder).
 # Survives logout + district restart without a DistributedToon DC field.
 # CAMPAIGN_PROGRESS_ENABLED = False keeps session-only director memory.

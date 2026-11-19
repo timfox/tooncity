@@ -250,10 +250,11 @@ class BreadcrumbUnlockProgressSyncTests(unittest.TestCase):
         self.assertGreater(sync_idx, 0)
         next_idx = self.crumb_src.find('\n    def ', sync_idx + 1)
         sync_win = self.crumb_src[
-            sync_idx:next_idx if next_idx > 0 else sync_idx + 700]
-        self.assertIn('setClientUnlockedThrough', sync_win)
-        self.assertIn('noteCampaignActUnlocked', sync_win)
+            sync_idx:next_idx if next_idx > 0 else sync_idx + 900]
+        # Unlock + chase-pending honesty from progress fields.
+        self.assertIn('noteCampaignProgressFields', sync_win)
         self.assertIn('unlockedThrough', sync_win)
+        self.assertIn('chaseCleared', sync_win)
         # Arity parity with PollutionManager fan-out.
         self.assertIn('reclaimCount', sync_win)
         self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', self.crumb_src)
