@@ -310,10 +310,11 @@ class OswaldPresenceClient(DirectObject):
     stand or ACTS street landmark (near-avatar only as unmapped fallback),
     arm E-talk when approached, greet once per zone visit (first-ever meet
     uses the once-ever first-meet tip and persists ``oswaldMet``; later
-    greets soft-next from ``oswaldCheered`` + unlock progress), cheer on
-    street-clear purity messengers (first cheer latches + persists
-    ``oswaldCheered``), clear after betrayal messengers / persisted victory
-    sync.
+    greets soft-next from ``oswaldCheered`` + unlock progress; ``_greetedZone``
+    clears on zone leave and re-arms after ``campaignActUnlocked`` so plaza
+    E-talk can show the new soft-next tip), cheer on street-clear purity
+    messengers (first cheer latches + persists ``oswaldCheered``), clear
+    after betrayal messengers / persisted victory sync.
     """
 
     def __init__(self):
@@ -470,7 +471,12 @@ class OswaldPresenceClient(DirectObject):
             self._onZoneChange(self._zoneId)
 
     def _onCampaignActUnlocked(self, nextIndex=0, zoneId=0):
-        """Raise unlock latch so post-cheer greets soft-next mid-session."""
+        """Raise unlock latch so post-cheer greets soft-next mid-session.
+
+        Soft-next tip text changes with unlock progress — clear the
+        once-per-visit greet latch and re-arm E-talk when still in range
+        so plaza talk shows the new soft-next without leaving the zone.
+        """
         try:
             unlocked = int(nextIndex)
         except Exception:
@@ -479,6 +485,7 @@ class OswaldPresenceClient(DirectObject):
             return
         self._unlockedThrough = max(int(self._unlockedThrough or 0), unlocked)
         self._refreshSoftNextStreet()
+        self._rearmSoftNextGreet()
 
     def _refreshSoftNextStreet(self):
         """Derive soft-next street name from unlock progress (PlayEntry twin)."""
@@ -503,6 +510,21 @@ class OswaldPresenceClient(DirectObject):
         name = acts[idx].get('name')
         self._softNextStreet = str(name) if name else None
 
+    def _rearmSoftNextGreet(self):
+        """Drop greet latch; re-arm E-talk if still in interact range.
+
+        Zone leave clears ``_greetedZone`` via ``_onZoneChange``. Act unlock
+        also re-arms so hub first-meet → unlock soft-next can E-talk again
+        without hopping tunnels. No cream / no KH.
+        """
+        self._greetedZone = None
+        if not self._inRange or self._zoneId is None:
+            return
+        if not shouldShowPresence(self._zoneId, betrayed=self._betrayed):
+            return
+        self._armInteract(self._zoneId)
+        self._showInteractPrompt()
+
     def _onZoneChange(self, zoneId=None):
         if zoneId is None and hasattr(base, 'localAvatar'):  # noqa: F821
             zoneId = getattr(base.localAvatar, 'zoneId', None)
@@ -521,6 +543,9 @@ class OswaldPresenceClient(DirectObject):
         self._clearTip()
         self._clearBody()
         self._inRange = False
+        # Once-per-zone-visit greet latch — clear on leave so re-entry
+        # (and post-unlock soft-next) can E-talk again.
+        self._greetedZone = None
         self._zoneId = zoneId
         if not shouldShowPresence(zoneId, betrayed=self._betrayed):
             return
