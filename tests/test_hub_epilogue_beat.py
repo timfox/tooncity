@@ -160,6 +160,7 @@ class HubEpilogueBeatTests(unittest.TestCase):
         for need in (
                 'HubEpilogueBeatClient', 'epilogueBeatEnabled',
                 'epilogueBeatLabel', 'epilogueBeatAbsence', 'epilogueBeatTip',
+                'epilogueBeatPlazaPos', 'epilogueBeatForward',
                 'ensureHubEpilogueBeatClient', 'refreshHubEpilogueBeat',
                 'clearHubEpilogueBeat', 'stopHubEpilogueBeat'):
             self.assertIn(need, names)

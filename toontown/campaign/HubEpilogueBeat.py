@@ -2,12 +2,14 @@
 
 After Corrupted Oswald chase clear, TTC fog goes pristine again — this
 module adds an authored world placemarker + tip so soft-end closure is
-not HUD plate / HUB_VICTORY_TIP alone. Complements HubStainConfront
-(pending-stain confront). Celebration + Oswald absence confirmation on
-the washed plaza. After the placemarker lands, sends hubEpilogueBeatShown;
-PlayEntry tip-latches the post-wash F/C strip and OswaldPresence
-soft-clears the trusted face (orphan → accept; no cream deepen).
-Toontown spiritual sequel — no KH branding.
+not HUD plate / HUB_VICTORY_TIP alone. Authored plaza stand
+(HUB_EPILOGUE_BEAT_POS) — not near-avatar FORWARD. Complements
+HubStainConfront (pending-stain confront) + OswaldPresence hub stand.
+Celebration + Oswald absence confirmation on the washed plaza. After the
+placemarker lands, sends hubEpilogueBeatShown; PlayEntry tip-latches the
+post-wash F/C strip and OswaldPresence soft-clears the trusted face
+(orphan → accept; no cream deepen). Toontown spiritual sequel — no KH
+branding.
 """
 
 from __future__ import annotations
@@ -59,6 +61,18 @@ def epilogueBeatForward():
         CampaignGlobals, 'HUB_EPILOGUE_BEAT_FORWARD', 5.5))
 
 
+def epilogueBeatPlazaPos():
+    """Authored TTC washed-plaza stand (x, y, z, h) or None if unset."""
+    raw = getattr(CampaignGlobals, 'HUB_EPILOGUE_BEAT_POS', None)
+    if raw is None:
+        return None
+    try:
+        return (
+            float(raw[0]), float(raw[1]), float(raw[2]), float(raw[3]))
+    except Exception:
+        return None
+
+
 # Re-export pure gate for callers / tests that import from this module.
 __all__ = (
     'HubEpilogueBeatClient',
@@ -68,6 +82,7 @@ __all__ = (
     'epilogueBeatEnabled',
     'epilogueBeatForward',
     'epilogueBeatLabel',
+    'epilogueBeatPlazaPos',
     'epilogueBeatTip',
     'hubEpilogueBeatWanted',
     'refreshHubEpilogueBeat',
@@ -179,7 +194,7 @@ class HubEpilogueBeatClient(DirectObject):
             return
         if self._shown and self._markerNP is not None:
             return
-        self._placeMarkerNearAvatar()
+        self._placeMarker()
         self._flashTip()
         self._shown = True
         # One-shot post-wash tip latch + Oswald soft-clear: PlayEntry /
@@ -228,24 +243,18 @@ class HubEpilogueBeatClient(DirectObject):
         self._clearMarker()
         self._shown = False
 
-    def _placeMarkerNearAvatar(self):
-        self._clearMarker()
-        av = getattr(base, 'localAvatar', None)  # noqa: F821
-        parent = getattr(base, 'render', None)  # noqa: F821
-        if av is None or parent is None:
+    def _placeMarker(self):
+        """Authored plaza stand first; near-avatar FORWARD as fallback."""
+        stand = epilogueBeatPlazaPos()
+        if stand is not None:
+            self._placeMarkerAtPlaza(stand)
             return
-        try:
-            import math
-            baseX = float(av.getX())
-            baseY = float(av.getY())
-            baseZ = float(av.getZ())
-            heading = float(av.getH())
-            rad = math.radians(heading)
-            forward = epilogueBeatForward()
-            x = baseX - math.sin(rad) * forward
-            y = baseY + math.cos(rad) * forward
-            z = baseZ + 1.15
-        except Exception:
+        self._placeMarkerNearAvatar()
+
+    def _attachMarkerLabels(self, x, y, z, heading=None):
+        self._clearMarker()
+        parent = getattr(base, 'render', None)  # noqa: F821
+        if parent is None:
             return
         try:
             tn = TextNode('hubEpilogueBeatLabel')
@@ -254,6 +263,11 @@ class HubEpilogueBeatClient(DirectObject):
             tn.setTextColor(_MARKER_COLOR)
             np = parent.attachNewNode(tn)
             np.setPos(x, y, z)
+            if heading is not None:
+                try:
+                    np.setH(float(heading))
+                except Exception:
+                    pass
             np.setBillboardPointEye()
             np.setScale(0.85)
             self._markerNP = np
@@ -270,11 +284,45 @@ class HubEpilogueBeatClient(DirectObject):
             atn.setTextColor(_ABSENCE_COLOR)
             anp = parent.attachNewNode(atn)
             anp.setPos(x, y, z - 0.55)
+            if heading is not None:
+                try:
+                    anp.setH(float(heading))
+                except Exception:
+                    pass
             anp.setBillboardPointEye()
             anp.setScale(0.55)
             self._absenceNP = anp
         except Exception:
             self._absenceNP = None
+
+    def _placeMarkerAtPlaza(self, stand=None):
+        """Place washed-plaza labels at authored HUB_EPILOGUE_BEAT_POS."""
+        if stand is None:
+            stand = epilogueBeatPlazaPos()
+        if stand is None:
+            return
+        x, y, z, h = stand
+        self._attachMarkerLabels(x, y, z, heading=h)
+
+    def _placeMarkerNearAvatar(self):
+        """Fallback when HUB_EPILOGUE_BEAT_POS is unset / unparseable."""
+        av = getattr(base, 'localAvatar', None)  # noqa: F821
+        if av is None:
+            return
+        try:
+            import math
+            baseX = float(av.getX())
+            baseY = float(av.getY())
+            baseZ = float(av.getZ())
+            heading = float(av.getH())
+            rad = math.radians(heading)
+            forward = epilogueBeatForward()
+            x = baseX - math.sin(rad) * forward
+            y = baseY + math.cos(rad) * forward
+            z = baseZ + 1.15
+        except Exception:
+            return
+        self._attachMarkerLabels(x, y, z)
 
     def _flashTip(self):
         self._clearTip()
