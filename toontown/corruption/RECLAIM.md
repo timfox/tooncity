@@ -481,10 +481,11 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    **AI**: slower chase + mid-range **ink-rain AoE** plus close-range **slam**
    when the player is already in the ink (`OVERLORD_PHASE_COMBAT[1]` two-note
    Rising kit — second pressure beyond rain-only before Unleash) matching the
-   rain puddle / spread — not Smudge melee smack. Rain resolve also leaves a
-   short **lingering sludge hazard** (`OVERLORD_RAIN_LINGER_*` — Gagster-like
-   DoT / slow while standing in the magenta puddle; arena trap, not cream
-   deepen). Mid-range surge stays on Unleashed only. Melee mid-rain / mid-slam
+   rain puddle / spread — not Smudge melee smack. Rain and close **slam**
+   resolve also leave a short **lingering sludge hazard**
+   (`OVERLORD_RAIN_LINGER_*` / `OVERLORD_SLAM_LINGER_*` — Gagster-like DoT /
+   slow while standing in the magenta puddle; arena trap, not cream deepen).
+   Mid-range surge stays on Unleashed only. Melee mid-rain / mid-slam
    telegraph cancels the wind-up (same snare-style AI interrupt as Brute spit /
    Gagster lob; `OVERLORD_RAIN_MELEE_INTERRUPT` / `OVERLORD_SLAM_MELEE_INTERRUPT`).
    After each telegraph reads, a short dedicated counter window arms by
@@ -505,11 +506,14 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    (planar rush then landing AoE — third Unleashed note beyond rain/slam),
    close-range **slam** when the player is already in the ink, plus
    **Smudge adds** on wave 2+ (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
-   Melee mid-telegraph also cancels **ink_surge** wind-up
-   (`OVERLORD_INK_SURGE_MELEE_INTERRUPT`) — climax punish parity with
-   rain/slam. Dedicated counter windows also arm for rain / slam /
-   ink_surge (`OVERLORD_RAIN_COUNTER_*` / `OVERLORD_SLAM_COUNTER_*` /
-   `OVERLORD_INK_SURGE_COUNTER_*` — same reward path; interrupt ≠ counter).
+   Slam and ink_surge resolve also leave **lingering sludge**
+   (`OVERLORD_SLAM_LINGER_*` / `OVERLORD_INK_SURGE_LINGER_*` — rain parity
+   floor control across the three-note kit). Melee mid-telegraph also
+   cancels **ink_surge** wind-up (`OVERLORD_INK_SURGE_MELEE_INTERRUPT`) —
+   climax punish parity with rain/slam. Dedicated counter windows also arm
+   for rain / slam / ink_surge (`OVERLORD_RAIN_COUNTER_*` /
+   `OVERLORD_SLAM_COUNTER_*` / `OVERLORD_INK_SURGE_COUNTER_*` — same reward
+   path; interrupt ≠ counter).
 4. Clear again → campaign victory + soft twist tease
    (`CampaignGlobals.FINALE_TWIST_TEASE`) → delayed **Corrupted Oswald**
    chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client) →

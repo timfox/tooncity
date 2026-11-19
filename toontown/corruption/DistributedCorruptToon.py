@@ -925,13 +925,17 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         if look:
             # Overlord impact ground punch bloom — warn ring already cleared.
             self.__playOverlordTelegraphPunchImpact(look, phase)
-            # Rain land leaves a linger sludge ring (DoT / slow arena trap).
+            # Rain / slam / ink_surge land leave linger sludge (DoT / slow).
             overlordMove = (
                 CorruptionGlobals.normalizeOverlordTelegraphMove(
                     getattr(self, '_telegraphMove', ''))
                 or 'rain')
-            if CorruptionGlobals.overlordTelegraphShowsInkRain(overlordMove):
+            if overlordMove == 'rain':
                 self.__playOverlordRainLingerPuddle()
+            elif overlordMove == 'slam':
+                self.__playOverlordSlamLingerPuddle()
+            elif overlordMove == 'ink_surge':
+                self.__playOverlordInkSurgeLingerPuddle()
         if isBrute:
             self.__playSpitBlob()
         elif isSnare:
@@ -980,16 +984,17 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             CorruptionGlobals.normalizeOverlordTelegraphMove(
                 getattr(self, '_telegraphMove', ''))
             or '')
-        rainLinger = bool(
-            look
-            and CorruptionGlobals.overlordTelegraphShowsInkRain(overlordMove))
         self.__clearOverlordTelegraphCrown()
         self.__clearOverlordPhaseInkRain()
         self.__clearOverlordTelegraphPunch()
-        # Rain still leaves arena sludge even when the land tick was dodged —
-        # matches AI __armOverlordRainLinger after resolve.
-        if rainLinger:
+        # Rain / slam / ink_surge still leave arena sludge when dodged —
+        # matches AI linger arm after resolve.
+        if look and overlordMove == 'rain':
             self.__playOverlordRainLingerPuddle()
+        elif look and overlordMove == 'slam':
+            self.__playOverlordSlamLingerPuddle()
+        elif look and overlordMove == 'ink_surge':
+            self.__playOverlordInkSurgeLingerPuddle()
         # Hackslash listens and plays perfect-dodge ink sparkle juice.
         messenger.send('corruptToonAttackDodged', [self])  # noqa: F821
 
@@ -2083,18 +2088,60 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         self._overlordInkRain = None
 
     def __playOverlordRainLingerPuddle(self):
-        """Hold a magenta sludge ring after rain resolve (DoT / slow zone).
+        """Hold a magenta sludge ring after rain resolve (DoT / slow zone)."""
+        self.__playOverlordLingerPuddleForMove('rain')
+
+    def __playOverlordSlamLingerPuddle(self):
+        """Hold a tight sludge ring after slam resolve (DoT / slow zone)."""
+        self.__playOverlordLingerPuddleForMove('slam')
+
+    def __playOverlordInkSurgeLingerPuddle(self):
+        """Hold a mid sludge ring after ink_surge resolve (DoT / slow zone)."""
+        self.__playOverlordLingerPuddleForMove('ink_surge')
+
+    def __playOverlordLingerPuddleForMove(self, moveId):
+        """Hold a magenta sludge ring after Overlord resolve (DoT / slow zone).
 
         Gameplay trap readability — not cream FX deepen. Hold matches AI
-        OVERLORD_RAIN_LINGER_SEC so the puddle stays while ticks fire.
+        OVERLORD_*_LINGER_SEC so the puddle stays while ticks fire. Rain /
+        slam / ink_surge share the same visual grammar with move-scaled
+        hold + radius.
         """
+        move = (
+            CorruptionGlobals.normalizeOverlordTelegraphMove(moveId)
+            or 'rain')
         self.__clearOverlordRainLingerPuddle()
-        if not bool(getattr(
-                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_ENABLED', True)):
-            return
-        lingerSec = float(getattr(
-            CorruptionGlobals, 'OVERLORD_RAIN_LINGER_SEC', 0.0) or 0.0)
-        if lingerSec <= 0.0:
+        if move == 'slam':
+            enabled = bool(getattr(
+                CorruptionGlobals, 'OVERLORD_SLAM_LINGER_ENABLED', True))
+            lingerSec = float(getattr(
+                CorruptionGlobals, 'OVERLORD_SLAM_LINGER_SEC', 0.0) or 0.0)
+            defaultRadius = float(getattr(
+                CorruptionGlobals, 'OVERLORD_SLAM_LINGER_RADIUS', 4.6))
+            radiusKey = 'slamHitRange'
+            untilFn = CorruptionGlobals.overlordSlamLingerUntil
+            cardName = 'overlord-slam-linger-puddle'
+        elif move == 'ink_surge':
+            enabled = bool(getattr(
+                CorruptionGlobals, 'OVERLORD_INK_SURGE_LINGER_ENABLED', True))
+            lingerSec = float(getattr(
+                CorruptionGlobals, 'OVERLORD_INK_SURGE_LINGER_SEC', 0.0) or 0.0)
+            defaultRadius = float(getattr(
+                CorruptionGlobals, 'OVERLORD_INK_SURGE_LINGER_RADIUS', 7.0))
+            radiusKey = 'surgeHitRange'
+            untilFn = CorruptionGlobals.overlordInkSurgeLingerUntil
+            cardName = 'overlord-ink-surge-linger-puddle'
+        else:
+            enabled = bool(getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_ENABLED', True))
+            lingerSec = float(getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_SEC', 0.0) or 0.0)
+            defaultRadius = float(getattr(
+                CorruptionGlobals, 'OVERLORD_RAIN_LINGER_RADIUS', 9.5))
+            radiusKey = 'attackHitRange'
+            untilFn = CorruptionGlobals.overlordRainLingerUntil
+            cardName = 'overlord-rain-linger-puddle'
+        if not enabled or lingerSec <= 0.0:
             return
         try:
             landPos = self.getPos(render)  # noqa: F821
@@ -2102,7 +2149,7 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             return
         try:
             look = dict(CorruptionGlobals.OVERLORD_PHASE_INK_RAIN_LOOK)
-            cm = CardMaker('overlord-rain-linger-puddle')
+            cm = CardMaker(cardName)
             half = float(look.get('puddleHalf', 0.72))
             cm.setFrame(-half, half, -half * 0.55, half * 0.55)
             puddle = render.attachNewNode(cm.generate())  # noqa: F821
@@ -2141,10 +2188,8 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             _look, phase = self.__finalePhaseLook()
             combat = CorruptionGlobals.overlordPhaseCombat(
                 max(1, int(phase or 1))) or {}
-            radius = float(combat.get(
-                'attackHitRange',
-                CorruptionGlobals.OVERLORD_RAIN_LINGER_RADIUS))
-            until = CorruptionGlobals.overlordRainLingerUntil(
+            radius = float(combat.get(radiusKey, defaultRadius))
+            until = untilFn(
                 globalClock.getFrameTime(), holdSec)  # noqa: F821
             self.__armOverlordRainSludgeSlow(landPos, radius, until)
         except Exception:

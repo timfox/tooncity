@@ -226,14 +226,20 @@ class OverlordRainLingerTest(unittest.TestCase):
         dodge_end = dodge.find('\n    def ', 1)
         dodge_body = dodge if dodge_end < 0 else dodge[:dodge_end]
         self.assertIn('__playOverlordRainLingerPuddle', dodge_body)
-        # Hold Wait uses linger sec so the magenta ring matches AI hazard.
+        # Rain wrapper delegates to shared move linger (slam/surge parity).
         play = src[src.find('def __playOverlordRainLingerPuddle'):]
         play_end = play.find('\n    def ', 1)
         play_body = play if play_end < 0 else play[:play_end]
-        self.assertIn('holdSec', play_body)
-        self.assertIn('__armOverlordRainSludgeSlow', play_body)
+        self.assertIn('__playOverlordLingerPuddleForMove', play_body)
+        shared = src[src.find('def __playOverlordLingerPuddleForMove'):]
+        shared_end = shared.find('\n    def ', 1)
+        shared_body = shared if shared_end < 0 else shared[:shared_end]
+        # Hold Wait uses linger sec so the magenta ring matches AI hazard.
+        self.assertIn('holdSec', shared_body)
+        self.assertIn('__armOverlordRainSludgeSlow', shared_body)
+        self.assertIn('OVERLORD_RAIN_LINGER_SEC', shared_body)
         # No cream deepen / KH in the linger path.
-        blob = play_body.lower()
+        blob = shared_body.lower()
         self.assertNotIn('keyblade', blob)
         self.assertNotIn('kingdom hearts', blob)
 
