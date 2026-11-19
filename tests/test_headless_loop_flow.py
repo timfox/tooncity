@@ -426,7 +426,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         for method in (
                 '_showHubTip', '_latchSoftNextCue', '_autoStartReclaim',
                 '_requestCampaign', '_armSillyApproachTip',
-                '_armLoopyApproachTip', '_onCampaignEpilogue'):
+                '_armLoopyApproachTip', '_armPunchlineApproachTip',
+                '_onCampaignEpilogue'):
             self.assertIn(method, methods, msg='PlayEntryClient missing %s' % method)
         self.assertIn("accept('oswaldBetrayalChaseCleared'", play_src)
         self.assertIn("accept('campaignEpilogue'", play_src)
@@ -654,6 +655,16 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('_armLoopyApproachTip', play_src)
         self.assertIn('_showLoopyApproachTip', play_src)
         self.assertGreater(camp.LOOPY_APPROACH_TIP_DELAY_SEC, 0.0)
+        # Punchline mid-act unease — approach tip + armer before Silly.
+        punch = self.act_by_id['punchline']
+        punch_tip = punch.get('approachTip') or ''
+        self.assertIn('Oswald', punch_tip)
+        self.assertIn('full beat', punch_tip.lower())
+        self.assertIn('rubbery', punch_tip.lower())
+        self.assertNotIn('almost confess', punch_tip.lower())
+        self.assertIn('_armPunchlineApproachTip', play_src)
+        self.assertIn('_showPunchlineApproachTip', play_src)
+        self.assertGreater(camp.PUNCHLINE_APPROACH_TIP_DELAY_SEC, 0.0)
 
     def test_explore_hub_breadcrumb_act_unlock(self):
         """Hub crumbs dim locked acts; PlayEntry accepts campaignActUnlocked (#332)."""
@@ -1373,9 +1384,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(cg.isEliteOrAmbushPreferName('AMBUSH Ink Smudge'))
         cg_src = _read('toontown/corruption/CorruptionGlobals.py')
         gate_idx = cg_src.index('def isBossOrChaseHpBarSubject')
+        # Window covers docstring + Elite/Ambush prefer gate (grew after #394).
         self.assertIn(
             'isEliteOrAmbushPreferName',
-            cg_src[gate_idx:gate_idx + 700])
+            cg_src[gate_idx:gate_idx + 1100])
         self.assertEqual(cg.bossHpBarRatio(50, 100), 0.5)
         self.assertEqual(cg.bossHpBarRatio(0, 100), 0.0)
         hud_rel = 'toontown/reclaim/BossHpBarHud.py'
@@ -2212,6 +2224,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('rubbery half-beat', loopy_approach.lower())
         self.assertNotIn('keyblade', loopy_approach.lower())
         self.assertFalse(bool(self.act_by_id['loopy'].get('entryTip')))
+        punch_approach = self.act_by_id['punchline'].get('approachTip') or ''
+        self.assertIn('full beat', punch_approach.lower())
+        self.assertNotIn('almost confess', punch_approach.lower())
+        self.assertNotIn('keyblade', punch_approach.lower())
         handoff = finale.get('handoff') or ''
         self.assertIn('his all along', handoff.lower())
 
