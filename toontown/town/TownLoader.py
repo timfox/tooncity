@@ -213,6 +213,16 @@ class TownLoader(StateData.StateData):
         if gsg:
             self.geom.prepareScene(gsg)
         self.geom.setName('town_top_level')
+        # USD street overlay: metadata only, behind want-usd-street-overlay.
+        self.usdStreetOverlayMeta = None
+        try:
+            from toontown.usd.runtime_hook import try_apply_street_overlay
+            self.usdStreetOverlayMeta = try_apply_street_overlay(
+                zone_id=getattr(self, 'canonicalBranchZone', None)
+                or getattr(self, 'zoneId', None))
+        except Exception:
+            self.notify.debug(
+                'usd street overlay hook skipped (metadata only)')
 
     def reparentLandmarkBlockNodes(self):
         bucket = self.landmarkBlocks = hidden.attachNewNode('landmarkBlocks')

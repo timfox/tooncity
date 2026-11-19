@@ -210,6 +210,15 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         self._anchorPos = (
             float(anchorPos[0]), float(anchorPos[1]), float(anchorPos[2]))
         self._anchorH = float(anchorH)
+        # USD street overlay: metadata only (want-usd-street-overlay).
+        self.usdStreetOverlayMeta = None
+        try:
+            from toontown.usd.runtime_hook import try_apply_street_overlay
+            self.usdStreetOverlayMeta = try_apply_street_overlay(
+                zone_id=self.reclaimZoneId)
+        except Exception:
+            self.notify.debug(
+                'usd street overlay hook skipped on reclaim enter')
         self._seedPollution = (
             ReclaimGlobals.RECLAIM_START_POLLUTION
             if seedPollution is None else float(seedPollution))
