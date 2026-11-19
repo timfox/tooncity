@@ -2,7 +2,9 @@
 
 Complements HubStain pollution fog: a short world TextNode + tip so the
 hub consequence reads even before fog density settles. Authored plaza
-stand (HUB_STAIN_CONFRONT_POS) — not near-avatar FORWARD. Not
+stand (HUB_STAIN_CONFRONT_POS) — not near-avatar FORWARD. After the
+placemarker lands, sends hubStainConfrontShown; PlayEntry tip-latches
+the chase-pending F/C strip (orphan → accept; no cream deepen). Not
 OswaldPresence (trusted face) — this is the post-betrayal stain
 confront. No cream FX, no KH branding.
 """
@@ -205,6 +207,20 @@ class HubStainConfrontClient(DirectObject):
         self._placeMarker()
         self._flashTip()
         self._shown = True
+        # One-shot chase-pending tip latch: PlayEntry accepts
+        # hubStainConfrontShown (orphan → accept; survives hub hops).
+        try:
+            from toontown.campaign.PlayEntry import ensurePlayEntryClient
+            ensurePlayEntryClient()
+        except Exception:
+            pass
+        shownMsg = getattr(
+            CampaignGlobals, 'HUB_STAIN_CONFRONT_SHOWN_MSG',
+            'hubStainConfrontShown')
+        try:
+            messenger.send(shownMsg, [hubStainZone()])  # noqa: F821
+        except Exception:
+            pass
 
     def _progressWantsConfront(self):
         mgr = getattr(getattr(base, 'cr', None), 'pollutionManager', None)  # noqa: F821
