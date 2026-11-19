@@ -88,6 +88,46 @@ def streetClearRewardEnabled():
         CampaignGlobals, 'STREET_CLEAR_REWARD_ENABLED', True))
 
 
+def streetClearRewardMsgName():
+    """Messenger name for street-clear reward (PlayEntry / Handoff accept)."""
+    if hasattr(CampaignGlobals, 'streetClearRewardMsgName'):
+        try:
+            return CampaignGlobals.streetClearRewardMsgName()
+        except Exception:
+            pass
+    return getattr(
+        CampaignGlobals, 'STREET_CLEAR_REWARD_MSG', 'streetClearReward')
+
+
+def emitStreetClearReward(
+        zoneId=0, beans=0, laff=0, trophy='', ensureClients=True):
+    """Send streetClearReward so tip / plate accepts can latch.
+
+    AI award path uses ensureClients=False (no client imports). Client
+    purity mirror (CampaignHandoff) ensures PlayEntry + Handoff first so
+    the formerly orphan messenger has live accepts (no cream / no KH).
+    """
+    if ensureClients:
+        try:
+            from toontown.campaign.PlayEntry import ensurePlayEntryClient
+            ensurePlayEntryClient()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.CampaignHandoff import (
+                ensureCampaignHandoffClient)
+            ensureCampaignHandoffClient()
+        except Exception:
+            pass
+    msg = streetClearRewardMsgName()
+    try:
+        messenger.send(  # noqa: F821
+            msg,
+            [int(zoneId or 0), int(beans or 0), int(laff or 0), trophy or ''])
+    except Exception:
+        pass
+
+
 def streetClearJellybeans(reclaimCount=1):
     """Jellybeans for one street clear (scales gently with reclaim depth)."""
     base = int(getattr(CampaignGlobals, 'STREET_CLEAR_JELLYBEANS', 20) or 0)
@@ -203,12 +243,11 @@ def awardStreetClearReward(toon, reclaimCount=1, zoneId=None, streetName=None):
                 toon.setSystemMessage(0, str(whisper)[:200])
         except Exception:
             pass
-    try:
-        msg = getattr(
-            CampaignGlobals, 'STREET_CLEAR_REWARD_MSG', 'streetClearReward')
-        messenger.send(  # noqa: F821
-            msg,
-            [payload.get('zoneId') or 0, beans, laff, payload.get('trophy')])
-    except Exception:
-        pass
+    emitStreetClearReward(
+        zoneId=payload.get('zoneId') or 0,
+        beans=beans,
+        laff=laff,
+        trophy=payload.get('trophy') or '',
+        # AI process — skip client ensure imports.
+        ensureClients=False)
     return payload

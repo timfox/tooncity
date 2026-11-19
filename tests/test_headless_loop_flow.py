@@ -1571,6 +1571,16 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('synced > self._localReclaimCount', purity_win)
         self.assertIn('rewardLine', purity_win)
         self.assertIn('_streetClearRewardLine', purity_win)
+        # streetClearReward orphan → accept (#tip latch): PlayEntry + Handoff.
+        self.assertIn('_emitStreetClearRewardMirror', purity_win)
+        self.assertIn('emitStreetClearReward', handoff_src)
+        self.assertIn('_onStreetClearReward', handoff_src)
+        play_src = _read('toontown/campaign/PlayEntry.py')
+        self.assertIn('_onStreetClearReward', play_src)
+        self.assertIn('streetClearRewardLatchTipText', play_src)
+        self.assertIn('_postClearRewardLatchedZone', play_src)
+        self.assertIn('emitStreetClearReward', power_src)
+        self.assertTrue(self.camp.STREET_CLEAR_REWARD_TIP_LATCH_ENABLED)
 
     # --- campaign progression + Oswald twist ---
 
@@ -2062,10 +2072,15 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                  ('finalePhaseStingBanner', '_onFinalePhaseStingBanner',
                   'finalePhaseStingTipText',
                   'hubEpilogueBeatShown', '_onHubEpilogueBeatShown',
-                  'hubEpilogueBeatLatchTipText')),
+                  'hubEpilogueBeatLatchTipText',
+                  'streetClearReward', '_onStreetClearReward',
+                  'streetClearRewardLatchTipText')),
                 ('toontown/campaign/OswaldPresence.py',
                  ('hubEpilogueBeatShown', '_onHubEpilogueBeatShown',
                   '_postWashCleared')),
+                ('toontown/campaign/CampaignPower.py',
+                 ('emitStreetClearReward', 'streetClearRewardMsgName',
+                  'awardStreetClearReward')),
                 ):
             path = REPO_ROOT / rel
             self.assertTrue(path.is_file(), msg='missing %s' % rel)

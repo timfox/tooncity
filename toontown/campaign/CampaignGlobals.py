@@ -110,7 +110,53 @@ STREET_CLEAR_REWARD_MSG_FMT = (
 STREET_CLEAR_REWARD_HANDOFF_FMT = (
     'Street Trophy  +%s beans  +%s laff')
 # Client messenger (optional UI listeners); AI also d_setSystemMessage.
+# CampaignPower emits streetClearReward on award + Handoff purity mirror.
+# PlayEntry + Handoff accept for a one-shot post-clear tip latch / plate
+# payload latch (orphan → accept; no cream deepen / no KH).
 STREET_CLEAR_REWARD_MSG = 'streetClearReward'
+STREET_CLEAR_REWARD_TIP_LATCH_ENABLED = True
+# Tip-bar latch under purity meter (PlayEntry). Handoff plate still owns
+# STREET_CLEAR_REWARD_HANDOFF_FMT; this is the discoverable F/C strip once
+# the street-clear reward messenger fires.
+STREET_CLEAR_REWARD_LATCH_TIP = (
+    '%s: Street Trophy! +%s beans +%s laff')
+STREET_CLEAR_REWARD_LATCH_TIP_NAMED = (
+    '%s: Street Trophy! +%s beans +%s laff — %s')
+
+
+def streetClearRewardMsgName():
+    """Messenger name CampaignPower emits; PlayEntry / Handoff accept."""
+    return STREET_CLEAR_REWARD_MSG
+
+
+def streetClearRewardLatchTipText(
+        face=None, beans=0, laff=0, trophy='', streetName=None):
+    """PlayEntry one-shot tip latch after streetClearReward fires."""
+    face = face or RECLAIM_FACE
+    beans = int(beans or 0)
+    laff = int(laff or 0)
+    label = streetName or ''
+    if not label and trophy:
+        # Trophy fmt is "Street Trophy: <name> reclaimed!" — peel the name.
+        raw = str(trophy)
+        if ':' in raw:
+            raw = raw.split(':', 1)[1].strip()
+        label = raw.replace(' reclaimed!', '').replace(' reclaimed', '').strip()
+    if label:
+        template = STREET_CLEAR_REWARD_LATCH_TIP_NAMED
+        try:
+            return template % (face, beans, laff, label)
+        except Exception:
+            return (
+                '%s: Street Trophy! +%s beans +%s laff — %s'
+                % (face, beans, laff, label))
+    template = STREET_CLEAR_REWARD_LATCH_TIP
+    try:
+        return template % (face, beans, laff)
+    except Exception:
+        return (
+            '%s: Street Trophy! +%s beans +%s laff' % (face, beans, laff))
+
 
 # Escalating reclaim acts: explore → fight → reclaim → next hood.
 # Finale: two-phase Ink Overlord under Oswald's lead, then twist.

@@ -107,6 +107,9 @@ class PlayEntryClient(DirectObject):
         # One-shot post-wash tip latch from hubEpilogueBeatShown (cleared on
         # replay C / fresh sync).
         self._postWashTipLatched = False
+        # One-shot post-clear tip latch from streetClearReward (per zone;
+        # cleared on next reclaim start / C replay).
+        self._postClearRewardLatchedZone = None
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
         # KO fail (#323) — clear live latch so same-street R / re-enter retry.
@@ -124,6 +127,10 @@ class PlayEntryClient(DirectObject):
             CampaignGlobals, 'HUB_EPILOGUE_BEAT_SHOWN_MSG',
             'hubEpilogueBeatShown')
         self.accept(beatMsg, self._onHubEpilogueBeatShown)
+        # CampaignPower street-clear reward — one-shot post-clear tip latch.
+        rewardMsg = getattr(
+            CampaignGlobals, 'STREET_CLEAR_REWARD_MSG', 'streetClearReward')
+        self.accept(rewardMsg, self._onStreetClearReward)
         self.accept('campaignVictory', self._onCampaignVictory)
         self.accept('oswaldBetrayalChaseCleared', self._onCampaignEpilogue)
         self.accept('campaignEpilogue', self._onCampaignEpilogue)
@@ -631,6 +638,8 @@ class PlayEntryClient(DirectObject):
 
     def _onReclaimStart(self, *args):
         self._reclaimLive = True
+        # New reclaim — allow the next streetClearReward tip latch.
+        self._postClearRewardLatchedZone = None
         self._cancelAutoReclaim()
         av = getattr(base, 'localAvatar', None)  # noqa: F821
         zoneId = getattr(av, 'zoneId', None) if av is not None else None
@@ -759,6 +768,44 @@ class PlayEntryClient(DirectObject):
             nextZone=CampaignGlobals.ACTS[0]['zoneId'],
             nextStreet=CampaignGlobals.ACTS[0]['name'])
 
+    def _onStreetClearReward(self, zoneId=0, beans=0, laff=0, trophy=''):
+        """One-shot post-clear tip latch for streetClearReward messenger.
+
+        Handoff plate still owns the trophy beans/laff line; tip bar
+        upgrades once per cleared zone (survives hub hops via soft-next).
+        Preserves any next-street soft latch from purityRestoreFx.
+        No cream deepen / no KH.
+        """
+        if not bool(getattr(
+                CampaignGlobals, 'STREET_CLEAR_REWARD_TIP_LATCH_ENABLED', True)):
+            return
+        if not bool(getattr(
+                CampaignGlobals, 'STREET_CLEAR_REWARD_ENABLED', True)):
+            return
+        try:
+            zid = int(zoneId or 0)
+        except Exception:
+            zid = 0
+        if (self._postClearRewardLatchedZone is not None
+                and int(self._postClearRewardLatchedZone) == zid):
+            return
+        self._postClearRewardLatchedZone = zid
+        tipFn = getattr(
+            CampaignGlobals, 'streetClearRewardLatchTipText', None)
+        if callable(tipFn):
+            tip = tipFn(
+                face=_face(), beans=beans, laff=laff, trophy=trophy)
+        else:
+            tip = '%s: Street Trophy! +%s beans +%s laff' % (
+                _face(), int(beans or 0), int(laff or 0))
+        if not tip:
+            return
+        # Keep travel soft-next from purity / handoff cue when already latched.
+        self._latchSoftNextCue(
+            tip,
+            nextZone=self._softNextZone,
+            nextStreet=self._softNextStreet)
+
     def _actsAroundZone(self, zoneId):
         if zoneId is None:
             return None, None
@@ -790,6 +837,7 @@ class PlayEntryClient(DirectObject):
             self._victoryEpilogue = False
             self._chasePending = False
             self._postWashTipLatched = False
+            self._postClearRewardLatchedZone = None
             self._softNextCue = None
             self._softNextZone = None
             self._softNextStreet = None
