@@ -1,9 +1,10 @@
 """Plaza confront placemarker when TTC hub carries the betrayal stain.
 
 Complements HubStain pollution fog: a short world TextNode + tip so the
-hub consequence reads even before fog density settles. Not OswaldPresence
-(trusted face) — this is the post-betrayal stain confront. No cream FX,
-no KH branding.
+hub consequence reads even before fog density settles. Authored plaza
+stand (HUB_STAIN_CONFRONT_POS) — not near-avatar FORWARD. Not
+OswaldPresence (trusted face) — this is the post-betrayal stain
+confront. No cream FX, no KH branding.
 """
 
 from __future__ import annotations
@@ -51,6 +52,18 @@ def confrontTip():
 def confrontForward():
     return float(getattr(
         CampaignGlobals, 'HUB_STAIN_CONFRONT_FORWARD', 5.5))
+
+
+def confrontPlazaPos():
+    """Authored TTC plaza confront stand (x, y, z, h) or None if unset."""
+    raw = getattr(CampaignGlobals, 'HUB_STAIN_CONFRONT_POS', None)
+    if raw is None:
+        return None
+    try:
+        return (
+            float(raw[0]), float(raw[1]), float(raw[2]), float(raw[3]))
+    except Exception:
+        return None
 
 
 _MARKER_COLOR = Vec4(0.42, 0.18, 0.28, 1.0)  # ink-crimson, not trusted blue
@@ -189,7 +202,7 @@ class HubStainConfrontClient(DirectObject):
             level = hubStainLevel()
         if self._shown and self._markerNP is not None:
             return
-        self._placeMarkerNearAvatar()
+        self._placeMarker()
         self._flashTip()
         self._shown = True
 
@@ -206,11 +219,50 @@ class HubStainConfrontClient(DirectObject):
             state == int(CampaignGlobals.STATE_VICTORY)
             and cleared == 0)
 
-    def _placeMarkerNearAvatar(self):
+    def _placeMarker(self):
+        """Authored plaza stand first; near-avatar FORWARD as fallback."""
+        stand = confrontPlazaPos()
+        if stand is not None:
+            self._placeMarkerAtPlaza(stand)
+            return
+        self._placeMarkerNearAvatar()
+
+    def _attachMarkerLabel(self, x, y, z, heading=None):
         self._clearMarker()
-        av = getattr(base, 'localAvatar', None)  # noqa: F821
         parent = getattr(base, 'render', None)  # noqa: F821
-        if av is None or parent is None:
+        if parent is None:
+            return
+        try:
+            tn = TextNode('hubStainConfrontLabel')
+            tn.setText(confrontLabel())
+            tn.setAlign(TextNode.ACenter)
+            tn.setTextColor(_MARKER_COLOR)
+            np = parent.attachNewNode(tn)
+            np.setPos(x, y, z)
+            if heading is not None:
+                try:
+                    np.setH(float(heading))
+                except Exception:
+                    pass
+            np.setBillboardPointEye()
+            np.setScale(0.85)
+            self._markerNP = np
+        except Exception:
+            self._markerNP = None
+
+    def _placeMarkerAtPlaza(self, stand=None):
+        """Place confront label at authored HUB_STAIN_CONFRONT_POS."""
+        if stand is None:
+            stand = confrontPlazaPos()
+        if stand is None:
+            return
+        x, y, z, h = stand
+        self._attachMarkerLabel(x, y, z, heading=h)
+
+    def _placeMarkerNearAvatar(self):
+        """Fallback when HUB_STAIN_CONFRONT_POS is unset / unparseable."""
+        av = getattr(base, 'localAvatar', None)  # noqa: F821
+        if av is None:
             return
         try:
             import math
@@ -225,18 +277,7 @@ class HubStainConfrontClient(DirectObject):
             z = baseZ + 1.15
         except Exception:
             return
-        try:
-            tn = TextNode('hubStainConfrontLabel')
-            tn.setText(confrontLabel())
-            tn.setAlign(TextNode.ACenter)
-            tn.setTextColor(_MARKER_COLOR)
-            np = parent.attachNewNode(tn)
-            np.setPos(x, y, z)
-            np.setBillboardPointEye()
-            np.setScale(0.85)
-            self._markerNP = np
-        except Exception:
-            self._markerNP = None
+        self._attachMarkerLabel(x, y, z)
 
     def _flashTip(self):
         self._clearTip()

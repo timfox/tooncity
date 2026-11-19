@@ -33,6 +33,14 @@ HUB_STAIN_CONFRONT_LABEL = "Oswald's stain"
 HUB_STAIN_CONFRONT_TIP = (
     "Oswald's ink stains the plaza — wash the betrayal chase!  |  "
     'F fight  |  C campaign')
+# Authored TTC plaza confront stand (x, y, z, h) — stable landmark while
+# betrayal chase is pending, not FORWARD beside the local toon (same
+# orphan-of-placement pattern streets closed with OSWALD_PRESENCE_*_POS).
+# Distinct from OSWALD_PRESENCE_HUB_POS (trusted face). Stub coords
+# (plaza DNA not in-tree); tweak when DNA lands. No cream / no KH.
+HUB_STAIN_CONFRONT_POS = (-38.0, 18.0, 1.15, -90.0)
+# Fallback offset relative to the local toon when HUB_STAIN_CONFRONT_POS
+# is unset / unparseable.
 HUB_STAIN_CONFRONT_FORWARD = 5.5
 # Washed-plaza epilogue beat after chase clear (HubEpilogueBeat).
 # Complements HubStainConfront (pending stain): once fog washes, TTC gets
