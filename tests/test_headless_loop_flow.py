@@ -972,6 +972,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(
             cg.archetypeCombatRole(cg.ARCHETYPE_CORRUPT_OSWALD),
             cg.ROLE_PRESS)
+        self.assertEqual(cg.overlordCombatRole(), cg.ROLE_CIRCLE)
         # Smudge orbit/weave (#379) — pack circles dash ring instead of scrum.
         gx, gy, action = cg.roleMoveGoal(
             cg.ROLE_ORBIT, 20.0, 0.0, 0.0, 0.0,
@@ -1023,7 +1024,31 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertAlmostEqual(gy_o, 0.0, places=5)
         self.assertGreater(
             cg.roleMoveSpeedScale(cg.ROLE_PRESS, 'press'), 1.0)
-        # AI role path wires orbit + press through archetypeCombatRole.
+        # Overlord hold/circle — climax between-telegraph asymmetry vs chase.
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_CIRCLE, 22.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, circleLead=4.0, circleCloseDist=15.0,
+            flankSide=1)
+        self.assertEqual(action, 'approach')
+        self.assertAlmostEqual(gx, 6.0, places=5)
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_CIRCLE, 10.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, circleLead=4.0, circleCloseDist=15.0,
+            flankSide=1)
+        self.assertEqual(action, 'circle')
+        self.assertAlmostEqual(math.hypot(gx, gy), 6.0, places=5)
+        self.assertGreater(gy, 0.0)
+        # Same close geometry: Smudge retreats; Oswald presses; Overlord holds.
+        gx_v, gy_v, act_v = cg.roleMoveGoal(
+            cg.ROLE_CIRCLE, 2.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, circleLead=4.0, circleCloseDist=15.0,
+            flankSide=1)
+        self.assertEqual(act_v, 'hold')
+        self.assertAlmostEqual(gx_v, 2.0, places=5)
+        self.assertAlmostEqual(gy_v, 0.0, places=5)
+        self.assertGreater(
+            cg.roleMoveSpeedScale(cg.ROLE_CIRCLE, 'circle'), 1.0)
+        # AI role path wires orbit + press + Overlord circle.
         corrupt_ai_role = _read(
             'toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('__roleMoveToward', corrupt_ai_role)
@@ -1032,10 +1057,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         role_end = role_snip.find('\n    def ', 1)
         role_body = role_snip if role_end < 0 else role_snip[:role_end]
         self.assertIn('archetypeCombatRole', role_body)
+        self.assertIn('overlordCombatRole', role_body)
         self.assertIn('roleMoveGoal', role_body)
         self.assertIn('orbit', role_body.lower())
         self.assertIn('press', role_body.lower())
         self.assertIn('circle', role_body.lower())
+        self.assertIn('hold', role_body.lower())
         self.assertIn('__chaseToward(target)', role_body)
         self.assertEqual(cg.oswaldPickAttackMove(8.0), 'betrayal_lunge')
         self.assertEqual(cg.oswaldPickAttackMove(2.0), 'stain_burst')

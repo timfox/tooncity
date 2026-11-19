@@ -115,13 +115,15 @@ class OswaldChaseRoleAiTest(unittest.TestCase):
         self.assertEqual(
             self.cg.archetypeCombatRole(self.cg.ARCHETYPE_CORRUPT_OSWALD),
             self.cg.ROLE_PRESS)
-        # Street roles stay distinct; Overlord path still skips via AI gate.
+        # Street roles stay distinct; Overlord uses separate hold/circle helper.
         self.assertEqual(
             self.cg.archetypeCombatRole(self.cg.ARCHETYPE_INK),
             self.cg.ROLE_ORBIT)
         self.assertEqual(
             self.cg.archetypeCombatRole(self.cg.ARCHETYPE_GAGSTER),
             self.cg.ROLE_KITE)
+        self.assertEqual(
+            self.cg.overlordCombatRole(), self.cg.ROLE_CIRCLE)
 
     def test_oswald_press_circle_goal(self):
         # Far: press toward preferred ring (not straight onto the toon).
@@ -204,11 +206,13 @@ class OswaldChaseRoleAiTest(unittest.TestCase):
         role_body = role if role_end < 0 else role[:role_end]
         self.assertIn('ROLE_AI_ENABLED', role_body)
         self.assertIn('archetypeCombatRole', role_body)
+        self.assertIn('overlordCombatRole', role_body)
         self.assertIn('roleMoveGoal', role_body)
         self.assertIn('_isOverlord', role_body)
-        # Oswald press/circle called out; Overlord still nearest chase.
+        # Oswald press/circle + Overlord hold/circle called out.
         self.assertIn('press', role_body.lower())
         self.assertIn('circle', role_body.lower())
+        self.assertIn('hold', role_body.lower())
         self.assertIn('__chaseToward(target)', role_body)
         # Class docstring names press/circle for Oswald.
         self.assertIn('press/circle', src.lower().replace(' ', ''))
