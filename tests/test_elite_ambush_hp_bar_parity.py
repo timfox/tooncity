@@ -180,7 +180,7 @@ class EliteAmbushHpBarParityTests(unittest.TestCase):
         self.assertIn("startswith('elite ')", cg_src)
         self.assertIn("startswith('ambush ')", cg_src)
         gate_idx = cg_src.index('def isBossOrChaseHpBarSubject')
-        gate_snip = cg_src[gate_idx:gate_idx + 700].lower()
+        gate_snip = cg_src[gate_idx:gate_idx + 1100].lower()
         self.assertIn('iseliteorambushprefername', gate_snip)
         self.assertNotIn('cream', gate_snip)
         self.assertNotIn('keyblade', gate_snip)

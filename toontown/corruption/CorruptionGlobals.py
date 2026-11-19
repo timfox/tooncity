@@ -4164,7 +4164,12 @@ BOSS_HP_BAR_DEFAULT_OSWALD_LABEL = 'Corrupted Oswald'
 
 
 def resolveBossHpBarFinalePhase(finalePhase=0, name=''):
-    """Resolve Overlord phase from reclaim director phase and/or name."""
+    """Resolve Overlord phase from the hostile's own phase and/or name.
+
+    Callers must pass the hostile's own finalePhase — never reclaim-director
+    street phase alone, or P2 Smudge adds would steal the singleton bar
+    from the Overlord (same anti-pattern as soft-lock prefer).
+    """
     phase = normalizeFinalePhase(finalePhase)
     if phase >= 1:
         return phase
@@ -4219,6 +4224,9 @@ def isBossOrChaseHpBarSubject(archetype=0, name='', finalePhase=0):
 
     Parity with soft-lock prefer (#375): mid-wave Elite / Ambush renames
     that already steal Tab focus also drive the readable life bar.
+    Callers must pass the hostile's own finalePhase — never reclaim-director
+    street phase alone, or P2 Smudge adds would steal the bar from the
+    Overlord.
     """
     if not BOSS_HP_BAR_ENABLED:
         return False

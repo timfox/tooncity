@@ -33,13 +33,13 @@ def syncFromCorruptToon(toon):
     name = str(getattr(toon, 'name', '') or '')
     hp = int(getattr(toon, 'hp', 0) or 0)
     maxHp = int(getattr(toon, 'maxHp', 0) or 0)
-    # Mirror DistributedCorruptToon.__finalePhaseLook: reclaim director first,
-    # then Overlord name tokens when phase is still unset.
+    # Per-hostile phase only (AI Overlord DOs). Never use reclaim-director
+    # street phase — P2 Smudge adds share that street flag and would steal
+    # the singleton bar from the Overlord (same anti-pattern soft-lock docs).
+    # Client Overlords still resolve via name tokens when phase is unset.
     finalePhase = 0
     try:
-        reclaim = getattr(base.cr, 'reclaimDirector', None)  # noqa: F821
-        if reclaim is not None:
-            finalePhase = int(getattr(reclaim, 'finalePhase', 0) or 0)
+        finalePhase = int(getattr(toon, 'finalePhase', 0) or 0)
     except Exception:
         finalePhase = 0
     finalePhase = CorruptionGlobals.resolveBossHpBarFinalePhase(
