@@ -2,6 +2,9 @@
 
 FOV punch + fullscreen flash + render color slam — mirrors hackslash /
 purity-restore patterns so the phase flip reads as a boss moment.
+Phase transition also sends finalePhaseStingBanner; CampaignHandoff owns
+the readable P1→P2 hose-pop plate and PlayEntry thin-accepts the tip
+(orphan → accept; no cream deepen).
 
 On Silly finale victory / twist, plays a short readable AV reveal sting
 (FOV/flash + rubber-hose Oswald silhouette shadow flash + optional SFX)
@@ -130,7 +133,18 @@ class FinalePhaseFxClient(DirectObject):
 
         title = CampaignGlobals.FINALE_PHASE_BANNER.get(
             phase, 'FINALE PHASE %s' % phase)
-        messenger.send('finalePhaseStingBanner', [phase, title])  # noqa: F821
+        # Readable P1→P2 plate + tip: CampaignHandoff / PlayEntry accept
+        # finalePhaseStingBanner (orphan → accept; no cream deepen).
+        try:
+            from toontown.campaign.CampaignHandoff import (
+                ensureCampaignHandoffClient)
+            ensureCampaignHandoffClient()
+        except Exception:
+            pass
+        stingMsg = getattr(
+            CampaignGlobals, 'FINALE_PHASE_STING_BANNER_MSG',
+            'finalePhaseStingBanner')
+        messenger.send(stingMsg, [phase, title])  # noqa: F821
 
         self._ival = Sequence(
             Parallel(*parts) if parts else Wait(0.01),

@@ -499,8 +499,9 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    branches — rain (wide ring + shower), slam (close ring, no rain),
    **ink_surge** (mid surge ring, no rain shower; HUD `… · SURGE`),
    hotter hit flash, FOV + fullscreen ink slam transition sting
-   (`announceFinalePhaseTransition`), HUD `OVERLORD · P2 UNLEASHED` + move,
-   wind-up chip `P2 CRIMSON FURY`.
+   (`announceFinalePhaseTransition` → `finalePhaseStingBanner` →
+   CampaignHandoff P2 hose plate + PlayEntry tip), HUD
+   `OVERLORD · P2 UNLEASHED` + move, wind-up chip `P2 CRIMSON FURY`.
    **AI**: enrage chase + wider/faster rain AoE, mid-range **ink_surge**
    (planar rush then landing AoE — third Unleashed note beyond rain/slam),
    close-range **slam** when the player is already in the ink, plus

@@ -111,6 +111,11 @@ class PlayEntryClient(DirectObject):
         # CampaignHandoff owns the celebration; tip bar latches the next cue.
         self.accept('purityRestoreFx', self._onPurity)
         self.accept('campaignHandoffCue', self._onHandoffCue)
+        # FinalePhaseFx sting banner — thin tip accept (plate is Handoff).
+        stingMsg = getattr(
+            CampaignGlobals, 'FINALE_PHASE_STING_BANNER_MSG',
+            'finalePhaseStingBanner')
+        self.accept(stingMsg, self._onFinalePhaseStingBanner)
         self.accept('campaignVictory', self._onCampaignVictory)
         self.accept('oswaldBetrayalChaseCleared', self._onCampaignEpilogue)
         self.accept('campaignEpilogue', self._onCampaignEpilogue)
@@ -704,6 +709,19 @@ class PlayEntryClient(DirectObject):
                     nextZone = act.get('zoneId')
                     break
         self._latchSoftNextCue(text, nextZone=nextZone, nextStreet=streetName)
+
+    def _onFinalePhaseStingBanner(self, phase=0, title=''):
+        """Thin tip accept for FinalePhaseFx P1→P2 sting banner.
+
+        Handoff owns the hose-pop plate; tip bar shows combat cue only
+        (no soft-next travel latch / no cream deepen / no KH).
+        """
+        if not bool(getattr(
+                CampaignGlobals, 'FINALE_PHASE_STING_TIP_ENABLED', True)):
+            return
+        tip = CampaignGlobals.finalePhaseStingTipText(phase, face=_face())
+        if tip:
+            self._showTip(tip)
 
     def _actsAroundZone(self, zoneId):
         if zoneId is None:
