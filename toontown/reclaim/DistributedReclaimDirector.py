@@ -19,10 +19,12 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
     when purity stalls or ink rises while packs are still alive (contested
     feel after incomplete re-creep #194). Between-wave ambush also accepts
     reclaimAmbushSpawn for a meter-adjacent pressure tip (soft-lock prefer
-    pulse lives on MeleeCombat). Full clear confirms the secured purity
-    lock with a short tip + meter rim so re-creep cannot undo it, plus a
-    green-cream sparkle / soft pitch sting that celebrates the lock
-    (distinct from mid-wave tip and generic wave-clear sparkle).
+    pulse lives on MeleeCombat). Contested re-creep accepts
+    pollutionRecreeping for a post-bail meter tip (PlayEntry owns the
+    soft-next tip latch of the same messenger). Full clear confirms the
+    secured purity lock with a short tip + meter rim so re-creep cannot
+    undo it, plus a green-cream sparkle / soft pitch sting that celebrates
+    the lock (distinct from mid-wave tip and generic wave-clear sparkle).
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('DistributedReclaimDirector')
@@ -72,6 +74,10 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         # Ambush spawn messenger → mid-fight pressure tip (orphan → accept).
         self.accept(
             ReclaimGlobals.ambushMsgName(), self.__onAmbushSpawnCue)
+        # Contested re-creep messenger → post-bail pressure tip (orphan → accept).
+        self.accept(
+            CorruptionGlobals.pollutionRecreepingMsgName(),
+            self.__onPollutionRecreeping)
         # Polluted STREET_PACK enter cream shimmer + soft wash pulse
         # (wash client also owns delayed cream aftershock + settle cream wash;
         # also via ReclaimCheer).
@@ -321,6 +327,43 @@ class DistributedReclaimDirector(DistributedObject.DistributedObject):
         now = self.__now()
         cooldown = float(getattr(
             ReclaimGlobals, 'AMBUSH_PRESSURE_COOLDOWN_SEC', 6.0))
+        self._pressureCooldownUntil = now + max(0.5, cooldown)
+
+    def __onPollutionRecreeping(self, zoneId=0, level=0.0):
+        """Accept pollutionRecreeping → meter tip + rim (post-bail pressure).
+
+        Contested re-ink already whispers + moves fog; this whisper sits
+        under the purity meter so reclaim→pressure feedback is discoverable
+        after an incomplete reclaim. PlayEntry owns the soft-next tip latch
+        of the same messenger. No cream deepen / no KH.
+        """
+        if not bool(getattr(
+                CorruptionGlobals, 'POLLUTION_RECREEP_TIP_LATCH_ENABLED', True)):
+            return
+        if not bool(getattr(
+                CorruptionGlobals, 'POLLUTION_RECREEP_ENABLED', True)):
+            return
+        tipFn = getattr(
+            CorruptionGlobals, 'pollutionRecreepPressureTipText', None)
+        if callable(tipFn):
+            tip = tipFn(zoneId=zoneId)
+        else:
+            tip = getattr(
+                CorruptionGlobals, 'POLLUTION_RECREEP_PRESSURE_TIP',
+                "Ink's creeping back! Finish the reclaim before this "
+                'street goes goopy!')
+        hold = float(getattr(
+            CorruptionGlobals, 'POLLUTION_RECREEP_PRESSURE_TIP_HOLD_SEC',
+            getattr(ReclaimGlobals, 'PURITY_PRESSURE_TIP_HOLD_SEC', 2.4)))
+        self.__showPressureTip(tip, hold=hold)
+        if self._purityMeter is not None:
+            try:
+                self._purityMeter.warnPressure()
+            except Exception:
+                pass
+        now = self.__now()
+        cooldown = float(getattr(
+            ReclaimGlobals, 'PURITY_PRESSURE_COOLDOWN_SEC', 12.0))
         self._pressureCooldownUntil = now + max(0.5, cooldown)
 
     def announceWaveCleared(self, waveIndex):

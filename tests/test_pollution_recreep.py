@@ -172,6 +172,7 @@ class PollutionRecreepTest(unittest.TestCase):
                 'isPurityLocked',
                 '_ensureRecreepTask',
                 '__recreepTick',
+                '_emitPollutionRecreeping',
                 '_announceRecreep'):
             self.assertIn(name, methods, msg='PollutionManagerAI missing %s' % name)
         src = _read('toontown/corruption/PollutionManagerAI.py')
@@ -179,8 +180,15 @@ class PollutionRecreepTest(unittest.TestCase):
         self.assertIn('pollutionRecreepStep', src)
         self.assertIn('POLLUTION_RECREEP_MSG', src)
         self.assertIn('pollutionRecreeping', src)
+        self.assertIn('_emitPollutionRecreeping', src)
+        self.assertIn('announcePollutionRecreeping', src)
         self.assertIn('_purityLocked', src)
         self.assertIn('streetPurityLockBlocksRise', src)
+        # Tip-latch helpers (orphan → accept) live on CorruptionGlobals.
+        self.assertEqual(self.cg.POLLUTION_RECREEPING_MSG, 'pollutionRecreeping')
+        self.assertTrue(self.cg.POLLUTION_RECREEP_TIP_LATCH_ENABLED)
+        self.assertEqual(
+            self.cg.pollutionRecreepingMsgName(), 'pollutionRecreeping')
 
     def test_reclaim_director_marks_incomplete_vs_secured(self):
         src = _read('toontown/reclaim/DistributedReclaimDirectorAI.py')

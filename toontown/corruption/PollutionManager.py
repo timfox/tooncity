@@ -23,8 +23,11 @@ class PollutionManager(DistributedObject.DistributedObject):
 
     Incomplete reclaim re-creep is AI-authored (PollutionManagerAI contested
     streets); finished reclaim purity-locks refuse re-stain on the AI. This
-    client only presents setZonePollution via the same density ramp / prop
-    tint / street-audio hooks — pure stays clear.
+    client presents setZonePollution via the same density ramp / prop tint /
+    street-audio hooks — pure stays clear — and rebroadcasts
+    announcePollutionRecreeping so PlayEntry / reclaim tip accepts hear the
+    first contested re-creep tick (AI-local messenger alone never crosses
+    processes).
     """
 
     notify = DirectNotifyGlobal.directNotify.newCategory('PollutionManager')
@@ -253,6 +256,26 @@ class PollutionManager(DistributedObject.DistributedObject):
             messenger.send(msg, [count])  # noqa: F821
         except Exception:
             self.notify.debug('campaignVictory messenger failed')
+
+    def announcePollutionRecreeping(self, zoneId, netLevel):
+        """First contested re-creep tick — rebroadcast pollutionRecreeping.
+
+        AI-process messenger.send('pollutionRecreeping') never reaches real
+        clients. PollutionManagerAI._emitPollutionRecreeping also sendUpdates
+        this so PlayEntry soft-next tip latch + reclaim pressure tip hear
+        the same event (orphan → accept; no cream deepen / no KH).
+        """
+        level = CorruptionGlobals.pollutionFromNet(netLevel)
+        try:
+            zid = int(zoneId)
+        except Exception:
+            zid = 0
+        msg = CorruptionGlobals.pollutionRecreepingMsgName()
+        try:
+            messenger.send(msg, [zid, float(level)])  # noqa: F821
+        except Exception:
+            self.notify.debug(
+                'pollutionRecreeping messenger failed zone=%s' % zid)
 
     def d_requestHackSlashIFrame(self, durationMs):
         """Tell AI the local toon is invulnerable for durationMs (capped server-side)."""

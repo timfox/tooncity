@@ -1755,6 +1755,23 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             tip_idx:play_src.find('\n    def ', tip_idx + 10)]
         self.assertIn('_latchSoftNextCue', tip_body)
         self.assertIn('_postClearRewardLatchedZone', tip_body)
+        # pollutionRecreeping orphan → accept tip latch: PlayEntry soft-next
+        # + reclaim director pressure tip; client DC rebroadcast.
+        self.assertIn('_onPollutionRecreeping', play_src)
+        self.assertIn('pollutionRecreepLatchTipText', play_src)
+        self.assertIn('_postRecreepLatchedZone', play_src)
+        self.assertTrue(self.cg.POLLUTION_RECREEP_TIP_LATCH_ENABLED)
+        self.assertEqual(
+            self.cg.POLLUTION_RECREEPING_MSG, 'pollutionRecreeping')
+        recreep_tip = self.cg.pollutionRecreepLatchTipText(face='Oswald')
+        self.assertIn('Oswald', recreep_tip)
+        self.assertIn('creeping', recreep_tip.lower())
+        director_src = _read(
+            'toontown/reclaim/DistributedReclaimDirector.py')
+        self.assertIn('__onPollutionRecreeping', director_src)
+        self.assertIn('pollutionRecreepingMsgName()', director_src)
+        pm_src = _read('toontown/corruption/PollutionManager.py')
+        self.assertIn('announcePollutionRecreeping', pm_src)
 
     # --- campaign progression + Oswald twist ---
 

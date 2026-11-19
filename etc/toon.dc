@@ -3302,6 +3302,10 @@ dclass PollutionManager : DistributedObject {
   // (PlayEntry / OswaldPresence / chase tip / FinalePhaseFx / Handoff).
   // reclaimCount uint8; AI-local messenger alone never crosses processes.
   announceCampaignVictory(uint8);
+  // First contested re-creep tick — live pollutionRecreeping messenger for
+  // real clients (PlayEntry soft-next tip latch + reclaim pressure tip).
+  // zoneId + pollution level; AI-local messenger alone never crosses processes.
+  announcePollutionRecreeping(uint32, uint16/1000(0-1)) broadcast;
 };
 
 dclass DistributedCorruptToon : DistributedNode {
