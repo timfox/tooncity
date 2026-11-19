@@ -129,6 +129,21 @@ MELEE_DAMAGE_MAX = 80
 MELEE_COUNTER_FLAG_NONE = 0
 MELEE_COUNTER_FLAG_PERFECT_DODGE = 1 << 0
 
+# Server melee hit integrity on requestHackSlashHit (CorruptToonAI).
+# Cadence + combo sequence stop finisher-spam RPCs; planar range gates
+# in-zone snipes; earned counter latch stops spoofed perfect-dodge bits.
+# Rubber-hose Oswald stretch punches only — no KH / keyblades.
+MELEE_HIT_CADENCE_ENABLED = True
+# Min seconds between accepted hits from the same avatar on one hostile.
+MELEE_HIT_MIN_GAP_SEC = 0.18
+# How long a live combo string remembers the last hitIndex before reset.
+MELEE_HIT_COMBO_HOLD_SEC = 1.05  # ~COMBO_WINDOW + COMBO_RECOVERY + slack
+MELEE_HIT_RANGE_GATE_ENABLED = True
+# Planar reach ≈ HIT_FORWARD + HIT_RADIUS (defined below); slack covers lag.
+MELEE_HIT_PLANAR_RANGE = 5.6
+MELEE_HIT_PLANAR_RANGE_SLACK = 1.15
+MELEE_EARNED_COUNTER_ENABLED = True
+
 # Hitstop / freeze on connect — pauses juice + anims so the impact silhouette
 # sticks before launch / hop / FOV punch. Longer on finisher. Client juice only.
 HITSTOP_ENABLED = True
@@ -971,6 +986,121 @@ def meleeDamageFromHitIndex(hitIndex, counterFlags=0, damageTable=None):
         amount = perfectDodgeCounterOpenerDamage(amount)
     ceiling = int(MELEE_DAMAGE_MAX)
     return max(0, min(ceiling, int(amount)))
+
+
+def meleeHitPlanarRange(baseRange=None, slack=None):
+    """Max planar distance for an accepted requestHackSlashHit."""
+    if baseRange is None:
+        baseRange = MELEE_HIT_PLANAR_RANGE
+    if slack is None:
+        slack = MELEE_HIT_PLANAR_RANGE_SLACK
+    return max(0.0, float(baseRange)) * max(0.0, float(slack))
+
+
+def isMeleeHitCadenceReady(lastHitAt, now, minGap=None):
+    """True when enough time has passed since the avatar's last accepted hit."""
+    if minGap is None:
+        minGap = MELEE_HIT_MIN_GAP_SEC
+    try:
+        last = float(lastHitAt)
+        t = float(now)
+        gap = max(0.0, float(minGap))
+    except (TypeError, ValueError):
+        return True
+    if last <= 0.0:
+        return True
+    return t >= (last + gap)
+
+
+def expectedMeleeComboHitIndex(lastHitIndex, lastHitAt, now,
+                               holdSec=None, comboLength=None):
+    """Next valid hitIndex for a per-avatar combo string (0 = fresh opener).
+
+    After holdSec without a hit the string resets. Completing the finisher
+    (last index) also resets so the next accepted beat is opener 0.
+    """
+    if holdSec is None:
+        holdSec = MELEE_HIT_COMBO_HOLD_SEC
+    if comboLength is None:
+        comboLength = COMBO_LENGTH
+    try:
+        length = max(1, int(comboLength))
+    except (TypeError, ValueError):
+        length = 3
+    try:
+        lastIdx = int(lastHitIndex)
+        lastAt = float(lastHitAt)
+        t = float(now)
+        hold = max(0.0, float(holdSec))
+    except (TypeError, ValueError):
+        return 0
+    if lastAt <= 0.0 or t > (lastAt + hold):
+        return 0
+    if lastIdx < 0:
+        return 0
+    nxt = lastIdx + 1
+    if nxt >= length:
+        return 0
+    return nxt
+
+
+def acceptMeleeHitIndex(requestedIndex, expectedIndex, comboLength=None):
+    """True when the client hitIndex matches the server-expected combo beat.
+
+    Opener 0 is always allowed (fresh string / whiff reset). Mid/finisher
+    indices must match the expected next beat — blocks finisher-spam RPCs.
+    """
+    if comboLength is None:
+        comboLength = COMBO_LENGTH
+    try:
+        length = max(1, int(comboLength))
+        req = max(0, min(int(requestedIndex), length - 1))
+        exp = max(0, min(int(expectedIndex), length - 1))
+    except (TypeError, ValueError):
+        return False
+    if req == 0:
+        return True
+    return req == exp
+
+
+def resolveEarnedCounterFlags(requestedFlags, counterUntil, now,
+                              enabled=None, perfectFlag=None):
+    """Strip PERFECT_DODGE unless a server-armed earned latch is still live.
+
+    Returns (sanitizedFlags, consumed). consumed is True when the latch was
+    spent on this hit. Client bit alone never grants the opener mult.
+    """
+    if enabled is None:
+        enabled = MELEE_EARNED_COUNTER_ENABLED
+    if perfectFlag is None:
+        perfectFlag = MELEE_COUNTER_FLAG_PERFECT_DODGE
+    try:
+        flags = max(0, int(requestedFlags or 0))
+    except (TypeError, ValueError):
+        flags = 0
+    if not enabled:
+        return (flags & ~int(perfectFlag), False)
+    wants = bool(flags & int(perfectFlag))
+    if not wants:
+        return (flags & ~int(perfectFlag), False)
+    try:
+        until = float(counterUntil or 0.0)
+        t = float(now)
+    except (TypeError, ValueError):
+        return (flags & ~int(perfectFlag), False)
+    if until <= 0.0 or t >= until:
+        return (flags & ~int(perfectFlag), False)
+    return (flags | int(perfectFlag), True)
+
+
+def earnedCounterUntil(now, windowSec=None):
+    """Absolute expiry for a server-armed earned counter latch."""
+    if windowSec is None:
+        windowSec = PERFECT_DODGE_COUNTER_WINDOW_SEC
+    try:
+        return float(now) + max(0.0, float(windowSec))
+    except (TypeError, ValueError):
+        return 0.0
 
 # Dodge roll afterimage / smear trail (Shift/X i-frame roll juice).
 # Warm cartoon smear ghosts drip behind the toon — not KH blue streaks.
