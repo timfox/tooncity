@@ -1235,6 +1235,9 @@ OSWALD_PRESENCE_CHEER_TIP = (
 # after the latch, plaza/street E-talk soft-nexts from unlock progress
 # (HUB/STREET_GREET_SOFT_NEXT / _CHEERED) so the trust ladder reads mid-act.
 # Soft-next templates take {street} from softNextStreetFromProgress.
+# OswaldPresence clears the once-per-visit `_greetedZone` latch on zone
+# leave and re-arms soft-next E-talk after campaignActUnlocked so plaza
+# talk works again when unlock refreshes the soft-next street tip.
 OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT = (
     'Oswald waves from the plaza — "{street} needs us next!"  |  '
     'Hop the tunnel  |  C campaign')
