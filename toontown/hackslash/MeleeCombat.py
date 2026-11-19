@@ -327,6 +327,8 @@ class MeleeCombatController(DirectObject):
         snapped = self.targetFinder.didSnap()
         # Sticky yield / fresh acquire onto a new lock key → remap cadence.
         self._remapMeleeCadenceComboForSoftLockChange(snapped)
+        # Boss/chase life bar follows soft-lock subject (not last setHp).
+        self._bindBossHpBarToSoftLock(target)
         if target is not None:
             name = target.getHackSlashName()
             hp = target.getHackSlashHp()
@@ -409,6 +411,8 @@ class MeleeCombatController(DirectObject):
         snapped = self.targetFinder.didSnap()
         # Tab/` onto a new hostile → opener for #386 per-hostile cadence.
         self._remapMeleeCadenceComboForSoftLockChange(snapped)
+        # Tab/` also remaps boss/chase life bar onto the soft-lock subject.
+        self._bindBossHpBarToSoftLock(target)
         if target is not None:
             try:
                 name = target.getHackSlashName()
@@ -428,6 +432,20 @@ class MeleeCombatController(DirectObject):
             messenger.send(  # noqa: F821
                 'hackslash-target-cycle',
                 [self.avatar, target, int(direction), bool(snapped)])
+        except Exception:
+            pass
+
+    def _bindBossHpBarToSoftLock(self, target):
+        """Point BossHpBarHud ownership at the soft-lock target.
+
+        Thin reclaim hook: living Overlord / Oswald / Elite / Ambush
+        subjects claim the singleton life bar; fodder leaves a prior
+        prefer sticky; None clears soft-lock prefer so last-writer
+        resumes between locks. No cream / no KH.
+        """
+        try:
+            from toontown.reclaim.BossHpBarHud import bindSoftLockTarget
+            bindSoftLockTarget(target)
         except Exception:
             pass
 

@@ -126,19 +126,27 @@ class BossHpBarOwnFinalePhaseTests(unittest.TestCase):
         rel = 'toontown/reclaim/BossHpBarHud.py'
         names = _function_body_names(rel, 'syncFromCorruptToon')
         self.assertIn('isBossOrChaseHpBarSubject', names)
-        self.assertIn('resolveBossHpBarFinalePhase', names)
-        self.assertIn('getattr', names)
-        self.assertIn('finalePhase', names)
+        self.assertIn('_subjectFields', names)
+        self.assertIn('shouldClaimBossHpBarOwnership', names)
         # Soft-lock anti-pattern lock: never glue street phase onto pack adds.
         self.assertNotIn('reclaimDirector', names)
         self.assertNotIn('base', names)
+        field_names = _function_body_names(rel, '_subjectFields')
+        self.assertIn('resolveBossHpBarFinalePhase', field_names)
+        self.assertIn('getattr', field_names)
+        self.assertIn('finalePhase', field_names)
         src = _read(rel)
         sync_idx = src.index('def syncFromCorruptToon')
-        sync_snip = src[sync_idx:sync_idx + 1200]
-        self.assertIn("getattr(toon, 'finalePhase'", sync_snip)
+        sync_snip = src[sync_idx:sync_idx + 1400]
+        self.assertIn('_subjectFields', sync_snip)
         self.assertNotIn('reclaimDirector', sync_snip)
-        self.assertIn('P2 Smudge', sync_snip)
-        self.assertIn('soft-lock', sync_snip.lower())
+        fields_idx = src.index('def _subjectFields')
+        fields_snip = src[fields_idx:fields_idx + 900]
+        self.assertIn("getattr(toon, 'finalePhase'", fields_snip)
+        # Module docs still call out P2 Smudge / soft-lock anti-pattern.
+        self.assertIn('soft-lock', src.lower())
+        self.assertIn('P2 Smudge', _read(
+            'toontown/corruption/CorruptionGlobals.py'))
 
     def test_globals_docs_forbid_director_phase_on_adds(self):
         cg_src = _read('toontown/corruption/CorruptionGlobals.py')
