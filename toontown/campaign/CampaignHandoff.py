@@ -74,6 +74,7 @@ from toontown.campaign.CampaignHandoffConfetti import (
 )
 from toontown.campaign.CampaignPower import (
     applyPowerBump,
+    emitStreetClearReward,
     streetClearRewardEnabled,
     streetClearRewardPayload,
 )
@@ -138,6 +139,8 @@ class CampaignHandoffClient(DirectObject):
         self._finaleClears = 0
         self._betrayalArmed = False
         self._epilogueShown = False
+        # Latched streetClearReward payload for plate line (orphan → accept).
+        self._streetClearRewardLatch = None
         self.accept('purityRestoreFx', self._onPurityRestore)
         self.accept('campaignVictory', self._onVictory)
         self.accept('campaignPhase', self._onPhase)
@@ -148,6 +151,11 @@ class CampaignHandoffClient(DirectObject):
             CampaignGlobals, 'FINALE_PHASE_STING_BANNER_MSG',
             'finalePhaseStingBanner')
         self.accept(stingMsg, self._onFinalePhaseStingBanner)
+        # CampaignPower street-clear reward — thin plate payload latch
+        # (PlayEntry tip-latches on the same messenger).
+        rewardMsg = getattr(
+            CampaignGlobals, 'STREET_CLEAR_REWARD_MSG', 'streetClearReward')
+        self.accept(rewardMsg, self._onStreetClearReward)
         # FinalePhaseFx fires this when the betrayal AV sting lands — handoff
         # plate owns the readable twist copy (hose-pop, not plain TextNode).
         self.accept('oswaldRevealBanner', self._onOswaldBetrayalBanner)
@@ -216,8 +224,10 @@ class CampaignHandoffClient(DirectObject):
             mult = self._applyReclaimPower(synced)
         else:
             mult = self._applyReclaimPower(self._localReclaimCount + 1)
-        # Street-trophy jellybean / laff line — client mirror of AI award
-        # (CampaignPower.awardStreetClearReward). Beyond COMBO_DAMAGE bump.
+        # Client mirror of AI streetClearReward — emit so PlayEntry tip-latches
+        # + this plate latches payload (orphan → accept; no cream / no KH).
+        self._emitStreetClearRewardMirror(zoneId)
+        # Street-trophy jellybean / laff line — prefers latched payload.
         rewardLine = self._streetClearRewardLine(zoneId)
         face = _face()
         act, nxt = self._actsForZone(zoneId)
@@ -287,10 +297,65 @@ class CampaignHandoffClient(DirectObject):
             trustSettle=True,
             trustFracture=bool(act.get('trustFracture')))
 
+    def _onStreetClearReward(self, zoneId=0, beans=0, laff=0, trophy=''):
+        """Thin accept — latch streetClearReward payload for the plate line.
+
+        PlayEntry tip-latches on the same messenger. No cream deepen / no KH.
+        """
+        if not streetClearRewardEnabled():
+            return
+        beans = int(beans or 0)
+        laff = int(laff or 0)
+        handoffFmt = getattr(
+            CampaignGlobals, 'STREET_CLEAR_REWARD_HANDOFF_FMT',
+            'Street Trophy  +%s beans  +%s laff')
+        try:
+            handoff = handoffFmt % (beans, laff)
+        except Exception:
+            handoff = 'Street Trophy  +%s beans  +%s laff' % (beans, laff)
+        try:
+            zid = int(zoneId or 0)
+        except Exception:
+            zid = 0
+        self._streetClearRewardLatch = {
+            'zoneId': zid,
+            'jellybeans': beans,
+            'laff': laff,
+            'trophy': trophy or '',
+            'handoff': handoff,
+        }
+
+    def _emitStreetClearRewardMirror(self, zoneId):
+        """Client-side streetClearReward emit after purity (AI award mirror)."""
+        if not streetClearRewardEnabled():
+            return
+        try:
+            payload = streetClearRewardPayload(
+                reclaimCount=self._localReclaimCount, zoneId=zoneId)
+        except Exception:
+            return
+        if not payload:
+            return
+        emitStreetClearReward(
+            zoneId=payload.get('zoneId') or zoneId or 0,
+            beans=payload.get('jellybeans') or 0,
+            laff=payload.get('laff') or 0,
+            trophy=payload.get('trophy') or '',
+            ensureClients=True)
+
     def _streetClearRewardLine(self, zoneId):
         """Handoff plate line for jellybean / laff street trophy (or None)."""
         if not streetClearRewardEnabled():
             return None
+        latch = self._streetClearRewardLatch
+        if latch:
+            try:
+                if int(latch.get('zoneId') or 0) == int(zoneId or 0):
+                    line = latch.get('handoff')
+                    if line:
+                        return line
+            except Exception:
+                pass
         try:
             payload = streetClearRewardPayload(
                 reclaimCount=self._localReclaimCount, zoneId=zoneId)

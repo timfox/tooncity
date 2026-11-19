@@ -288,7 +288,9 @@ class StreetClearReclaimRewardTests(unittest.TestCase):
                 'streetClearTrophyLabel',
                 'streetClearRewardPayload',
                 'awardStreetClearReward',
-                'streetClearRewardEnabled'):
+                'streetClearRewardEnabled',
+                'emitStreetClearReward',
+                'streetClearRewardMsgName'):
             self.assertIn(name, power_src)
         # Still documents power bump + street reward (not cream / KH).
         self.assertIn('jellybean', power_src.lower())
