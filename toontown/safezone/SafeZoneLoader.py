@@ -91,6 +91,18 @@ class SafeZoneLoader(StateData.StateData):
         gsg = base.win.getGsg()
         if gsg:
             self.geom.prepareScene(gsg)
+        # USD street overlay: metadata only, behind want-usd-street-overlay.
+        self.usdStreetOverlayMeta = None
+        try:
+            from toontown.usd.runtime_hook import try_apply_street_overlay
+            zone_id = getattr(self, 'zoneId', None)
+            if zone_id is None and getattr(self, 'hood', None) is not None:
+                zone_id = getattr(self.hood, 'hoodId', None)
+            self.usdStreetOverlayMeta = try_apply_street_overlay(
+                zone_id=zone_id)
+        except Exception:
+            self.notify.debug(
+                'usd street overlay hook skipped (metadata only)')
 
     def makeDictionaries(self, dnaStore):
         self.nodeList = []

@@ -94,6 +94,15 @@ attribute (`TELEGRAPH_INK_DRIP_LOOK`, `DEATH_POP_LOOK`, …). Headless map:
 `toontown.usd.fx_sockets.load_fx_sockets`. String table only — no mesh
 FX, no Hydra, no gameplay wiring.
 
+## Runtime street overlay hook (metadata only)
+
+Feature flag `want-usd-street-overlay` (default **off**). Optional
+`usd-street-overlay-path` / `usd-street-overlay-look`. When enabled,
+`toontown.usd.runtime_hook` composes a street fixture stack and
+`apply_overlay_metadata` returns pollution seed + spawn stand list for
+TownLoader / SafeZoneLoader / reclaim enter to stash — no Hydra, no DNA
+rewrite, no `pxr` required.
+
 ## Fixture reference
 
 See `fixtures/schema_kitchen_sink.usda` for a single ASCII stage that
