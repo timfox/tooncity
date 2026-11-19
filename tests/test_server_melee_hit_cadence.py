@@ -215,6 +215,8 @@ class ServerMeleeHitCadenceTest(unittest.TestCase):
         for name in (
                 'acceptMeleeHitIndex',
                 'earnedCounterUntil',
+                'earnedCounterWindowSec',
+                'earnedTelegraphCounterUntil',
                 'expectedMeleeComboHitIndex',
                 'isMeleeHitCadenceReady',
                 'meleeHitPlanarRange',

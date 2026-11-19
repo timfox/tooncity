@@ -386,7 +386,12 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self.sendUpdate('announceAttackDodged', [])
 
     def __armEarnedCounterForTelegraph(self, avId, move):
-        """Arm earned counter across telegraph delay + punish window."""
+        """Arm earned counter across telegraph delay + punish window.
+
+        Window length is move-specific (Snare / Brute / Gagster / Oswald /
+        Overlord / Smudge) so server latch expiry matches client
+        dedicated-counter windows — not a flat perfect-dodge 0.50.
+        """
         if avId is None:
             return
         if not CorruptionGlobals.isDedicatedTelegraphCounterMove(
@@ -394,11 +399,17 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return
         now = globalClock.getFrameTime()  # noqa: F821
         delay = float(self.__telegraphDelayForMove(move))
-        window = float(getattr(
+        defaultWindow = float(getattr(
             HackSlashConfig, 'PERFECT_DODGE_COUNTER_WINDOW_SEC', 0.50))
+        window = CorruptionGlobals.dedicatedTelegraphCounterWindowSec(
+            self.archetype, move, default=defaultWindow)
+        if window is None:
+            window = defaultWindow
         # Cover mid-telegraph interrupt (before client arm delay) through the
         # post-telegraph punish window — matches client counter eligibility.
-        self.__armEarnedCounter(avId, until=now + delay + window)
+        until = HackSlashConfig.earnedTelegraphCounterUntil(
+            now, delay, windowSec=window)
+        self.__armEarnedCounter(avId, until=until)
 
     def __applyJuggleHangStun(self, hitIndex):
         """Pause chase/attack for launch hang so cancel→slam sticks."""

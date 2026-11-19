@@ -2644,6 +2644,45 @@ def isDedicatedTelegraphCounterMove(archetype, move):
     return False
 
 
+def dedicatedTelegraphCounterWindowSec(archetype, move, default=None):
+    """Client-parity punish-window length for a dedicated telegraph counter.
+
+    Returns the move-specific ``*_COUNTER_WINDOW_SEC`` (Snare / Brute spit /
+    Gagster lob / Oswald lunge+burst / Overlord rain+slam+surge / Smudge
+    dash+splat) when :func:`isDedicatedTelegraphCounterMove` is true.
+    Otherwise returns ``default`` (None when omitted) so callers can fall
+    back to the perfect-dodge window. Server earned-counter latch uses this
+    instead of a flat 0.50 — kit windows are 0.42–0.55. No cream / no KH.
+    """
+    if not isDedicatedTelegraphCounterMove(archetype, move):
+        return default
+    aid = normalizeArchetype(archetype)
+    moveName = str(move or 'smack')
+    if aid == ARCHETYPE_SNARE:
+        return float(SNARE_STRING_COUNTER_WINDOW_SEC)
+    if aid == ARCHETYPE_BRUTE and moveName == 'spit':
+        return float(BRUTE_SPIT_COUNTER_WINDOW_SEC)
+    if aid == ARCHETYPE_GAGSTER and moveName == 'gag_lob':
+        return float(GAGSTER_LOB_COUNTER_WINDOW_SEC)
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        if moveName in ('betrayal_lunge', 'smack', ''):
+            return float(OSWALD_BETRAYAL_LUNGE_COUNTER_WINDOW_SEC)
+        if moveName == 'stain_burst':
+            return float(OSWALD_STAIN_BURST_COUNTER_WINDOW_SEC)
+    if aid == ARCHETYPE_INK:
+        if moveName == 'rain':
+            return float(OVERLORD_RAIN_COUNTER_WINDOW_SEC)
+        if moveName == 'slam':
+            return float(OVERLORD_SLAM_COUNTER_WINDOW_SEC)
+        if moveName == 'ink_surge':
+            return float(OVERLORD_INK_SURGE_COUNTER_WINDOW_SEC)
+        if moveName == 'ink_dash':
+            return float(INK_DASH_COUNTER_WINDOW_SEC)
+        if moveName == 'ink_splat':
+            return float(INK_SPLAT_COUNTER_WINDOW_SEC)
+    return default
+
+
 def bruteSpitCounterOpenerDamage(baseDamage, mult=None):
     """Rewarded stretch-punch opener damage after a Brute spit counter."""
     if mult is None:

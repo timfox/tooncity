@@ -1122,12 +1122,44 @@ def resolveEarnedCounterFlags(requestedFlags, counterUntil, now,
     return (flags | int(perfectFlag), True)
 
 
-def earnedCounterUntil(now, windowSec=None):
-    """Absolute expiry for a server-armed earned counter latch."""
+def earnedCounterWindowSec(windowSec=None):
+    """Resolve earned-counter latch length; default perfect-dodge window.
+
+    Pass a move-specific ``*_COUNTER_WINDOW_SEC`` (from CorruptionGlobals
+    dedicatedTelegraphCounterWindowSec) for telegraph earns so server latch
+    length matches client Snare/Brute/Gagster/Oswald/Overlord/Smudge windows.
+    Perfect-dodge earn keeps the flat PERFECT_DODGE_COUNTER_WINDOW_SEC.
+    """
     if windowSec is None:
         windowSec = PERFECT_DODGE_COUNTER_WINDOW_SEC
     try:
-        return float(now) + max(0.0, float(windowSec))
+        return max(0.0, float(windowSec))
+    except (TypeError, ValueError):
+        return max(0.0, float(PERFECT_DODGE_COUNTER_WINDOW_SEC))
+
+
+def earnedCounterUntil(now, windowSec=None):
+    """Absolute expiry for a server-armed earned counter latch."""
+    try:
+        return float(now) + earnedCounterWindowSec(windowSec)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def earnedTelegraphCounterUntil(now, telegraphDelaySec, windowSec=None):
+    """Server latch expiry covering mid-telegraph through punish window.
+
+    Arms from telegraph start through ``telegraphDelaySec + windowSec`` so
+    mid-telegraph interrupt earns and post-telegraph client windows stay
+    eligible. Pass move-specific windowSec (client parity); default is the
+    perfect-dodge window. Rubber-hose Oswald punches only — no KH.
+    """
+    try:
+        delay = max(0.0, float(telegraphDelaySec))
+    except (TypeError, ValueError):
+        delay = 0.0
+    try:
+        return float(now) + delay + earnedCounterWindowSec(windowSec)
     except (TypeError, ValueError):
         return 0.0
 
