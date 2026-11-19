@@ -15,10 +15,12 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     Ink Overlord (finalePhase 1/2) uses phase combat instead of Smudge chase:
     P1 ink-rain AoE + close slam, P2 enrage rain + mid ink_surge + close
-    slam. Street archetypes use role AI (Smudge orbit/weave, Gagster kite,
-    Brute hold, Snare flank) so wave-script pack intent survives after
-    combat starts — not all nearest-chase. Corrupted Oswald press/circles
-    for betrayal-lunge approach asymmetry (not plain nearest-chase).
+    slam. Between rain/slam/surge telegraphs, Overlord role AI holds /
+    circles (``ROLE_CIRCLE``) instead of forced nearest-chase. Street
+    archetypes use role AI (Smudge orbit/weave, Gagster kite, Brute hold,
+    Snare flank) so wave-script pack intent survives after combat starts —
+    not all nearest-chase. Corrupted Oswald press/circles for
+    betrayal-lunge approach asymmetry (not plain nearest-chase).
 
     Sludge Brute fires a traveling spit projectile (trail + land splash) from
     hold range, with a close slam secondary — not an instant long-range smack.
@@ -466,11 +468,15 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             now = globalClock.getFrameTime()
             if now >= self._attackReadyAt:
                 self.__beginAttack(target)
+                return Task.again
+            # Between telegraphs: Overlord hold/circle instead of freeze.
+            if self._isOverlord():
+                self.__roleMoveToward(target)
             return Task.again
 
         if dist <= CorruptionGlobals.AGGRO_RANGE:
-            # Role AI: Smudge orbit / Oswald press-circle / Gagster kite /
-            # Brute hold / Snare flank.
+            # Role AI: Overlord hold/circle / Smudge orbit / Oswald
+            # press-circle / Gagster kite / Brute hold / Snare flank.
             self.__roleMoveToward(target)
         return Task.again
 
@@ -544,18 +550,21 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         return math.sqrt(dx * dx + dy * dy)
 
     def __roleMoveToward(self, target):
-        """Move with archetype role AI so pack scripts keep combat identity.
+        """Move with archetype / Overlord role AI so kits keep combat identity.
 
-        Overlord / disabled → nearest chase. Smudge orbits/weaves the dash
-        ring, Oswald presses/circles the betrayal lunge ring, Gagster kites
-        the lob ring, Brute plants in spit range, Snare approaches on a
-        flank.
+        Disabled → nearest chase. Overlord holds/circles between
+        rain/slam/surge telegraphs (``ROLE_CIRCLE``), Smudge orbits/weaves
+        the dash ring, Oswald presses/circles the betrayal lunge ring,
+        Gagster kites the lob ring, Brute plants in spit range, Snare
+        approaches on a flank.
         """
-        if self._isOverlord() or not getattr(
-                CorruptionGlobals, 'ROLE_AI_ENABLED', True):
+        if not getattr(CorruptionGlobals, 'ROLE_AI_ENABLED', True):
             self.__chaseToward(target)
             return
-        role = CorruptionGlobals.archetypeCombatRole(self.archetype)
+        if self._isOverlord():
+            role = CorruptionGlobals.overlordCombatRole()
+        else:
+            role = CorruptionGlobals.archetypeCombatRole(self.archetype)
         if role == CorruptionGlobals.ROLE_CHASE:
             self.__chaseToward(target)
             return
@@ -570,14 +579,15 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         gx, gy, action = CorruptionGlobals.roleMoveGoal(
             role, sx, sy, tx, ty, flankSide=side)
         if action == 'hold':
-            # Face the toon while planted so spit / lob telegraphs read.
+            # Face the toon while planted so spit / lob / Overlord
+            # rain-slam-surge telegraphs read.
             self.__faceTowardXY(tx, ty)
             return
         speedScale = CorruptionGlobals.roleMoveSpeedScale(role, action)
         self.__moveTowardXY(gx, gy, speedScale=speedScale)
 
     def __chaseToward(self, target):
-        """Legacy nearest-chase — straight at the toon (Overlord / disabled)."""
+        """Legacy nearest-chase — straight at the toon (role AI disabled)."""
         try:
             tx, ty = target.getX(), target.getY()
         except Exception:

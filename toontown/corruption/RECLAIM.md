@@ -170,7 +170,8 @@ gameplay timing only; interrupt ≠ counter).
 # CorruptToons prefer ink-tinted Toon Actor silhouettes (DNA clone of you
 # when available), else improved card limbs. Role AI (Smudge orbit/weave dash
 # ring, Gagster kite lob ring, Brute hold/plant spit, Snare flank approach;
-# Oswald press/circle) keeps wave-script pack intent after combat starts;
+# Oswald press/circle; Overlord hold/circle) keeps wave-script pack intent
+# after combat starts;
 # between telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
 # presence, layered with soft cream / pastel contrast drips
 # (IdleCreamDripContrastFx) plus sunny cream / pastel sparkle flecks on
@@ -481,10 +482,13 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    / Snare whip / Smudge hose / Gunk puddle bloom); slam skips rain and uses
    a close slam danger ring (footprint scales to the move hit band). HUD chip
    names the move (`… · RAIN` / `… · SLAM`); wind-up chip `P1 MAGENTA SWELL`.
-   **AI**: slower chase + mid-range **ink-rain AoE** plus close-range **slam**
-   when the player is already in the ink (`OVERLORD_PHASE_COMBAT[1]` two-note
-   Rising kit — second pressure beyond rain-only before Unleash) matching the
-   rain puddle / spread — not Smudge melee smack. Rain and close **slam**
+   **AI**: between rain/slam telegraphs, Overlord **hold/circle** role AI
+   (`ROLE_CIRCLE` / `overlordCombatRole` — measured approach, mid circle,
+   in-band hold plant; not forced nearest-chase, not Smudge orbit) + mid-range
+   **ink-rain AoE** plus close-range **slam** when the player is already in
+   the ink (`OVERLORD_PHASE_COMBAT[1]` two-note Rising kit — second pressure
+   beyond rain-only before Unleash) matching the rain puddle / spread — not
+   Smudge melee smack. Rain and close **slam**
    resolve also leave a short **lingering sludge hazard**
    (`OVERLORD_RAIN_LINGER_*` / `OVERLORD_SLAM_LINGER_*` — Gagster-like DoT /
    slow while standing in the magenta puddle; arena trap, not cream deepen).
@@ -506,10 +510,12 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    (`announceFinalePhaseTransition` → `finalePhaseStingBanner` →
    CampaignHandoff P2 hose plate + PlayEntry tip), HUD
    `OVERLORD · P2 UNLEASHED` + move, wind-up chip `P2 CRIMSON FURY`.
-   **AI**: enrage chase + wider/faster rain AoE, mid-range **ink_surge**
-   (planar rush then landing AoE — third Unleashed note beyond rain/slam),
-   close-range **slam** when the player is already in the ink, plus
-   **Smudge adds** on wave 2+ (`phase2.addCount` / `OVERLORD_P2_ADD_*`).
+   **AI**: between rain/slam/surge telegraphs, same Overlord **hold/circle**
+   role AI (`ROLE_CIRCLE` — not forced nearest-chase) + enrage rain AoE,
+   mid-range **ink_surge** (planar rush then landing AoE — third Unleashed
+   note beyond rain/slam), close-range **slam** when the player is already
+   in the ink, plus **Smudge adds** on wave 2+ (`phase2.addCount` /
+   `OVERLORD_P2_ADD_*`).
    Slam and ink_surge resolve also leave **lingering sludge**
    (`OVERLORD_SLAM_LINGER_*` / `OVERLORD_INK_SURGE_LINGER_*` — rain parity
    floor control across the three-note kit). Melee mid-telegraph also

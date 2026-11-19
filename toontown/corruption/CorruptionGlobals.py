@@ -219,14 +219,17 @@ DEFEAT_DELETE_DELAY = 0.95
 #   Brute   → hold (plant in spit range; sluggish close)
 #   Snare   → flank (approach via perpendicular offset, then lash)
 #   Oswald  → press / circle (aggressive close + mid-range circle for lunge)
-# Overlord stays plain chase (gated by finalePhase). ROLE_AI_ENABLED = False
-# restores legacy nearest-chase for all archetypes.
+#   Overlord → hold / circle (plant for rain/slam/surge; mid circle between
+#              telegraphs — gated by finalePhase / ``_isOverlord()``, not
+#              archetype id; shares ARCHETYPE_INK with Smudge)
+# ROLE_AI_ENABLED = False restores legacy nearest-chase for all archetypes.
 # Wired from DistributedCorruptToonAI.__roleMoveToward / __moveTowardXY.
 # ---------------------------------------------------------------------------
 ROLE_AI_ENABLED = True
 ROLE_CHASE = 'chase'
 ROLE_ORBIT = 'orbit'
 ROLE_PRESS = 'press'
+ROLE_CIRCLE = 'circle'
 ROLE_KITE = 'kite'
 ROLE_HOLD = 'hold'
 ROLE_FLANK = 'flank'
@@ -248,6 +251,18 @@ OSWALD_PRESS_CIRCLE = 3.8  # tangential lead so the goal keeps him circling
 OSWALD_PRESS_SPEED_SCALE = 1.18  # snappy betrayal press-in
 OSWALD_CIRCLE_SPEED_SCALE = 1.10  # zip on the circle arc
 
+# Ink Overlord hold / circle — climax approach between rain/slam/surge.
+# Far: measured approach toward the hold ring; mid: circle for angled
+# telegraph; in-band / close: hold plant (face toon) so rain/slam/surge
+# still fire — not Smudge orbit retreat, not Oswald press-onto-toon.
+# Preferred sits under P1 rain meleeRange (8.0) so engage still owns the hit.
+OVERLORD_CIRCLE_PREFERRED = 6.6  # hold/circle ring (under P1 rain engage 8.0)
+OVERLORD_CIRCLE_BAND = 1.2  # half-width comfort band around preferred
+OVERLORD_CIRCLE_CLOSE_DIST = 15.0  # beyond this, approach toward ring before circling
+OVERLORD_CIRCLE_LEAD = 4.0  # tangential lead so the goal keeps him circling
+OVERLORD_APPROACH_SPEED_SCALE = 0.92  # measured close — not frantic nearest-chase
+OVERLORD_CIRCLE_SPEED_SCALE = 1.06  # slight zip on the between-telegraph arc
+
 # Gunk Gagster kite — stand off on a lob ring; retreat when the toon closes.
 GAGSTER_KITE_PREFERRED = 9.5  # ring radius (near meleeRange 8.5)
 GAGSTER_KITE_BAND = 1.4  # half-width comfort band around preferred
@@ -264,10 +279,11 @@ SNARE_FLANK_SPEED_SCALE = 1.05  # slight zip on the flank arc
 
 
 def archetypeCombatRole(archetype):
-    """Return role-AI mode (orbit/press/kite/hold/flank).
+    """Return street / Oswald role-AI mode (orbit/press/kite/hold/flank).
 
-    Overlord combat is gated separately by finalePhase — callers should skip
-    role AI when ``_isOverlord()``. Unknown ids clamp via normalizeArchetype.
+    Ink Overlord (finalePhase ≥ 1) shares ``ARCHETYPE_INK`` with Smudge —
+    callers use ``overlordCombatRole()`` when ``_isOverlord()``. Unknown ids
+    clamp via normalizeArchetype.
     """
     if not ROLE_AI_ENABLED:
         return ROLE_CHASE
@@ -285,10 +301,22 @@ def archetypeCombatRole(archetype):
     return ROLE_CHASE
 
 
+def overlordCombatRole():
+    """Return Overlord between-telegraph role (hold / circle).
+
+    Distinct from Smudge ``ROLE_ORBIT`` despite shared ``ARCHETYPE_INK``.
+    ``ROLE_AI_ENABLED = False`` restores legacy nearest-chase.
+    """
+    if not ROLE_AI_ENABLED:
+        return ROLE_CHASE
+    return ROLE_CIRCLE
+
+
 def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
                  holdRange=None, flankOffset=None, flankCloseDist=None,
                  flankSide=1, weave=None, orbitCloseDist=None,
-                 pressCircle=None, pressCloseDist=None):
+                 pressCircle=None, pressCloseDist=None,
+                 circleLead=None, circleCloseDist=None):
     """Planar (gx, gy, action) for role-aware chase.
 
     ``action`` is one of ``chase`` / ``approach`` / ``retreat`` / ``hold`` /
@@ -379,6 +407,42 @@ def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
             gy = ty + rdy / rdist * preferred
         return (gx, gy, 'circle')
 
+    if role == ROLE_CIRCLE:
+        # Overlord hold / circle — plant in-band; circle mid; approach far.
+        if preferred is None:
+            preferred = OVERLORD_CIRCLE_PREFERRED
+        if band is None:
+            band = OVERLORD_CIRCLE_BAND
+        if circleLead is None:
+            circleLead = OVERLORD_CIRCLE_LEAD
+        if circleCloseDist is None:
+            circleCloseDist = OVERLORD_CIRCLE_CLOSE_DIST
+        preferred = max(0.5, float(preferred))
+        band = max(0.0, float(band))
+        circleLead = max(0.0, float(circleLead))
+        circleCloseDist = max(preferred, float(circleCloseDist))
+        side = 1.0 if float(flankSide) >= 0.0 else -1.0
+        if dist < 1e-6 or dist <= preferred + band:
+            # In comfort band / on top of toon — hold plant for telegraph.
+            return (sx, sy, 'hold')
+        ux = dx / dist
+        uy = dy / dist
+        if dist > circleCloseDist:
+            # Far: measured approach toward preferred hold ring.
+            return (tx + ux * preferred, ty + uy * preferred, 'approach')
+        # Mid: circle on preferred ring (angled rain/slam/surge approach).
+        wx = (-uy) * side
+        wy = (ux) * side
+        gx = tx + ux * preferred + wx * circleLead
+        gy = ty + uy * preferred + wy * circleLead
+        rdx = gx - tx
+        rdy = gy - ty
+        rdist = (rdx * rdx + rdy * rdy) ** 0.5
+        if rdist > 1e-6:
+            gx = tx + rdx / rdist * preferred
+            gy = ty + rdy / rdist * preferred
+        return (gx, gy, 'circle')
+
     if role == ROLE_KITE:
         if preferred is None:
             preferred = GAGSTER_KITE_PREFERRED
@@ -424,7 +488,7 @@ def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
         gy = ty + (ux) * side * flankOffset
         return (gx, gy, 'flank')
 
-    # Plain chase (Overlord / disabled / unknown).
+    # Plain chase (disabled / unknown).
     return (tx, ty, 'chase')
 
 
@@ -438,6 +502,12 @@ def roleMoveSpeedScale(role, action=None):
         if action == 'circle':
             return float(OSWALD_CIRCLE_SPEED_SCALE)
         return float(OSWALD_PRESS_SPEED_SCALE)
+    if role == ROLE_CIRCLE:
+        if action == 'circle':
+            return float(OVERLORD_CIRCLE_SPEED_SCALE)
+        if action == 'approach':
+            return float(OVERLORD_APPROACH_SPEED_SCALE)
+        return 1.0
     if role == ROLE_KITE and action == 'retreat':
         return float(GAGSTER_KITE_RETREAT_SPEED_SCALE)
     if role == ROLE_HOLD:
@@ -448,7 +518,7 @@ def roleMoveSpeedScale(role, action=None):
 
 
 def snareFlankSide(doId):
-    """Stable left/right flank / orbit / press-circle side from doId.
+    """Stable left/right flank / orbit / press / Overlord-circle side from doId.
 
     Even doIds weave / flank / circle one way; odd the other, so packs split
     around the toon instead of stacking on one shoulder.
