@@ -4200,6 +4200,33 @@ def resolveBossHpBarFinalePhase(finalePhase=0, name=''):
     return 0
 
 
+# Soft-lock prefer tiers — lower int wins. Binary prefer (#339/#375) made
+# Ambush outrank Overlord by distance during Unleashed adds + ambush beats;
+# tiered rank keeps climax/twist above Elite above Ambush above fodder.
+SOFT_LOCK_PRIORITY_TIER_BOSS = 0
+SOFT_LOCK_PRIORITY_TIER_ELITE = 1
+SOFT_LOCK_PRIORITY_TIER_AMBUSH = 2
+SOFT_LOCK_PRIORITY_TIER_FODDER = 3
+
+
+def isElitePreferName(name=''):
+    """True for Elite pack rename prefix (``Elite ``).
+
+    Matches ReclaimGlobals.ELITE_NAME_PREFIX without importing reclaim.
+    Bare ``Elite`` without the trailing space is not a pack rename.
+    """
+    return (name or '').lower().startswith('elite ')
+
+
+def isAmbushPreferName(name=''):
+    """True for Ambush pack rename prefix (``Ambush ``).
+
+    Matches ReclaimGlobals.AMBUSH_NAME_PREFIX without importing reclaim.
+    Bare ``Ambush`` without the trailing space is not a pack rename.
+    """
+    return (name or '').lower().startswith('ambush ')
+
+
 def isEliteOrAmbushPreferName(name=''):
     """True for Elite / Ambush pack rename prefixes (soft-lock + HP bar).
 
@@ -4208,8 +4235,34 @@ def isEliteOrAmbushPreferName(name=''):
     Bare ``Elite`` / ``Ambush`` tokens without the trailing space are not
     pack renames.
     """
+    return isElitePreferName(name) or isAmbushPreferName(name)
+
+
+def softLockPriorityTier(archetype=0, name='', finalePhase=0):
+    """Soft-lock prefer tier — lower int wins (boss > elite > ambush > fodder).
+
+    Overlord (name tokens / per-toon finalePhase) and Corrupted Oswald share
+    the boss tier. Elite rename outranks Ambush rename; plain pack fodder
+    is last. Callers must pass the hostile's own finalePhase — never
+    reclaim-director street phase alone, or P2 Smudge adds would steal
+    priority from the Overlord.
+    """
+    try:
+        aid = int(archetype)
+    except (TypeError, ValueError):
+        aid = ARCHETYPE_INK
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return SOFT_LOCK_PRIORITY_TIER_BOSS
     text = (name or '').lower()
-    return text.startswith('elite ') or text.startswith('ambush ')
+    if 'overlord' in text or 'unleashed' in text:
+        return SOFT_LOCK_PRIORITY_TIER_BOSS
+    if normalizeFinalePhase(finalePhase) >= 1:
+        return SOFT_LOCK_PRIORITY_TIER_BOSS
+    if isElitePreferName(name):
+        return SOFT_LOCK_PRIORITY_TIER_ELITE
+    if isAmbushPreferName(name):
+        return SOFT_LOCK_PRIORITY_TIER_AMBUSH
+    return SOFT_LOCK_PRIORITY_TIER_FODDER
 
 
 def isSoftLockPrioritySubject(archetype=0, name='', finalePhase=0):
@@ -4220,22 +4273,11 @@ def isSoftLockPrioritySubject(archetype=0, name='', finalePhase=0):
     (``Elite `` / ``Ambush `` rename tokens from ReclaimGlobals). Callers
     must pass the hostile's own finalePhase — never reclaim-director
     street phase alone, or P2 Smudge adds would steal priority from the
-    Overlord.
+    Overlord. Prefer softLockPriorityTier when ranking among subjects.
     """
-    try:
-        aid = int(archetype)
-    except (TypeError, ValueError):
-        aid = ARCHETYPE_INK
-    if aid == ARCHETYPE_CORRUPT_OSWALD:
-        return True
-    text = (name or '').lower()
-    if 'overlord' in text or 'unleashed' in text:
-        return True
-    # Elite / Ambush pack rename prefixes — permanent soft-lock prefer so
-    # mid-wave elite/ambush scrums do not glue onto nearer fodder.
-    if isEliteOrAmbushPreferName(name):
-        return True
-    return normalizeFinalePhase(finalePhase) >= 1
+    return softLockPriorityTier(
+        archetype, name=name, finalePhase=finalePhase) < (
+            SOFT_LOCK_PRIORITY_TIER_FODDER)
 
 
 def isBossOrChaseHpBarSubject(archetype=0, name='', finalePhase=0):

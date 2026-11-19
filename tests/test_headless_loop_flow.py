@@ -827,14 +827,44 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(
             pick([(False, 1.5, smudge), (True, 10.0, ambush)]),
             ambush)
+        # Tiered prefer (TC-413): Overlord/Oswald > Elite > Ambush > fodder.
+        boss_t = cg.SOFT_LOCK_PRIORITY_TIER_BOSS
+        elite_t = cg.SOFT_LOCK_PRIORITY_TIER_ELITE
+        ambush_t = cg.SOFT_LOCK_PRIORITY_TIER_AMBUSH
+        self.assertEqual(
+            cg.softLockPriorityTier(cg.ARCHETYPE_INK, name='Ink Overlord'),
+            boss_t)
+        self.assertEqual(
+            cg.softLockPriorityTier(
+                cg.ARCHETYPE_INK, name='Elite Ink Smudge'),
+            elite_t)
+        self.assertEqual(
+            cg.softLockPriorityTier(
+                cg.ARCHETYPE_BRUTE, name='Ambush Sludge Brute'),
+            ambush_t)
+        self.assertEqual(
+            pick([
+                (ambush_t, 2.0, ambush),
+                (boss_t, 13.0, overlord),
+            ]),
+            overlord)
+        self.assertEqual(
+            pick([
+                (ambush_t, 1.5, ambush),
+                (elite_t, 10.0, elite),
+            ]),
+            elite)
         soft_src = _read('toontown/hackslash/SoftTarget.py')
         self.assertIn('pickSoftLockAcquire', soft_src)
         self.assertIn('isSoftLockPrioritySubject', soft_src)
+        self.assertIn('softLockPriorityTier', soft_src)
         self.assertIn('TARGET_PRIORITY_ENABLED', soft_src)
         self.assertIn('Elite / Ambush', soft_src)
+        self.assertIn('Overlord/Oswald > Elite > Ambush', soft_src)
         cg_src = _read('toontown/corruption/CorruptionGlobals.py')
         self.assertIn("startswith('elite ')", cg_src)
         self.assertIn("startswith('ambush ')", cg_src)
+        self.assertIn('def softLockPriorityTier', cg_src)
         # Sticky hold yields glued adds when Overlord/Oswald is in cone (#347).
         self.assertIn('shouldStickyYieldToPriority', soft_src)
         self.assertGreater(cfg.TARGET_LOCK_HOLD_SEC, 0.0)
@@ -859,11 +889,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             'acquire')
         for need in (
                 'shouldStickyYieldToPriority', '_isPriorityTarget',
-                'pickSoftLockAcquire', '_inStickyCone',
+                '_priorityTier', 'pickSoftLockAcquire', '_inStickyCone',
                 'TARGET_LOCK_HOLD_SEC'):
             self.assertIn(need, acquire_names, msg='acquire missing %s' % need)
         cfg_src = _read('toontown/hackslash/HackSlashConfig.py')
         self.assertIn('sticky hold yield', cfg_src.lower())
+        self.assertIn('priority tiers', cfg_src.lower())
         # Tab/` cycle-with-lock jumps to Overlord/Oswald over yaw-orbit.
         self.assertIn('shouldCyclePreferPriority', soft_src)
         self.assertTrue(
@@ -874,13 +905,18 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             soft.shouldCyclePreferPriority(False, False))
         self.assertFalse(
             soft.shouldCyclePreferPriority(False, True, enabled=False))
+        # Tier path: Ambush lock yields / jumps to Overlord.
+        self.assertTrue(soft.shouldStickyYieldToPriority(
+            True, True, lockedTier=ambush_t, candidateTier=boss_t))
+        self.assertTrue(soft.shouldCyclePreferPriority(
+            True, True, lockedTier=ambush_t, candidateTier=boss_t))
         cycle_names = _method_body_names(
             'toontown/hackslash/SoftTarget.py',
             'SoftTargetFinder',
             'cycle')
         for need in (
                 'shouldCyclePreferPriority', '_isPriorityTarget',
-                'pickSoftLockAcquire', 'pickCycleChoice'):
+                '_priorityTier', 'pickSoftLockAcquire', 'pickCycleChoice'):
             self.assertIn(need, cycle_names, msg='cycle missing %s' % need)
         self.assertIn('cycle-with-lock', cfg_src.lower())
         hs_init = _read('toontown/hackslash/__init__.py')
