@@ -1,0 +1,128 @@
+#usda 1.0
+(
+    "Toon City corrupt character kit — Ink Smudge (ink variant). "
+    "LOD bands mirror Toon Actor 1000/500/250; pure/ink material looks; "
+    "FX sockets for telegraph/hit/death/cream attach. Bake targets feed "
+    "Actor-compatible BAM paths; DistributedCorruptToon CardMaker fallback "
+    "stays until a future feature-flagged kit load. No Hydra."
+)
+
+def Xform "InkSmudgeKit" (
+    customData = {
+        string tc:kind = "TcCharacterKit"
+        string tc:variant = "ink"
+        string tc:archetype = "ink"
+        string tc:kitId = "ink-smudge"
+        string tc:actorRoot = "phase_3/models/char/ink_smudge"
+    }
+)
+{
+    def Xform "LodGroup" (
+        customData = {
+            string tc:kind = "TcLodGroup"
+        }
+    )
+    {
+        def Xform "lod1000" (
+            customData = {
+                string tc:purpose = "render"
+                string tc:bamPath = "phase_3/models/char/ink_smudge-1000.bam"
+                int tc:lodBand = 1000
+            }
+        )
+        {
+        }
+
+        def Xform "lod500" (
+            customData = {
+                string tc:purpose = "proxy"
+                string tc:bamPath = "phase_3/models/char/ink_smudge-500.bam"
+                int tc:lodBand = 500
+            }
+        )
+        {
+        }
+
+        def Xform "lod250" (
+            customData = {
+                string tc:purpose = "proxy"
+                string tc:bamPath = "phase_3/models/char/ink_smudge-250.bam"
+                int tc:lodBand = 250
+            }
+        )
+        {
+        }
+    }
+
+    def Xform "LookPure" (
+        customData = {
+            string tc:kind = "TcMaterialLook"
+            string tc:look = "pure"
+        }
+    )
+    {
+    }
+
+    def Xform "LookInk" (
+        customData = {
+            string tc:kind = "TcMaterialLook"
+            string tc:look = "ink"
+        }
+    )
+    {
+    }
+
+    def Xform "IdleClip" (
+        customData = {
+            string tc:kind = "TcAnimClip"
+            string tc:animKey = "neutral"
+        }
+    )
+    {
+    }
+
+    def Xform "RunClip" (
+        customData = {
+            string tc:kind = "TcAnimClip"
+            string tc:animKey = "run"
+        }
+    )
+    {
+    }
+
+    def Xform "FxTelegraph" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "telegraph"
+        }
+    )
+    {
+    }
+
+    def Xform "FxHit" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "hit"
+        }
+    )
+    {
+    }
+
+    def Xform "FxDeath" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "death"
+        }
+    )
+    {
+    }
+
+    def Xform "FxCream" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "cream"
+        }
+    )
+    {
+    }
+}

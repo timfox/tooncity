@@ -70,7 +70,23 @@ tc/streets/loopy_lane/
 `punchline-sludge`, `silly-overlord`). Runtime reclaim still flips pollution
 scalars / FX in Python; USD owns authoring composition.
 
+## Character kit bake → Actor (corrupt ink)
+
+`fixtures/kits/ink_smudge_kit.usda` is the Ink Smudge (`ink` variant)
+assembly. Headless map: `toontown.usd.character_kit.load_kit`.
+
+- LOD prims `lod1000` / `lod500` / `lod250` carry `tc:bamPath` under
+  `phase_3/models/char/…` — bake into Actor LOD parts matching
+  `Toon.setLODs()` (bands 1000 / 500 / 250).
+- Material looks `pure` / `ink` bind to tint hooks used by corruption;
+  FX sockets (`telegraph` / `hit` / `death` / `cream`) are empty
+  attach Xforms only.
+- **Do not** replace `DistributedCorruptToon` CardMaker silhouette
+  fallback yet — Actor DNA path stays primary; kit BAM paths are a
+  future feature-flagged feed.
+
 ## Fixture reference
 
 See `fixtures/schema_kitchen_sink.usda` for a single ASCII stage that
 declares every kind above with valid LOD names and archetype tokens.
+Character kits live under `fixtures/kits/` (see `ink_smudge_kit.usda`).
