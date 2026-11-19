@@ -44,8 +44,13 @@ acts do not get a full reclaim crumb — dim placemarkers keep explore
 visible while the progression ladder reads from the hub. Client latch
 tracks unlockedThrough via campaignActUnlocked (PlayEntry / purity
 mirror) and campaignProgressSync (login rehydrate so crumbs undim
-after relog without waiting for a live unlock). Rubber-hose Toontown
-voice — no KH.
+after relog without waiting for a live unlock).
+
+Chase-pending honesty: campaignProgressSync also latches state /
+chaseCleared. While STATE_VICTORY + chaseCleared=0, hub crumbs must not
+say reclaim-with-Oswald — show chase-pending copy and gate reclaim
+invites (PlayEntry victory / epilogue keep the latch live). Rubber-hose
+Toontown voice — no KH / no cream deepen.
 """
 
 from __future__ import annotations
@@ -73,6 +78,9 @@ _HUB_ZONE = ToontownGlobals.ToontownCentral
 # Raised by campaignActUnlocked and campaignProgressSync (login rehydrate).
 # Default 0 = Loopy-only until unlock / sync.
 _clientUnlockedThrough = 0
+# Session latch: STATE_VICTORY + chaseCleared=0 — hub chase still pending.
+# Raised/cleared by campaignProgressSync + live victory / epilogue.
+_clientChasePending = False
 # Live hub breadcrumb instance (set by ensureCorruptStreetBreadcrumbs).
 _activeBreadcrumb = None
 
@@ -201,6 +209,14 @@ _STREET_COPY = {
     ToontownGlobals.PunchlinePlace: 'Sludge jokes on Punchline — reclaim!',
     ToontownGlobals.SillyStreet: 'Silly Street ink-deep — reclaim with Oswald!',
 }
+# Chase-pending placemarker copy — honest wash-the-chase, never reclaim-with-Oswald.
+_STREET_COPY_CHASE_PENDING = {
+    ToontownGlobals.LoopyLane: 'Ink stains Loopy — wash Oswald\'s betrayal chase!',
+    ToontownGlobals.PunchlinePlace: (
+        'Sludge jokes on Punchline — wash Oswald\'s betrayal chase!'),
+    ToontownGlobals.SillyStreet: (
+        'Silly Street ink-deep — wash Oswald\'s betrayal chase!'),
+}
 
 # Ink-on-cream placemarker colors (readable against sunny TTC tunnels).
 _TEXT_FG = Vec4(0.18, 0.12, 0.22, 1.0)
@@ -227,6 +243,34 @@ def setClientUnlockedThrough(unlockedThrough):
     return int(_clientUnlockedThrough)
 
 
+def getClientChasePending():
+    """Session latch: victory landed but Corrupted Oswald chase not cleared."""
+    return bool(_clientChasePending)
+
+
+def setClientChasePending(chasePending):
+    """Set chase-pending latch. Returns new value."""
+    global _clientChasePending
+    _clientChasePending = bool(chasePending)
+    return bool(_clientChasePending)
+
+
+def noteChasePending(chasePending):
+    """Latch chase-pending + refresh live hub crumbs.
+
+    Used by PlayEntry victory / epilogue / progress sync so placemarkers
+    drop reclaim-with-Oswald lies while the betrayal chase is pending.
+    """
+    setClientChasePending(chasePending)
+    crumb = _activeBreadcrumb
+    if crumb is not None and getattr(crumb, '_active', False):
+        try:
+            crumb.refresh()
+        except Exception:
+            notify.debug('breadcrumb refresh after chase-pending latch failed')
+    return getClientChasePending()
+
+
 def noteCampaignActUnlocked(nextIndex, zoneId=None):
     """Latch unlock + refresh live hub crumbs (campaignActUnlocked consumer).
 
@@ -243,10 +287,42 @@ def noteCampaignActUnlocked(nextIndex, zoneId=None):
     return getClientUnlockedThrough()
 
 
+def noteCampaignProgressFields(unlockedThrough=0, state=0, chaseCleared=0,
+                               reclaimCount=0):
+    """Thin progress-field latch for unlock + chase-pending honesty.
+
+    reclaimCount accepted for campaignProgressSync arity (power path).
+    """
+    setClientUnlockedThrough(unlockedThrough)
+    try:
+        from toontown.campaign import CampaignGlobals
+        pending = CampaignGlobals.campaignChasePending(state, chaseCleared)
+    except Exception:
+        try:
+            pending = (
+                int(state) == 2 and int(chaseCleared or 0) == 0)
+        except (TypeError, ValueError):
+            pending = False
+    setClientChasePending(pending)
+    crumb = _activeBreadcrumb
+    if crumb is not None and getattr(crumb, '_active', False):
+        try:
+            crumb.refresh()
+        except Exception:
+            notify.debug('breadcrumb refresh after progress fields failed')
+    return getClientUnlockedThrough(), getClientChasePending()
+
+
 def resetClientUnlockedThrough():
     """Test / teardown helper — clears the session unlock latch."""
     global _clientUnlockedThrough
     _clientUnlockedThrough = 0
+
+
+def resetClientChasePending():
+    """Test / teardown helper — clears the chase-pending latch."""
+    global _clientChasePending
+    _clientChasePending = False
 
 
 def _streetActUnlocked(zoneId, unlockedThrough):
@@ -275,10 +351,31 @@ def _streetLooksPolluted(zoneId, pollutionByZone, seedPollution, pure=0.0):
         return False
 
 
-def reclaimStreetEntries():
+def streetBreadcrumbText(zoneId, streetName=None, chasePending=False):
+    """Placemarker copy for a reclaim street.
+
+    When chasePending, returns honest wash-the-chase copy — never
+    reclaim-with-Oswald. Pure helper — headless-safe.
+    """
+    zoneId = int(zoneId)
+    name = streetName or ('Street %s' % zoneId)
+    if chasePending:
+        text = _STREET_COPY_CHASE_PENDING.get(zoneId)
+        if text:
+            return text
+        return (
+            'Corruption stains %s — wash Oswald\'s betrayal chase!' % name)
+    text = _STREET_COPY.get(zoneId)
+    if text:
+        return text
+    return 'Corruption stains %s — hop the tunnel & reclaim!' % name
+
+
+def reclaimStreetEntries(chasePending=False):
     """[(zoneId, streetName, placemarkerText, seedPollution), ...] for hub tips.
 
     Prefers CampaignGlobals.ACTS, falls back to ReclaimGlobals.STREET_PACKS.
+    When chasePending, texts use chase-pending copy (no reclaim-with-Oswald).
     Pure helper — safe for AST / headless import checks without Panda geom.
     """
     entries = []
@@ -291,8 +388,8 @@ def reclaimStreetEntries():
                 continue
             name = act.get('name') or ('Street %s' % zoneId)
             seed = float(act.get('seedPollution', 0.0) or 0.0)
-            text = _STREET_COPY.get(zoneId) or (
-                'Corruption stains %s — hop the tunnel & reclaim!' % name)
+            text = streetBreadcrumbText(
+                zoneId, streetName=name, chasePending=chasePending)
             entries.append((zoneId, name, text, seed))
             seen.add(zoneId)
     except Exception:
@@ -308,8 +405,8 @@ def reclaimStreetEntries():
                 continue
             name = (pack or {}).get('name') or ('Street %s' % zoneId)
             seed = float((pack or {}).get('seedPollution', 0.0) or 0.0)
-            text = _STREET_COPY.get(zoneId) or (
-                'Corruption stains %s — hop the tunnel & reclaim!' % name)
+            text = streetBreadcrumbText(
+                zoneId, streetName=name, chasePending=chasePending)
             entries.append((zoneId, name, text, seed))
             seen.add(zoneId)
     except Exception:
@@ -318,7 +415,7 @@ def reclaimStreetEntries():
 
 
 def streetNeedsBreadcrumb(zoneId, pollutionByZone, seedPollution, pure=0.0,
-                           unlockedThrough=None):
+                           unlockedThrough=None, chasePending=None):
     """True when a reclaim street needs a full hub reclaim breadcrumb.
 
     Known PollutionManager samples win; unknown zones fall back to seed
@@ -326,9 +423,13 @@ def streetNeedsBreadcrumb(zoneId, pollutionByZone, seedPollution, pure=0.0,
 
     When unlockedThrough is provided, locked campaign acts (soft-gate
     parity with street-pack R) do not get a full reclaim invite — use
-    streetBreadcrumbDimmed for the muted locked cue. When omitted, only
-    pollution/seed is checked (headless helper backward compatible).
+    streetBreadcrumbDimmed for the muted locked cue. When chasePending
+    is True, reclaim invites are gated (use streetBreadcrumbChasePending
+    for honest chase-pending copy). When omitted, only pollution/seed
+    (+ unlock when given) is checked (headless helper backward compatible).
     """
+    if chasePending:
+        return False
     if not _streetLooksPolluted(
             zoneId, pollutionByZone, seedPollution, pure=pure):
         return False
@@ -337,12 +438,29 @@ def streetNeedsBreadcrumb(zoneId, pollutionByZone, seedPollution, pure=0.0,
     return _streetActUnlocked(zoneId, unlockedThrough)
 
 
+def streetBreadcrumbChasePending(zoneId, pollutionByZone, seedPollution,
+                                 pure=0.0, unlockedThrough=0,
+                                 chasePending=False):
+    """True when chase is pending — honest wash-chase cue, not reclaim invite.
+
+    Polluted + unlocked streets keep a hub placemarker during the twist
+    window, but copy must not say reclaim-with-Oswald.
+    """
+    if not chasePending:
+        return False
+    if not _streetLooksPolluted(
+            zoneId, pollutionByZone, seedPollution, pure=pure):
+        return False
+    return _streetActUnlocked(zoneId, unlockedThrough)
+
+
 def streetBreadcrumbDimmed(zoneId, pollutionByZone, seedPollution, pure=0.0,
-                           unlockedThrough=0):
+                           unlockedThrough=0, chasePending=None):
     """True when polluted but act-locked — muted hub cue, not reclaim invite.
 
     Keeps explore discoverability for Punchline / Silly tunnels while the
-    progression ladder dims locked reclaim invitations from TTC.
+    progression ladder dims locked reclaim invitations from TTC. Chase
+    pending does not undim locked acts.
     """
     if not _streetLooksPolluted(
             zoneId, pollutionByZone, seedPollution, pure=pure):
@@ -533,7 +651,7 @@ class CorruptStreetBreadcrumb(DirectObject):
         DirectObject.__init__(self)
         self._playground = playground
         self._markers = {}  # zoneId -> NodePath
-        self._markerMode = {}  # zoneId -> 'full' | 'dim'
+        self._markerMode = {}  # zoneId -> 'full' | 'dim' | 'chase'
         self._pulseHalos = {}  # zoneId -> NodePath (cream deepen halo)
         self._crumbTrails = {}  # zoneId -> [NodePath, ...]
         self._crumbCreamPips = {}  # zoneId -> [NodePath, ...] (crumb cream pips)
@@ -554,15 +672,21 @@ class CorruptStreetBreadcrumb(DirectObject):
         self.accept('purityRestoreFx', self._onPurityRestore)
         # AI / PlayEntry purity mirror — refresh crumbs when acts unlock.
         self.accept('campaignActUnlocked', self._onCampaignActUnlocked)
-        # Login / persist push — raise latch so dim crumbs undim after relog.
+        # Login / persist push — raise unlock + chase-pending latches.
         try:
             from toontown.campaign import CampaignGlobals
             syncMsg = getattr(
                 CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
                 'campaignProgressSync')
+            victoryMsg = getattr(
+                CampaignGlobals, 'CAMPAIGN_VICTORY_MSG', 'campaignVictory')
         except Exception:
             syncMsg = 'campaignProgressSync'
+            victoryMsg = 'campaignVictory'
         self.accept(syncMsg, self._onCampaignProgressSync)
+        # Live twist window — drop reclaim-with-Oswald before next sync.
+        self.accept(victoryMsg, self._onCampaignVictory)
+        self.accept('campaignEpilogue', self._onCampaignEpilogue)
         self.accept('exitPlayground', self.stop)
         self._requestStreetPollution()
         self.refresh()
@@ -579,9 +703,14 @@ class CorruptStreetBreadcrumb(DirectObject):
             syncMsg = getattr(
                 CampaignGlobals, 'CAMPAIGN_PROGRESS_SYNC_MSG',
                 'campaignProgressSync')
+            victoryMsg = getattr(
+                CampaignGlobals, 'CAMPAIGN_VICTORY_MSG', 'campaignVictory')
         except Exception:
             syncMsg = 'campaignProgressSync'
+            victoryMsg = 'campaignVictory'
         self.ignore(syncMsg)
+        self.ignore(victoryMsg)
+        self.ignore('campaignEpilogue')
         self.ignore('exitPlayground')
         self._clearMarkers()
         self._clearBirdsReturnCreamWash()
@@ -680,15 +809,39 @@ class CorruptStreetBreadcrumb(DirectObject):
 
     def _onCampaignProgressSync(
             self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
-        """Rehydrate unlock latch from AI progress so hub crumbs undim on relog.
+        """Rehydrate unlock + chase-pending from AI progress after relog.
 
-        state / chaseCleared / reclaimCount accepted for campaignProgressSync
-        arity (tip / presence / power paths); crumbs only need unlock cursor.
+        state / chaseCleared drive chase-pending honesty so Silly crumbs
+        never keep reclaim-with-Oswald through the twist window.
+        reclaimCount accepted for campaignProgressSync arity (power path).
         """
         if not self._active:
-            setClientUnlockedThrough(unlockedThrough)
+            noteCampaignProgressFields(
+                unlockedThrough=unlockedThrough,
+                state=state,
+                chaseCleared=chaseCleared,
+                reclaimCount=reclaimCount)
             return
-        noteCampaignActUnlocked(unlockedThrough)
+        noteCampaignProgressFields(
+            unlockedThrough=unlockedThrough,
+            state=state,
+            chaseCleared=chaseCleared,
+            reclaimCount=reclaimCount)
+
+    def _onCampaignVictory(self, reclaimCount=0):
+        """Live finale — chase pending until epilogue / chase clear."""
+        # reclaimCount accepted for messenger arity with PlayEntry / presence.
+        if not self._active:
+            setClientChasePending(True)
+            return
+        noteChasePending(True)
+
+    def _onCampaignEpilogue(self, doId=0):
+        """Chase washed — restore reclaim placemarker invites."""
+        if not self._active:
+            setClientChasePending(False)
+            return
+        noteChasePending(False)
 
     def refresh(self):
         if not self._active:
@@ -704,22 +857,34 @@ class CorruptStreetBreadcrumb(DirectObject):
         pollution = self._pollutionMap()
         pure = _pollutionPure()
         unlocked = getClientUnlockedThrough()
+        chasePending = getClientChasePending()
         wanted = {}  # zoneId -> (name, text, mode)
-        for zoneId, name, text, seed in reclaimStreetEntries():
+        for zoneId, name, _text, seed in reclaimStreetEntries(
+                chasePending=chasePending):
             zid = int(zoneId)
+            text = streetBreadcrumbText(
+                zid, streetName=name, chasePending=chasePending)
             if streetNeedsBreadcrumb(
                     zid, pollution, seed, pure=pure,
-                    unlockedThrough=unlocked):
+                    unlockedThrough=unlocked,
+                    chasePending=chasePending):
                 wanted[zid] = (name, text, 'full')
+            elif streetBreadcrumbChasePending(
+                    zid, pollution, seed, pure=pure,
+                    unlockedThrough=unlocked,
+                    chasePending=chasePending):
+                wanted[zid] = (name, text, 'chase')
             elif streetBreadcrumbDimmed(
                     zid, pollution, seed, pure=pure,
-                    unlockedThrough=unlocked):
+                    unlockedThrough=unlocked,
+                    chasePending=chasePending):
+                # Dim locked acts keep explore cue; still avoid reclaim-Oswald.
                 wanted[zid] = (name, text, 'dim')
         # Drop cleared / no-longer-wanted streets (caller may cue birds wash).
         for zoneId in list(self._markers.keys()):
             if zoneId not in wanted:
                 self._removeMarker(zoneId)
-        # Ensure placemarkers; rebuild when soft-gate mode flips dim ↔ full.
+        # Ensure placemarkers; rebuild when mode flips (dim ↔ full ↔ chase).
         for zoneId, (name, text, mode) in wanted.items():
             if (zoneId not in self._markers
                     or self._markerMode.get(zoneId) != mode):
@@ -759,7 +924,12 @@ class CorruptStreetBreadcrumb(DirectObject):
             self.notify.debug(
                 'no linktunnel for polluted street %s (%s)' % (zoneId, streetName))
             return
-        mode = 'dim' if mode == 'dim' else 'full'
+        if mode == 'dim':
+            mode = 'dim'
+        elif mode == 'chase':
+            mode = 'chase'
+        else:
+            mode = 'full'
         # Avoid stacking if DNA already has a leftover marker name.
         existing = link.find('**/corruptStreetBreadcrumb')
         if not existing.isEmpty():
@@ -806,6 +976,11 @@ class CorruptStreetBreadcrumb(DirectObject):
             # Locked act: muted placemarker only — no reclaim pulse juice.
             self.notify.debug(
                 'dim placemarker on tunnel → %s (%s)' % (streetName, zoneId))
+            return
+        if mode == 'chase':
+            # Chase-pending: honest wash-chase copy, no reclaim invite juice.
+            self.notify.debug(
+                'chase placemarker on tunnel → %s (%s)' % (streetName, zoneId))
             return
         halo = self._attachPulseCreamHalo(link, zoneId)
         crumbs = self._attachCrumbTrail(link, zoneId)

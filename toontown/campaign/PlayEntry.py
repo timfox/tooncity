@@ -280,12 +280,15 @@ class PlayEntryClient(DirectObject):
                 # Fresh campaign — clear stale soft cues from a prior local
                 # session if the AI says Act 1 only.
                 self._softNextStreet = None
-        # Raise hub crumb unlock latch so Punchline/Silly undim after relog
-        # without waiting for a live campaignActUnlocked.
+        # Raise hub crumb unlock + chase-pending latches so Punchline/Silly
+        # undim after relog and never keep reclaim-with-Oswald through the
+        # twist window (without waiting for a live campaignActUnlocked).
         try:
             from toontown.safezone.CorruptStreetBreadcrumb import (
-                noteCampaignActUnlocked)
+                noteCampaignActUnlocked,
+                noteChasePending)
             noteCampaignActUnlocked(unlocked)
+            noteChasePending(bool(self._chasePending))
         except Exception:
             pass
         # Refresh hub tip if the player is already on TTC.
@@ -664,6 +667,13 @@ class PlayEntryClient(DirectObject):
         # Chase is still pending until oswaldBetrayalChaseCleared / epilogue.
         self._victoryEpilogue = True
         self._chasePending = True
+        # Hub crumbs: drop reclaim-with-Oswald while betrayal chase is live.
+        try:
+            from toontown.safezone.CorruptStreetBreadcrumb import (
+                noteChasePending)
+            noteChasePending(True)
+        except Exception:
+            pass
 
     def _onCampaignEpilogue(self, doId=0):
         """Chase-clear soft-end — hub replay tip + Loopy rematch latch."""
@@ -673,6 +683,12 @@ class PlayEntryClient(DirectObject):
         self._victoryEpilogue = True
         self._chasePending = False
         self._postConfrontTipLatched = False
+        try:
+            from toontown.safezone.CorruptStreetBreadcrumb import (
+                noteChasePending)
+            noteChasePending(False)
+        except Exception:
+            pass
         face = _face()
         tip = getattr(
             CampaignGlobals, 'CAMPAIGN_EPILOGUE_CUE', None) or (

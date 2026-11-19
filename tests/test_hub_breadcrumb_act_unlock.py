@@ -248,10 +248,10 @@ class HubBreadcrumbActUnlockTests(unittest.TestCase):
         self.assertIn('CAMPAIGN_PROGRESS_SYNC_MSG', self.src)
         crumb_sync_idx = self.src.find('def _onCampaignProgressSync')
         self.assertGreater(crumb_sync_idx, 0)
-        crumb_sync = self.src[crumb_sync_idx:crumb_sync_idx + 700]
-        self.assertIn('setClientUnlockedThrough', crumb_sync)
-        self.assertIn('noteCampaignActUnlocked', crumb_sync)
+        crumb_sync = self.src[crumb_sync_idx:crumb_sync_idx + 900]
+        self.assertIn('noteCampaignProgressFields', crumb_sync)
         self.assertIn('unlockedThrough', crumb_sync)
+        self.assertIn('chaseCleared', crumb_sync)
 
         # PlayEntry thin accept + purity mirror (AI messenger is process-local).
         self.assertIn("self.accept('campaignActUnlocked'", self.play_src)
