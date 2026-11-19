@@ -2,8 +2,10 @@
 
 Thin aspect2d HUD driven by DistributedCorruptToon client setHp/setMaxHp.
 Shows one active subject at a time (finale Overlord, betrayal chase, or
-soft-lock-preferred Elite / Ambush rename). Rubber-hose Toontown
-spiritual-sequel tone only (not cream FX deepen; no KH).
+soft-lock-preferred Elite / Ambush rename). Soft-lock bind owns the
+singleton when Tab/` / sticky acquire lands on a bar subject — other
+subjects' setHp cannot steal it. Rubber-hose Toontown spiritual-sequel
+tone only (not cream FX deepen; no KH).
 """
 
 from panda3d.core import CardMaker, TextNode, TransparencyAttrib
@@ -14,6 +16,8 @@ from toontown.corruption import CorruptionGlobals
 # Module singleton — one readable life bar for the active boss/chase.
 _hud = None
 _ownerDoId = None
+# Soft-lock preferred owner doId (None = last-writer among subjects).
+_softLockDoId = None
 
 
 def _getHud():
@@ -23,20 +27,23 @@ def _getHud():
     return _hud
 
 
-def syncFromCorruptToon(toon):
-    """Show/update/hide the bar from a live DistributedCorruptToon client."""
-    global _ownerDoId
-    if toon is None:
-        return
+def getSoftLockBossHpBarDoId():
+    """doId soft-lock currently prefers for bar ownership, or None."""
+    return _softLockDoId
+
+
+def getBossHpBarOwnerDoId():
+    """doId currently owning the singleton bar, or None."""
+    return _ownerDoId
+
+
+def _subjectFields(toon):
+    """Return (doId, archetype, name, hp, maxHp, finalePhase) from a toon."""
     doId = getattr(toon, 'doId', None)
     archetype = int(getattr(toon, 'archetype', CorruptionGlobals.ARCHETYPE_INK))
     name = str(getattr(toon, 'name', '') or '')
     hp = int(getattr(toon, 'hp', 0) or 0)
     maxHp = int(getattr(toon, 'maxHp', 0) or 0)
-    # Per-hostile phase only (AI Overlord DOs). Never use reclaim-director
-    # street phase — P2 Smudge adds share that street flag and would steal
-    # the singleton bar from the Overlord (same anti-pattern soft-lock docs).
-    # Client Overlords still resolve via name tokens when phase is unset.
     finalePhase = 0
     try:
         finalePhase = int(getattr(toon, 'finalePhase', 0) or 0)
@@ -44,6 +51,39 @@ def syncFromCorruptToon(toon):
         finalePhase = 0
     finalePhase = CorruptionGlobals.resolveBossHpBarFinalePhase(
         finalePhase, name)
+    return doId, archetype, name, hp, maxHp, finalePhase
+
+
+def bindSoftLockTarget(toon):
+    """Bind singleton ownership to the soft-lock target when it is a subject.
+
+    MeleeCombat calls this after Tab/` cycle and sticky acquire so the
+    readable life bar follows focus. Living bar subjects claim ownership
+    immediately; None clears the soft-lock prefer (last-writer resumes);
+    fodder / non-subjects leave a prior soft-lock prefer unchanged so
+    mid-scrum setHp cannot steal while focus is on pack adds.
+    """
+    global _softLockDoId
+    if toon is None:
+        _softLockDoId = None
+        return False
+    doId, archetype, name, hp, maxHp, finalePhase = _subjectFields(toon)
+    subject = CorruptionGlobals.isBossOrChaseHpBarSubject(
+        archetype, name=name, finalePhase=finalePhase)
+    alive = hp > 0 and maxHp > 0
+    if not subject or not alive or doId is None:
+        return False
+    _softLockDoId = doId
+    syncFromCorruptToon(toon)
+    return True
+
+
+def syncFromCorruptToon(toon):
+    """Show/update/hide the bar from a live DistributedCorruptToon client."""
+    global _ownerDoId
+    if toon is None:
+        return
+    doId, archetype, name, hp, maxHp, finalePhase = _subjectFields(toon)
 
     subject = CorruptionGlobals.isBossOrChaseHpBarSubject(
         archetype, name=name, finalePhase=finalePhase)
@@ -51,6 +91,11 @@ def syncFromCorruptToon(toon):
     if not subject or not alive:
         if _ownerDoId is not None and doId == _ownerDoId:
             hideBossHpBar()
+        return
+
+    # Soft-lock ownership: only the bound subject may take/refresh the bar.
+    if not CorruptionGlobals.shouldClaimBossHpBarOwnership(
+            doId, _softLockDoId):
         return
 
     hud = _getHud()
@@ -66,10 +111,12 @@ def syncFromCorruptToon(toon):
 
 def releaseCorruptToon(toon):
     """Drop the bar when the owning boss/chase disables or dies."""
-    global _ownerDoId
+    global _ownerDoId, _softLockDoId
     if toon is None:
         return
     doId = getattr(toon, 'doId', None)
+    if _softLockDoId is not None and doId == _softLockDoId:
+        _softLockDoId = None
     if _ownerDoId is not None and doId == _ownerDoId:
         hideBossHpBar()
 
@@ -82,8 +129,9 @@ def hideBossHpBar():
 
 
 def destroyBossHpBar():
-    global _hud, _ownerDoId
+    global _hud, _ownerDoId, _softLockDoId
     _ownerDoId = None
+    _softLockDoId = None
     if _hud is not None:
         _hud.destroy()
         _hud = None

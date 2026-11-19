@@ -1559,18 +1559,24 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         hud_names = _class_and_func_names(_module_ast(hud_rel))
         for sym in (
                 'BossHpBarHud', 'syncFromCorruptToon', 'releaseCorruptToon',
-                'hideBossHpBar', 'destroyBossHpBar'):
+                'bindSoftLockTarget', 'hideBossHpBar', 'destroyBossHpBar'):
             self.assertIn(sym, hud_names)
         hud_src = _read(hud_rel)
         self.assertIn('boss-chase-hp-bar', hud_src)
         self.assertIn('Elite', hud_src)
         self.assertIn('Ambush', hud_src)
+        self.assertIn('shouldClaimBossHpBarOwnership', hud_src)
+        self.assertIn('_softLockDoId', hud_src)
         # Free-function sync — never glue reclaimDirector.finalePhase onto adds.
         sync_idx = hud_src.index('def syncFromCorruptToon')
-        sync_snip = hud_src[sync_idx:sync_idx + 1200]
-        self.assertIn('resolveBossHpBarFinalePhase', sync_snip)
-        self.assertIn("getattr(toon, 'finalePhase'", sync_snip)
+        sync_snip = hud_src[sync_idx:sync_idx + 1400]
+        self.assertIn('_subjectFields', sync_snip)
+        self.assertIn('finalePhase', sync_snip)
+        self.assertIn('shouldClaimBossHpBarOwnership', sync_snip)
         self.assertNotIn('reclaimDirector', sync_snip)
+        fields_idx = hud_src.index('def _subjectFields')
+        fields_snip = hud_src[fields_idx:fields_idx + 900]
+        self.assertIn('resolveBossHpBarFinalePhase', fields_snip)
         self.assertNotIn('CreamWash', hud_src)
         corrupt_client = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('BossHpBarHud', corrupt_client)

@@ -4341,6 +4341,24 @@ def isBossOrChaseHpBarSubject(archetype=0, name='', finalePhase=0):
     return resolveBossHpBarFinalePhase(finalePhase, name) >= 1
 
 
+def shouldClaimBossHpBarOwnership(syncDoId, softLockDoId=None):
+    """True when this subject's sync may take/refresh singleton bar ownership.
+
+    When soft-lock is bound to a bar-subject doId, only that doId may own
+    the readable life bar — other living subjects' setHp must not steal it
+    (Tab/` lock and the life bar stay agreed). softLockDoId None → legacy
+    last-writer (no soft-lock subject currently bound).
+    """
+    if softLockDoId is None:
+        return True
+    if syncDoId is None:
+        return False
+    try:
+        return int(syncDoId) == int(softLockDoId)
+    except (TypeError, ValueError):
+        return syncDoId == softLockDoId
+
+
 def bossHpBarRatio(hp, maxHp):
     """Clamped 0..1 life fraction for the boss/chase bar fill."""
     try:

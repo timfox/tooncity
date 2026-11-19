@@ -244,13 +244,16 @@ class BossChaseHpBarTests(unittest.TestCase):
         names = _module_names('toontown/reclaim/BossHpBarHud.py')
         for expected in (
                 'BossHpBarHud', 'syncFromCorruptToon', 'releaseCorruptToon',
-                'hideBossHpBar', 'destroyBossHpBar'):
+                'bindSoftLockTarget', 'hideBossHpBar', 'destroyBossHpBar'):
             self.assertIn(expected, names)
         src = _read('toontown/reclaim/BossHpBarHud.py')
         self.assertIn('aspect2d', src)
         self.assertIn('boss-chase-hp-bar', src)
+        # Soft-lock bind owns singleton — not last setHp.
+        self.assertIn('shouldClaimBossHpBarOwnership', src)
+        self.assertIn('_softLockDoId', src)
         # Per-hostile phase only — never reclaim-director street phase on adds.
-        self.assertIn("getattr(toon, 'finalePhase'", src)
+        self.assertIn('finalePhase', src)
         self.assertNotIn('reclaimDirector', src)
         # Thin readable life bar only — no cream wash FX modules.
         self.assertNotIn('CreamWash', src)
