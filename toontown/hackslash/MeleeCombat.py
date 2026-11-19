@@ -325,6 +325,8 @@ class MeleeCombatController(DirectObject):
         self._flushHurtRecoveryCancelBuffer()
         target = self.targetFinder.acquire()
         snapped = self.targetFinder.didSnap()
+        # Sticky yield / fresh acquire onto a new lock key → remap cadence.
+        self._remapMeleeCadenceComboForSoftLockChange(snapped)
         if target is not None:
             name = target.getHackSlashName()
             hp = target.getHackSlashHp()
@@ -390,8 +392,9 @@ class MeleeCombatController(DirectObject):
         Breaks sticky hold onto the next/prev yaw-ordered candidate and
         immediately refreshes the lock hint + reticle. When the lock key
         changes, plays a brief cycle reticle pulse (not full acquire snap
-        FOV/wash) so the new target reads clearly. Cooldown stops key-repeat
-        double pulses.
+        FOV/wash) so the new target reads clearly, and remaps client
+        comboIndex to opener 0 so per-hostile server cadence accepts the
+        next punch. Cooldown stops key-repeat double pulses.
         """
         if not self.enabled:
             return
@@ -404,6 +407,8 @@ class MeleeCombatController(DirectObject):
         self._cycleReadyAt = now + max(0.0, cooldown)
         target = self.targetFinder.cycle(direction=direction, now=now)
         snapped = self.targetFinder.didSnap()
+        # Tab/` onto a new hostile → opener for #386 per-hostile cadence.
+        self._remapMeleeCadenceComboForSoftLockChange(snapped)
         if target is not None:
             try:
                 name = target.getHackSlashName()
@@ -423,6 +428,41 @@ class MeleeCombatController(DirectObject):
             messenger.send(  # noqa: F821
                 'hackslash-target-cycle',
                 [self.avatar, target, int(direction), bool(snapped)])
+        except Exception:
+            pass
+
+    def _remapMeleeCadenceComboForSoftLockChange(self, snapped):
+        """Reset client combo beat when soft-lock switches hostiles.
+
+        Server hit cadence is per-hostile (#386): a fresh lock key expects
+        opener 0. Mid-string Tab/` or sticky yield that keeps comboIndex
+        mid/finisher silently drops the RPC. Interrupt an in-flight swing
+        (same pattern as dodge/hurt) so openWindow cannot overwrite the
+        remap, and clear juggle-cancel so cancel→slam cannot fire a
+        finisher index at the new target.
+        """
+        if not getattr(
+                HackSlashConfig, 'MELEE_COMBO_REMAP_ON_SOFT_LOCK_CHANGE', True):
+            return
+        if not snapped:
+            return
+        if self.busy:
+            self._finishSwing()
+            self.busy = False
+            self.comboWindowOpen = False
+            self._restoreScale()
+            try:
+                if not getattr(
+                        self.avatar.controlManager.currentControls,
+                        'isAirborne', 0):
+                    self.avatar.setAnimState('Happy', 1.0)
+            except Exception:
+                pass
+        self.comboIndex = HackSlashConfig.remapMeleeComboIndexOnSoftLockChange(
+            self.comboIndex, snapped=True)
+        self.comboWindowOpen = False
+        try:
+            self._clearJuggleCancelWindow()
         except Exception:
             pass
 

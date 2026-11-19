@@ -218,6 +218,7 @@ class ServerMeleeHitCadenceTest(unittest.TestCase):
                 'expectedMeleeComboHitIndex',
                 'isMeleeHitCadenceReady',
                 'meleeHitPlanarRange',
+                'remapMeleeComboIndexOnSoftLockChange',
                 'resolveEarnedCounterFlags'):
             self.assertIn(name, init_src)
         target = _read('toontown/corruption/HackSlashTarget.py')

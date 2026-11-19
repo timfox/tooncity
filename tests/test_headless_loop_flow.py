@@ -981,10 +981,20 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         for export in (
                 'acceptMeleeHitIndex', 'earnedCounterUntil',
                 'expectedMeleeComboHitIndex', 'isMeleeHitCadenceReady',
-                'meleeHitPlanarRange', 'resolveEarnedCounterFlags'):
+                'meleeHitPlanarRange', 'remapMeleeComboIndexOnSoftLockChange',
+                'resolveEarnedCounterFlags'):
             self.assertIn(export, hs_init)
         self.assertIn('earned counterFlags', target_src)
         self.assertIn('planar range', target_src.lower())
+        # Soft-lock cycle / sticky snap remaps client combo to opener (#409)
+        # so per-hostile cadence accepts the next punch on a fresh lock key.
+        self.assertTrue(cfg.MELEE_COMBO_REMAP_ON_SOFT_LOCK_CHANGE)
+        self.assertEqual(
+            cfg.remapMeleeComboIndexOnSoftLockChange(2, True), 0)
+        self.assertEqual(
+            cfg.remapMeleeComboIndexOnSoftLockChange(1, False), 1)
+        self.assertIn(
+            '_remapMeleeCadenceComboForSoftLockChange', melee_methods)
 
         # Soft-lock reticle / hit-assist cream modules stay registered.
         for rel in (

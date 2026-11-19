@@ -143,6 +143,10 @@ MELEE_HIT_RANGE_GATE_ENABLED = True
 MELEE_HIT_PLANAR_RANGE = 5.6
 MELEE_HIT_PLANAR_RANGE_SLACK = 1.15
 MELEE_EARNED_COUNTER_ENABLED = True
+# Soft-lock cycle / sticky yield target change → client comboIndex remaps to
+# opener 0 so per-hostile server cadence accepts the next punch (Tab/` mid-
+# string must not keep mid/finisher indices against a fresh lock key).
+MELEE_COMBO_REMAP_ON_SOFT_LOCK_CHANGE = True
 
 # Hitstop / freeze on connect — pauses juice + anims so the impact silhouette
 # sticks before launch / hop / FOV punch. Longer on finisher. Client juice only.
@@ -1061,6 +1065,31 @@ def acceptMeleeHitIndex(requestedIndex, expectedIndex, comboLength=None):
     if req == 0:
         return True
     return req == exp
+
+
+def remapMeleeComboIndexOnSoftLockChange(comboIndex, snapped, enabled=None,
+                                         comboLength=None):
+    """Client combo beat after a soft-lock cycle / sticky target snap.
+
+    Per-hostile server cadence expects opener 0 on a fresh lock key. When
+    ``snapped`` (Tab/` cycle or sticky yield onto another hostile), remap to
+    opener 0 so mid/finisher RPCs are not silently dropped. Same-key refresh
+    (snapped False) keeps the live string index.
+    """
+    if enabled is None:
+        enabled = MELEE_COMBO_REMAP_ON_SOFT_LOCK_CHANGE
+    if comboLength is None:
+        comboLength = COMBO_LENGTH
+    try:
+        length = max(1, int(comboLength))
+        idx = max(0, min(int(comboIndex), length - 1))
+    except (TypeError, ValueError):
+        idx = 0
+    if not enabled:
+        return idx
+    if snapped:
+        return 0
+    return idx
 
 
 def resolveEarnedCounterFlags(requestedFlags, counterUntil, now,
