@@ -15,9 +15,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
 
     Ink Overlord (finalePhase 1/2) uses phase combat instead of Smudge chase:
     P1 ink-rain AoE + close slam, P2 enrage rain + mid ink_surge + close
-    slam. Street archetypes use role AI (Gagster kite, Brute hold, Snare
-    flank) so wave-script pack intent survives after combat starts — not all
-    nearest-chase.
+    slam. Street archetypes use role AI (Smudge orbit/weave, Gagster kite,
+    Brute hold, Snare flank) so wave-script pack intent survives after
+    combat starts — not all nearest-chase.
 
     Sludge Brute fires a traveling spit projectile (trail + land splash) from
     hold range, with a close slam secondary — not an instant long-range smack.
@@ -349,7 +349,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.again
 
         if dist <= CorruptionGlobals.AGGRO_RANGE:
-            # Role AI: Gagster kite / Brute hold / Snare flank (Smudge chase).
+            # Role AI: Smudge orbit / Gagster kite / Brute hold / Snare flank.
             self.__roleMoveToward(target)
         return Task.again
 
@@ -425,8 +425,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def __roleMoveToward(self, target):
         """Move with archetype role AI so pack scripts keep combat identity.
 
-        Overlord / disabled / Smudge / Oswald → nearest chase. Gagster kites
-        the lob ring, Brute plants in spit range, Snare approaches on a flank.
+        Overlord / disabled / Oswald → nearest chase. Smudge orbits/weaves
+        the dash ring, Gagster kites the lob ring, Brute plants in spit
+        range, Snare approaches on a flank.
         """
         if self._isOverlord() or not getattr(
                 CorruptionGlobals, 'ROLE_AI_ENABLED', True):
@@ -454,7 +455,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self.__moveTowardXY(gx, gy, speedScale=speedScale)
 
     def __chaseToward(self, target):
-        """Legacy nearest-chase — straight at the toon (Smudge / Overlord)."""
+        """Legacy nearest-chase — straight at the toon (Oswald / Overlord)."""
         try:
             tx, ty = target.getX(), target.getY()
         except Exception:

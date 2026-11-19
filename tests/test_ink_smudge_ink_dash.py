@@ -117,10 +117,10 @@ class InkSmudgeInkDashTest(unittest.TestCase):
         self.assertGreater(
             int(stats.get('splatDamage', 0)),
             int(stats.get('dashDamage', 0)) - 1)
-        # Still chase role — kit is attack identity, not role AI.
+        # Orbit / weave role — kit is attack identity; role AI circles.
         self.assertEqual(
             self.cg.archetypeCombatRole(self.cg.ARCHETYPE_INK),
-            self.cg.ROLE_CHASE)
+            self.cg.ROLE_ORBIT)
         # Distinct from Oswald betrayal moves.
         self.assertNotEqual(stats.get('attackMove'), 'betrayal_lunge')
         self.assertNotEqual(stats.get('attackMove'), 'stain_burst')

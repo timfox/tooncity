@@ -122,9 +122,10 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
   ambushes after waves 1–3 (Gagster → Snare → Gagster/Snare) — not
   composition-only. Gunk Gagster is a real fourth archetype (teal gag-lob
   puddle trap), not a Smudge rename. Combat role AI preserves that mix after
-  spawn (Snare flanks, Gagster kites the lob ring, Brute holds/plants for spit)
-  instead of every unit nearest-chasing into one scrum. PlayEntry tip reads
-  explore → fight → reclaim; start banner is gag-green.
+  spawn (Smudge orbits/weaves the dash ring, Snare flanks, Gagster kites the
+  lob ring, Brute holds/plants for spit) instead of every unit
+  nearest-chasing into one scrum. PlayEntry tip reads explore → fight →
+  reclaim; start banner is gag-green.
 - Punchline campaign ACTS `waveScripts` / `waveModifiers` / `ambushBeats` stay
   the source of truth for **C**; STREET_PACKS mirrors so discoverable
   auto-reclaim matches the second-hood beat.
@@ -147,10 +148,13 @@ remain the fallback via `pickPackArchetype`. Scripts use `ink` / `brute` / `snar
 
 Ink Smudge AI uses ``ink_dash`` (short planar rush then hit) by default and
 close ``ink_splat`` AoE when already in their face — Act 1 / Overlord P2-add
-swarm identity, not default smack fodder. Distinct from Oswald
-``betrayal_lunge`` / ``stain_burst`` (longer dash + shove). Melee
-mid-ink_dash / mid-ink_splat telegraph cancels the wind-up (same snare-style
-AI interrupt as Brute spit / Gagster lob / Overlord / Oswald;
+swarm identity, not default smack fodder. Role AI orbits/weaves the
+dash-engage ring (``ROLE_ORBIT``) so Smudge packs split CW/CCW instead of
+nearest-chasing into one scrum — parity with Gagster kite / Brute hold /
+Snare flank. Distinct from Oswald ``betrayal_lunge`` / ``stain_burst``
+(longer dash + shove; still plain chase). Melee mid-ink_dash /
+mid-ink_splat telegraph cancels the wind-up (same snare-style AI interrupt
+as Brute spit / Gagster lob / Overlord / Oswald;
 ``INK_DASH_MELEE_INTERRUPT`` / ``INK_SPLAT_MELEE_INTERRUPT``). After each
 telegraph reads, a short dedicated counter window arms — F / LMB punish
 opener (``INK_DASH_COUNTER_*`` / ``INK_SPLAT_COUNTER_*``; same reward path;
@@ -162,10 +166,10 @@ gameplay timing only; interrupt ≠ counter).
 ~spawncorrupt 2
 ~hackslash 0
 # CorruptToons prefer ink-tinted Toon Actor silhouettes (DNA clone of you
-# when available), else improved card limbs. Role AI (Gagster kite lob ring,
-# Brute hold/plant spit, Snare flank approach; Smudge nearest-chase) keeps
-# wave-script pack intent after combat starts; between
-# telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
+# when available), else improved card limbs. Role AI (Smudge orbit/weave dash
+# ring, Gagster kite lob ring, Brute hold/plant spit, Snare flank approach;
+# Oswald nearest-chase) keeps wave-script pack intent after combat starts;
+# between telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
 # presence, layered with soft cream / pastel contrast drips
 # (IdleCreamDripContrastFx) plus sunny cream / pastel sparkle flecks on
 # the cream drip path (IdleCreamDripSparkleFx) plus soft cream wash pulse
