@@ -125,6 +125,12 @@ class BossChaseHpBarTests(unittest.TestCase):
         self.assertFalse(subject(cg.ARCHETYPE_SNARE, name='Balloon Snare'))
         self.assertFalse(subject(cg.ARCHETYPE_GAGSTER))
         self.assertFalse(subject(cg.ARCHETYPE_INK, name='Ink Smudge'))
+        # P2 Smudge adds keep per-toon finalePhase=0 — not bar subjects even
+        # during Silly Unleashed (director street phase must not be applied).
+        self.assertFalse(subject(
+            cg.ARCHETYPE_INK, name='Ink Smudge', finalePhase=0))
+        self.assertFalse(subject(
+            cg.ARCHETYPE_INK, name='Ink Smudge 2', finalePhase=0))
         # Bare tokens without the rename space prefix — not Elite/Ambush.
         self.assertFalse(subject(cg.ARCHETYPE_INK, name='Elite'))
         self.assertFalse(subject(cg.ARCHETYPE_INK, name='Ambush'))
@@ -132,9 +138,11 @@ class BossChaseHpBarTests(unittest.TestCase):
         self.assertTrue(subject(cg.ARCHETYPE_CORRUPT_OSWALD))
         self.assertTrue(subject(
             cg.ARCHETYPE_CORRUPT_OSWALD, name='Corrupted Oswald'))
-        # Overlord via finale phase or name.
+        # Overlord via per-toon finale phase or name (not director street phase).
         self.assertTrue(subject(cg.ARCHETYPE_INK, finalePhase=1))
         self.assertTrue(subject(cg.ARCHETYPE_INK, finalePhase=2))
+        self.assertTrue(subject(
+            cg.ARCHETYPE_INK, name='Ink Overlord', finalePhase=0))
         self.assertTrue(subject(
             cg.ARCHETYPE_INK, name='Ink Overlord Rising'))
         self.assertTrue(subject(
@@ -241,6 +249,9 @@ class BossChaseHpBarTests(unittest.TestCase):
         src = _read('toontown/reclaim/BossHpBarHud.py')
         self.assertIn('aspect2d', src)
         self.assertIn('boss-chase-hp-bar', src)
+        # Per-hostile phase only — never reclaim-director street phase on adds.
+        self.assertIn("getattr(toon, 'finalePhase'", src)
+        self.assertNotIn('reclaimDirector', src)
         # Thin readable life bar only — no cream wash FX modules.
         self.assertNotIn('CreamWash', src)
         self.assertNotIn('CreamSplash', src)
