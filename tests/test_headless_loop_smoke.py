@@ -3,7 +3,10 @@
 
 Asserts STREET_PACKS, campaign ACTS / PlayEntry entry points, corrupt
 archetype registration, and recent rubber-hose juice module / symbol
-presence via AST / direct import of panda-free modules.
+presence via AST / direct import of panda-free modules. Aggregate
+explore→fight→reclaim→twist deepen through wave J (#390) lives in
+`test_headless_loop_flow.py` (cadence/planar, Overlord hold/circle,
+plaza stands, Elite/Ambush HP parity, streetClearReward tip).
 
 Run from repo root:
   python3 tests/test_headless_loop_smoke.py
