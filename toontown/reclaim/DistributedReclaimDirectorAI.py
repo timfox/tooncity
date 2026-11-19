@@ -578,9 +578,19 @@ class DistributedReclaimDirectorAI(DistributedObjectAI):
         return Task.done
 
     def _applyEliteModifiers(self, corrupt, mods):
-        """Apply elite HP (already baked into maxHp) + damage buff to stats."""
+        """Apply elite HP (already baked into maxHp) + damage buff to stats.
+
+        Also stashes mods on the corrupt AI so Overlord P2 promote (which
+        rebuilds ``_stats`` from archetype + phase combat) can re-apply the
+        elite land-hit buff mid-fight.
+        """
         if not ReclaimGlobals.waveIsElite(mods):
             return
+        setMods = getattr(corrupt, 'setEliteDamageMods', None)
+        if callable(setMods):
+            setMods(mods)
+        else:
+            corrupt._eliteDamageMods = dict(mods)
         stats = getattr(corrupt, '_stats', None)
         if not isinstance(stats, dict):
             return
