@@ -306,12 +306,32 @@ class PollutionManagerAI(DistributedObjectAI):
             if zoneId not in self._recreepAnnounced:
                 self._recreepAnnounced.add(zoneId)
                 self._announceRecreep(zoneId)
-                messenger.send('pollutionRecreeping', [zoneId, applied])  # noqa: F821
+                self._emitPollutionRecreeping(zoneId, applied)
 
         if not anyContested:
             self._recreepTaskName = None
             return Task.done
         return Task.again
+
+    def _emitPollutionRecreeping(self, zoneId, level):
+        """First re-creep tick — local messenger + DC so tip accepts land.
+
+        Same-process listeners hear messenger.send; real clients hear
+        announcePollutionRecreeping → PollutionManager rebroadcast.
+        """
+        msg = CorruptionGlobals.pollutionRecreepingMsgName()
+        try:
+            messenger.send(msg, [int(zoneId), float(level)])  # noqa: F821
+        except Exception:
+            self.notify.debug(
+                'pollutionRecreeping messenger failed zone=%s' % zoneId)
+        try:
+            self.sendUpdate(
+                'announcePollutionRecreeping',
+                [int(zoneId), CorruptionGlobals.pollutionToNet(level)])
+        except Exception:
+            self.notify.debug(
+                'announcePollutionRecreeping send failed zone=%s' % zoneId)
 
     def _announceRecreep(self, zoneId):
         """Best-effort rubber-hose whisper to toons still on the street."""

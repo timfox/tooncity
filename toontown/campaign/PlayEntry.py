@@ -115,6 +115,9 @@ class PlayEntryClient(DirectObject):
         # One-shot post-clear tip latch from streetClearReward (per zone;
         # cleared on next reclaim start / C replay).
         self._postClearRewardLatchedZone = None
+        # One-shot post-recreep tip latch from pollutionRecreeping (per zone;
+        # cleared on next reclaim start / C replay).
+        self._postRecreepLatchedZone = None
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
         # KO fail (#323) — clear live latch so same-street R / re-enter retry.
@@ -136,6 +139,11 @@ class PlayEntryClient(DirectObject):
         rewardMsg = getattr(
             CampaignGlobals, 'STREET_CLEAR_REWARD_MSG', 'streetClearReward')
         self.accept(rewardMsg, self._onStreetClearReward)
+        # PollutionManagerAI contested re-creep — one-shot post-recreep tip.
+        recreepMsg = getattr(
+            CorruptionGlobals, 'POLLUTION_RECREEPING_MSG',
+            'pollutionRecreeping')
+        self.accept(recreepMsg, self._onPollutionRecreeping)
         self.accept('campaignVictory', self._onCampaignVictory)
         self.accept('oswaldBetrayalChaseCleared', self._onCampaignEpilogue)
         self.accept('campaignEpilogue', self._onCampaignEpilogue)
@@ -700,6 +708,8 @@ class PlayEntryClient(DirectObject):
         self._reclaimLive = True
         # New reclaim — allow the next streetClearReward tip latch.
         self._postClearRewardLatchedZone = None
+        # New reclaim — allow the next pollutionRecreeping tip latch.
+        self._postRecreepLatchedZone = None
         self._cancelAutoReclaim()
         av = getattr(base, 'localAvatar', None)  # noqa: F821
         zoneId = getattr(av, 'zoneId', None) if av is not None else None
@@ -866,6 +876,43 @@ class PlayEntryClient(DirectObject):
             nextZone=self._softNextZone,
             nextStreet=self._softNextStreet)
 
+    def _onPollutionRecreeping(self, zoneId=0, level=0.0):
+        """One-shot post-recreep tip latch for pollutionRecreeping messenger.
+
+        Contested re-ink already whispers + moves fog; tip bar upgrades once
+        per zone so reclaim→pressure feedback is discoverable (orphan →
+        accept). Preserves any soft-next travel latch already held.
+        No cream deepen / no KH.
+        """
+        if not bool(getattr(
+                CorruptionGlobals, 'POLLUTION_RECREEP_TIP_LATCH_ENABLED', True)):
+            return
+        if not bool(getattr(
+                CorruptionGlobals, 'POLLUTION_RECREEP_ENABLED', True)):
+            return
+        try:
+            zid = int(zoneId or 0)
+        except Exception:
+            zid = 0
+        if (self._postRecreepLatchedZone is not None
+                and int(self._postRecreepLatchedZone) == zid):
+            return
+        self._postRecreepLatchedZone = zid
+        tipFn = getattr(
+            CorruptionGlobals, 'pollutionRecreepLatchTipText', None)
+        if callable(tipFn):
+            tip = tipFn(face=_face(), zoneId=zid)
+        else:
+            tip = (
+                "%s: ink's creeping back — finish reclaim (R) before it "
+                'goes goopy!' % _face())
+        if not tip:
+            return
+        self._latchSoftNextCue(
+            tip,
+            nextZone=self._softNextZone,
+            nextStreet=self._softNextStreet)
+
     def _actsAroundZone(self, zoneId):
         if zoneId is None:
             return None, None
@@ -898,6 +945,7 @@ class PlayEntryClient(DirectObject):
             self._chasePending = False
             self._postWashTipLatched = False
             self._postClearRewardLatchedZone = None
+            self._postRecreepLatchedZone = None
             self._softNextCue = None
             self._softNextZone = None
             self._softNextStreet = None

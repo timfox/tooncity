@@ -572,6 +572,25 @@ POLLUTION_RECREEP_MSG = (
     "Whoa — that ink's creeping back! Finish the reclaim before this "
     'street goes goopy again!'
 )
+# Messenger name PollutionManagerAI sends on first re-creep tick per zone.
+# PlayEntry + reclaim director accept for a one-shot post-recreep tip latch
+# (orphan → accept; no cream deepen / no KH). Client PollutionManager
+# rebroadcasts via announcePollutionRecreeping so real clients hear it
+# (AI-local messenger alone never crosses processes).
+POLLUTION_RECREEPING_MSG = 'pollutionRecreeping'
+POLLUTION_RECREEP_TIP_LATCH_ENABLED = True
+# Tip-bar latch under purity meter (PlayEntry soft-next). System whisper
+# still owns POLLUTION_RECREEP_MSG; this is the discoverable F/C strip once
+# the recreep messenger fires.
+POLLUTION_RECREEP_LATCH_TIP = (
+    "%s: ink's creeping back — finish reclaim (R) before it goes goopy!"
+)
+# Meter-adjacent reclaim pressure tip (DistributedReclaimDirector thin
+# accept). Distinct from mid-wave stall/rise purity pressure whispers.
+POLLUTION_RECREEP_PRESSURE_TIP = (
+    "Ink's creeping back! Finish the reclaim before this street goes goopy!"
+)
+POLLUTION_RECREEP_PRESSURE_TIP_HOLD_SEC = 2.4
 # After a finished reclaim, PollutionManagerAI purity-locks the street so
 # setPollution rises / re-creep cannot undo full purity. Ambient never-stained
 # streets stay SECURED without this lock (still accept ~pollute). Toggle
@@ -4598,6 +4617,32 @@ def pollutionRecreepStep(level, perTick=None, cap=None):
     if current >= limit:
         return current
     return clampPollution(min(limit, current + step))
+
+
+def pollutionRecreepingMsgName():
+    """Messenger name PollutionManagerAI / client announce; tip accepts."""
+    return POLLUTION_RECREEPING_MSG
+
+
+def pollutionRecreepLatchTipText(face=None, zoneId=None):
+    """PlayEntry one-shot tip latch after pollutionRecreeping fires."""
+    face = face or 'Oswald'
+    template = POLLUTION_RECREEP_LATCH_TIP
+    try:
+        return template % face
+    except Exception:
+        return (
+            "%s: ink's creeping back — finish reclaim (R) before it goes goopy!"
+            % face)
+
+
+def pollutionRecreepPressureTipText(zoneId=None):
+    """Meter-adjacent reclaim tip after pollutionRecreeping fires.
+
+    Distinct from mid-wave stall/rise purity pressure whispers and the
+    PlayEntry soft-next latch tip — rubber-hose contested feel, no KH.
+    """
+    return POLLUTION_RECREEP_PRESSURE_TIP
 
 
 def hoodFogColor(zoneId, level):

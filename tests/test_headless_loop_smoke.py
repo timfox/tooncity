@@ -1025,6 +1025,7 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
                 'isPurityLocked',
                 '_ensureRecreepTask',
                 '__recreepTick',
+                '_emitPollutionRecreeping',
                 '_announceRecreep'):
             self.assertIn(
                 recreep_method, pollution_ai_methods,
@@ -1033,6 +1034,10 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
             'toontown/corruption/PollutionManagerAI.py')
         self.assertIn('pollutionRecreeping', pollution_ai_src)
         self.assertIn('POLLUTION_RECREEP_MSG', pollution_ai_src)
+        self.assertIn('_emitPollutionRecreeping', pollution_ai_src)
+        self.assertIn('announcePollutionRecreeping', pollution_ai_src)
+        self.assertEqual(cg.POLLUTION_RECREEPING_MSG, 'pollutionRecreeping')
+        self.assertTrue(cg.POLLUTION_RECREEP_TIP_LATCH_ENABLED)
         self.assertIn('_purityLocked', pollution_ai_src)
         self.assertIn('streetPurityLockBlocksRise', pollution_ai_src)
         self.assertTrue(
