@@ -154,9 +154,9 @@ swarm identity, not default smack fodder. Role AI orbits/weaves the
 dash-engage ring (``ROLE_ORBIT``) so Smudge packs split CW/CCW instead of
 nearest-chasing into one scrum — parity with Gagster kite / Brute hold /
 Snare flank. Distinct from Oswald ``betrayal_lunge`` / ``stain_burst``
-(longer dash + shove; still plain chase). Melee mid-ink_dash /
-mid-ink_splat telegraph cancels the wind-up (same snare-style AI interrupt
-as Brute spit / Gagster lob / Overlord / Oswald;
+(longer dash + shove; ``ROLE_PRESS`` press/circle approach asymmetry).
+Melee mid-ink_dash / mid-ink_splat telegraph cancels the wind-up (same
+snare-style AI interrupt as Brute spit / Gagster lob / Overlord / Oswald;
 ``INK_DASH_MELEE_INTERRUPT`` / ``INK_SPLAT_MELEE_INTERRUPT``). After each
 telegraph reads, a short dedicated counter window arms — F / LMB punish
 opener (``INK_DASH_COUNTER_*`` / ``INK_SPLAT_COUNTER_*``; same reward path;
@@ -170,7 +170,7 @@ gameplay timing only; interrupt ≠ counter).
 # CorruptToons prefer ink-tinted Toon Actor silhouettes (DNA clone of you
 # when available), else improved card limbs. Role AI (Smudge orbit/weave dash
 # ring, Gagster kite lob ring, Brute hold/plant spit, Snare flank approach;
-# Oswald nearest-chase) keeps wave-script pack intent after combat starts;
+# Oswald press/circle) keeps wave-script pack intent after combat starts;
 # between telegraphs sparse ambient ink drips (IdleInkDripFx) show pollution
 # presence, layered with soft cream / pastel contrast drips
 # (IdleCreamDripContrastFx) plus sunny cream / pastel sparkle flecks on
@@ -461,8 +461,11 @@ consequence — not cream-only. Oswald uses a distinct betrayal attack kit
 (`betrayal_lunge` dash-then-hit, close `stain_burst` AoE, planar shove —
 not a crimson Ink Smudge smack reskin) plus client AV
 (`OswaldBetrayalTelegraphFx` / `OswaldBetrayalSplashFx` — crimson, not
-Smudge purple fallthrough). Melee mid-lunge / mid-burst telegraph cancels
-the wind-up (`OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT` /
+Smudge purple fallthrough). Role AI presses/circles the lunge ring
+(`ROLE_PRESS`) so the climax approach is asymmetric vs nearest-chase —
+far snappy press, mid circle for angled lunge, close press for
+`stain_burst`. Melee mid-lunge / mid-burst telegraph cancels the wind-up
+(`OSWALD_BETRAYAL_LUNGE_MELEE_INTERRUPT` /
 `OSWALD_STAIN_BURST_MELEE_INTERRUPT`); after each telegraph reads, a short
 dedicated counter window arms (`OSWALD_BETRAYAL_LUNGE_COUNTER_*` /
 `OSWALD_STAIN_BURST_COUNTER_*` — same reward path as Snare / Brute spit /

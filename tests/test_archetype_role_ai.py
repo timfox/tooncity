@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Headless/AST tests for archetype role AI (orbit / kite / hold / flank).
+"""Headless/AST tests for archetype role AI (orbit / press / kite / hold / flank).
 
 Loads CorruptionGlobals without Panda3D. Asserts role tunables + pure
-helpers (Smudge orbit/weave, Gagster kite ring, Brute hold plant, Snare
-flank goal) and AI wiring on DistributedCorruptToonAI (__roleMoveToward /
-__moveTowardXY). Gameplay identity — not cream FX deepen. Must not
-regress Snare yank, Gagster linger, Oswald chase, or juggle hang stun.
+helpers (Smudge orbit/weave, Oswald press/circle, Gagster kite ring,
+Brute hold plant, Snare flank goal) and AI wiring on
+DistributedCorruptToonAI (__roleMoveToward / __moveTowardXY). Gameplay
+identity — not cream FX deepen. Must not regress Snare yank, Gagster
+linger, Oswald betrayal kit, or juggle hang stun.
 
 Run from repo root:
   python3 tests/test_archetype_role_ai.py
@@ -88,6 +89,7 @@ class ArchetypeRoleAiTest(unittest.TestCase):
     def test_role_globals_armed(self):
         self.assertTrue(self.cg.ROLE_AI_ENABLED)
         self.assertEqual(self.cg.ROLE_ORBIT, 'orbit')
+        self.assertEqual(self.cg.ROLE_PRESS, 'press')
         self.assertEqual(self.cg.ROLE_KITE, 'kite')
         self.assertEqual(self.cg.ROLE_HOLD, 'hold')
         self.assertEqual(self.cg.ROLE_FLANK, 'flank')
@@ -96,6 +98,11 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         self.assertGreater(
             self.cg.SMUDGE_ORBIT_CLOSE_DIST, self.cg.SMUDGE_ORBIT_PREFERRED)
         self.assertGreater(self.cg.SMUDGE_ORBIT_WEAVE, 0.0)
+        self.assertGreater(self.cg.OSWALD_PRESS_PREFERRED, 3.0)
+        self.assertGreater(self.cg.OSWALD_PRESS_BAND, 0.0)
+        self.assertGreater(
+            self.cg.OSWALD_PRESS_CLOSE_DIST, self.cg.OSWALD_PRESS_PREFERRED)
+        self.assertGreater(self.cg.OSWALD_PRESS_CIRCLE, 0.0)
         self.assertGreater(self.cg.GAGSTER_KITE_PREFERRED, 5.0)
         self.assertGreater(self.cg.GAGSTER_KITE_BAND, 0.0)
         self.assertGreater(self.cg.BRUTE_HOLD_RANGE, 4.0)
@@ -106,9 +113,11 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         blob = ' '.join([
             'ROLE_AI_ENABLED',
             'ROLE_ORBIT',
+            'ROLE_PRESS',
             'archetypeCombatRole',
             'roleMoveGoal',
             'Smudge orbit',
+            'Oswald press',
             'Gagster kite',
             'Brute hold',
             'Snare flank',
@@ -129,10 +138,10 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         self.assertEqual(
             self.cg.archetypeCombatRole(self.cg.ARCHETYPE_SNARE),
             self.cg.ROLE_FLANK)
-        # Oswald stays plain chase — do not regress nearest-chase climax.
+        # Oswald press/circle — climax approach asymmetry vs nearest-chase.
         self.assertEqual(
             self.cg.archetypeCombatRole(self.cg.ARCHETYPE_CORRUPT_OSWALD),
-            self.cg.ROLE_CHASE)
+            self.cg.ROLE_PRESS)
 
     def test_smudge_orbit_weave(self):
         # Far: approach toward preferred ring (not onto the toon).
@@ -173,6 +182,34 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         # Orbit chase is slightly zippy vs default.
         self.assertGreater(
             self.cg.roleMoveSpeedScale(self.cg.ROLE_ORBIT, 'orbit'), 1.0)
+
+    def test_oswald_press_circle(self):
+        # Far: press toward preferred ring (not onto the toon).
+        gx, gy, action = self.cg.roleMoveGoal(
+            self.cg.ROLE_PRESS, 22.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, pressCircle=4.0, pressCloseDist=14.0,
+            flankSide=1)
+        self.assertEqual(action, 'press')
+        self.assertAlmostEqual(gx, 6.0, places=5)
+        self.assertAlmostEqual(gy, 0.0, places=5)
+        # Mid range: circle on preferred ring, advanced tangentially.
+        gx, gy, action = self.cg.roleMoveGoal(
+            self.cg.ROLE_PRESS, 8.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, pressCircle=4.0, pressCloseDist=14.0,
+            flankSide=1)
+        self.assertEqual(action, 'circle')
+        self.assertAlmostEqual(math.hypot(gx, gy), 6.0, places=5)
+        self.assertGreater(gy, 0.0)
+        # Too close: press onto the toon (stain_burst) — not Smudge retreat.
+        gx, gy, action = self.cg.roleMoveGoal(
+            self.cg.ROLE_PRESS, 2.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, pressCircle=4.0, pressCloseDist=14.0,
+            flankSide=1)
+        self.assertEqual(action, 'press')
+        self.assertAlmostEqual(gx, 0.0, places=5)
+        self.assertAlmostEqual(gy, 0.0, places=5)
+        self.assertGreater(
+            self.cg.roleMoveSpeedScale(self.cg.ROLE_PRESS, 'press'), 1.0)
 
     def test_gagster_kite_ring(self):
         # Far: approach toward preferred ring (not onto the toon).
@@ -252,9 +289,12 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         oswald = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_CORRUPT_OSWALD]
         self.assertEqual(oswald.get('name'), 'Corrupted Oswald')
         self.assertGreater(float(oswald.get('chaseSpeed', 0)), 8.0)
-        # Betrayal kit stays attack identity; role AI still plain chase.
+        # Betrayal kit stays attack identity; role AI now presses/circles.
         self.assertEqual(oswald.get('attackMove'), 'betrayal_lunge')
         self.assertTrue(self.cg.OSWALD_BETRAYAL_KIT_ENABLED)
+        self.assertEqual(
+            self.cg.archetypeCombatRole(self.cg.ARCHETYPE_CORRUPT_OSWALD),
+            self.cg.ROLE_PRESS)
         # Brute hold still plants; spit projectile kit stays armed beside role AI.
         brute = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_BRUTE]
         self.assertEqual(brute.get('attackMove'), 'spit')
@@ -294,14 +334,17 @@ class ArchetypeRoleAiTest(unittest.TestCase):
         self.assertIn('roleMoveGoal', role_body)
         self.assertIn('snareFlankSide', role_body)
         self.assertIn('_isOverlord', role_body)
-        # Orbit / weave called out; Overlord / Oswald path still nearest chase.
+        # Orbit / press-circle called out; Overlord path still nearest chase.
         self.assertIn('orbit', role_body.lower())
+        self.assertIn('press', role_body.lower())
+        self.assertIn('circle', role_body.lower())
         self.assertIn('__chaseToward(target)', role_body)
 
     def test_reclaim_docs_mention_role_ai(self):
         reclaim = _read('toontown/corruption/RECLAIM.md').lower()
         self.assertIn('role ai', reclaim)
         self.assertIn('orbit', reclaim)
+        self.assertIn('press/circle', reclaim)
         self.assertIn('kite', reclaim)
         self.assertIn('flank', reclaim)
         # Doc bans KH branding explicitly (same line as Overlord framing).

@@ -131,10 +131,10 @@ class OswaldBetrayalKitTest(unittest.TestCase):
         self.assertGreater(int(stats.get('burstDamage', 0)),
                            int(stats.get('lungeDamage', 0)) - 1)
         self.assertGreater(float(stats.get('shoveDist', 0)), 0.5)
-        # Still chase role — kit is attack identity, not role AI.
+        # Kit is attack identity; role AI presses/circles for approach asymmetry.
         self.assertEqual(
             self.cg.archetypeCombatRole(self.cg.ARCHETYPE_CORRUPT_OSWALD),
-            self.cg.ROLE_CHASE)
+            self.cg.ROLE_PRESS)
 
     def test_oswald_pick_attack_move(self):
         stats = self.cg.ARCHETYPE_STATS[self.cg.ARCHETYPE_CORRUPT_OSWALD]

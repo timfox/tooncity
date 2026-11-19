@@ -17,14 +17,17 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     P1 ink-rain AoE + close slam, P2 enrage rain + mid ink_surge + close
     slam. Street archetypes use role AI (Smudge orbit/weave, Gagster kite,
     Brute hold, Snare flank) so wave-script pack intent survives after
-    combat starts — not all nearest-chase.
+    combat starts — not all nearest-chase. Corrupted Oswald press/circles
+    for betrayal-lunge approach asymmetry (not plain nearest-chase).
 
     Sludge Brute fires a traveling spit projectile (trail + land splash) from
     hold range, with a close slam secondary — not an instant long-range smack.
 
     Corrupted Oswald (finale betrayal chase) uses a distinct betrayal kit —
     ``betrayal_lunge`` dash-then-hit plus close ``stain_burst`` AoE and a
-    planar shove — not a crimson Ink Smudge smack reskin.
+    planar shove — not a crimson Ink Smudge smack reskin. Role AI
+    ``ROLE_PRESS`` presses in / circles the lunge ring so the climax approach
+    is asymmetric vs street nearest-chase.
 
     Ink Smudge (Act 1 spine + Overlord P2 adds) uses ``ink_dash`` rush plus
     close ``ink_splat`` AoE secondary — swarm pressure with move identity,
@@ -355,7 +358,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return Task.again
 
         if dist <= CorruptionGlobals.AGGRO_RANGE:
-            # Role AI: Smudge orbit / Gagster kite / Brute hold / Snare flank.
+            # Role AI: Smudge orbit / Oswald press-circle / Gagster kite /
+            # Brute hold / Snare flank.
             self.__roleMoveToward(target)
         return Task.again
 
@@ -431,9 +435,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def __roleMoveToward(self, target):
         """Move with archetype role AI so pack scripts keep combat identity.
 
-        Overlord / disabled / Oswald → nearest chase. Smudge orbits/weaves
-        the dash ring, Gagster kites the lob ring, Brute plants in spit
-        range, Snare approaches on a flank.
+        Overlord / disabled → nearest chase. Smudge orbits/weaves the dash
+        ring, Oswald presses/circles the betrayal lunge ring, Gagster kites
+        the lob ring, Brute plants in spit range, Snare approaches on a
+        flank.
         """
         if self._isOverlord() or not getattr(
                 CorruptionGlobals, 'ROLE_AI_ENABLED', True):
@@ -461,7 +466,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self.__moveTowardXY(gx, gy, speedScale=speedScale)
 
     def __chaseToward(self, target):
-        """Legacy nearest-chase — straight at the toon (Oswald / Overlord)."""
+        """Legacy nearest-chase — straight at the toon (Overlord / disabled)."""
         try:
             tx, ty = target.getX(), target.getY()
         except Exception:

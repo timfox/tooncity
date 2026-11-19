@@ -947,6 +947,9 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             cg.archetypeCombatRole(cg.ARCHETYPE_GAGSTER), cg.ROLE_KITE)
         self.assertEqual(
             cg.archetypeCombatRole(cg.ARCHETYPE_SNARE), cg.ROLE_FLANK)
+        self.assertEqual(
+            cg.archetypeCombatRole(cg.ARCHETYPE_CORRUPT_OSWALD),
+            cg.ROLE_PRESS)
         self.assertEqual(cg.oswaldPickAttackMove(8.0), 'betrayal_lunge')
         self.assertEqual(cg.oswaldPickAttackMove(2.0), 'stain_burst')
         self.assertTrue(cg.OSWALD_BETRAYAL_KIT_ENABLED)

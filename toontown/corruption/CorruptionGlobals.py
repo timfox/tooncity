@@ -218,13 +218,15 @@ DEFEAT_DELETE_DELAY = 0.95
 #   Gagster → kite (hold lob ring / backpedal when pressed)
 #   Brute   → hold (plant in spit range; sluggish close)
 #   Snare   → flank (approach via perpendicular offset, then lash)
-# Corrupted Oswald / Overlord stay plain chase. ROLE_AI_ENABLED = False
+#   Oswald  → press / circle (aggressive close + mid-range circle for lunge)
+# Overlord stays plain chase (gated by finalePhase). ROLE_AI_ENABLED = False
 # restores legacy nearest-chase for all archetypes.
 # Wired from DistributedCorruptToonAI.__roleMoveToward / __moveTowardXY.
 # ---------------------------------------------------------------------------
 ROLE_AI_ENABLED = True
 ROLE_CHASE = 'chase'
 ROLE_ORBIT = 'orbit'
+ROLE_PRESS = 'press'
 ROLE_KITE = 'kite'
 ROLE_HOLD = 'hold'
 ROLE_FLANK = 'flank'
@@ -235,6 +237,16 @@ SMUDGE_ORBIT_BAND = 1.1  # half-width comfort band around preferred
 SMUDGE_ORBIT_CLOSE_DIST = 13.0  # beyond this, close toward ring before weaving
 SMUDGE_ORBIT_WEAVE = 4.0  # tangential lead so the goal keeps them circling
 SMUDGE_ORBIT_SPEED_SCALE = 1.08  # slight zip on the weave arc
+
+# Corrupted Oswald press / circle — betrayal chase approach asymmetry.
+# Far: snappy press toward the circle ring; mid: circle for angled lunge;
+# close: press onto the toon for stain_burst (not Smudge orbit retreat).
+OSWALD_PRESS_PREFERRED = 5.8  # circle ring (at/under meleeRange 6.4 so lunge fires)
+OSWALD_PRESS_BAND = 1.2  # half-width comfort band around preferred
+OSWALD_PRESS_CLOSE_DIST = 14.0  # beyond this, press toward ring before circling
+OSWALD_PRESS_CIRCLE = 3.8  # tangential lead so the goal keeps him circling
+OSWALD_PRESS_SPEED_SCALE = 1.18  # snappy betrayal press-in
+OSWALD_CIRCLE_SPEED_SCALE = 1.10  # zip on the circle arc
 
 # Gunk Gagster kite — stand off on a lob ring; retreat when the toon closes.
 GAGSTER_KITE_PREFERRED = 9.5  # ring radius (near meleeRange 8.5)
@@ -252,7 +264,7 @@ SNARE_FLANK_SPEED_SCALE = 1.05  # slight zip on the flank arc
 
 
 def archetypeCombatRole(archetype):
-    """Return role-AI mode for a street archetype (orbit/kite/hold/flank).
+    """Return role-AI mode (orbit/press/kite/hold/flank).
 
     Overlord combat is gated separately by finalePhase — callers should skip
     role AI when ``_isOverlord()``. Unknown ids clamp via normalizeArchetype.
@@ -262,6 +274,8 @@ def archetypeCombatRole(archetype):
     aid = normalizeArchetype(archetype)
     if aid == ARCHETYPE_INK:
         return ROLE_ORBIT
+    if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return ROLE_PRESS
     if aid == ARCHETYPE_GAGSTER:
         return ROLE_KITE
     if aid == ARCHETYPE_BRUTE:
@@ -273,12 +287,13 @@ def archetypeCombatRole(archetype):
 
 def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
                  holdRange=None, flankOffset=None, flankCloseDist=None,
-                 flankSide=1, weave=None, orbitCloseDist=None):
+                 flankSide=1, weave=None, orbitCloseDist=None,
+                 pressCircle=None, pressCloseDist=None):
     """Planar (gx, gy, action) for role-aware chase.
 
     ``action`` is one of ``chase`` / ``approach`` / ``retreat`` / ``hold`` /
-    ``flank`` / ``orbit``. ``hold`` means stay put (gx, gy == sx, sy).
-    Default / unknown roles chase straight at the toon.
+    ``flank`` / ``orbit`` / ``press`` / ``circle``. ``hold`` means stay put
+    (gx, gy == sx, sy). Default / unknown roles chase straight at the toon.
     """
     role = str(role or ROLE_CHASE)
     sx = float(sx)
@@ -326,6 +341,44 @@ def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
             return (gx, gy, 'retreat')
         return (gx, gy, 'orbit')
 
+    if role == ROLE_PRESS:
+        if preferred is None:
+            preferred = OSWALD_PRESS_PREFERRED
+        if band is None:
+            band = OSWALD_PRESS_BAND
+        if pressCircle is None:
+            pressCircle = OSWALD_PRESS_CIRCLE
+        if pressCloseDist is None:
+            pressCloseDist = OSWALD_PRESS_CLOSE_DIST
+        preferred = max(0.5, float(preferred))
+        band = max(0.0, float(band))
+        pressCircle = max(0.0, float(pressCircle))
+        pressCloseDist = max(preferred, float(pressCloseDist))
+        side = 1.0 if float(flankSide) >= 0.0 else -1.0
+        if dist < 1e-6:
+            # On top of the toon — keep pressing (stain_burst range).
+            return (tx, ty, 'press')
+        ux = dx / dist
+        uy = dy / dist
+        if dist < preferred - band:
+            # Inside the circle band: press onto the toon for stain_burst.
+            return (tx, ty, 'press')
+        if dist > pressCloseDist:
+            # Far: snappy press toward preferred circle ring.
+            return (tx + ux * preferred, ty + uy * preferred, 'press')
+        # Mid: circle on preferred ring (angled betrayal_lunge approach).
+        wx = (-uy) * side
+        wy = (ux) * side
+        gx = tx + ux * preferred + wx * pressCircle
+        gy = ty + uy * preferred + wy * pressCircle
+        rdx = gx - tx
+        rdy = gy - ty
+        rdist = (rdx * rdx + rdy * rdy) ** 0.5
+        if rdist > 1e-6:
+            gx = tx + rdx / rdist * preferred
+            gy = ty + rdy / rdist * preferred
+        return (gx, gy, 'circle')
+
     if role == ROLE_KITE:
         if preferred is None:
             preferred = GAGSTER_KITE_PREFERRED
@@ -371,7 +424,7 @@ def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
         gy = ty + (ux) * side * flankOffset
         return (gx, gy, 'flank')
 
-    # Plain chase (Oswald / Overlord / disabled).
+    # Plain chase (Overlord / disabled / unknown).
     return (tx, ty, 'chase')
 
 
@@ -381,6 +434,10 @@ def roleMoveSpeedScale(role, action=None):
     action = str(action or '')
     if role == ROLE_ORBIT:
         return float(SMUDGE_ORBIT_SPEED_SCALE)
+    if role == ROLE_PRESS:
+        if action == 'circle':
+            return float(OSWALD_CIRCLE_SPEED_SCALE)
+        return float(OSWALD_PRESS_SPEED_SCALE)
     if role == ROLE_KITE and action == 'retreat':
         return float(GAGSTER_KITE_RETREAT_SPEED_SCALE)
     if role == ROLE_HOLD:
@@ -391,10 +448,10 @@ def roleMoveSpeedScale(role, action=None):
 
 
 def snareFlankSide(doId):
-    """Stable left/right flank (or Smudge orbit) side from doId.
+    """Stable left/right flank / orbit / press-circle side from doId.
 
-    Even doIds weave / flank one way; odd the other, so packs split around
-    the toon instead of stacking on one shoulder.
+    Even doIds weave / flank / circle one way; odd the other, so packs split
+    around the toon instead of stacking on one shoulder.
     """
     try:
         return 1 if (int(doId) % 2 == 0) else -1
