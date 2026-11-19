@@ -142,6 +142,12 @@ class CampaignHandoffClient(DirectObject):
         self.accept('campaignVictory', self._onVictory)
         self.accept('campaignPhase', self._onPhase)
         self.accept('reclaimFinalePhase', self._onReclaimFinalePhase)
+        # FinalePhaseFx playTransition sting banner — readable P1→P2 hose
+        # plate (campaignPhase skips phase >= 2; orphan → accept).
+        stingMsg = getattr(
+            CampaignGlobals, 'FINALE_PHASE_STING_BANNER_MSG',
+            'finalePhaseStingBanner')
+        self.accept(stingMsg, self._onFinalePhaseStingBanner)
         # FinalePhaseFx fires this when the betrayal AV sting lands — handoff
         # plate owns the readable twist copy (hose-pop, not plain TextNode).
         self.accept('oswaldRevealBanner', self._onOswaldBetrayalBanner)
@@ -449,7 +455,8 @@ class CampaignHandoffClient(DirectObject):
             betrayalHandoff=True)
 
     def _onPhase(self, phaseIndex, message):
-        # Skip duplicate flash when finale phase FX already own phase 2.
+        # Skip duplicate flash when finale phase FX already own phase 2 —
+        # readable P2 plate lands via finalePhaseStingBanner accept.
         phase = int(phaseIndex) + 1
         if phase >= 2:
             return
@@ -462,11 +469,49 @@ class CampaignHandoffClient(DirectObject):
             powerMult=None,
             nextStreet=None)
 
+    def _onFinalePhaseStingBanner(self, phase=0, title=''):
+        """Accept FinalePhaseFx sting banner → readable P1→P2 hose plate.
+
+        FOV/flash sting already fired in FinalePhaseFx; this owns the
+        hose-pop copy that campaignPhase skips for phase >= 2. PlayEntry
+        thin-accepts the same messenger for the tip bar (no soft-next latch).
+        No cream deepen / no KH branding.
+        """
+        if not bool(getattr(
+                CampaignGlobals, 'FINALE_PHASE_STING_PLATE_ENABLED', True)):
+            return
+        self._showFinalePhaseStingPlate(phase=phase, title=title)
+
+    def _showFinalePhaseStingPlate(self, phase=0, title=''):
+        """Hose-pop phase-transition plate for Overlord P1→P2 sting."""
+        face = _face()
+        phase = max(1, int(phase or 1))
+        banner = (
+            title
+            or CampaignGlobals.FINALE_PHASE_BANNER.get(phase)
+            or 'FINALE PHASE %s' % phase)
+        subtitle = CampaignGlobals.FINALE_PHASE_SUB.get(
+            phase, '%s rallies the reclaim!' % face)
+        cue = CampaignGlobals.finalePhaseStingCueText(phase)
+        color = _FINALE_P2_COLOR if phase >= 2 else _PHASE_COLOR
+        hold = float(getattr(
+            CampaignGlobals, 'FINALE_PHASE_STING_HOLD_SEC', 3.2))
+        self._celebrate(
+            banner,
+            subtitle=subtitle,
+            nextCue=cue,
+            color=color,
+            powerMult=None,
+            nextStreet=None,
+            holdSec=hold,
+            emitHandoffCue=False)
+
     def _celebrate(self, title, subtitle='', nextCue='', color=_TITLE_COLOR,
                    powerMult=None, rewardLine=None, nextStreet=None,
                    holdSec=None, onDone=None,
                    confetti=False, trustSettle=False, creamSwell=False,
-                   trustFracture=False, betrayalHandoff=False):
+                   trustFracture=False, betrayalHandoff=False,
+                   emitHandoffCue=True):
         """Staged rubber-hose celebration: card → title pop → cue → hold."""
         self._clear()
         root = aspect2d.attachNewNode('campaign-handoff-root')  # noqa: F821
@@ -689,12 +734,13 @@ class CampaignHandoffClient(DirectObject):
                 LerpColorScaleInterval(rewardNP, 0.2, Vec4(1, 1, 1, 1)),
             ))
 
-        try:
-            messenger.send(  # noqa: F821
-                'campaignHandoffCue',
-                [nextStreet, cueText or nextCue or title])
-        except Exception:
-            pass
+        if emitHandoffCue:
+            try:
+                messenger.send(  # noqa: F821
+                    'campaignHandoffCue',
+                    [nextStreet, cueText or nextCue or title])
+            except Exception:
+                pass
 
         tail = [Func(self._clear)]
         if onDone is not None:

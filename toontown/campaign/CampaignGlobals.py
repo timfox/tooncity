@@ -374,6 +374,48 @@ FINALE_PHASE_HUD = {
     1: 'OVERLORD · P1 RISE',
     2: 'OVERLORD · P2 UNLEASHED',
 }
+# FinalePhaseFx playTransition sends finalePhaseStingBanner after the FOV /
+# flash sting. CampaignHandoff + PlayEntry accept for a readable P1→P2
+# hose-pop plate + tip (orphan → accept; no cream deepen / no KH).
+FINALE_PHASE_STING_BANNER_MSG = 'finalePhaseStingBanner'
+FINALE_PHASE_STING_PLATE_ENABLED = True
+FINALE_PHASE_STING_TIP_ENABLED = True
+FINALE_PHASE_STING_HOLD_SEC = 3.2
+# Tip-bar combat cue under the purity meter / tip strip (not soft-next travel).
+FINALE_PHASE_STING_TIP = {
+    1: '%s: Overlord Rising — magenta swell, slam when you are in the ink!',
+    2: (
+        '%s: Overlord Unleashed — crimson fury, ink surge + Smudge adds!'),
+}
+FINALE_PHASE_STING_CUE = {
+    1: 'Clear the street — reclaim purity!',
+    2: 'Stay sharp — Unleashed packs inbound!',
+}
+
+
+def finalePhaseStingMsgName():
+    """Messenger name FinalePhaseFx sends; Handoff / PlayEntry accept."""
+    return FINALE_PHASE_STING_BANNER_MSG
+
+
+def finalePhaseStingTipText(phase=2, face=None):
+    """PlayEntry tip line for the phase-transition sting banner."""
+    face = face or RECLAIM_FACE
+    phase = max(1, int(phase or 1))
+    template = FINALE_PHASE_STING_TIP.get(phase) or FINALE_PHASE_STING_TIP.get(
+        2, '%s: phase transition!')
+    try:
+        return template % face
+    except Exception:
+        return '%s: Overlord phase %s!' % (face, phase)
+
+
+def finalePhaseStingCueText(phase=2):
+    phase = max(1, int(phase or 1))
+    return FINALE_PHASE_STING_CUE.get(
+        phase, FINALE_PHASE_STING_CUE.get(2, 'Clear the street!'))
+
+
 # PlayEntry tip bar — Oswald / combat cue strip at street enter.
 # Short rubber-hose scale pop when the tip appears (Toontown spiritual
 # sequel — no keyblades / KH branding). Tunables live here so PlayEntry

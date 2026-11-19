@@ -1913,7 +1913,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 ('toontown/campaign/FinalePhaseFx.py',
                  ('FinalePhaseFxClient', 'ensureFinalePhaseFxClient',
                   'playOswaldReveal', 'oswaldRevealSting',
-                  'oswaldRevealBanner')),
+                  'oswaldRevealBanner', 'finalePhaseStingBanner')),
                 ('toontown/campaign/VictoryTwistConfettiSting.py',
                  ('VictoryTwistConfettiSting',
                   'playVictoryTwistConfettiSting',
@@ -1921,7 +1921,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 ('toontown/campaign/CampaignHandoff.py',
                  ('oswaldRevealBanner', '_onOswaldBetrayalBanner',
                   '_showBetrayalHandoff', 'betrayalHandoff',
-                  'playVictoryTwistConfettiSting', 'campaignVictory')),
+                  'playVictoryTwistConfettiSting', 'campaignVictory',
+                  'finalePhaseStingBanner', '_onFinalePhaseStingBanner',
+                  '_showFinalePhaseStingPlate')),
+                ('toontown/campaign/PlayEntry.py',
+                 ('finalePhaseStingBanner', '_onFinalePhaseStingBanner',
+                  'finalePhaseStingTipText')),
                 ):
             path = REPO_ROOT / rel
             self.assertTrue(path.is_file(), msg='missing %s' % rel)
@@ -1945,7 +1950,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             _module_ast('toontown/campaign/CampaignHandoff.py'),
             'CampaignHandoffClient')
         for method in (
-                '_onOswaldBetrayalBanner', '_showBetrayalHandoff', '_onVictory'):
+                '_onOswaldBetrayalBanner', '_showBetrayalHandoff', '_onVictory',
+                '_onFinalePhaseStingBanner', '_showFinalePhaseStingPlate'):
             self.assertIn(method, handoff_methods)
 
         # CampaignGlobals keeps betrayal / twist tunables assigned.
@@ -1955,7 +1961,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'FINALE_TWIST_TEASE', 'FINALE_REVEAL_BANNER',
                 'FINALE_REVEAL_DELAY_SEC', 'FINALE_BETRAYAL_HANDOFF_CUE',
                 'VICTORY_TWIST_CONFETTI_ENABLED', 'SILLY_APPROACH_TIP_DELAY_SEC',
-                'LOOPY_APPROACH_TIP_DELAY_SEC'):
+                'LOOPY_APPROACH_TIP_DELAY_SEC',
+                'FINALE_PHASE_STING_BANNER_MSG',
+                'FINALE_PHASE_STING_PLATE_ENABLED',
+                'FINALE_PHASE_STING_TIP_ENABLED'):
             self.assertIn(name, camp_names)
         self.assertTrue(camp.VICTORY_TWIST_CONFETTI_ENABLED)
         self.assertGreater(camp.SILLY_APPROACH_TIP_DELAY_SEC, 0.0)
