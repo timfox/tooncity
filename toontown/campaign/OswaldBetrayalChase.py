@@ -4,8 +4,10 @@ Gameplay payload for the Oswald twist: CampaignDirectorAI schedules a
 thin ARCHETYPE_CORRUPT_OSWALD spawn after Silly finale victory / reveal.
 Oswald carries a distinct betrayal attack kit (lunge + stain burst +
 shove) from CorruptionGlobals — not a crimson Smudge smack reskin.
+Spawn prefers authored OSWALD_BETRAYAL_CHASE_POS landmarks (hub resume
+fills the HubStainConfront plaza stand) over near-avatar FORWARD.
 Client tip + melee arm land when the chase fields. Not cream FX; not a
-full new campaign act. Toontown spiritual sequel — no keyblades / KH.
+full new campaign act. Toontown spiritual sequel — no KH branding.
 """
 
 from __future__ import annotations
@@ -151,8 +153,73 @@ def epilogueCue():
         'Replay from Toon Central hub — C on Loopy Lane to start over'))
 
 
+def _parseStandPos(raw):
+    """Coerce (x, y, z, h) authored stand tuple or None."""
+    if raw is None:
+        return None
+    try:
+        return (
+            float(raw[0]), float(raw[1]), float(raw[2]), float(raw[3]))
+    except Exception:
+        return None
+
+
+def chaseSpawnStand(zoneId):
+    """Authored chase stand (x, y, z, h) for zone, or None.
+
+    Prefers ``OSWALD_BETRAYAL_CHASE_POS[zoneId]``. On hub, falls back to
+    ``HUB_STAIN_CONFRONT_POS`` (grounded) so resume-at-hub fills the
+    stain/confront landmark instead of SPAWN_FORWARD beside the toon.
+    """
+    try:
+        zid = int(zoneId)
+    except Exception:
+        return None
+    raw_map = getattr(CampaignGlobals, 'OSWALD_BETRAYAL_CHASE_POS', None)
+    raw = None
+    if raw_map:
+        try:
+            raw = raw_map.get(zid)
+        except Exception:
+            raw = None
+        if raw is None:
+            # Tolerate string keys from hand-edited tables.
+            try:
+                raw = raw_map.get(str(zid))
+            except Exception:
+                raw = None
+    stand = _parseStandPos(raw)
+    if stand is not None:
+        return stand
+    # Hub resume-at-confront when chase POS unset for HUB_ZONE.
+    hub = int(getattr(CampaignGlobals, 'HUB_ZONE', -1))
+    if zid != hub:
+        return None
+    confront = _parseStandPos(
+        getattr(CampaignGlobals, 'HUB_STAIN_CONFRONT_POS', None))
+    if confront is None:
+        return None
+    x, y, z, h = confront
+    # Confront placemarker z is label-height (~1.15); fightable body needs
+    # plaza ground (match trusted presence hub body when available).
+    if z > 0.5:
+        hubBody = _parseStandPos(
+            getattr(CampaignGlobals, 'OSWALD_PRESENCE_HUB_POS', None))
+        if hubBody is not None:
+            z = hubBody[2]
+        else:
+            z = float(getattr(
+                CampaignGlobals, 'OSWALD_PRESENCE_BODY_Z', 0.0) or 0.0)
+    return (x, y, z, h)
+
+
 def spawnCorruptOswald(air, toon, zoneId=None, forward=None, hp=None):
-    """Spawn one fightable Corrupted Oswald near `toon`. Returns AI or None.
+    """Spawn one fightable Corrupted Oswald. Returns AI or None.
+
+    Prefers authored ``OSWALD_BETRAYAL_CHASE_POS`` for ``zoneId`` (hub
+    resume fills the HubStainConfront plaza landmark). Falls back to
+    ``OSWALD_BETRAYAL_CHASE_SPAWN_FORWARD`` beside ``toon`` when the zone
+    has no stand.
 
     Archetype stats already carry the betrayal attack kit
     (``betrayal_lunge`` / ``stain_burst``); this hook only fields HP/name/
@@ -188,15 +255,21 @@ def spawnCorruptOswald(air, toon, zoneId=None, forward=None, hp=None):
         except Exception:
             pass
 
-    baseX = float(toon.getX())
-    baseY = float(toon.getY())
-    baseZ = float(toon.getZ())
-    heading = float(toon.getH())
-    rad = math.radians(heading)
-    x = baseX - math.sin(rad) * forward
-    y = baseY + math.cos(rad) * forward
-    corrupt.setPos(x, y, baseZ)
-    corrupt.setH(heading + 180.0)
+    stand = chaseSpawnStand(zoneId)
+    if stand is not None:
+        x, y, z, h = stand
+        corrupt.setPos(x, y, z)
+        corrupt.setH(h)
+    else:
+        baseX = float(toon.getX())
+        baseY = float(toon.getY())
+        baseZ = float(toon.getZ())
+        heading = float(toon.getH())
+        rad = math.radians(heading)
+        x = baseX - math.sin(rad) * forward
+        y = baseY + math.cos(rad) * forward
+        corrupt.setPos(x, y, baseZ)
+        corrupt.setH(heading + 180.0)
     corrupt.generateWithRequired(zoneId)
     return corrupt
 

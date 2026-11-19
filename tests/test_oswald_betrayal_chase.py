@@ -194,6 +194,7 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
         names = _module_names(rel)
         for required in (
                 'spawnCorruptOswald',
+                'chaseSpawnStand',
                 'OswaldBetrayalChaseClient',
                 'ensureOswaldBetrayalChaseClient',
                 'chaseEnabled',
@@ -205,12 +206,26 @@ class OswaldBetrayalChaseTests(unittest.TestCase):
             self.assertIn(required, names)
         src = _read(rel)
         self.assertIn('ARCHETYPE_CORRUPT_OSWALD', src)
+        self.assertIn('OSWALD_BETRAYAL_CHASE_POS', src)
+        self.assertIn('chaseSpawnStand', src)
         self.assertIn('oswaldRevealBanner', src)
         self.assertIn('campaignVictory', src)
         self.assertIn('enableHackSlashMelee', src)
         # Doc may say "no keyblades"; ban affirmative KH product copy only.
         self.assertNotIn('kingdom hearts', src.lower())
         self.assertNotIn('sora', src.lower())
+
+    def test_chase_spawn_stands_authored(self):
+        camp = self.camp
+        pos_map = camp.OSWALD_BETRAYAL_CHASE_POS
+        self.assertIn(int(camp.HUB_ZONE), pos_map)
+        self.assertIn(2000, pos_map)
+        self.assertIn(SILLY, pos_map)
+        hub = pos_map[2000]
+        confront = camp.HUB_STAIN_CONFRONT_POS
+        self.assertEqual(float(hub[0]), float(confront[0]))
+        self.assertEqual(float(hub[1]), float(confront[1]))
+        self.assertGreater(float(camp.OSWALD_BETRAYAL_CHASE_SPAWN_FORWARD), 0.0)
 
     def test_client_wiring(self):
         finale_src = _read('toontown/campaign/FinalePhaseFx.py')
