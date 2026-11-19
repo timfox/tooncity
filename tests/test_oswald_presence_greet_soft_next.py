@@ -180,7 +180,7 @@ class OswaldPresenceGreetSoftNextTests(unittest.TestCase):
         self.assertEqual(
             greet(LOOPY, cheered=True),
             camp.OSWALD_PRESENCE_STREET_GREET_CHEERED)
-        # Cheered + soft-next street from unlocks.
+        # Cheered + soft-next street from unlocks (Punchline-tier unease).
         hub_soft = greet(
             TTC, cheered=True, softNextStreet='Punchline Place')
         street_soft = greet(
@@ -189,13 +189,18 @@ class OswaldPresenceGreetSoftNextTests(unittest.TestCase):
         self.assertIn('Punchline Place', street_soft)
         self.assertIn('Oswald', hub_soft)
         self.assertIn('Oswald', street_soft)
+        self.assertIn('stretchy', hub_soft.lower())
+        self.assertIn('half-beat', street_soft.lower())
         self.assertNotEqual(hub_soft, camp.OSWALD_PRESENCE_HUB_GREET)
         self.assertNotEqual(street_soft, camp.OSWALD_PRESENCE_STREET_GREET)
-        # Finale soft-next name works too.
+        # Finale soft-next deepens Silly-tier unease (no twist spoilers).
         finale = greet(
             TTC, cheered=True,
             softNextStreet=camp.ACTS[2]['name'])
         self.assertIn(camp.ACTS[2]['name'], finale)
+        self.assertIn('half-beat off', finale.lower())
+        self.assertNotEqual(hub_soft, finale)
+        self.assertNotIn('almost confess', finale.lower())
 
     def test_soft_next_street_from_progress_feeds_greet(self):
         camp = self.camp
@@ -269,8 +274,12 @@ class OswaldPresenceGreetSoftNextTests(unittest.TestCase):
         for required in (
                 'OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT',
                 'OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT',
+                'OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT_SILLY',
+                'OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT_SILLY',
                 'OSWALD_PRESENCE_HUB_GREET_CHEERED',
-                'OSWALD_PRESENCE_STREET_GREET_CHEERED'):
+                'OSWALD_PRESENCE_STREET_GREET_CHEERED',
+                'oswaldPresenceSoftNextUneaseTier',
+                'oswaldPresenceSoftNextTemplates'):
             self.assertIn(required, names)
 
     def test_cheer_latch_still_persists(self):

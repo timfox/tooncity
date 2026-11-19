@@ -1276,11 +1276,27 @@ OSWALD_PRESENCE_CHEER_TIP = (
 # OswaldPresence clears the once-per-visit `_greetedZone` latch on zone
 # leave and re-arms soft-next E-talk after campaignActUnlocked so plaza
 # talk works again when unlock refreshes the soft-next street tip.
+# Soft-next copy deepens unease along the Punchline→Silly unlock ladder
+# (matches entry/approach tip foreshadow; stub-safe — no DNA Oswald, no
+# twist spoilers / no "almost confess" / no "Oswald caused it" / no KH).
+# Default SOFT_NEXT = Punchline-tier (unlockedThrough 1 → Punchline Place).
 OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT = (
-    'Oswald waves from the plaza — "{street} needs us next!"  |  '
+    'Oswald waves from the plaza — grin still stretchy — '
+    '"{street} needs us next!"  |  '
     'Hop the tunnel  |  C campaign')
 OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT = (
-    'Oswald tips his ears — "Wash this stain — then {street}!"  |  '
+    'Oswald tips his ears — smile sticks a rubbery half-beat — '
+    '"Wash this stain — then {street}!"  |  '
+    'F fight  |  Shift dodge  |  C campaign')
+# Silly-tier soft-next (unlockedThrough 2 → Silly Street Finale): deeper
+# unease than Punchline soft-next, still foreshadow-only plaza talk.
+OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT_SILLY = (
+    'Oswald waves from the plaza — cheer feels a half-beat off — '
+    '"{street} needs us… ink laughs sticky—"  |  '
+    'Hop the tunnel  |  C campaign')
+OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT_SILLY = (
+    'Oswald tips his ears — grin hangs rubbery a beat too long — '
+    '"Wash this stain — then {street}!"  |  '
     'F fight  |  Shift dodge  |  C campaign')
 # Cheered but Act 1 cursor still (unlockedThrough 0 / no soft-next street).
 OSWALD_PRESENCE_HUB_GREET_CHEERED = (
@@ -1335,13 +1351,48 @@ OSWALD_PRESENCE_TIP_COLOR = (0.95, 0.98, 1.0, 1.0)
 OSWALD_PRESENCE_HIDE_ON_BETRAYAL = True
 
 
+def oswaldPresenceSoftNextUneaseTier(softNextStreet):
+    """Punchline vs Silly soft-next unease tier from unlock soft-next name.
+
+    ``softNextStreetFromProgress`` points at ACTS[1] (Punchline Place) after
+    Loopy clear and ACTS[2] (Silly Street Finale) after Punchline clear.
+    Silly-tier greets deepen plaza foreshadow; Punchline-tier is the default
+    soft-next unease beat. Stub-safe — no twist spoilers.
+    """
+    street = str(softNextStreet or '').strip()
+    if not street:
+        return 'punchline'
+    acts = ACTS or ()
+    if len(acts) >= 3:
+        finale_name = str(acts[2].get('name') or '').strip()
+        if finale_name and street == finale_name:
+            return 'silly'
+    # Tolerate short / alias soft-next labels that still name Silly.
+    if 'silly' in street.lower():
+        return 'silly'
+    return 'punchline'
+
+
+def oswaldPresenceSoftNextTemplates(softNextStreet):
+    """Hub + street soft-next templates for the unlock unease tier."""
+    if oswaldPresenceSoftNextUneaseTier(softNextStreet) == 'silly':
+        return (
+            str(OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT_SILLY),
+            str(OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT_SILLY))
+    return (
+        str(OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT),
+        str(OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT))
+
+
 def oswaldPresenceGreetTip(zoneId, cheered=False, softNextStreet=None):
     """Hub/street E-talk greet; soft-next after oswaldCheered + unlocks.
 
     Pre-cheer keeps static HUB/STREET_GREET. After the durable cheer latch,
     prefer soft-next templates filled with ``softNextStreet`` (from unlock
-    progress); fall back to CHEERED greets when Act 1 still has no soft-next.
-    First-meet tip stays owned by OswaldPresence.firstMeetTip (once-ever).
+    progress); Punchline→Silly unlock tiers deepen unease copy (plaza talk
+    foreshadow, no twist spoilers). Fall back to CHEERED greets when Act 1
+    still has no soft-next. First-meet tip stays owned by
+    OswaldPresence.firstMeetTip (once-ever).
     """
     hub = int(HUB_ZONE)
     try:
@@ -1353,10 +1404,8 @@ def oswaldPresenceGreetTip(zoneId, cheered=False, softNextStreet=None):
         street = softNextStreet
         if street:
             street = str(street)
-            if isHub:
-                tmpl = OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT
-            else:
-                tmpl = OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT
+            hub_tmpl, street_tmpl = oswaldPresenceSoftNextTemplates(street)
+            tmpl = hub_tmpl if isHub else street_tmpl
             try:
                 return tmpl.format(street=street)
             except Exception:

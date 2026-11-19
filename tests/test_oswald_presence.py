@@ -182,6 +182,8 @@ class OswaldPresenceTests(unittest.TestCase):
             camp.OSWALD_PRESENCE_STREET_GREET,
             camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT,
             camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT,
+            camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT_SILLY,
+            camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT_SILLY,
             camp.OSWALD_PRESENCE_HUB_GREET_CHEERED,
             camp.OSWALD_PRESENCE_STREET_GREET_CHEERED,
             camp.OSWALD_PRESENCE_FIRST_MEET_TIP,
@@ -190,7 +192,8 @@ class OswaldPresenceTests(unittest.TestCase):
             camp.OSWALD_PRESENCE_LABEL,
             camp.OSWALD_PRESENCE_PLATE,
         ]).lower()
-        for banned in ('keyblade', 'kingdom hearts', 'sora', 'key blade'):
+        for banned in ('keyblade', 'kingdom hearts', 'sora', 'key blade',
+                       'almost confess', 'cream wash'):
             self.assertNotIn(banned, blob)
 
     def test_presence_zones_hub_and_acts(self):
@@ -211,11 +214,18 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('plaza', hub.lower())
         self.assertIn('packs', street.lower())
         self.assertNotEqual(hub, street)
-        # Soft-next after cheer latch + unlocks.
+        # Soft-next after cheer latch + unlocks (Punchline→Silly unease).
         hub_soft = _mirror_greet(
             camp, TTC, cheered=True, softNextStreet='Punchline Place')
         self.assertIn('Punchline Place', hub_soft)
+        self.assertIn('stretchy', hub_soft.lower())
         self.assertNotEqual(hub_soft, hub)
+        hub_silly = _mirror_greet(
+            camp, TTC, cheered=True,
+            softNextStreet=camp.ACTS[2]['name'])
+        self.assertIn(camp.ACTS[2]['name'], hub_silly)
+        self.assertIn('half-beat off', hub_silly.lower())
+        self.assertNotEqual(hub_soft, hub_silly)
         cheered_only = _mirror_greet(camp, TTC, cheered=True)
         self.assertEqual(cheered_only, camp.OSWALD_PRESENCE_HUB_GREET_CHEERED)
 
@@ -229,6 +239,8 @@ class OswaldPresenceTests(unittest.TestCase):
                 'streetGreetTip',
                 'hubGreetSoftNextTip',
                 'streetGreetSoftNextTip',
+                'softNextUneaseTier',
+                'softNextTemplates',
                 'hubGreetCheeredTip',
                 'streetGreetCheeredTip',
                 'firstMeetTip',
