@@ -2,7 +2,7 @@
 """Headless behavioral deepen: explore → fight → reclaim → Oswald twist.
 
 Panda-free proof of the multi-hood loop already shipped on develop (through
-systems waves ending at PR #383 / wave I). Complements
+systems waves ending at PR #390 / wave J). Complements
 `test_headless_loop_smoke.py` (registration / juice AST) and the focused
 wave / act-param / kit suites by chaining the spiritual-sequel loop:
 
@@ -17,28 +17,32 @@ wave / act-param / kit suites by chaining the spiritual-sequel loop:
             counters (#359), Smudge ink_dash/ink_splat interrupt+counters
             (#363), Oswald betrayal counters (#352), authoritative server
             melee damage from hitIndex (#366) + CampaignPower reclaimCount
-            AI table (#371), juggle hang stun, reclaim KO fail + retry
+            AI table (#371) + hit cadence / earned counterFlags / planar
+            reach (#386), juggle hang stun, reclaim KO fail + retry
             (#338), soft-lock boss priority (#339) + sticky yield (#347) +
             cycle-with-lock prefer (#356) + Elite/Ambush pack prefer
             (#375) + reclaimAmbushSpawn pressure/soft-lock cue (#372),
             Smudge swarm orbit/weave (#379) + Oswald chase press/circle
-            (#383), Overlord P1 rising slam (#334) + move-id telegraph
-            (#340) + rain linger sludge (#362) + slam/ink_surge linger
-            (#381), boss/chase HP bar (#331)
+            (#383) + Overlord between-telegraph hold/circle (#388),
+            Overlord P1 rising slam (#334) + move-id telegraph (#340) +
+            rain linger sludge (#362) + slam/ink_surge linger (#381),
+            boss/chase HP bar (#331) + Elite/Ambush HP bar parity (#390)
   reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
             modifiers / earlier-wave ambush + Silly between-swell
             (#345/#358) + ACTS C path elite/ambush mirror (#365) +
             finale C phase2 elite/ambush beside Unleashed adds (#376) +
             finalePhaseStingBanner plate (#380), street-clear
-            jellybean/laff reward (#361), campaign progress client sync
-            on login (#333), CampaignPower reclaimCount rehydrate (#349)
-            + sync/purity dedupe (#367), SECURED purity-lock persist
-            across AI restart (#368), campaignVictory client relay (#351)
+            jellybean/laff reward (#361) + streetClearReward tip latch
+            (#387), campaign progress client sync on login (#333),
+            CampaignPower reclaimCount rehydrate (#349) + sync/purity
+            dedupe (#367), SECURED purity-lock persist across AI restart
+            (#368), campaignVictory client relay (#351)
   twist   — betrayal chase + kit + chase resume (#330) + false-clear gate
             (#341) + mid-chase HP persist (#350) + Oswald telegraph/hit AV
             (#344) + chase-clear epilogue + hub stain (#336) + hub-stain
-            securedZones mirror (#374) + washed-plaza epilogue beat (#353)
-            + hubEpilogueBeatShown tip latch (#382)
+            securedZones mirror (#374) + HubStainConfront plaza stand
+            (#385) + washed-plaza epilogue beat (#353) + HubEpilogueBeat
+            plaza stand (#389) + hubEpilogueBeatShown tip latch (#382)
 
 No Panda3D, no resources, no invented gameplay — only concrete symbols and
 pure helpers already on develop. Not a cream-FX deepen / no KH.
@@ -939,6 +943,48 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         target_src = _read('toontown/corruption/HackSlashTarget.py')
         self.assertIn('meleeDamageFromHitIndex', target_src)
         self.assertIn('counterFlags', target_src)
+        # Server hit cadence + earned counterFlags + planar range (#386) —
+        # clients cannot spoof finisher hitIndex, PERFECT_DODGE bit, or
+        # out-of-reach planar hits after the #366/#371 damage table work.
+        self.assertTrue(cfg.MELEE_HIT_CADENCE_ENABLED)
+        self.assertTrue(cfg.MELEE_HIT_RANGE_GATE_ENABLED)
+        self.assertTrue(cfg.MELEE_EARNED_COUNTER_ENABLED)
+        gap = float(cfg.MELEE_HIT_MIN_GAP_SEC)
+        self.assertGreater(gap, 0.0)
+        self.assertTrue(cfg.isMeleeHitCadenceReady(1.0, 1.0 + gap))
+        self.assertFalse(cfg.isMeleeHitCadenceReady(1.0, 1.0 + gap * 0.5))
+        self.assertEqual(cfg.expectedMeleeComboHitIndex(-1, 0.0, 10.0), 0)
+        self.assertTrue(cfg.acceptMeleeHitIndex(0, 0))
+        self.assertFalse(cfg.acceptMeleeHitIndex(2, 0))
+        self.assertEqual(cfg.expectedMeleeComboHitIndex(0, 1.0, 1.2), 1)
+        self.assertFalse(cfg.acceptMeleeHitIndex(2, 1))
+        stripped, consumed = cfg.resolveEarnedCounterFlags(flag, 0.0, 1.0)
+        self.assertEqual(stripped & flag, 0)
+        self.assertFalse(consumed)
+        until = cfg.earnedCounterUntil(1.0, windowSec=0.5)
+        kept, consumed = cfg.resolveEarnedCounterFlags(flag, until, 1.2)
+        self.assertEqual(kept & flag, flag)
+        self.assertTrue(consumed)
+        reach = cfg.meleeHitPlanarRange()
+        self.assertAlmostEqual(
+            reach,
+            float(cfg.MELEE_HIT_PLANAR_RANGE)
+            * float(cfg.MELEE_HIT_PLANAR_RANGE_SLACK),
+            places=4)
+        self.assertIn('__meleeHitInPlanarRange', req_snip)
+        self.assertIn('__acceptMeleeHitIntegrity', req_snip)
+        self.assertIn('resolveEarnedCounterFlags', corrupt_ai)
+        self.assertIn('isMeleeHitCadenceReady', corrupt_ai)
+        self.assertIn('expectedMeleeComboHitIndex', corrupt_ai)
+        self.assertIn('meleeHitPlanarRange', corrupt_ai)
+        self.assertIn('__armEarnedCounterForTelegraph', corrupt_ai)
+        for export in (
+                'acceptMeleeHitIndex', 'earnedCounterUntil',
+                'expectedMeleeComboHitIndex', 'isMeleeHitCadenceReady',
+                'meleeHitPlanarRange', 'resolveEarnedCounterFlags'):
+            self.assertIn(export, hs_init)
+        self.assertIn('earned counterFlags', target_src)
+        self.assertIn('planar range', target_src.lower())
 
         # Soft-lock reticle / hit-assist cream modules stay registered.
         for rel in (
@@ -1024,7 +1070,15 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertAlmostEqual(gy_o, 0.0, places=5)
         self.assertGreater(
             cg.roleMoveSpeedScale(cg.ROLE_PRESS, 'press'), 1.0)
-        # Overlord hold/circle — climax between-telegraph asymmetry vs chase.
+        # Overlord hold/circle (#388) — climax between-telegraph asymmetry
+        # vs chase; preferred under P1 rain engage so telegraphs still own.
+        self.assertGreater(cg.OVERLORD_CIRCLE_PREFERRED, 3.0)
+        self.assertGreater(cg.OVERLORD_CIRCLE_BAND, 0.0)
+        self.assertGreater(
+            cg.OVERLORD_CIRCLE_CLOSE_DIST, cg.OVERLORD_CIRCLE_PREFERRED)
+        p1_circle = cg.OVERLORD_PHASE_COMBAT[1]
+        self.assertLessEqual(
+            cg.OVERLORD_CIRCLE_PREFERRED, float(p1_circle['meleeRange']))
         gx, gy, action = cg.roleMoveGoal(
             cg.ROLE_CIRCLE, 22.0, 0.0, 0.0, 0.0,
             preferred=6.0, band=1.0, circleLead=4.0, circleCloseDist=15.0,
@@ -1038,6 +1092,20 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(action, 'circle')
         self.assertAlmostEqual(math.hypot(gx, gy), 6.0, places=5)
         self.assertGreater(gy, 0.0)
+        # Opposite flank flips the between-telegraph circle.
+        gx2, gy2, action2 = cg.roleMoveGoal(
+            cg.ROLE_CIRCLE, 10.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, circleLead=4.0, circleCloseDist=15.0,
+            flankSide=-1)
+        self.assertEqual(action2, 'circle')
+        self.assertLess(gy2, 0.0)
+        # In-band plant (not only close-hold).
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_CIRCLE, 6.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, circleLead=4.0, circleCloseDist=15.0,
+            flankSide=1)
+        self.assertEqual(action, 'hold')
+        self.assertAlmostEqual(gx, 6.0, places=5)
         # Same close geometry: Smudge retreats; Oswald presses; Overlord holds.
         gx_v, gy_v, act_v = cg.roleMoveGoal(
             cg.ROLE_CIRCLE, 2.0, 0.0, 0.0, 0.0,
@@ -1048,7 +1116,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertAlmostEqual(gy_v, 0.0, places=5)
         self.assertGreater(
             cg.roleMoveSpeedScale(cg.ROLE_CIRCLE, 'circle'), 1.0)
-        # AI role path wires orbit + press + Overlord circle.
+        self.assertLess(
+            cg.roleMoveSpeedScale(cg.ROLE_CIRCLE, 'approach'), 1.0)
+        self.assertEqual(
+            cg.roleMoveSpeedScale(cg.ROLE_CIRCLE, 'hold'), 1.0)
+        # AI role path wires orbit + press + Overlord circle; tick holds
+        # between telegraphs (no forced chase early-out).
         corrupt_ai_role = _read(
             'toontown/corruption/DistributedCorruptToonAI.py')
         self.assertIn('__roleMoveToward', corrupt_ai_role)
@@ -1064,6 +1137,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('circle', role_body.lower())
         self.assertIn('hold', role_body.lower())
         self.assertIn('__chaseToward(target)', role_body)
+        self.assertNotIn(
+            'if self._isOverlord() or not getattr', role_body)
+        tick = corrupt_ai_role[corrupt_ai_role.find('def __aiTick'):]
+        tick_end = tick.find('\n    def ', 1)
+        tick_body = tick if tick_end < 0 else tick[:tick_end]
+        self.assertIn('_isOverlord', tick_body)
+        self.assertIn('__roleMoveToward(target)', tick_body)
         self.assertEqual(cg.oswaldPickAttackMove(8.0), 'betrayal_lunge')
         self.assertEqual(cg.oswaldPickAttackMove(2.0), 'stain_burst')
         self.assertTrue(cg.OSWALD_BETRAYAL_KIT_ENABLED)
@@ -1259,6 +1339,32 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             cg.bossHpBarFillColor(
                 cg.ARCHETYPE_INK, name='Ambush Ink Smudge'),
             cg.BOSS_HP_BAR_FILL_AMBUSH)
+        # Elite / Ambush rim + soft-lock ↔ HP bar parity (#390).
+        self.assertEqual(
+            cg.bossHpBarRimColor(
+                cg.ARCHETYPE_BRUTE, name='Elite Sludge Brute'),
+            cg.BOSS_HP_BAR_RIM_ELITE)
+        self.assertEqual(
+            cg.bossHpBarRimColor(
+                cg.ARCHETYPE_SNARE, name='Ambush Balloon Snare'),
+            cg.BOSS_HP_BAR_RIM_AMBUSH)
+        self.assertNotEqual(
+            cg.BOSS_HP_BAR_FILL_ELITE, cg.BOSS_HP_BAR_FILL_AMBUSH)
+        for archetype, name in (
+                (cg.ARCHETYPE_INK, 'Elite Ink Smudge'),
+                (cg.ARCHETYPE_BRUTE, 'Ambush Sludge Brute')):
+            self.assertTrue(
+                cg.isSoftLockPrioritySubject(archetype, name=name))
+            self.assertTrue(
+                cg.isBossOrChaseHpBarSubject(archetype, name=name))
+        self.assertFalse(cg.isBossOrChaseHpBarSubject(
+            cg.ARCHETYPE_INK, name='Ambush'))
+        self.assertTrue(cg.isEliteOrAmbushPreferName('AMBUSH Ink Smudge'))
+        cg_src = _read('toontown/corruption/CorruptionGlobals.py')
+        gate_idx = cg_src.index('def isBossOrChaseHpBarSubject')
+        self.assertIn(
+            'isEliteOrAmbushPreferName',
+            cg_src[gate_idx:gate_idx + 700])
         self.assertEqual(cg.bossHpBarRatio(50, 100), 0.5)
         self.assertEqual(cg.bossHpBarRatio(0, 100), 0.0)
         hud_rel = 'toontown/reclaim/BossHpBarHud.py'
@@ -1270,6 +1376,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             self.assertIn(sym, hud_names)
         hud_src = _read(hud_rel)
         self.assertIn('boss-chase-hp-bar', hud_src)
+        self.assertIn('Elite', hud_src)
+        self.assertIn('Ambush', hud_src)
         self.assertNotIn('CreamWash', hud_src)
         corrupt_client = _read('toontown/corruption/DistributedCorruptToon.py')
         self.assertIn('BossHpBarHud', corrupt_client)
@@ -1611,7 +1719,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('synced > self._localReclaimCount', purity_win)
         self.assertIn('rewardLine', purity_win)
         self.assertIn('_streetClearRewardLine', purity_win)
-        # streetClearReward orphan → accept (#tip latch): PlayEntry + Handoff.
+        # streetClearReward orphan → accept tip latch (#387): PlayEntry +
+        # Handoff; live tip helper distinct from handoff plate fmt.
         self.assertIn('_emitStreetClearRewardMirror', purity_win)
         self.assertIn('emitStreetClearReward', handoff_src)
         self.assertIn('_onStreetClearReward', handoff_src)
@@ -1621,6 +1730,20 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('_postClearRewardLatchedZone', play_src)
         self.assertIn('emitStreetClearReward', power_src)
         self.assertTrue(self.camp.STREET_CLEAR_REWARD_TIP_LATCH_ENABLED)
+        self.assertEqual(self.camp.STREET_CLEAR_REWARD_MSG, 'streetClearReward')
+        tip = self.camp.streetClearRewardLatchTipText(
+            face='Oswald', beans=20, laff=5,
+            trophy='Street Trophy: Loopy Lane reclaimed!')
+        self.assertIn('Oswald', tip)
+        self.assertIn('20', tip)
+        self.assertIn('5', tip)
+        self.assertNotEqual(
+            tip, self.camp.STREET_CLEAR_REWARD_HANDOFF_FMT % (20, 5))
+        tip_idx = play_src.index('def _onStreetClearReward')
+        tip_body = play_src[
+            tip_idx:play_src.find('\n    def ', tip_idx + 10)]
+        self.assertIn('_latchSoftNextCue', tip_body)
+        self.assertIn('_postClearRewardLatchedZone', tip_body)
 
     # --- campaign progression + Oswald twist ---
 
@@ -2414,7 +2537,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('stain', camp.HUB_STAIN_MSG.lower())
         self.assertTrue(camp.HUB_STAIN_CONFRONT_ENABLED)
         self.assertIn('Oswald', camp.HUB_STAIN_CONFRONT_LABEL)
-        # Authored plaza confront stand (not FORWARD near-avatar).
+        # Authored plaza confront stand (#385) — absolute landmark, not
+        # FORWARD near-avatar; placement prefers plaza → near.
         confront_pos = camp.HUB_STAIN_CONFRONT_POS
         self.assertEqual(len(confront_pos), 4)
         self.assertNotEqual(
@@ -2422,6 +2546,20 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         confront_src = _read('toontown/campaign/HubStainConfront.py')
         self.assertIn('confrontPlazaPos', confront_src)
         self.assertIn('_placeMarkerAtPlaza', confront_src)
+        self.assertGreater(float(camp.HUB_STAIN_CONFRONT_FORWARD), 0.0)
+        cx, cy = float(confront_pos[0]), float(confront_pos[1])
+        self.assertNotEqual((cx, cy), (0.0, 0.0))
+        self.assertNotEqual(
+            (cx, cy), (0.0, float(camp.HUB_STAIN_CONFRONT_FORWARD)))
+        place_idx = confront_src.index('def _placeMarker(')
+        plaza_idx = confront_src.index('_placeMarkerAtPlaza', place_idx)
+        near_idx = confront_src.index('_placeMarkerNearAvatar', place_idx)
+        self.assertLess(plaza_idx, near_idx)
+        refresh = confront_src[
+            confront_src.index('def _refreshForHubPollution'):]
+        refresh = refresh[:refresh.index('def _progressWantsConfront')]
+        self.assertIn('self._placeMarker()', refresh)
+        self.assertNotIn('self._placeMarkerNearAvatar()', refresh)
         # Victory + chase pending stains hub; cleared / non-victory does not.
         self.assertTrue(stain.hubStainWanted(camp.STATE_VICTORY, chaseCleared=0))
         self.assertFalse(stain.hubStainWanted(camp.STATE_VICTORY, chaseCleared=1))
@@ -2481,7 +2619,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertNotIn(
             'wash the betrayal chase', camp.HUB_EPILOGUE_BEAT_TIP.lower())
         self.assertGreater(float(camp.HUB_EPILOGUE_BEAT_FORWARD), 0.0)
-        # Authored washed-plaza stand (not FORWARD near-avatar).
+        # Authored washed-plaza stand (#389) — absolute landmark distinct
+        # from confront / Oswald hub; placement prefers plaza → near.
         epi_pos = camp.HUB_EPILOGUE_BEAT_POS
         self.assertEqual(len(epi_pos), 4)
         self.assertNotEqual(
@@ -2504,6 +2643,18 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('HUB_EPILOGUE_BEAT_SHOWN_MSG', epi_src)
         self.assertIn('epilogueBeatPlazaPos', epi_src)
         self.assertIn('_placeMarkerAtPlaza', epi_src)
+        ex, ey = float(epi_pos[0]), float(epi_pos[1])
+        self.assertNotEqual((ex, ey), (0.0, 0.0))
+        self.assertNotEqual(
+            (ex, ey), (0.0, float(camp.HUB_EPILOGUE_BEAT_FORWARD)))
+        epi_place = epi_src.index('def _placeMarker(')
+        epi_plaza = epi_src.index('_placeMarkerAtPlaza', epi_place)
+        epi_near = epi_src.index('_placeMarkerNearAvatar', epi_place)
+        self.assertLess(epi_plaza, epi_near)
+        zone = epi_src[epi_src.index('def _onZoneChange'):]
+        zone = zone[:zone.index('def _progressWantsBeat')]
+        self.assertIn('self._placeMarker()', zone)
+        self.assertNotIn('self._placeMarkerNearAvatar()', zone)
         self.assertIn('ensurePlayEntryClient', epi_src)
         self.assertIn('ensureOswaldPresenceClient', epi_src)
         self.assertIn('hubStainCleared', epi_src)
