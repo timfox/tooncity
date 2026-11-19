@@ -112,6 +112,9 @@ class PlayEntryClient(DirectObject):
         # One-shot post-wash tip latch from hubEpilogueBeatShown (cleared on
         # replay C / fresh sync).
         self._postWashTipLatched = False
+        # One-shot chase-pending tip latch from hubStainConfrontShown
+        # (cleared on chase clear / replay C / fresh sync).
+        self._postConfrontTipLatched = False
         # One-shot post-clear tip latch from streetClearReward (per zone;
         # cleared on next reclaim start / C replay).
         self._postClearRewardLatchedZone = None
@@ -130,6 +133,11 @@ class PlayEntryClient(DirectObject):
             CampaignGlobals, 'FINALE_PHASE_STING_BANNER_MSG',
             'finalePhaseStingBanner')
         self.accept(stingMsg, self._onFinalePhaseStingBanner)
+        # HubStainConfront plaza beat — one-shot chase-pending tip latch.
+        confrontMsg = getattr(
+            CampaignGlobals, 'HUB_STAIN_CONFRONT_SHOWN_MSG',
+            'hubStainConfrontShown')
+        self.accept(confrontMsg, self._onHubStainConfrontShown)
         # HubEpilogueBeat washed-plaza beat — one-shot post-wash tip latch.
         beatMsg = getattr(
             CampaignGlobals, 'HUB_EPILOGUE_BEAT_SHOWN_MSG',
@@ -256,9 +264,14 @@ class PlayEntryClient(DirectObject):
             # Relog / hydrate: tip latch is live-only; hub tip uses replay copy.
             if self._chasePending:
                 self._postWashTipLatched = False
+                self._postConfrontTipLatched = False
+            else:
+                # Chase cleared — confront latch no longer applies.
+                self._postConfrontTipLatched = False
         else:
             self._chasePending = False
             self._postWashTipLatched = False
+            self._postConfrontTipLatched = False
             softStreet = mirror.get('softNextStreet')
             if softStreet:
                 self._softNextStreet = softStreet
@@ -659,6 +672,7 @@ class PlayEntryClient(DirectObject):
             return
         self._victoryEpilogue = True
         self._chasePending = False
+        self._postConfrontTipLatched = False
         face = _face()
         tip = getattr(
             CampaignGlobals, 'CAMPAIGN_EPILOGUE_CUE', None) or (
@@ -814,6 +828,31 @@ class PlayEntryClient(DirectObject):
         if tip:
             self._showTip(tip)
 
+    def _onHubStainConfrontShown(self, zoneId=0):
+        """One-shot chase-pending tip latch for HubStainConfront placemarker.
+
+        World placemarker + world tip stay on HubStainConfront; tip bar
+        upgrades to plaza-stain chase copy once (survives hub hops via
+        soft-next latch). Keep chasePending honest — do not claim wash.
+        No cream deepen / no KH.
+        """
+        if not bool(getattr(
+                CampaignGlobals, 'HUB_STAIN_CONFRONT_TIP_LATCH_ENABLED', True)):
+            return
+        if not bool(getattr(
+                CampaignGlobals, 'HUB_STAIN_CONFRONT_ENABLED', True)):
+            return
+        if self._postConfrontTipLatched:
+            return
+        self._postConfrontTipLatched = True
+        self._victoryEpilogue = True
+        self._chasePending = True
+        tip = CampaignGlobals.hubStainConfrontLatchTipText(face=_face())
+        if not tip:
+            return
+        # nextZone unset so hub re-entry does not drop the chase-pending tip.
+        self._latchSoftNextCue(tip, nextZone=None, nextStreet=None)
+
     def _onHubEpilogueBeatShown(self, zoneId=0):
         """One-shot post-wash tip latch for HubEpilogueBeat placemarker.
 
@@ -828,6 +867,7 @@ class PlayEntryClient(DirectObject):
         if self._postWashTipLatched:
             return
         self._postWashTipLatched = True
+        self._postConfrontTipLatched = False
         self._victoryEpilogue = True
         self._chasePending = False
         tip = CampaignGlobals.hubEpilogueBeatLatchTipText(face=_face())
@@ -944,6 +984,7 @@ class PlayEntryClient(DirectObject):
             self._victoryEpilogue = False
             self._chasePending = False
             self._postWashTipLatched = False
+            self._postConfrontTipLatched = False
             self._postClearRewardLatchedZone = None
             self._postRecreepLatchedZone = None
             self._softNextCue = None

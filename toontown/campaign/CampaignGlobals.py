@@ -42,6 +42,14 @@ HUB_STAIN_CONFRONT_POS = (-38.0, 18.0, 1.15, -90.0)
 # Fallback offset relative to the local toon when HUB_STAIN_CONFRONT_POS
 # is unset / unparseable.
 HUB_STAIN_CONFRONT_FORWARD = 5.5
+# HubStainConfront sends hubStainConfrontShown after the plaza placemarker.
+# PlayEntry accepts for a one-shot chase-pending tip latch (orphan → accept;
+# no cream deepen / no KH). World placemarker tip stays HUB_STAIN_CONFRONT_TIP;
+# this is the discoverable F/C strip upgrade once confront lands.
+HUB_STAIN_CONFRONT_SHOWN_MSG = 'hubStainConfrontShown'
+HUB_STAIN_CONFRONT_TIP_LATCH_ENABLED = True
+HUB_STAIN_CONFRONT_LATCH_TIP = (
+    "%s: Oswald's ink stains the plaza — wash the betrayal chase!")
 # Washed-plaza epilogue beat after chase clear (HubEpilogueBeat).
 # Complements HubStainConfront (pending stain): once fog washes, TTC gets
 # an authored celebration placemarker + absence confirmation tip — not
@@ -78,6 +86,23 @@ HUB_EPILOGUE_BEAT_LATCH_TIP = (
     'Replay from hub / C on Loopy!')
 # Alias used by handoff / PlayEntry celebration UX.
 RECLAIM_FACE = PROTAGONIST
+
+
+def hubStainConfrontShownMsgName():
+    """Messenger name HubStainConfront sends; PlayEntry accepts."""
+    return HUB_STAIN_CONFRONT_SHOWN_MSG
+
+
+def hubStainConfrontLatchTipText(face=None):
+    """PlayEntry one-shot tip latch after hub-stain confront placemarker shows."""
+    face = face or RECLAIM_FACE
+    template = HUB_STAIN_CONFRONT_LATCH_TIP
+    try:
+        return template % face
+    except Exception:
+        return (
+            "%s: Oswald's ink stains the plaza — wash the betrayal chase!"
+            % face)
 
 
 def hubEpilogueBeatShownMsgName():
