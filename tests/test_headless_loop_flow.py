@@ -2359,6 +2359,14 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('stain', camp.HUB_STAIN_MSG.lower())
         self.assertTrue(camp.HUB_STAIN_CONFRONT_ENABLED)
         self.assertIn('Oswald', camp.HUB_STAIN_CONFRONT_LABEL)
+        # Authored plaza confront stand (not FORWARD near-avatar).
+        confront_pos = camp.HUB_STAIN_CONFRONT_POS
+        self.assertEqual(len(confront_pos), 4)
+        self.assertNotEqual(
+            tuple(confront_pos), tuple(camp.OSWALD_PRESENCE_HUB_POS))
+        confront_src = _read('toontown/campaign/HubStainConfront.py')
+        self.assertIn('confrontPlazaPos', confront_src)
+        self.assertIn('_placeMarkerAtPlaza', confront_src)
         # Victory + chase pending stains hub; cleared / non-victory does not.
         self.assertTrue(stain.hubStainWanted(camp.STATE_VICTORY, chaseCleared=0))
         self.assertFalse(stain.hubStainWanted(camp.STATE_VICTORY, chaseCleared=1))

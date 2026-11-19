@@ -300,13 +300,20 @@ class HubStainAfterBetrayalTests(unittest.TestCase):
         names = _module_names('toontown/campaign/HubStainConfront.py')
         for need in (
                 'HubStainConfrontClient', 'confrontEnabled', 'confrontLabel',
-                'refreshHubStainConfront', 'stopHubStainConfront',
-                'ensureHubStainConfrontClient'):
+                'confrontPlazaPos', 'refreshHubStainConfront',
+                'stopHubStainConfront', 'ensureHubStainConfrontClient'):
             self.assertIn(need, names)
         confront_src = _read('toontown/campaign/HubStainConfront.py')
         self.assertIn('hubStainConfrontLabel', confront_src)
         self.assertIn('pollutionChanged', confront_src)
         self.assertIn('hubStainApplied', confront_src)
+        self.assertIn('HUB_STAIN_CONFRONT_POS', confront_src)
+        self.assertIn('_placeMarkerAtPlaza', confront_src)
+        # Authored plaza stand present and distinct from Oswald hub stand.
+        stand = self.camp.HUB_STAIN_CONFRONT_POS
+        self.assertEqual(len(stand), 4)
+        self.assertNotEqual(
+            tuple(stand), tuple(self.camp.OSWALD_PRESENCE_HUB_POS))
         # No KH / cream deepen hooks.
         low = confront_src.lower()
         for banned in ('keyblade', 'kingdom hearts', 'cream wash', 'cream hose'):
