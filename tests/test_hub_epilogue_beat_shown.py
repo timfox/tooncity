@@ -147,8 +147,8 @@ class HubEpilogueBeatShownTest(unittest.TestCase):
             _module_ast(rel), 'HubEpilogueBeatClient')
         self.assertIn('_onZoneChange', methods)
         self.assertIn('_flashTip', methods)
-        # Scope KH check to the shown-send arm.
-        start = src.index('self._placeMarkerNearAvatar()')
+        # Scope KH check to the shown-send arm (plaza stand → shown msg).
+        start = src.index('self._placeMarker()')
         end = src.index('def _progressWantsBeat', start)
         block = src[start:end].lower()
         self.assertNotIn('keyblade', block)

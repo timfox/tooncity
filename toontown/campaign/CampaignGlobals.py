@@ -54,6 +54,15 @@ HUB_EPILOGUE_BEAT_ABSENCE = "Oswald's gone — plaza pure"
 HUB_EPILOGUE_BEAT_TIP = (
     "Toon Central plaza is washed clean — Oswald's absence holds. "
     'Replay from hub / C on Loopy!  |  F fight  |  C campaign')
+# Authored TTC washed-plaza epilogue stand (x, y, z, h) — stable landmark
+# after chase clear, not FORWARD beside the local toon (same
+# orphan-of-placement pattern HubStainConfront closed with
+# HUB_STAIN_CONFRONT_POS). Distinct from OSWALD_PRESENCE_HUB_POS (trusted
+# face) and HUB_STAIN_CONFRONT_POS (pending-stain confront). Stub coords
+# (plaza DNA not in-tree); tweak when DNA lands. No cream / no KH.
+HUB_EPILOGUE_BEAT_POS = (-28.0, 8.0, 1.15, -75.0)
+# Fallback offset relative to the local toon when HUB_EPILOGUE_BEAT_POS
+# is unset / unparseable.
 HUB_EPILOGUE_BEAT_FORWARD = 5.5
 # HubEpilogueBeat sends hubEpilogueBeatShown after the washed-plaza
 # placemarker. PlayEntry + OswaldPresence accept for a one-shot post-wash

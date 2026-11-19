@@ -2441,6 +2441,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertNotIn(
             'wash the betrayal chase', camp.HUB_EPILOGUE_BEAT_TIP.lower())
         self.assertGreater(float(camp.HUB_EPILOGUE_BEAT_FORWARD), 0.0)
+        # Authored washed-plaza stand (not FORWARD near-avatar).
+        epi_pos = camp.HUB_EPILOGUE_BEAT_POS
+        self.assertEqual(len(epi_pos), 4)
+        self.assertNotEqual(
+            tuple(epi_pos), tuple(camp.OSWALD_PRESENCE_HUB_POS))
+        self.assertNotEqual(
+            tuple(epi_pos), tuple(camp.HUB_STAIN_CONFRONT_POS))
         epi_rel = 'toontown/campaign/HubEpilogueBeat.py'
         self.assertTrue((REPO_ROOT / epi_rel).is_file())
         epi_names = _class_and_func_names(_module_ast(epi_rel))
@@ -2448,12 +2455,15 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'HubEpilogueBeatClient', 'ensureHubEpilogueBeatClient',
                 'refreshHubEpilogueBeat', 'stopHubEpilogueBeat',
                 'clearHubEpilogueBeat', 'epilogueBeatEnabled',
-                'epilogueBeatLabel', 'epilogueBeatAbsence', 'epilogueBeatTip'):
+                'epilogueBeatLabel', 'epilogueBeatAbsence', 'epilogueBeatTip',
+                'epilogueBeatPlazaPos'):
             self.assertIn(sym, epi_names)
         epi_src = _read(epi_rel)
         self.assertIn('hubEpilogueBeatWanted', epi_src)
         self.assertIn('hubEpilogueBeatShown', epi_src)
         self.assertIn('HUB_EPILOGUE_BEAT_SHOWN_MSG', epi_src)
+        self.assertIn('epilogueBeatPlazaPos', epi_src)
+        self.assertIn('_placeMarkerAtPlaza', epi_src)
         self.assertIn('ensurePlayEntryClient', epi_src)
         self.assertIn('ensureOswaldPresenceClient', epi_src)
         self.assertIn('hubStainCleared', epi_src)
