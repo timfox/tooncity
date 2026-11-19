@@ -214,18 +214,27 @@ DEFEAT_DELETE_DELAY = 0.95
 # Wave scripts place Snare-front / Gagster lob / Brute rear, but every unit
 # independently nearest-chasing collapses that intent into the same scrum.
 # Role AI keeps street archetypes distinct during chase (not cream FX):
+#   Smudge  → orbit / weave (circle dash-engage ring; pack splits by side)
 #   Gagster → kite (hold lob ring / backpedal when pressed)
 #   Brute   → hold (plant in spit range; sluggish close)
 #   Snare   → flank (approach via perpendicular offset, then lash)
-# Smudge / Corrupted Oswald / Overlord stay plain chase. ROLE_AI_ENABLED =
-# False restores legacy nearest-chase for all archetypes.
+# Corrupted Oswald / Overlord stay plain chase. ROLE_AI_ENABLED = False
+# restores legacy nearest-chase for all archetypes.
 # Wired from DistributedCorruptToonAI.__roleMoveToward / __moveTowardXY.
 # ---------------------------------------------------------------------------
 ROLE_AI_ENABLED = True
 ROLE_CHASE = 'chase'
+ROLE_ORBIT = 'orbit'
 ROLE_KITE = 'kite'
 ROLE_HOLD = 'hold'
 ROLE_FLANK = 'flank'
+
+# Ink Smudge orbit / weave — circle the dash-engage ring; packs split CW/CCW.
+SMUDGE_ORBIT_PREFERRED = 5.6  # weave ring (at/under meleeRange 5.8 so dash fires)
+SMUDGE_ORBIT_BAND = 1.1  # half-width comfort band around preferred
+SMUDGE_ORBIT_CLOSE_DIST = 13.0  # beyond this, close toward ring before weaving
+SMUDGE_ORBIT_WEAVE = 4.0  # tangential lead so the goal keeps them circling
+SMUDGE_ORBIT_SPEED_SCALE = 1.08  # slight zip on the weave arc
 
 # Gunk Gagster kite — stand off on a lob ring; retreat when the toon closes.
 GAGSTER_KITE_PREFERRED = 9.5  # ring radius (near meleeRange 8.5)
@@ -243,7 +252,7 @@ SNARE_FLANK_SPEED_SCALE = 1.05  # slight zip on the flank arc
 
 
 def archetypeCombatRole(archetype):
-    """Return role-AI mode for a street archetype (chase/kite/hold/flank).
+    """Return role-AI mode for a street archetype (orbit/kite/hold/flank).
 
     Overlord combat is gated separately by finalePhase — callers should skip
     role AI when ``_isOverlord()``. Unknown ids clamp via normalizeArchetype.
@@ -251,6 +260,8 @@ def archetypeCombatRole(archetype):
     if not ROLE_AI_ENABLED:
         return ROLE_CHASE
     aid = normalizeArchetype(archetype)
+    if aid == ARCHETYPE_INK:
+        return ROLE_ORBIT
     if aid == ARCHETYPE_GAGSTER:
         return ROLE_KITE
     if aid == ARCHETYPE_BRUTE:
@@ -262,12 +273,12 @@ def archetypeCombatRole(archetype):
 
 def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
                  holdRange=None, flankOffset=None, flankCloseDist=None,
-                 flankSide=1):
+                 flankSide=1, weave=None, orbitCloseDist=None):
     """Planar (gx, gy, action) for role-aware chase.
 
     ``action`` is one of ``chase`` / ``approach`` / ``retreat`` / ``hold`` /
-    ``flank``. ``hold`` means stay put (gx, gy == sx, sy). Default / unknown
-    roles chase straight at the toon.
+    ``flank`` / ``orbit``. ``hold`` means stay put (gx, gy == sx, sy).
+    Default / unknown roles chase straight at the toon.
     """
     role = str(role or ROLE_CHASE)
     sx = float(sx)
@@ -277,6 +288,43 @@ def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
     dx = sx - tx
     dy = sy - ty
     dist = (dx * dx + dy * dy) ** 0.5
+
+    if role == ROLE_ORBIT:
+        if preferred is None:
+            preferred = SMUDGE_ORBIT_PREFERRED
+        if band is None:
+            band = SMUDGE_ORBIT_BAND
+        if weave is None:
+            weave = SMUDGE_ORBIT_WEAVE
+        if orbitCloseDist is None:
+            orbitCloseDist = SMUDGE_ORBIT_CLOSE_DIST
+        preferred = max(0.5, float(preferred))
+        band = max(0.0, float(band))
+        weave = max(0.0, float(weave))
+        orbitCloseDist = max(preferred, float(orbitCloseDist))
+        side = 1.0 if float(flankSide) >= 0.0 else -1.0
+        if dist < 1e-6:
+            return (tx + preferred, ty, 'retreat')
+        ux = dx / dist
+        uy = dy / dist
+        # Tangential weave direction (same left/right split as Snare flank).
+        wx = (-uy) * side
+        wy = (ux) * side
+        if dist > orbitCloseDist:
+            # Far: close toward preferred ring (not straight onto the toon).
+            return (tx + ux * preferred, ty + uy * preferred, 'approach')
+        # Goal on preferred ring, advanced along tangent (orbit / weave).
+        gx = tx + ux * preferred + wx * weave
+        gy = ty + uy * preferred + wy * weave
+        rdx = gx - tx
+        rdy = gy - ty
+        rdist = (rdx * rdx + rdy * rdy) ** 0.5
+        if rdist > 1e-6:
+            gx = tx + rdx / rdist * preferred
+            gy = ty + rdy / rdist * preferred
+        if dist < preferred - band:
+            return (gx, gy, 'retreat')
+        return (gx, gy, 'orbit')
 
     if role == ROLE_KITE:
         if preferred is None:
@@ -323,7 +371,7 @@ def roleMoveGoal(role, sx, sy, tx, ty, preferred=None, band=None,
         gy = ty + (ux) * side * flankOffset
         return (gx, gy, 'flank')
 
-    # Plain chase (Smudge / Oswald / disabled).
+    # Plain chase (Oswald / Overlord / disabled).
     return (tx, ty, 'chase')
 
 
@@ -331,6 +379,8 @@ def roleMoveSpeedScale(role, action=None):
     """Chase-speed multiplier for a role action (1.0 = archetype chaseSpeed)."""
     role = str(role or ROLE_CHASE)
     action = str(action or '')
+    if role == ROLE_ORBIT:
+        return float(SMUDGE_ORBIT_SPEED_SCALE)
     if role == ROLE_KITE and action == 'retreat':
         return float(GAGSTER_KITE_RETREAT_SPEED_SCALE)
     if role == ROLE_HOLD:
@@ -341,7 +391,11 @@ def roleMoveSpeedScale(role, action=None):
 
 
 def snareFlankSide(doId):
-    """Stable left/right flank side from doId so packs split around the toon."""
+    """Stable left/right flank (or Smudge orbit) side from doId.
+
+    Even doIds weave / flank one way; odd the other, so packs split around
+    the toon instead of stacking on one shoulder.
+    """
     try:
         return 1 if (int(doId) % 2 == 0) else -1
     except (TypeError, ValueError):

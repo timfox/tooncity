@@ -940,6 +940,8 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertAlmostEqual(dy, 0.0, places=5)
         self.assertTrue(cg.ROLE_AI_ENABLED)
         self.assertEqual(
+            cg.archetypeCombatRole(cg.ARCHETYPE_INK), cg.ROLE_ORBIT)
+        self.assertEqual(
             cg.archetypeCombatRole(cg.ARCHETYPE_BRUTE), cg.ROLE_HOLD)
         self.assertEqual(
             cg.archetypeCombatRole(cg.ARCHETYPE_GAGSTER), cg.ROLE_KITE)
