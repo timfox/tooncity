@@ -6,7 +6,8 @@ Slice 1 SoftTarget prefers objects that expose this API. MeleeCombat calls
 `meleeDamageFromHitIndex` / `takeHackSlashDamage` (+ juggle-hang stun on
 launch beats so AI chase/attack pause during hang). Client damage is juice
 only — the AI owns the COMBO_DAMAGE table, scaled by campaign
-reclaimCount (same POWER_BUMP_* math as CampaignPower).
+reclaimCount (same POWER_BUMP_* math as CampaignPower), plus hit cadence /
+combo integrity, planar range, and server-armed earned counterFlags.
 """
 
 

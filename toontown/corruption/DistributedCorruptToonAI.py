@@ -64,6 +64,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._spitProjectile = None
         # Absolute frame-time until which chase/attack stay paused (juggle hang).
         self._juggleHangStunUntil = 0.0
+        # Per-avatar melee integrity (cadence / combo / earned counter latch).
+        # Keys are avatar doIds; values are small state dicts.
+        self._meleeHitStateByAv = {}
         self._puddleLinger = None
         self._rainLinger = None
         self._slamLinger = None
@@ -231,6 +234,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         via HackSlashConfig.meleeDamageFromHitIndex / COMBO_DAMAGE, scaled by
         CampaignDirector reclaimCount (same POWER_BUMP_* math as client
         CampaignPower) — the client amount is not trusted.
+
+        Integrity gates (after #366/#371 table authority):
+        - planar range (same-zone alone is not enough)
+        - per-avatar hit cadence + combo sequence
+        - earned counterFlags (PERFECT_DODGE only when server-armed)
         """
         if self._defeated:
             return
@@ -241,11 +249,18 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         # Same-zone gate keeps random cross-shard smackdowns out of reclaim demos.
         if getattr(toon, 'zoneId', None) != self.zoneId:
             return
+        now = globalClock.getFrameTime()  # noqa: F821
+        if not self.__meleeHitInPlanarRange(toon):
+            return
         idx = max(0, min(255, int(hitIndex)))
         try:
             flags = max(0, min(255, int(counterFlags or 0)))
         except (TypeError, ValueError):
             flags = 0
+        accepted = self.__acceptMeleeHitIntegrity(avId, idx, flags, now)
+        if accepted is None:
+            return
+        idx, flags = accepted
         table = self.__campaignPowerDamageTable()
         amount = HackSlashConfig.meleeDamageFromHitIndex(
             idx, flags, damageTable=table)
@@ -286,6 +301,102 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return None
         return HackSlashConfig.comboDamageTableFromReclaimCount(
             reclaimCount, perReclaim=perReclaim, bumpMax=bumpMax)
+
+    def __meleeHitState(self, avId):
+        """Per-avatar cadence / combo / earned-counter latch for this hostile."""
+        try:
+            key = int(avId)
+        except (TypeError, ValueError):
+            return None
+        state = self._meleeHitStateByAv.get(key)
+        if state is None:
+            state = {
+                'lastHitAt': 0.0,
+                'lastHitIndex': -1,
+                'counterUntil': 0.0,
+            }
+            self._meleeHitStateByAv[key] = state
+        return state
+
+    def __meleeHitInPlanarRange(self, toon):
+        """True when the attacker is within server melee planar reach."""
+        if not getattr(HackSlashConfig, 'MELEE_HIT_RANGE_GATE_ENABLED', True):
+            return True
+        reach = float(HackSlashConfig.meleeHitPlanarRange())
+        return self.__planarDist(toon) <= reach
+
+    def __acceptMeleeHitIntegrity(self, avId, hitIndex, counterFlags, now):
+        """Cadence + combo + earned-counter gates. Returns (idx, flags) or None."""
+        state = self.__meleeHitState(avId)
+        if state is None:
+            return None
+        if getattr(HackSlashConfig, 'MELEE_HIT_CADENCE_ENABLED', True):
+            if not HackSlashConfig.isMeleeHitCadenceReady(
+                    state.get('lastHitAt', 0.0), now):
+                return None
+            expected = HackSlashConfig.expectedMeleeComboHitIndex(
+                state.get('lastHitIndex', -1),
+                state.get('lastHitAt', 0.0),
+                now)
+            if not HackSlashConfig.acceptMeleeHitIndex(hitIndex, expected):
+                return None
+        flags, consumed = HackSlashConfig.resolveEarnedCounterFlags(
+            counterFlags, state.get('counterUntil', 0.0), now)
+        # Clamp hitIndex to combo table before recording / damage lookup.
+        try:
+            length = max(1, int(getattr(HackSlashConfig, 'COMBO_LENGTH', 3)))
+        except (TypeError, ValueError):
+            length = 3
+        idx = max(0, min(int(hitIndex), length - 1))
+        state['lastHitAt'] = float(now)
+        state['lastHitIndex'] = idx
+        if consumed:
+            state['counterUntil'] = 0.0
+        return (idx, flags)
+
+    def __armEarnedCounter(self, avId, now=None, windowSec=None, until=None):
+        """Server-arm PERFECT_DODGE latch for avId (dodge / telegraph earn)."""
+        if not getattr(HackSlashConfig, 'MELEE_EARNED_COUNTER_ENABLED', True):
+            return
+        if not getattr(HackSlashConfig, 'PERFECT_DODGE_COUNTER_ENABLED', True):
+            return
+        state = self.__meleeHitState(avId)
+        if state is None:
+            return
+        if now is None:
+            now = globalClock.getFrameTime()  # noqa: F821
+        if until is None:
+            until = HackSlashConfig.earnedCounterUntil(now, windowSec=windowSec)
+        try:
+            until = float(until)
+        except (TypeError, ValueError):
+            return
+        # Keep the furthest expiry if multiple earns overlap.
+        if until > float(state.get('counterUntil', 0.0) or 0.0):
+            state['counterUntil'] = until
+
+    def __announceAttackDodged(self, avId=None):
+        """Broadcast dodge juice + arm earned counter for the dodging avatar."""
+        if avId is None:
+            avId = self._targetId
+        if avId is not None:
+            self.__armEarnedCounter(avId)
+        self.sendUpdate('announceAttackDodged', [])
+
+    def __armEarnedCounterForTelegraph(self, avId, move):
+        """Arm earned counter across telegraph delay + punish window."""
+        if avId is None:
+            return
+        if not CorruptionGlobals.isDedicatedTelegraphCounterMove(
+                self.archetype, move):
+            return
+        now = globalClock.getFrameTime()  # noqa: F821
+        delay = float(self.__telegraphDelayForMove(move))
+        window = float(getattr(
+            HackSlashConfig, 'PERFECT_DODGE_COUNTER_WINDOW_SEC', 0.50))
+        # Cover mid-telegraph interrupt (before client arm delay) through the
+        # post-telegraph punish window — matches client counter eligibility.
+        self.__armEarnedCounter(avId, until=now + delay + window)
 
     def __applyJuggleHangStun(self, hitIndex):
         """Pause chase/attack for launch hang so cancel→slam sticks."""
@@ -561,6 +672,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         # Pass move id so client Overlord AV can read rain vs slam vs ink_surge
         # (and street kits keep their own attackMove string).
         self.sendUpdate('announceAttackTelegraph', [str(move or '')])
+        # Server-arm earned counter for dedicated telegraph punish windows so
+        # client PERFECT_DODGE bits are not spoofable without an earn.
+        self.__armEarnedCounterForTelegraph(
+            getattr(target, 'doId', self._targetId), move)
         delay = self.__telegraphDelayForMove(move)
         taskMgr.doMethodLater(
             delay,
@@ -883,6 +998,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 dx, dy, radius)
             if iframes and (inSplash or dist <= max(radius, nearMiss)):
                 spit['anyDodge'] = True
+                if doId:
+                    self.__armEarnedCounter(doId, now=now)
                 continue
             if not inSplash:
                 continue
@@ -935,6 +1052,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             iframes = now < iframeUntil
             if iframes and dist <= max(hitRange, nearMiss):
                 anyDodge = True
+                self.__armEarnedCounter(
+                    getattr(target, 'doId', None), now=now)
                 continue
             if dist > hitRange:
                 continue
@@ -1053,6 +1172,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             iframes = now < iframeUntil
             if iframes and dist <= max(hitRange, nearMiss):
                 anyDodge = True
+                self.__armEarnedCounter(
+                    getattr(target, 'doId', None), now=now)
                 continue
             if dist > hitRange:
                 continue
@@ -1192,6 +1313,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             iframes = now < iframeUntil
             if iframes and dist <= max(hitRange, nearMiss):
                 anyDodge = True
+                self.__armEarnedCounter(
+                    getattr(toon, 'doId', None), now=now)
                 continue
             if dist > hitRange:
                 continue
@@ -1465,6 +1588,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             iframes = now < iframeUntil
             if iframes and dist <= max(hitRange, nearMiss):
                 anyDodge = True
+                self.__armEarnedCounter(
+                    getattr(target, 'doId', None), now=now)
                 continue
             if dist > hitRange:
                 continue
@@ -1556,6 +1681,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             iframes = now < iframeUntil
             if iframes and dist <= max(hitRange, nearMiss):
                 anyDodge = True
+                self.__armEarnedCounter(
+                    getattr(target, 'doId', None), now=now)
                 continue
             if dist > hitRange:
                 continue
@@ -1607,7 +1734,7 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.notify.debug(
                 'attack dodged — av %s i-framed (dist=%.2f move=%s)' % (
                     self._targetId, dist, move))
-            self.sendUpdate('announceAttackDodged', [])
+            self.__announceAttackDodged(self._targetId)
             return Task.done
         if dist > hitRange:
             return Task.done
