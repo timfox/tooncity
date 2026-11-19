@@ -26,7 +26,8 @@ WAVE_MAX_EXTRA = 3
 ELITE_HP_MULT = 1.35
 ELITE_DAMAGE_MULT = 1.4
 ELITE_NAME_PREFIX = 'Elite '
-# Damage keys scaled on elite packs (archetype attack / secondary hits).
+# Damage keys scaled on elite packs (archetype attack / secondary hits
+# plus puddle/rain/slam/surge linger DoT ticks).
 ELITE_DAMAGE_STAT_KEYS = (
     'attackDamage',
     'dashDamage',
@@ -36,6 +37,11 @@ ELITE_DAMAGE_STAT_KEYS = (
     'lungeDamage',
     'burstDamage',
     'surgeDamage',
+    # Linger tick DoTs — elite packing buffs floor hazards too.
+    'puddleLingerTickDamage',
+    'rainLingerTickDamage',
+    'slamLingerTickDamage',
+    'surgeLingerTickDamage',
 )
 
 # Between-wave ambush: short delayed pack after a cleared wave, before the
@@ -1478,7 +1484,8 @@ def applyWaveDamageMultToStats(stats, mods):
     """Return a new stats dict with damage keys scaled by waveDamageMult.
 
     Scales attackDamage plus secondary kit damages (dash / slam / spit trail
-    / splat / …). Non-damage keys pass through unchanged.
+    / splat / …) and linger tick DoTs (puddle / rain / slam / surge).
+    Non-damage keys pass through unchanged.
     """
     base = dict(stats or {})
     mult = waveDamageMult(mods)
