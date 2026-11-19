@@ -4,8 +4,10 @@ After Corrupted Oswald chase clear, TTC fog goes pristine again — this
 module adds an authored world placemarker + tip so soft-end closure is
 not HUD plate / HUB_VICTORY_TIP alone. Complements HubStainConfront
 (pending-stain confront). Celebration + Oswald absence confirmation on
-the washed plaza. Not cream FX, not OswaldPresence deepen. Toontown
-spiritual sequel — no KH branding.
+the washed plaza. After the placemarker lands, sends hubEpilogueBeatShown;
+PlayEntry tip-latches the post-wash F/C strip and OswaldPresence
+soft-clears the trusted face (orphan → accept; no cream deepen).
+Toontown spiritual sequel — no KH branding.
 """
 
 from __future__ import annotations
@@ -180,9 +182,24 @@ class HubEpilogueBeatClient(DirectObject):
         self._placeMarkerNearAvatar()
         self._flashTip()
         self._shown = True
+        # One-shot post-wash tip latch + Oswald soft-clear: PlayEntry /
+        # OswaldPresence accept hubEpilogueBeatShown (orphan → accept).
         try:
-            messenger.send(  # noqa: F821
-                'hubEpilogueBeatShown', [hubStainZone()])
+            from toontown.campaign.PlayEntry import ensurePlayEntryClient
+            ensurePlayEntryClient()
+        except Exception:
+            pass
+        try:
+            from toontown.campaign.OswaldPresence import (
+                ensureOswaldPresenceClient)
+            ensureOswaldPresenceClient()
+        except Exception:
+            pass
+        shownMsg = getattr(
+            CampaignGlobals, 'HUB_EPILOGUE_BEAT_SHOWN_MSG',
+            'hubEpilogueBeatShown')
+        try:
+            messenger.send(shownMsg, [hubStainZone()])  # noqa: F821
         except Exception:
             pass
 

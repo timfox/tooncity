@@ -1970,7 +1970,12 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                   '_showFinalePhaseStingPlate')),
                 ('toontown/campaign/PlayEntry.py',
                  ('finalePhaseStingBanner', '_onFinalePhaseStingBanner',
-                  'finalePhaseStingTipText')),
+                  'finalePhaseStingTipText',
+                  'hubEpilogueBeatShown', '_onHubEpilogueBeatShown',
+                  'hubEpilogueBeatLatchTipText')),
+                ('toontown/campaign/OswaldPresence.py',
+                 ('hubEpilogueBeatShown', '_onHubEpilogueBeatShown',
+                  '_postWashCleared')),
                 ):
             path = REPO_ROOT / rel
             self.assertTrue(path.is_file(), msg='missing %s' % rel)
@@ -2008,7 +2013,10 @@ class HeadlessLoopFlowTest(unittest.TestCase):
                 'LOOPY_APPROACH_TIP_DELAY_SEC',
                 'FINALE_PHASE_STING_BANNER_MSG',
                 'FINALE_PHASE_STING_PLATE_ENABLED',
-                'FINALE_PHASE_STING_TIP_ENABLED'):
+                'FINALE_PHASE_STING_TIP_ENABLED',
+                'HUB_EPILOGUE_BEAT_SHOWN_MSG',
+                'HUB_EPILOGUE_BEAT_TIP_LATCH_ENABLED',
+                'HUB_EPILOGUE_BEAT_PRESENCE_CLEAR_ENABLED'):
             self.assertIn(name, camp_names)
         self.assertTrue(camp.VICTORY_TWIST_CONFETTI_ENABLED)
         self.assertGreater(camp.SILLY_APPROACH_TIP_DELAY_SEC, 0.0)
@@ -2331,10 +2339,19 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             self.assertIn(sym, epi_names)
         epi_src = _read(epi_rel)
         self.assertIn('hubEpilogueBeatWanted', epi_src)
+        self.assertIn('hubEpilogueBeatShown', epi_src)
+        self.assertIn('HUB_EPILOGUE_BEAT_SHOWN_MSG', epi_src)
+        self.assertIn('ensurePlayEntryClient', epi_src)
+        self.assertIn('ensureOswaldPresenceClient', epi_src)
         self.assertIn('hubStainCleared', epi_src)
         self.assertIn('oswaldBetrayalChaseCleared', epi_src)
         self.assertIn('campaignEpilogue', epi_src)
         self.assertIn('campaignProgressSync', epi_src)
+        self.assertEqual(camp.HUB_EPILOGUE_BEAT_SHOWN_MSG, 'hubEpilogueBeatShown')
+        self.assertTrue(camp.HUB_EPILOGUE_BEAT_TIP_LATCH_ENABLED)
+        self.assertTrue(camp.HUB_EPILOGUE_BEAT_PRESENCE_CLEAR_ENABLED)
+        latch_tip = camp.hubEpilogueBeatLatchTipText(face='Oswald')
+        self.assertIn('plaza washed', latch_tip.lower())
         tt = _read('toontown/safezone/TTPlayground.py')
         self.assertIn('refreshHubStainConfront', tt)
         self.assertIn('stopHubStainConfront', tt)
@@ -2350,6 +2367,11 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('ensureHubEpilogueBeatClient', play_src)
         self.assertIn('refreshHubEpilogueBeat', play_src)
         self.assertIn('clearHubEpilogueBeat', play_src)
+        self.assertIn('_onHubEpilogueBeatShown', play_src)
+        self.assertIn('hubEpilogueBeatShown', play_src)
+        presence_src = _read('toontown/campaign/OswaldPresence.py')
+        self.assertIn('_onHubEpilogueBeatShown', presence_src)
+        self.assertIn('hubEpilogueBeatShown', presence_src)
         # Confront clear stays separate from washed-plaza beat module.
         confront_src = _read('toontown/campaign/HubStainConfront.py')
         self.assertIn('_onHubStainCleared', confront_src)

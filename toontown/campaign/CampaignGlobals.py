@@ -47,8 +47,37 @@ HUB_EPILOGUE_BEAT_TIP = (
     "Toon Central plaza is washed clean — Oswald's absence holds. "
     'Replay from hub / C on Loopy!  |  F fight  |  C campaign')
 HUB_EPILOGUE_BEAT_FORWARD = 5.5
+# HubEpilogueBeat sends hubEpilogueBeatShown after the washed-plaza
+# placemarker. PlayEntry + OswaldPresence accept for a one-shot post-wash
+# tip latch + Oswald soft-clear (orphan → accept; no cream deepen / no KH).
+HUB_EPILOGUE_BEAT_SHOWN_MSG = 'hubEpilogueBeatShown'
+HUB_EPILOGUE_BEAT_TIP_LATCH_ENABLED = True
+HUB_EPILOGUE_BEAT_PRESENCE_CLEAR_ENABLED = True
+# Tip-bar latch under purity meter (PlayEntry). World placemarker tip stays
+# HUB_EPILOGUE_BEAT_TIP; this is the discoverable F/C strip upgrade once the
+# washed beat lands.
+HUB_EPILOGUE_BEAT_LATCH_TIP = (
+    "%s: plaza washed — Oswald's absence holds. "
+    'Replay from hub / C on Loopy!')
 # Alias used by handoff / PlayEntry celebration UX.
 RECLAIM_FACE = PROTAGONIST
+
+
+def hubEpilogueBeatShownMsgName():
+    """Messenger name HubEpilogueBeat sends; PlayEntry / OswaldPresence accept."""
+    return HUB_EPILOGUE_BEAT_SHOWN_MSG
+
+
+def hubEpilogueBeatLatchTipText(face=None):
+    """PlayEntry one-shot tip latch after washed-plaza beat shows."""
+    face = face or RECLAIM_FACE
+    template = HUB_EPILOGUE_BEAT_LATCH_TIP
+    try:
+        return template % face
+    except Exception:
+        return (
+            '%s: plaza washed — Oswald\'s absence holds. '
+            'Replay from hub / C on Loopy!' % face)
 
 # Per reclaim: multiplicative bump applied to HackSlashConfig.COMBO_DAMAGE.
 POWER_BUMP_PER_RECLAIM = 0.08

@@ -520,7 +520,9 @@ Gagster lob; interrupt ≠ counter). Full dialogue is out of scope here.
    chase spawn (`OSWALD_BETRAYAL_CHASE_*`; tip + melee arm on client) →
    chase clear → **campaign epilogue** soft-end handoff
    (`CAMPAIGN_EPILOGUE_*` / `oswaldBetrayalChaseCleared`) + hub victory
-   replay tip (`HUB_VICTORY_TIP`) so twist→soft-end has an authored beat.
+   replay tip (`HUB_VICTORY_TIP`) + washed-plaza beat
+   (`hubEpilogueBeatShown` → PlayEntry post-wash tip latch +
+   OswaldPresence soft-clear) so twist→soft-end has an authored beat.
 
 Debug Overlord AI without the full campaign: `~spawnoverlord` (P1) /
 `~spawnoverlord 1 160 2` (P2) / `~spawncorrupt 1 90 0 1`.
