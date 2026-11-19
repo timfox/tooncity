@@ -1,0 +1,28 @@
+#usda 1.0
+(
+    "Toon City USD — Loopy Lane street base layer. "
+    "Geometry / vis refs + TcStreetRoot zone metadata. "
+    "Pack overlay and looks compose on top (see compose.py)."
+)
+
+def Xform "LoopyLane" (
+    customData = {
+        string tc:kind = "TcStreetRoot"
+        int tc:zoneId = 2200
+        string tc:hood = "TT"
+        string tc:bamPath = "phase_5/models/neighborhoods/toontown_central_2100.bam"
+        string tc:dnaStorage = "phase_5/dna/storage_TT_town.dna"
+        string tc:dnaStreet = "phase_5/dna/toontown_central_2200.dna"
+    }
+)
+{
+    def Xform "VisGroups" (
+        customData = {
+            string tc:kind = "TcProp"
+            string tc:role = "vis_placeholder"
+            string tc:bamPath = "phase_5/models/neighborhoods/toontown_central_2100.bam"
+        }
+    )
+    {
+    }
+}
