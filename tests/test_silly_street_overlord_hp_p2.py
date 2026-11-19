@@ -158,9 +158,16 @@ class SillyStreetOverlordHpP2Tests(unittest.TestCase):
         # Promote must re-apply Overlord combat stats via setFinalePhase.
         promote_idx = src.find('def promoteFinalePhase')
         self.assertGreater(promote_idx, 0)
-        snip = src[promote_idx:promote_idx + 700]
+        snip = src[promote_idx:promote_idx + 1200]
         self.assertIn('setFinalePhase', snip)
         self.assertIn('__interruptAttackForPhasePromote', snip)
+        # Elite land-hit buff survives P2 rebuild (TC-427).
+        self.assertIn('elite', snip.lower())
+        self.assertIn('_reapplyEliteDamageMods', src)
+        apply_idx = src.find('def _applyOverlordCombatStats')
+        self.assertGreater(apply_idx, 0)
+        apply_snip = src[apply_idx:apply_idx + 1600]
+        self.assertIn('_reapplyEliteDamageMods', apply_snip)
 
     def test_client_twist_gated_on_start_phase(self):
         """Street HP-threshold P2 must not fire Oswald twist on clear."""

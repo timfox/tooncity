@@ -73,6 +73,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._rainLinger = None
         self._slamLinger = None
         self._inkSurgeLinger = None
+        # Elite / wave damage mods from reclaim director — remembered so
+        # Overlord P2 promote (rebuilds _stats) can re-apply the land-hit buff.
+        self._eliteDamageMods = None
         self.finalePhase = 0
         self.setFinalePhase(finalePhase)
 
@@ -108,12 +111,45 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self.finalePhase = CorruptionGlobals.normalizeFinalePhase(phase)
         self._applyOverlordCombatStats()
 
+    def setEliteDamageMods(self, mods):
+        """Remember elite / wave damage mods for re-apply after phase promote.
+
+        Reclaim director stashes these at spawn. ``_applyOverlordCombatStats``
+        rebuilds ``_stats`` from archetype + phase combat only — without a
+        re-apply, Unleash would silently drop the elite land-hit buff.
+        """
+        if mods and isinstance(mods, dict):
+            self._eliteDamageMods = dict(mods)
+        else:
+            self._eliteDamageMods = None
+
+    def getEliteDamageMods(self):
+        mods = self._eliteDamageMods
+        return dict(mods) if isinstance(mods, dict) else None
+
+    def _reapplyEliteDamageMods(self):
+        """Scale land-hit damage keys by remembered elite / wave mods."""
+        mods = self._eliteDamageMods
+        if not mods:
+            return
+        stats = getattr(self, '_stats', None)
+        if not isinstance(stats, dict):
+            return
+        try:
+            from toontown.reclaim import ReclaimGlobals
+        except ImportError:
+            return
+        if not ReclaimGlobals.waveIsElite(mods):
+            return
+        self._stats = ReclaimGlobals.applyWaveDamageMultToStats(stats, mods)
+
     def _applyOverlordCombatStats(self):
         """Overlay Overlord phase combat onto archetype base stats."""
         base = CorruptionGlobals.archetypeStats(self.archetype)
         combat = CorruptionGlobals.overlordPhaseCombat(self.finalePhase)
         if not combat:
             self._stats = dict(base)
+            self._reapplyEliteDamageMods()
             return
         merged = dict(base)
         for key in (
@@ -139,6 +175,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             if key in combat:
                 merged[key] = combat[key]
         self._stats = merged
+        # Elite twins that promote Rising→Unleash mid-fight keep land-hit buff.
+        self._reapplyEliteDamageMods()
 
     def _isOverlord(self):
         return int(self.finalePhase) >= 1
@@ -147,7 +185,9 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         """Mid-fight Overlord phase promote (street HP-threshold Unleash).
 
         Applies P2 combat stats and cancels an in-flight telegraph so the
-        next wind-up uses rain/surge/slam enrage. Client AV reads phase from
+        next wind-up uses rain/surge/slam enrage. Elite damage mods stashed
+        at spawn are re-applied inside ``_applyOverlordCombatStats`` so
+        Unleash keeps the elite land-hit buff. Client AV reads phase from
         the reclaim director — no DC finalePhase field required.
         """
         newPhase = CorruptionGlobals.normalizeFinalePhase(phase)
