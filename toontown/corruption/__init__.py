@@ -5,7 +5,8 @@ chase, and telegraph attacks: Ink Smudge purple ink_dash rush + close
 ink_splat secondary (swarm move identity, not smack fodder), Sludge Brute
 green spit telegraph + AI traveling spit projectile (trail/land splash) with
 close slam secondary + client ink blob on land, Balloon Snare amber
-string-lash + vine zip, Gunk Gagster teal gag-lob puddle trap. Between
+string_lash + close cord_coil secondary + vine zip, Gunk Gagster teal
+gag-lob puddle trap. Between
 telegraphs, IdleInkDripFx plays sparse ambient rubber-hose ink
 drips (archetype-tinted pollution presence) layered with
 IdleCreamDripContrastFx (soft cream / pastel drips — contrast to idle ink)
@@ -61,11 +62,14 @@ Smudge radial hose; telegraph cream warn aftershock grammar). Sludge Brute
 hits and deaths also flash
 BruteSludgeSplashFx (cheap green rubber-hose sludge splash; composes with
 spit / death / idle looks).
-Balloon Snare wind-ups also flash BalloonSnareTelegraphFx (amber
-rubber-hose string-lash pop) and, after the string reads, arm a short
-string-snap counter window into melee (SNARE_STRING_COUNTER_*; synchs
-with hackslash perfect-dodge counter; mid-telegraph melee interrupts
-the wind-up). Successful string-snap punish/counter hits also flash
+Balloon Snare AI uses string_lash (yank) by default and close cord_coil
+AoE when already in their face — Punchline flank multi-note identity,
+not one-note smack fodder. Balloon Snare wind-ups also flash
+BalloonSnareTelegraphFx (amber rubber-hose string-lash / cord-coil wrap
+pop) and, on string_lash / cord_coil, arm a short string-snap counter
+window into melee (SNARE_STRING_COUNTER_*; synchs with hackslash
+perfect-dodge counter; mid-telegraph melee interrupts the wind-up —
+interrupt ≠ counter). Successful string-snap punish/counter hits also flash
 SnareStringCounterCreamSplashFx (deepened cream splash beyond #269 +
 thicker horizontal cream whip filaments + wider sideways cream aftershock
 — sunny cream/pastel juice on the rewarded window; distinct from Gunk

@@ -115,6 +115,7 @@ class EliteWaveModifiersAmbushTests(unittest.TestCase):
         self.assertTrue(rg.ELITE_NAME_PREFIX)
         self.assertTrue(rg.AMBUSH_NAME_PREFIX)
         self.assertIn('attackDamage', rg.ELITE_DAMAGE_STAT_KEYS)
+        self.assertIn('coilDamage', rg.ELITE_DAMAGE_STAT_KEYS)
 
     def test_resolve_wave_modifiers_elite_defaults(self):
         rg = self.rg

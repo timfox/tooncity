@@ -624,11 +624,19 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
             stretch = Point3(*CorruptionGlobals.BRUTE_TELEGRAPH_STRETCH)
         elif isSnare:
             # Amber rubber-hose string lash — horizontal stretch, quick zip.
+            # Close cord_coil uses a tighter vertical wrap telegraph so the
+            # secondary reads as a wrap, not another long rubber stretch.
             charge = Vec4(*CorruptionGlobals.SNARE_TELEGRAPH_CHARGE_COLOR)
             hold = Vec4(*CorruptionGlobals.SNARE_TELEGRAPH_HOLD_COLOR)
-            squash = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_SQUASH)
-            mid = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_MID)
-            stretch = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_STRETCH)
+            if str(moveId or '') == 'cord_coil':
+                squash = Point3(*CorruptionGlobals.SNARE_COIL_TELEGRAPH_SQUASH)
+                mid = Point3(*CorruptionGlobals.SNARE_COIL_TELEGRAPH_MID)
+                stretch = Point3(
+                    *CorruptionGlobals.SNARE_COIL_TELEGRAPH_STRETCH)
+            else:
+                squash = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_SQUASH)
+                mid = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_MID)
+                stretch = Point3(*CorruptionGlobals.SNARE_TELEGRAPH_STRETCH)
         elif isGagster:
             # Teal gag-lob wind-up — crouch then upward toss stretch.
             charge = Vec4(*CorruptionGlobals.GAGSTER_TELEGRAPH_CHARGE_COLOR)
@@ -718,11 +726,17 @@ class DistributedCorruptToon(DistributedNode.DistributedNode, HackSlashTarget):
         else:
             self.__clearBruteTelegraphSpit()
             self.__clearBruteSpitCounter()
-        # Balloon Snare-only: amber string-lash telegraph pop for zip/lash read.
+        # Balloon Snare-only: amber string-lash / cord-coil telegraph pop for
+        # zip/lash + close wrap read. string_lash / cord_coil both arm the
+        # string-snap dedicated counter→melee window (thin messenger hook;
+        # interrupt ≠ counter; both notes are string telegraphs).
         if isSnare and not look:
             self.__playSnareTelegraphString()
-            # After the string pops readable, arm a short punish→melee window.
-            self.__scheduleSnareStringSnapCounter()
+            if ((not telegraphMove) or telegraphMove in (
+                    'string_lash', 'cord_coil', 'smack')):
+                self.__scheduleSnareStringSnapCounter()
+            else:
+                self.__clearSnareStringSnapCounter()
         else:
             self.__clearSnareTelegraphString()
             self.__clearSnareStringSnapCounter()

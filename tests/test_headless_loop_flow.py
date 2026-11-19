@@ -793,6 +793,14 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(brute.get('attackMove'), 'spit')
         self.assertTrue(cg.BRUTE_SPIT_PROJECTILE_ENABLED)
         self.assertTrue(cg.BRUTE_SLAM_SECONDARY_ENABLED)
+        snare = cg.ARCHETYPE_STATS[cg.ARCHETYPE_SNARE]
+        self.assertEqual(snare.get('attackMove'), 'string_lash')
+        self.assertTrue(cg.SNARE_STRING_KIT_ENABLED)
+        self.assertTrue(cg.SNARE_CORD_COIL_SECONDARY_ENABLED)
+        self.assertEqual(
+            cg.snarePickAttackMove(8.0, snare), 'string_lash')
+        self.assertEqual(
+            cg.snarePickAttackMove(1.0, snare), 'cord_coil')
         oswald = cg.ARCHETYPE_STATS[cg.ARCHETYPE_CORRUPT_OSWALD]
         self.assertEqual(oswald.get('attackMove'), 'betrayal_lunge')
         self.assertTrue(cg.OSWALD_BETRAYAL_KIT_ENABLED)
@@ -1446,11 +1454,13 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertGreater(fail_h, 0)
         fail_body = play_src[fail_h:play_src.find('\n    def ', fail_h + 1)]
         self.assertIn('self._reclaimLive = False', fail_body)
-        # All corrupt damage paths (incl. stain_burst / ink_splat) share KO helper.
+        # All corrupt damage paths (incl. stain_burst / ink_splat / cord_coil)
+        # share KO helper.
         for needle in (
                 '__damageToonAndCheckReclaimKo',
                 "context='stain_burst'",
                 "context='ink_splat'",
+                "context='cord_coil'",
                 'failStreetOnKnockout'):
             self.assertIn(needle, corrupt_ai, msg='KO path missing %s' % needle)
 

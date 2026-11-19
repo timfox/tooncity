@@ -36,6 +36,7 @@ ELITE_DAMAGE_STAT_KEYS = (
     'lungeDamage',
     'burstDamage',
     'surgeDamage',
+    'coilDamage',
 )
 
 # Between-wave ambush: short delayed pack after a cleared wave, before the
@@ -1478,7 +1479,7 @@ def applyWaveDamageMultToStats(stats, mods):
     """Return a new stats dict with damage keys scaled by waveDamageMult.
 
     Scales attackDamage plus secondary kit damages (dash / slam / spit trail
-    / splat / …). Non-damage keys pass through unchanged.
+    / splat / coil / …). Non-damage keys pass through unchanged.
     """
     base = dict(stats or {})
     mult = waveDamageMult(mods)

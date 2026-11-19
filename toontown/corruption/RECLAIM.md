@@ -434,13 +434,18 @@ gameplay timing only; interrupt ≠ counter).
 ~spawncorrupt 1 0 2
 # or ~spawnsnare 1 0 2
 ~hackslash 0
-# Snare: amber horizontal rubber stretch + string-lash telegraph pop
-# (BalloonSnareTelegraphFx) + vine zip SFX; string line snaps on hit and
-# reels the toon a short planar yank toward the zip-flier (not damage-only).
-# After the string telegraph reads, a short string-snap counter window
-# arms — F / LMB for a bumped snappy punish opener (same reward path as
-# perfect-dodge counter); melee mid-telegraph interrupts the wind-up
-# (shared AI path with Brute spit / Gagster lob).
+# Snare AI uses string_lash (long rubber-hose reach + planar yank) by
+# default and close cord_coil AoE when already in their face — Punchline
+# flank multi-note identity, not one-note smack fodder. Role AI flanks
+# (ROLE_FLANK). Client: amber horizontal rubber stretch on string_lash /
+# vertical wrap on cord_coil (BalloonSnareTelegraphFx) + vine zip SFX;
+# string line snaps on hit and reels the toon toward the zip-flier
+# (not damage-only). After the string telegraph reads, a short string-snap
+# counter window arms — F / LMB for a bumped snappy punish opener (same
+# reward path as perfect-dodge counter); melee mid-telegraph interrupts
+# the wind-up (shared AI path with Brute spit / Gagster lob).
+# Mid-string_lash / mid-cord_coil both cancel via SNARE_STRING_COUNTER_INTERRUPT
+# and arm SNARE_STRING_COUNTER_* (interrupt ≠ counter).
 # Land F / LMB — cheap amber string-snap splash (SnareStringSnapSplashFx)
 # on each hit; a successful string-snap counter punish also fires a deepened
 # cream splash beyond #269 + thicker horizontal cream whip filaments +

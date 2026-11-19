@@ -35,6 +35,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     close ``ink_splat`` AoE secondary — swarm pressure with move identity,
     not default smack fodder.
 
+    Balloon Snare (Punchline flank) uses ``string_lash`` (yank) plus close
+    ``cord_coil`` AoE secondary — multi-note zip-flier identity, not
+    one-note smack fodder.
+
     Air-juggle hang stuns chase/attack on the AI so cancel→slam is not just
     client juice under multi-enemy pressure.
     """
@@ -232,11 +236,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         damage = max(0, int(amount))
         newHp = max(0, self.hp - damage)
         self.b_setHp(newHp)
-        # Melee mid-telegraph punish: cancel Snare string / Brute spit /
-        # Gagster lob / Overlord rain·slam·ink_surge / Smudge ink_dash·
-        # ink_splat / Oswald betrayal_lunge·stain_burst wind-ups so street
-        # kits, swarm adds, climax, and twist chase telegraphs feel fair
-        # to interrupt.
+        # Melee mid-telegraph punish: cancel Snare string_lash·cord_coil /
+        # Brute spit / Gagster lob / Overlord rain·slam·ink_surge / Smudge
+        # ink_dash·ink_splat / Oswald betrayal_lunge·stain_burst wind-ups so
+        # street kits, swarm adds, climax, and twist chase telegraphs feel
+        # fair to interrupt.
         if newHp > 0:
             self.__maybeInterruptMeleeTelegraph()
         if newHp <= 0:
@@ -709,6 +713,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                     and move in ('betrayal_lunge', 'smack')):
                 move = CorruptionGlobals.oswaldPickAttackMove(
                     self.__planarDist(target), self._stats)
+            # Balloon Snare: string-lash by default; cord coil when in their face.
+            elif (aid == CorruptionGlobals.ARCHETYPE_SNARE
+                    and move in ('string_lash', 'smack')):
+                move = CorruptionGlobals.snarePickAttackMove(
+                    self.__planarDist(target), self._stats)
             # Gunk Gagster: snapshot target XY at wind-up so the puddle lands
             # where they stood — dodge out during telegraph to escape the trap.
             if move == 'gag_lob':
@@ -774,6 +783,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'splatTelegraphDelay',
                 self._stats.get(
                     'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
+        if move == 'cord_coil':
+            return float(self._stats.get(
+                'coilTelegraphDelay',
+                self._stats.get(
+                    'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY)))
         return float(self._stats.get(
             'telegraphDelay', CorruptionGlobals.ATTACK_TELEGRAPH_DELAY))
 
@@ -796,6 +810,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         if move == 'ink_splat':
             return float(self._stats.get(
                 'splatCooldown',
+                self._stats.get(
+                    'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
+        if move == 'cord_coil':
+            return float(self._stats.get(
+                'coilCooldown',
                 self._stats.get(
                     'attackCooldown', CorruptionGlobals.ATTACK_COOLDOWN)))
         return float(self._stats.get(
@@ -855,6 +874,13 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                     'attackNearMissRange',
                     CorruptionGlobals.ATTACK_NEAR_MISS_RANGE)))
             return hit, near
+        if move == 'cord_coil':
+            hit = float(self._stats.get(
+                'coilHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
+            near = float(self._stats.get(
+                'coilNearMissRange',
+                CorruptionGlobals.ATTACK_NEAR_MISS_RANGE))
+            return hit, near
         hit = float(self._stats.get(
             'attackHitRange', CorruptionGlobals.ATTACK_HIT_RANGE))
         near = float(self._stats.get(
@@ -886,6 +912,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return int(self._stats.get(
                 'dashDamage',
                 self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
+        if move == 'cord_coil':
+            return int(self._stats.get(
+                'coilDamage',
+                self._stats.get('attackDamage', CorruptionGlobals.ATTACK_DAMAGE)))
         return int(self._stats.get(
             'attackDamage', CorruptionGlobals.ATTACK_DAMAGE))
 
@@ -915,6 +945,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return self.__resolveInkSplat()
         if move == 'ink_dash':
             return self.__resolveInkDash()
+        if move == 'cord_coil':
+            return self.__resolveSnareCordCoil()
+        if move == 'string_lash':
+            return self.__resolveSnareStringLash()
         return self.__resolveSingleTargetHit(move)
 
     def __resolveBruteSpit(self):
@@ -1776,6 +1810,70 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self.setPos(nx, ny, sz)
         self.setH(heading)
         self.sendUpdate('setXYZH', [nx, ny, sz, heading])
+
+    def __resolveSnareStringLash(self):
+        """Flank zip: single-target string-lash + planar yank toward the Snare.
+
+        Default Balloon Snare attackMove — long rubber-hose reach that reels
+        the toon in. Falls back to smack when the string kit is disabled.
+        Damage routes through ``__damageToonAndCheckReclaimKo`` via the
+        shared single-target path (yank applied there for Snare).
+        """
+        if not getattr(CorruptionGlobals, 'SNARE_STRING_KIT_ENABLED', True):
+            return self.__resolveSingleTargetHit('smack')
+        return self.__resolveSingleTargetHit('string_lash')
+
+    def __resolveSnareCordCoil(self):
+        """Close rubber-hose cord coil — self-centered AoE when Snare is pressed.
+
+        Punchline flank secondary: tighter wrap than the long string_lash,
+        still yanks hit toons so the string identity stays. Distinct from
+        Smudge ink_splat (no yank) and Oswald stain_burst (shove). Dodge
+        out of the coil radius during telegraph to escape. Damage routes
+        through ``__damageToonAndCheckReclaimKo`` only.
+        """
+        if not getattr(CorruptionGlobals, 'SNARE_STRING_KIT_ENABLED', True):
+            return self.__resolveSingleTargetHit('smack')
+        if not getattr(
+                CorruptionGlobals, 'SNARE_CORD_COIL_SECONDARY_ENABLED', True):
+            return self.__resolveSnareStringLash()
+        try:
+            ox = float(self.getX())
+            oy = float(self.getY())
+        except Exception:
+            return Task.done
+        hitRange, nearMiss = self.__hitRangesForMove('cord_coil')
+        dmg = self.__damageForMove('cord_coil')
+        now = globalClock.getFrameTime()  # noqa: F821
+        anyHit = False
+        anyDodge = False
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - ox
+                dy = float(target.getY()) - oy
+            except Exception:
+                continue
+            dist = math.sqrt(dx * dx + dy * dy)
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            iframes = now < iframeUntil
+            if iframes and dist <= max(hitRange, nearMiss):
+                anyDodge = True
+                self.__armEarnedCounter(
+                    getattr(target, 'doId', None), now=now)
+                continue
+            if dist > hitRange:
+                continue
+            if self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='cord_coil'):
+                anyHit = True
+                # String identity — reel each hit toon toward the zip-flier.
+                self.__yankTargetTowardSnare(target)
+        if anyHit:
+            self.sendUpdate('announceAttackHit', [])
+        elif anyDodge:
+            self.sendUpdate('announceAttackDodged', [])
+        return Task.done
 
     def __resolveSingleTargetHit(self, move='smack'):
         target = self.air.doId2do.get(self._targetId)

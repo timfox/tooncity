@@ -79,18 +79,30 @@ ARCHETYPE_STATS = {
         'slamTelegraphDelay': 0.55,
         'slamCooldown': 2.0,
     },
-    # Punchline zip-flier: fragile balloon that lashes with a rubber-hose string.
+    # Punchline zip-flier: fragile balloon that lashes with a rubber-hose
+    # string (default string_lash + yank) + close cord_coil secondary when
+    # already in their face — multi-note flank kit like Smudge/Brute/Oswald.
     ARCHETYPE_SNARE: {
         'name': 'Balloon Snare',
         'hpScale': 0.7,
         'chaseSpeed': 13.5,
         'meleeRange': 3.8,
         'attackHitRange': 7.2,  # string-lash reach
+        'attackNearMissRange': 8.2,
         'attackDamage': 2,
         'telegraphDelay': 0.38,
         'attackCooldown': 1.35,
         'actorScale': 0.82,
         'actorTint': (0.55, 0.22, 0.08, 1.0),
+        # Flank zip — string lash then yank (default attackMove).
+        'attackMove': 'string_lash',
+        # Close secondary — rubber-hose cord coil AoE when already in face.
+        'coilMeleeRange': 2.6,
+        'coilHitRange': 3.4,
+        'coilNearMissRange': 4.4,
+        'coilDamage': 3,
+        'coilTelegraphDelay': 0.28,
+        'coilCooldown': 1.15,
     },
     # Punchline gag-lobber: stands back, telegraphs a bounce-bomb, then
     # resolves a teal puddle trap at the target's wind-up position (AoE
@@ -2150,6 +2162,49 @@ def snareLashYankPos(sx, sy, tx, ty, dist=None, stop=None):
 
 
 # ---------------------------------------------------------------------------
+# Balloon Snare string-lash + cord-coil secondary (gameplay identity).
+# Gap scan #5: Punchline flank was one-note smack+yank while Smudge/Brute/
+# Oswald/Overlord are multi-note. SNARE_STRING_KIT_ENABLED = False restores
+# legacy smack. SNARE_CORD_COIL_SECONDARY_ENABLED = False keeps lash-only.
+# Wired from DistributedCorruptToonAI.__beginAttack / __resolveSnare*.
+# Not cream FX deepen. No keyblades / KH branding.
+# ---------------------------------------------------------------------------
+SNARE_STRING_KIT_ENABLED = True
+SNARE_CORD_COIL_SECONDARY_ENABLED = True
+SNARE_CORD_COIL_MELEE_RANGE = 2.6  # pick coil when inside this engage
+
+# Client telegraph for cord_coil — vertical wrap vs horizontal string_lash.
+# Same amber charge/hold colors; squash/stretch swap so the close secondary
+# reads as a wrap, not another long rubber stretch. Thin AV only.
+SNARE_COIL_TELEGRAPH_SQUASH = (1.35, 1.35, 0.58)
+SNARE_COIL_TELEGRAPH_MID = (1.1, 1.1, 1.05)
+SNARE_COIL_TELEGRAPH_STRETCH = (0.68, 0.68, 1.95)
+
+
+def snareCoilMeleeRange(stats=None):
+    if stats and 'coilMeleeRange' in stats:
+        return max(0.5, float(stats['coilMeleeRange']))
+    return max(0.5, float(SNARE_CORD_COIL_MELEE_RANGE))
+
+
+def snarePickAttackMove(dist, stats=None):
+    """Choose Balloon Snare ``string_lash`` vs close ``cord_coil``.
+
+    String lash is the default attackMove (flank zip + yank). Cord coil is
+    the close secondary when the toon is inside coilMeleeRange. Returns
+    ``string_lash`` when the kit or coil secondary is off; ``smack`` when
+    the whole kit is disabled.
+    """
+    if not SNARE_STRING_KIT_ENABLED:
+        return 'smack'
+    if not SNARE_CORD_COIL_SECONDARY_ENABLED:
+        return 'string_lash'
+    if float(dist) <= snareCoilMeleeRange(stats):
+        return 'cord_coil'
+    return 'string_lash'
+
+
+# ---------------------------------------------------------------------------
 # Ink Smudge ink-dash + splat secondary (gameplay identity).
 # Gap scan #7: Act 1 spine + Overlord P2 adds were default smack fodder while
 # Brute/Snare/Gagster/Oswald had distinct kits. INK_SMUDGE_KIT_ENABLED = False
@@ -2528,7 +2583,8 @@ INK_SPLAT_COUNTER_EVENT = 'corruptInkSplatCounter'
 def isMeleeInterruptibleTelegraph(archetype, move):
     """True when stretch-punch mid-telegraph should cancel this wind-up.
 
-    Snare: any string telegraph when SNARE_STRING_COUNTER_INTERRUPT.
+    Snare: any string telegraph (string_lash / cord_coil / smack) when
+    SNARE_STRING_COUNTER_INTERRUPT.
     Brute: spit only (slam stays commit-through).
     Gagster: gag_lob only.
     Overlord (ARCHETYPE_INK + rain/slam/ink_surge move ids): when the matching
@@ -2605,7 +2661,8 @@ def snareStringCounterUntil(armedAt, window=None):
 def isDedicatedTelegraphCounterMove(archetype, move):
     """True when this telegraph should arm a Snare-like dedicated counter window.
 
-    Snare: any string telegraph when SNARE_STRING_COUNTER_ENABLED.
+    Snare: any string telegraph (string_lash / cord_coil / smack) when
+    SNARE_STRING_COUNTER_ENABLED.
     Brute: spit only (slam stays commit-through, no counter).
     Gagster: gag_lob only.
     Oswald: betrayal_lunge / stain_burst when the matching COUNTER_ENABLED flag.
