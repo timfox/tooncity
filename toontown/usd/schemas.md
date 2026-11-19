@@ -85,8 +85,18 @@ assembly. Headless map: `toontown.usd.character_kit.load_kit`.
   fallback yet — Actor DNA path stays primary; kit BAM paths are a
   future feature-flagged feed.
 
+## Combat FX sockets → CorruptionGlobals
+
+`fixtures/fx/telegraph_sockets.usda` declares empty `TcFxSocket` Xforms
+for telegraph / hit / death / cream (plus layered cream hooks). Each
+socket carries `tc:consumerKey` naming a `CorruptionGlobals` LOOK
+attribute (`TELEGRAPH_INK_DRIP_LOOK`, `DEATH_POP_LOOK`, …). Headless map:
+`toontown.usd.fx_sockets.load_fx_sockets`. String table only — no mesh
+FX, no Hydra, no gameplay wiring.
+
 ## Fixture reference
 
 See `fixtures/schema_kitchen_sink.usda` for a single ASCII stage that
 declares every kind above with valid LOD names and archetype tokens.
 Character kits live under `fixtures/kits/` (see `ink_smudge_kit.usda`).
+Combat FX sockets live under `fixtures/fx/` (see `telegraph_sockets.usda`).

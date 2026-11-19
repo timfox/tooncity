@@ -1,0 +1,116 @@
+#usda 1.0
+(
+    "Toon City combat FX socket placeholders (telegraph / hit / death / cream). "
+    "Empty Xforms only — no mesh-heavy FX. Each TcFxSocket maps tc:socket to a "
+    "CorruptionGlobals consumer key (LOOK / hook string) used by corrupt "
+    "telegraph and death juice. Headless string table; no Hydra."
+)
+
+def Xform "TelegraphSockets" (
+    customData = {
+        string tc:fixtureId = "telegraph-sockets"
+        string tc:archetype = "ink"
+    }
+)
+{
+    def Xform "FxTelegraph" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "telegraph"
+            string tc:consumerKey = "TELEGRAPH_INK_DRIP_LOOK"
+            string tc:event = "announceAttackTelegraph"
+        }
+    )
+    {
+    }
+
+    def Xform "FxHit" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "hit"
+            string tc:consumerKey = "SMUDGE_INK_SPLASH_LOOK"
+            string tc:event = "attackHit"
+        }
+    )
+    {
+    }
+
+    def Xform "FxDeath" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "death"
+            string tc:consumerKey = "DEATH_POP_LOOK"
+            string tc:event = "deathPop"
+        }
+    )
+    {
+    }
+
+    def Xform "FxCream" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "cream"
+            string tc:consumerKey = "TELEGRAPH_CREAM_WARN_LOOK"
+            string tc:event = "telegraphCreamWarn"
+        }
+    )
+    {
+    }
+
+    # Secondary cream / death cream attach points — still empty Xforms;
+    # consumer keys must exist on CorruptionGlobals (string table only).
+    def Xform "FxDeathCream" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "death_cream"
+            string tc:consumerKey = "DEATH_CREAM_FLECK_LOOK"
+            string tc:event = "deathCreamFleck"
+        }
+    )
+    {
+    }
+
+    def Xform "FxTelegraphCreamSparkle" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "telegraph_cream_sparkle"
+            string tc:consumerKey = "TELEGRAPH_CREAM_SPARKLE_LOOK"
+            string tc:event = "telegraphCreamSparkle"
+        }
+    )
+    {
+    }
+
+    def Xform "FxTelegraphCreamWash" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "telegraph_cream_wash"
+            string tc:consumerKey = "TELEGRAPH_CREAM_WASH_LOOK"
+            string tc:event = "telegraphCreamWash"
+        }
+    )
+    {
+    }
+
+    def Xform "FxDeathCreamSparkle" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "death_cream_sparkle"
+            string tc:consumerKey = "DEATH_CREAM_SPARKLE_LOOK"
+            string tc:event = "deathCreamSparkle"
+        }
+    )
+    {
+    }
+
+    def Xform "FxHitCream" (
+        customData = {
+            string tc:kind = "TcFxSocket"
+            string tc:socket = "hit_cream"
+            string tc:consumerKey = "SMUDGE_HIT_CREAM_SPLASH_LOOK"
+            string tc:event = "hitCreamSplash"
+        }
+    )
+    {
+    }
+}
