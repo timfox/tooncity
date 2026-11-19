@@ -104,6 +104,9 @@ class PlayEntryClient(DirectObject):
         # the stain is washed before the betrayal chase clears.
         self._victoryEpilogue = False
         self._chasePending = False
+        # One-shot post-wash tip latch from hubEpilogueBeatShown (cleared on
+        # replay C / fresh sync).
+        self._postWashTipLatched = False
         self.accept('localAvatarZoneChange', self._onZoneChange)
         self.accept('announceReclaimStart', self._onReclaimStart)
         # KO fail (#323) — clear live latch so same-street R / re-enter retry.
@@ -116,6 +119,11 @@ class PlayEntryClient(DirectObject):
             CampaignGlobals, 'FINALE_PHASE_STING_BANNER_MSG',
             'finalePhaseStingBanner')
         self.accept(stingMsg, self._onFinalePhaseStingBanner)
+        # HubEpilogueBeat washed-plaza beat — one-shot post-wash tip latch.
+        beatMsg = getattr(
+            CampaignGlobals, 'HUB_EPILOGUE_BEAT_SHOWN_MSG',
+            'hubEpilogueBeatShown')
+        self.accept(beatMsg, self._onHubEpilogueBeatShown)
         self.accept('campaignVictory', self._onCampaignVictory)
         self.accept('oswaldBetrayalChaseCleared', self._onCampaignEpilogue)
         self.accept('campaignEpilogue', self._onCampaignEpilogue)
@@ -224,8 +232,12 @@ class PlayEntryClient(DirectObject):
             self._softNextCue = None
             self._softNextZone = None
             self._softNextStreet = None
+            # Relog / hydrate: tip latch is live-only; hub tip uses replay copy.
+            if self._chasePending:
+                self._postWashTipLatched = False
         else:
             self._chasePending = False
+            self._postWashTipLatched = False
             softStreet = mirror.get('softNextStreet')
             if softStreet:
                 self._softNextStreet = softStreet
@@ -723,6 +735,30 @@ class PlayEntryClient(DirectObject):
         if tip:
             self._showTip(tip)
 
+    def _onHubEpilogueBeatShown(self, zoneId=0):
+        """One-shot post-wash tip latch for HubEpilogueBeat placemarker.
+
+        World placemarker + world tip stay on HubEpilogueBeat; tip bar
+        upgrades to plaza-washed absence copy once (survives hub hops via
+        soft-next latch). OswaldPresence soft-clears on the same messenger.
+        No cream deepen / no KH.
+        """
+        if not bool(getattr(
+                CampaignGlobals, 'HUB_EPILOGUE_BEAT_TIP_LATCH_ENABLED', True)):
+            return
+        if self._postWashTipLatched:
+            return
+        self._postWashTipLatched = True
+        self._victoryEpilogue = True
+        self._chasePending = False
+        tip = CampaignGlobals.hubEpilogueBeatLatchTipText(face=_face())
+        if not tip:
+            return
+        self._latchSoftNextCue(
+            tip,
+            nextZone=CampaignGlobals.ACTS[0]['zoneId'],
+            nextStreet=CampaignGlobals.ACTS[0]['name'])
+
     def _actsAroundZone(self, zoneId):
         if zoneId is None:
             return None, None
@@ -753,6 +789,7 @@ class PlayEntryClient(DirectObject):
         if self._victoryEpilogue:
             self._victoryEpilogue = False
             self._chasePending = False
+            self._postWashTipLatched = False
             self._softNextCue = None
             self._softNextZone = None
             self._softNextStreet = None

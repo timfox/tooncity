@@ -171,6 +171,9 @@ class HubEpilogueBeatTests(unittest.TestCase):
         self.assertIn('hubEpilogueBeatLabel', src)
         self.assertIn('hubEpilogueBeatAbsence', src)
         self.assertIn('hubEpilogueBeatShown', src)
+        self.assertIn('HUB_EPILOGUE_BEAT_SHOWN_MSG', src)
+        self.assertIn('ensurePlayEntryClient', src)
+        self.assertIn('ensureOswaldPresenceClient', src)
         self.assertIn('hubStainCleared', src)
         self.assertIn('oswaldBetrayalChaseCleared', src)
         self.assertIn('campaignEpilogue', src)
@@ -179,6 +182,10 @@ class HubEpilogueBeatTests(unittest.TestCase):
         low = src.lower()
         for banned in ('keyblade', 'kingdom hearts', 'cream wash', 'cream hose'):
             self.assertNotIn(banned, low)
+        # Orphan → accept surface.
+        self.assertEqual(
+            self.camp.HUB_EPILOGUE_BEAT_SHOWN_MSG, 'hubEpilogueBeatShown')
+        self.assertTrue(self.camp.HUB_EPILOGUE_BEAT_TIP_LATCH_ENABLED)
 
     def test_ttplayground_and_client_wiring(self):
         tt = _read('toontown/safezone/TTPlayground.py')
@@ -200,6 +207,11 @@ class HubEpilogueBeatTests(unittest.TestCase):
         self.assertIn('refreshHubEpilogueBeat', play)
         self.assertIn('clearHubEpilogueBeat', play)
         self.assertIn('_onCampaignEpilogue', play)
+        self.assertIn('_onHubEpilogueBeatShown', play)
+        self.assertIn('hubEpilogueBeatShown', play)
+        presence = _read('toontown/campaign/OswaldPresence.py')
+        self.assertIn('_onHubEpilogueBeatShown', presence)
+        self.assertIn('hubEpilogueBeatShown', presence)
 
     def test_hub_stain_clear_still_only_clears_confront(self):
         """Confront clears on wash; epilogue beat is a separate module."""

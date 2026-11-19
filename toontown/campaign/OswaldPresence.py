@@ -11,6 +11,8 @@ E-talk soft-nexts from unlock progress (trust ladder mid-act beats).
 Stub-shippable: CardMaker silhouette + nametag (not a full DistributedNPC
 / DNA toon, not companion AI, not cream FX). Suppresses after reveal /
 betrayal chase, including AI-persisted STATE_VICTORY mirrored on login.
+Also soft-clears once on ``hubEpilogueBeatShown`` so washed-plaza absence
+matches the tip latch (orphan → accept; no cream deepen).
 Toontown spiritual sequel — no keyblades / KH branding.
 """
 
@@ -336,6 +338,8 @@ class OswaldPresenceClient(DirectObject):
         self._unlockedThrough = 0
         self._softNextStreet = None
         self._betrayed = False
+        # One-shot soft-clear from hubEpilogueBeatShown (washed-plaza absence).
+        self._postWashCleared = False
         self._markerPos = None
         self._inRange = False
         self._interactArmed = False
@@ -345,6 +349,11 @@ class OswaldPresenceClient(DirectObject):
         self.accept('oswaldRevealSting', self._onBetrayal)
         self.accept('campaignVictory', self._onBetrayal)
         self.accept('oswaldBetrayalChase', self._onBetrayal)
+        # Washed-plaza epilogue beat — soft-clear trusted face once.
+        beatMsg = getattr(
+            CampaignGlobals, 'HUB_EPILOGUE_BEAT_SHOWN_MSG',
+            'hubEpilogueBeatShown')
+        self.accept(beatMsg, self._onHubEpilogueBeatShown)
         # Reclaim purity: director fires npcCheerStub / purityRestoreFx —
         # Oswald body must cheer (local-avatar bounce alone is not enough).
         self.accept('npcCheerStub', self._onReclaimCheer)
@@ -386,6 +395,7 @@ class OswaldPresenceClient(DirectObject):
         self._unlockedThrough = 0
         self._softNextStreet = None
         self._betrayed = False
+        self._postWashCleared = False
 
     def _bootZone(self, task):
         if hasattr(base, 'localAvatar'):  # noqa: F821
@@ -404,6 +414,21 @@ class OswaldPresenceClient(DirectObject):
         self._zoneId = None
         self._greetedZone = None
         self._inRange = False
+
+    def _onHubEpilogueBeatShown(self, zoneId=0):
+        """Accept washed-plaza beat — soft-clear trusted Oswald once.
+
+        Twist→hub closeout confirms Oswald absence on the washed plaza.
+        PlayEntry tip-latches on the same messenger. No cream deepen / no KH.
+        """
+        if not bool(getattr(
+                CampaignGlobals, 'HUB_EPILOGUE_BEAT_PRESENCE_CLEAR_ENABLED',
+                True)):
+            return
+        if self._postWashCleared:
+            return
+        self._postWashCleared = True
+        self._onBetrayal()
 
     def _onCampaignProgressSync(
             self, unlockedThrough=0, state=0, chaseCleared=0, reclaimCount=0):
@@ -431,6 +456,7 @@ class OswaldPresenceClient(DirectObject):
         # Fresh / mid-campaign — trusted face may return (replay wipe).
         wasBetrayed = self._betrayed
         self._betrayed = False
+        self._postWashCleared = False
         self._unlockedThrough = int(mirror.get('unlockedThrough', 0) or 0)
         softStreet = mirror.get('softNextStreet')
         if softStreet:
