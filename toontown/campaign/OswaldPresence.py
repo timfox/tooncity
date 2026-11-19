@@ -8,10 +8,12 @@ spawn-near-avatar CardMaker stub: fixed plaza + ACTS street placement,
 idle bob, and a reclaim cheer beat when a street clears (`npcCheerStub` /
 purity), then vanish for the twist. After ``oswaldCheered``, plaza/street
 E-talk soft-nexts from unlock progress (trust ladder mid-act beats).
-Stub-shippable: CardMaker silhouette + nametag (not a full DistributedNPC
-/ DNA toon, not companion AI, not cream FX). Suppresses after reveal /
-betrayal chase, including AI-persisted STATE_VICTORY mirrored on login.
-Also soft-clears once on ``hubEpilogueBeatShown`` so washed-plaza absence
+Soft-next greet copy deepens unease along the Punchline→Silly unlock
+ladder (stub-safe foreshadow; no twist spoilers). Stub-shippable:
+CardMaker silhouette + nametag (not a full DistributedNPC / DNA toon,
+not companion AI, not cream FX). Suppresses after reveal / betrayal
+chase, including AI-persisted STATE_VICTORY mirrored on login. Also
+soft-clears once on ``hubEpilogueBeatShown`` so washed-plaza absence
 matches the tip latch (orphan → accept; no cream deepen).
 Toontown spiritual sequel — no keyblades / KH branding.
 """
@@ -73,12 +75,59 @@ def streetGreetTip():
         'F fight  |  Shift dodge  |  C campaign'))
 
 
-def hubGreetSoftNextTip(street):
-    """Post-cheer hub greet pointing at soft-next street."""
-    tmpl = str(getattr(
+def softNextUneaseTier(street):
+    """Punchline vs Silly soft-next unease tier (CampaignGlobals twin)."""
+    helper = getattr(
+        CampaignGlobals, 'oswaldPresenceSoftNextUneaseTier', None)
+    if callable(helper):
+        try:
+            return str(helper(street))
+        except Exception:
+            pass
+    name = str(street or '').strip().lower()
+    if 'silly' in name:
+        return 'silly'
+    return 'punchline'
+
+
+def softNextTemplates(street):
+    """Hub + street soft-next templates for unlock unease tier."""
+    helper = getattr(
+        CampaignGlobals, 'oswaldPresenceSoftNextTemplates', None)
+    if callable(helper):
+        try:
+            hub_tmpl, street_tmpl = helper(street)
+            return str(hub_tmpl), str(street_tmpl)
+        except Exception:
+            pass
+    if softNextUneaseTier(street) == 'silly':
+        hub_tmpl = str(getattr(
+            CampaignGlobals, 'OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT_SILLY',
+            'Oswald waves from the plaza — cheer feels a half-beat off — '
+            '"{street} needs us… ink laughs sticky—"  |  '
+            'Hop the tunnel  |  C campaign'))
+        street_tmpl = str(getattr(
+            CampaignGlobals, 'OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT_SILLY',
+            'Oswald tips his ears — grin hangs rubbery a beat too long — '
+            '"Wash this stain — then {street}!"  |  '
+            'F fight  |  Shift dodge  |  C campaign'))
+        return hub_tmpl, street_tmpl
+    hub_tmpl = str(getattr(
         CampaignGlobals, 'OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT',
-        'Oswald waves from the plaza — "{street} needs us next!"  |  '
+        'Oswald waves from the plaza — grin still stretchy — '
+        '"{street} needs us next!"  |  '
         'Hop the tunnel  |  C campaign'))
+    street_tmpl = str(getattr(
+        CampaignGlobals, 'OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT',
+        'Oswald tips his ears — smile sticks a rubbery half-beat — '
+        '"Wash this stain — then {street}!"  |  '
+        'F fight  |  Shift dodge  |  C campaign'))
+    return hub_tmpl, street_tmpl
+
+
+def hubGreetSoftNextTip(street):
+    """Post-cheer hub greet pointing at soft-next street (unease tier)."""
+    tmpl, _ = softNextTemplates(street)
     try:
         return tmpl.format(street=str(street))
     except Exception:
@@ -86,11 +135,8 @@ def hubGreetSoftNextTip(street):
 
 
 def streetGreetSoftNextTip(street):
-    """Post-cheer street greet pointing at soft-next street."""
-    tmpl = str(getattr(
-        CampaignGlobals, 'OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT',
-        'Oswald tips his ears — "Wash this stain — then {street}!"  |  '
-        'F fight  |  Shift dodge  |  C campaign'))
+    """Post-cheer street greet pointing at soft-next street (unease tier)."""
+    _, tmpl = softNextTemplates(street)
     try:
         return tmpl.format(street=str(street))
     except Exception:
@@ -252,7 +298,9 @@ def greetTipForZone(zoneId, cheered=False, softNextStreet=None):
 
     Pre-cheer: static hub/street copy. After the durable cheer latch, prefer
     soft-next templates filled from unlock progress (PlayEntry soft-next twin
-    on the plaza NPC). First-meet tip stays separate (once-ever meet path).
+    on the plaza NPC). Punchline→Silly unlocks deepen unease copy (stub-safe
+    foreshadow; no twist spoilers). First-meet tip stays separate (once-ever
+    meet path).
     """
     helper = getattr(CampaignGlobals, 'oswaldPresenceGreetTip', None)
     if callable(helper):

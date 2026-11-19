@@ -497,16 +497,27 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_STREET_GREET)
         self.assertTrue(camp.OSWALD_PRESENCE_HIDE_ON_BETRAYAL)
         # Soft-next greets after oswaldCheered + unlocks (#TC-385 / post-#369).
+        # Punchline→Silly unlock ladder deepens unease (TC-430; no spoilers).
         self.assertIn('{street}', camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT)
         self.assertIn('{street}', camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT)
+        self.assertIn('{street}', camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT_SILLY)
         self.assertTrue(callable(camp.oswaldPresenceGreetTip))
+        self.assertTrue(callable(camp.oswaldPresenceSoftNextUneaseTier))
         soft_hub = camp.oswaldPresenceGreetTip(
             HUB, cheered=True, softNextStreet='Punchline Place')
         self.assertIn('Punchline Place', soft_hub)
+        self.assertIn('stretchy', soft_hub.lower())
+        soft_silly = camp.oswaldPresenceGreetTip(
+            HUB, cheered=True, softNextStreet=camp.ACTS[2]['name'])
+        self.assertIn(camp.ACTS[2]['name'], soft_silly)
+        self.assertIn('half-beat off', soft_silly.lower())
+        self.assertNotEqual(soft_hub, soft_silly)
+        self.assertNotIn('almost confess', soft_silly.lower())
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             self.assertNotIn(banned, camp.OSWALD_PRESENCE_HUB_GREET.lower())
             self.assertNotIn(banned, camp.OSWALD_PRESENCE_STREET_GREET.lower())
             self.assertNotIn(banned, soft_hub.lower())
+            self.assertNotIn(banned, soft_silly.lower())
 
         presence_rel = 'toontown/campaign/OswaldPresence.py'
         self.assertTrue((REPO_ROOT / presence_rel).is_file())

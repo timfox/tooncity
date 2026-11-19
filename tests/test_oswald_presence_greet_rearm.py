@@ -183,14 +183,21 @@ class OswaldPresenceGreetRearmTests(unittest.TestCase):
             TTC, cheered=True, softNextStreet='Punchline Place')
         self.assertIn('Punchline Place', tip)
         self.assertIn('Oswald', tip)
+        self.assertIn('stretchy', tip.lower())
         self.assertIn('{street}', camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT)
+        silly_tip = camp.oswaldPresenceGreetTip(
+            TTC, cheered=True, softNextStreet=camp.ACTS[2]['name'])
+        self.assertIn('half-beat off', silly_tip.lower())
         blob = ' '.join([
             camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT,
             camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT,
+            camp.OSWALD_PRESENCE_HUB_GREET_SOFT_NEXT_SILLY,
+            camp.OSWALD_PRESENCE_STREET_GREET_SOFT_NEXT_SILLY,
             tip,
+            silly_tip,
         ]).lower()
         for banned in ('keyblade', 'kingdom hearts', 'sora', 'key blade',
-                       'cream_wash', 'cream wash'):
+                       'cream_wash', 'cream wash', 'almost confess'):
             self.assertNotIn(banned, blob)
 
     def test_globals_doc_mentions_greet_rearm(self):
