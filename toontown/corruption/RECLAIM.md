@@ -73,12 +73,14 @@ No `~spawncorrupt` required for the happy path.
 On the TTC hub (and campaign streets before the twist), a stub **Oswald**
 plaza NPC (`toontown/campaign/OswaldPresence.py`) lets players meet the
 trusted reclaim lead before finale betrayal: authored plaza stand on TTC,
-short E-talk greet (first-ever meet shows a once-ever first-meet tip and
-persists `oswaldMet` across relog), and a rubber-hose cheer when a street
-clears (`npcCheerStub` / `ReclaimCheer`; first cheer latches
-`oswaldCheered` so cheer-on-clear survives relog). Silhouette stub — not a
-full DistributedNPC / companion AI — suppresses after reveal / Corrupted
-Oswald chase (including persisted victory after relog).
+authored ACTS street stands on Loopy / Punchline / Silly (stable landmarks
+— not spawn-forward beside the local toon), short E-talk greet (first-ever
+meet shows a once-ever first-meet tip and persists `oswaldMet` across
+relog), and a rubber-hose cheer when a street clears (`npcCheerStub` /
+`ReclaimCheer`; first cheer latches `oswaldCheered` so cheer-on-clear
+survives relog). Silhouette stub — not a full DistributedNPC / companion
+AI — suppresses after reveal / Corrupted Oswald chase (including persisted
+victory after relog).
 
 On polluted ACTS street enter, `PlayEntry` flashes a brief rubber-hose ink **edge
 vignette** (hood-tinted) that fades as the tip bar appears

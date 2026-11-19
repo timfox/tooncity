@@ -4,8 +4,8 @@
 Loads CampaignGlobals with a ToontownGlobals stub — no Panda3D.
 OswaldPresence helpers are mirrored from CampaignGlobals (module imports
 panda); client wiring is AST-checked. Beyond the CardMaker spawn-near-
-avatar stub: authored plaza stand, idle bob, reclaim cheer on
-npcCheerStub / ReclaimCheer nudge; preserves #333 persisted-victory hide.
+avatar stub: authored plaza + ACTS street stands, idle bob, reclaim cheer
+on npcCheerStub / ReclaimCheer nudge; preserves #333 persisted-victory hide.
 
 Run from repo root:
   python3 tests/test_oswald_presence.py
@@ -159,6 +159,13 @@ class OswaldPresenceTests(unittest.TestCase):
         hub_pos = camp.OSWALD_PRESENCE_HUB_POS
         self.assertEqual(len(hub_pos), 4)
         self.assertTrue(all(isinstance(v, (int, float)) for v in hub_pos))
+        street_pos = camp.OSWALD_PRESENCE_STREET_POS
+        self.assertIsInstance(street_pos, dict)
+        for zid in (LOOPY, PUNCHLINE, SILLY):
+            self.assertIn(zid, street_pos)
+            stand = street_pos[zid]
+            self.assertEqual(len(stand), 4)
+            self.assertTrue(all(isinstance(v, (int, float)) for v in stand))
         self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')
         self.assertEqual(
             camp.OSWALD_PRESENCE_CHEERED_MSG, 'oswaldPresenceCheered')
@@ -231,6 +238,7 @@ class OswaldPresenceTests(unittest.TestCase):
                 'shouldShowPresence',
                 'presenceZoneIds',
                 'hubPlazaPos',
+                'streetStandPos',
                 'cheerOnReclaim',
                 'metMsgName',
                 'metSyncMsgName',
@@ -245,6 +253,8 @@ class OswaldPresenceTests(unittest.TestCase):
         for required in (
                 '_placeBody',
                 '_placeBodyAtPlaza',
+                '_placeBodyAtStreetStand',
+                '_placeBodyAtAuthoredStand',
                 '_placeBodyNearAvatar',
                 '_buildNpcSilhouette',
                 '_buildNametag',
@@ -285,14 +295,17 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('npccheerstub', src_l)
         self.assertIn('purityrestorefx', src_l)
         self.assertIn('oswaldpresencecheer', src_l)
-        # Plaza NPC deepen beyond spawn-near-avatar CardMaker stub.
+        # Plaza + ACTS street authored stands beyond spawn-near-avatar stub.
         self.assertIn('CardMaker', src)
         self.assertIn('oswald-npc-torso', src)
         self.assertIn('oswald-npc-head', src)
         self.assertIn('oswald-npc-ear-l', src)
         self.assertIn('_buildNpcSilhouette', src)
         self.assertIn('_placeBodyAtPlaza', src)
+        self.assertIn('_placeBodyAtStreetStand', src)
         self.assertIn('OSWALD_PRESENCE_HUB_POS', src)
+        self.assertIn('OSWALD_PRESENCE_STREET_POS', src)
+        self.assertIn('streetStandPos', src)
         self.assertIn('_armInteract', src)
         self.assertIn("accept('e'", src)
         self.assertIn('oswaldPresenceInteract', src)
@@ -357,6 +370,7 @@ class OswaldPresenceTests(unittest.TestCase):
     def test_magic_words_and_docs_mention_presence(self):
         magic = _read('toontown/campaign/MagicWords.py').lower()
         self.assertIn('plaza', magic)
+        self.assertIn('street stands', magic)
         self.assertIn('cheer on reclaim', magic)
         self.assertIn('e-talk', magic)
         reclaim = _read('toontown/corruption/RECLAIM.md').lower()
@@ -365,10 +379,11 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('e-talk', reclaim)
         self.assertIn('npccheerstub', reclaim.replace('`', ''))
         self.assertIn('plaza', reclaim)
+        self.assertIn('street stands', reclaim)
 
     def test_not_cream_only_module(self):
         src = _read('toontown/campaign/OswaldPresence.py').lower()
-        # Presence deepen owns plaza NPC / cheer — not a cream wash deepen PR.
+        # Presence deepen owns plaza/street NPC / cheer — not cream wash.
         self.assertNotIn('cream_wash', src)
         self.assertNotIn('creamaftershock', src.replace('_', ''))
         self.assertIn('greet', src)
@@ -376,6 +391,7 @@ class OswaldPresenceTests(unittest.TestCase):
         self.assertIn('interact', src)
         self.assertIn('cheer', src)
         self.assertIn('plaza', src)
+        self.assertIn('street stand', src)
 
 
 if __name__ == '__main__':

@@ -1,16 +1,17 @@
 """Trusted Oswald hub/street NPC-style presence before the twist.
 
 Players meet Oswald as a rubber-hose plaza lead + short greet interact on
-the TTC hub (authored plaza stand) and campaign streets — the trust face
-they later lose at the finale betrayal. Beyond the spawn-near-avatar
-CardMaker stub: fixed plaza placement, idle bob, and a reclaim cheer
-beat when a street clears (`npcCheerStub` / purity), then vanish for the
-twist. After ``oswaldCheered``, plaza/street E-talk soft-nexts from unlock
-progress (trust ladder mid-act beats). Stub-shippable: CardMaker silhouette
-+ nametag (not a full DistributedNPC / DNA toon, not companion AI, not
-cream FX). Suppresses after reveal / betrayal chase, including AI-persisted
-STATE_VICTORY mirrored on login. Toontown spiritual sequel — no keyblades /
-KH branding.
+the TTC hub (authored plaza stand) and campaign ACTS streets (authored
+street stands on stable landmarks — not SPAWN_FORWARD beside the local
+toon) — the trust face they later lose at the finale betrayal. Beyond the
+spawn-near-avatar CardMaker stub: fixed plaza + ACTS street placement,
+idle bob, and a reclaim cheer beat when a street clears (`npcCheerStub` /
+purity), then vanish for the twist. After ``oswaldCheered``, plaza/street
+E-talk soft-nexts from unlock progress (trust ladder mid-act beats).
+Stub-shippable: CardMaker silhouette + nametag (not a full DistributedNPC
+/ DNA toon, not companion AI, not cream FX). Suppresses after reveal /
+betrayal chase, including AI-persisted STATE_VICTORY mirrored on login.
+Toontown spiritual sequel — no keyblades / KH branding.
 """
 
 from __future__ import annotations
@@ -198,6 +199,39 @@ def hubPlazaPos():
         return None
 
 
+def _parseStandPos(raw):
+    """Coerce (x, y, z, h) authored stand tuple or None."""
+    if raw is None:
+        return None
+    try:
+        return (
+            float(raw[0]), float(raw[1]), float(raw[2]), float(raw[3]))
+    except Exception:
+        return None
+
+
+def streetStandPos(zoneId):
+    """Authored ACTS street stand (x, y, z, h) for zone, or None."""
+    raw_map = getattr(CampaignGlobals, 'OSWALD_PRESENCE_STREET_POS', None)
+    if not raw_map:
+        return None
+    try:
+        zid = int(zoneId)
+    except Exception:
+        return None
+    try:
+        raw = raw_map.get(zid)
+    except Exception:
+        raw = None
+    if raw is None:
+        # Tolerate string keys from hand-edited tables.
+        try:
+            raw = raw_map.get(str(zid))
+        except Exception:
+            raw = None
+    return _parseStandPos(raw)
+
+
 def presenceZoneIds():
     """Hub + campaign ACTS streets where the trusted stub may appear."""
     zones = set()
@@ -268,15 +302,16 @@ _PROMPT_COLOR = Vec4(0.92, 0.96, 1.0, 1.0)
 
 
 class OswaldPresenceClient(DirectObject):
-    """Plaza NPC-style body + greet interact + reclaim cheer for trusted Oswald.
+    """Plaza/street NPC-style body + greet interact + reclaim cheer.
 
     AI-free stub: place a rubber-hose silhouette at the authored TTC plaza
-    stand (streets: near local toon), arm E-talk when approached, greet once
-    per zone visit (first-ever meet uses the once-ever first-meet tip and
-    persists ``oswaldMet``; later greets soft-next from ``oswaldCheered`` +
-    unlock progress), cheer on street-clear purity messengers (first cheer
-    latches + persists ``oswaldCheered``), clear after betrayal messengers /
-    persisted victory sync.
+    stand or ACTS street landmark (near-avatar only as unmapped fallback),
+    arm E-talk when approached, greet once per zone visit (first-ever meet
+    uses the once-ever first-meet tip and persists ``oswaldMet``; later
+    greets soft-next from ``oswaldCheered`` + unlock progress), cheer on
+    street-clear purity messengers (first cheer latches + persists
+    ``oswaldCheered``), clear after betrayal messengers / persisted victory
+    sync.
     """
 
     def __init__(self):
@@ -491,18 +526,23 @@ class OswaldPresenceClient(DirectObject):
             return False
 
     def _placeBody(self, zoneId):
-        """Hub: authored plaza stand. Streets: near local toon (field lead)."""
+        """Hub plaza / ACTS street authored stands; near-avatar as fallback."""
         if self._isHubZone(zoneId) and hubPlazaPos() is not None:
             self._placeBodyAtPlaza(zoneId)
-        else:
-            self._placeBodyNearAvatar(zoneId)
-
-    def _placeBodyAtPlaza(self, zoneId):
-        parent = getattr(base, 'render', None)  # noqa: F821
-        plaza = hubPlazaPos()
-        if parent is None or plaza is None:
             return
-        x, y, z, h = plaza
+        stand = streetStandPos(zoneId)
+        if stand is not None:
+            self._placeBodyAtStreetStand(zoneId, stand)
+            return
+        # Unmapped presence zone — keep near-avatar field-lead fallback.
+        self._placeBodyNearAvatar(zoneId)
+
+    def _placeBodyAtAuthoredStand(self, stand):
+        """Place the CardMaker stub at a fixed (x, y, z, h) landmark."""
+        parent = getattr(base, 'render', None)  # noqa: F821
+        if parent is None or stand is None:
+            return
+        x, y, z, h = stand
         root = parent.attachNewNode('oswaldPresenceNpc')
         root.setPos(x, y, z)
         try:
@@ -519,7 +559,16 @@ class OswaldPresenceClient(DirectObject):
         self._markerPos = (x, y, z)
         self._startIdleBob()
 
+    def _placeBodyAtPlaza(self, zoneId):
+        self._placeBodyAtAuthoredStand(hubPlazaPos())
+
+    def _placeBodyAtStreetStand(self, zoneId, stand=None):
+        if stand is None:
+            stand = streetStandPos(zoneId)
+        self._placeBodyAtAuthoredStand(stand)
+
     def _placeBodyNearAvatar(self, zoneId):
+        """Fallback when no authored plaza/street stand exists for the zone."""
         av = getattr(base, 'localAvatar', None)  # noqa: F821
         parent = getattr(base, 'render', None)  # noqa: F821
         if av is None or parent is None:
