@@ -1,0 +1,47 @@
+#usda 1.0
+(
+    "Toon City USD spike fixture — Loopy Lane reclaim pack overlay. "
+    "Matches ReclaimGlobals STREET_PACKS zone 2200 / packId loopy-smudge."
+)
+
+def Xform "LoopyLaneRoot" (
+    # Spike marker: TcStreetRoot — street / playground composition root.
+    customData = {
+        string tc:kind = "TcStreetRoot"
+        int tc:zoneId = 2200
+        string tc:hood = "TT"
+        string tc:packId = "loopy-smudge"
+        string tc:bamPath = "phase_5/models/neighborhoods/loopy_lane_overlay.bam"
+    }
+)
+{
+    def Xform "SpawnStand_A" (
+        # Spike marker: TcSpawnStand — corrupt pack ambush stand.
+        customData = {
+            string tc:kind = "TcSpawnStand"
+            string tc:archetype = "ink"
+            int tc:standIndex = 0
+        }
+    )
+    {
+    }
+
+    def Xform "SpawnStand_B" (
+        customData = {
+            string tc:kind = "TcSpawnStand"
+            string tc:archetype = "brute"
+            int tc:standIndex = 1
+        }
+    )
+    {
+    }
+
+    def Xform "ReclaimVolume" (
+        customData = {
+            string tc:kind = "TcReclaimVolume"
+            float tc:seedPollution = 0.55
+        }
+    )
+    {
+    }
+}
