@@ -267,6 +267,14 @@ ACTS = (
             'Punchline Place sludge: explore → '
             'F fight Gunk Gagsters, Sludge Brutes & Balloon Snares → reclaim  |  '
             'Shift dodge  |  C campaign'),
+        # Mid-act Punchline approach tip (PlayEntry, after Act 2 entry tip):
+        # rubbery grin hangs longer mid-street — deepens entry "half-beat off"
+        # before Silly almost-confess. Stub-safe foreshadow only (no DNA
+        # Oswald / no twist spoilers / no "Oswald caused it" / no KH).
+        'approachTip': (
+            'Oswald: grin hangs rubbery a full beat too long — '
+            '"This sludge laughs sticky—" then tips his ears: keep reclaiming!  |  '
+            'F fight Gagsters & Brutes  |  Shift dodge  |  C campaign'),
         # Punchline clear deepens trust fracture: still a cheer, rubber-hose
         # grin hangs odd again — foreshadow only (no Silly twist spoilers).
         'handoffTitle': 'PUNCHLINE PLACE LAUGHS CLEAN!',
@@ -604,6 +612,11 @@ SILLY_APPROACH_TIP_DELAY_SEC = 3.85
 # Oswald trust stays intact early; Punchline entryTip deepens the beat.
 # No cream hose / wash deepen — copy + fracture tipHose settle only.
 LOOPY_APPROACH_TIP_DELAY_SEC = 3.45
+# Delay after Punchline Place enter before the mid-act unease tip replaces
+# the Act 2 entry tip (PlayEntry). Longer than PUNCHLINE_AUTO_RECLAIM so
+# the sludge explore / entry foreshadow lands first; Silly approachTip
+# almost-confess deepens next. Reuses tipHose='punchline' (no cream deepen).
+PUNCHLINE_APPROACH_TIP_DELAY_SEC = 3.65
 
 # Soft cream wash pulse + delayed cream aftershock after Silly Act 3 tip
 # hose pop (#95) / Overlord foreshadow / almost-confess tip (#200 / #251 /

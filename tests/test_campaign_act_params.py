@@ -584,6 +584,76 @@ class CampaignActParamsTest(unittest.TestCase):
         self.assertIn('no keyblades', magic_l)
         self.assertNotIn('kingdom hearts', magic_l)
 
+    def test_punchline_approach_unease_tip(self):
+        """Punchline mid-act approach tip deepens unease before Silly."""
+        camp = self.camp
+        punch = self.acts_by_id['punchline']
+        loopy = self.acts_by_id['loopy']
+        finale = self.acts_by_id['finale']
+        entry = punch.get('entryTip') or ''
+        approach = punch.get('approachTip') or ''
+        self.assertTrue(bool(entry))
+        self.assertTrue(bool(approach))
+        self.assertIn('half-beat off', entry.lower())
+        # Mid-act deepens past entry / Loopy — full beat hang, sticky laugh.
+        self.assertIn('full beat', approach.lower())
+        self.assertIn('rubbery', approach.lower())
+        self.assertIn('sludge', approach.lower())
+        self.assertIn('reclaim', approach.lower())
+        # Heavier than Loopy rubbery half-beat; lighter than Silly confess.
+        loopy_approach = loopy.get('approachTip') or ''
+        self.assertIn('rubbery half-beat', loopy_approach.lower())
+        self.assertNotIn('full beat', loopy_approach.lower())
+        self.assertNotIn('almost confess', approach.lower())
+        self.assertNotIn('gag went wrong', approach.lower())
+        finale_approach = finale.get('approachTip') or ''
+        self.assertIn('almost confess', finale_approach.lower())
+        # Stub-safe foreshadow only — no twist spoilers / no KH.
+        for banned in (
+                'keyblade', 'kingdom hearts', 'caused the corruption',
+                'his all along', 'betrayed', 'villain', 'sora', 'dna'):
+            self.assertNotIn(banned, approach.lower())
+            self.assertNotIn(banned, entry.lower())
+        self.assertGreater(camp.PUNCHLINE_APPROACH_TIP_DELAY_SEC, 0.0)
+        self.assertGreaterEqual(
+            camp.PUNCHLINE_APPROACH_TIP_DELAY_SEC,
+            1.85)  # after Punchline auto-reclaim explore beat
+        # Ladder: Loopy delay ≤ Punchline ≤ Silly.
+        self.assertGreaterEqual(
+            camp.PUNCHLINE_APPROACH_TIP_DELAY_SEC,
+            camp.LOOPY_APPROACH_TIP_DELAY_SEC)
+        self.assertLessEqual(
+            camp.PUNCHLINE_APPROACH_TIP_DELAY_SEC,
+            camp.SILLY_APPROACH_TIP_DELAY_SEC)
+        play_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'PlayEntry.py'
+        ).read_text(encoding='utf-8')
+        self.assertIn('_armPunchlineApproachTip', play_src)
+        self.assertIn('_showPunchlineApproachTip', play_src)
+        self.assertIn('_cancelPunchlineApproachTip', play_src)
+        self.assertIn('PUNCHLINE_APPROACH_TIP_DELAY_SEC', play_src)
+        self.assertIn("act.get('id') == 'punchline'", play_src)
+        self.assertIn("tipHose='punchline'", play_src)
+        # No cream deepen on the mid-act arm path (reuse entry tipHose only).
+        arm_idx = play_src.find('def _armPunchlineApproachTip')
+        show_idx = play_src.find('def _showPunchlineApproachTip')
+        hub_idx = play_src.find('def _showHubTip', show_idx)
+        self.assertGreater(arm_idx, 0)
+        self.assertGreater(show_idx, arm_idx)
+        punch_arm_snip = play_src[arm_idx:hub_idx]
+        self.assertNotIn('CREAM_HOSE', punch_arm_snip)
+        self.assertNotIn('CREAM_WASH', punch_arm_snip)
+        self.assertNotIn('CreamWash', punch_arm_snip)
+        magic_src = (
+            Path(__file__).resolve().parents[1]
+            / 'toontown' / 'campaign' / 'MagicWords.py'
+        ).read_text(encoding='utf-8')
+        magic_l = magic_src.lower()
+        self.assertIn('punchline mid-act unease tip', magic_l)
+        self.assertIn('full beat too long', magic_l)
+        self.assertIn('no twist spoil', magic_l)
+
     def test_silly_approach_almost_confess_tip(self):
         """Silly mid-act approach tip almost-confesses before finale reveal."""
         camp = self.camp

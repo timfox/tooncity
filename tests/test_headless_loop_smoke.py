@@ -889,6 +889,21 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         for banned in (
                 'keyblade', 'kingdom hearts', 'caused the corruption', 'sora'):
             self.assertNotIn(banned, loopy_approach_l)
+        # Punchline mid-act unease approach tip (before Silly almost-confess).
+        punch_act = next(a for a in acts if a.get('id') == 'punchline')
+        punch_approach = punch_act.get('approachTip') or ''
+        if isinstance(punch_approach, list):
+            punch_approach = ''.join(str(part) for part in punch_approach)
+        punch_approach_l = str(punch_approach).lower()
+        self.assertIn('full beat', punch_approach_l)
+        self.assertIn('rubbery', punch_approach_l)
+        self.assertNotIn('almost confess', punch_approach_l)
+        self.assertIn('PUNCHLINE_APPROACH_TIP_DELAY_SEC', campaign_names)
+        self.assertIn('_armPunchlineApproachTip', play_src)
+        self.assertIn('_showPunchlineApproachTip', play_src)
+        for banned in (
+                'keyblade', 'kingdom hearts', 'caused the corruption', 'sora'):
+            self.assertNotIn(banned, punch_approach_l)
 
         # Reclaim cheer cream sparkle flecks (#98) — mid-screen flecks with pitch swell.
         cheer_sparkle_rel = 'toontown/reclaim/CheerCreamSparkleFx.py'
@@ -3876,6 +3891,14 @@ class HeadlessLoopSmokeTest(unittest.TestCase):
         self.assertIn('rubbery half-beat', str(loopy_mid_tip).lower())
         self.assertIn('_armLoopyApproachTip', play_src)
         self.assertIn('LOOPY_APPROACH_TIP_DELAY_SEC', campaign_names)
+        # Punchline mid-act unease tip before Silly (stub-safe foreshadow).
+        punch_mid_tip = (punch_act or {}).get('approachTip') or ''
+        if isinstance(punch_mid_tip, list):
+            punch_mid_tip = ''.join(str(part) for part in punch_mid_tip)
+        self.assertIn('full beat', str(punch_mid_tip).lower())
+        self.assertNotIn('almost confess', str(punch_mid_tip).lower())
+        self.assertIn('_armPunchlineApproachTip', play_src)
+        self.assertIn('PUNCHLINE_APPROACH_TIP_DELAY_SEC', campaign_names)
 
         # Finale betrayal handoff banner — hose-pop plate when reveal fires.
         self.assertTrue(finale_act.get('betrayalHandoff'))
