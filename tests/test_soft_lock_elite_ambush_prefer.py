@@ -130,11 +130,14 @@ class SoftLockEliteAmbushPreferTest(unittest.TestCase):
         self.assertNotIn('keyblade', hint_l)
         self.assertNotIn('kingdom hearts', hint_l)
         cfg_src = _read('toontown/hackslash/HackSlashConfig.py')
-        self.assertIn('Elite/Ambush', cfg_src)
+        self.assertIn('Elite', cfg_src)
+        self.assertIn('Ambush', cfg_src)
+        self.assertIn('priority tiers', cfg_src.lower())
         # Priority docs mention Elite/Ambush; no KH product branding beyond
         # the existing "without KH branding / keyblades" disclaimer.
         soft_src = _read('toontown/hackslash/SoftTarget.py')
         self.assertIn('Elite / Ambush', soft_src)
+        self.assertIn('Overlord/Oswald > Elite > Ambush', soft_src)
         self.assertNotIn('kingdom hearts', soft_src.lower())
         self.assertNotIn('keyblade', soft_src.lower().replace(
             'without kh branding / keyblades', ''))
@@ -189,16 +192,19 @@ class SoftLockEliteAmbushPreferTest(unittest.TestCase):
                 (True, 10.0, ambush),
             ]),
             ambush)
-        # Two priority subjects → nearer wins (Elite vs Overlord).
+        # Tiered prefer: farther Overlord outranks nearer Elite.
+        boss = getattr(self.cg, 'SOFT_LOCK_PRIORITY_TIER_BOSS', 0)
+        elite_t = getattr(self.cg, 'SOFT_LOCK_PRIORITY_TIER_ELITE', 1)
         self.assertEqual(
             pick([
-                (True, 9.0, overlord),
-                (True, 4.0, elite),
+                (boss, 9.0, overlord),
+                (elite_t, 4.0, elite),
             ]),
-            elite)
+            overlord)
         # Rank helper: Elite priority beats nearer fodder.
         rank = self.soft.softLockAcquireRank
         self.assertLess(rank(12.0, True), rank(3.0, False))
+        self.assertLess(rank(12.0, elite_t), rank(3.0, False))
 
     def test_sticky_and_cycle_helpers_still_yield_to_priority(self):
         yield_fn = self.soft.shouldStickyYieldToPriority
@@ -215,20 +221,28 @@ class SoftLockEliteAmbushPreferTest(unittest.TestCase):
             'toontown/hackslash/SoftTarget.py',
             'SoftTargetFinder',
             '_isPriorityTarget')
-        self.assertIn('isSoftLockPrioritySubject', names)
-        self.assertIn('isAmbushPreferName', names)
+        self.assertIn('_priorityTier', names)
+        tier_names = _method_body_names(
+            'toontown/hackslash/SoftTarget.py',
+            'SoftTargetFinder',
+            '_priorityTier')
+        self.assertIn('softLockPriorityTier', tier_names)
+        self.assertIn('isAmbushPreferName', tier_names)
         soft_src = _read('toontown/hackslash/SoftTarget.py')
-        self.assertIn('Elite / Ambush', soft_src)
+        self.assertIn('Elite', soft_src)
+        self.assertIn('Ambush', soft_src)
         self.assertIn('isSoftLockPrioritySubject', soft_src)
+        self.assertIn('softLockPriorityTier', soft_src)
         cg_src = _read('toontown/corruption/CorruptionGlobals.py')
         self.assertIn("startswith('elite ')", cg_src)
         self.assertIn("startswith('ambush ')", cg_src)
         self.assertIn('def isEliteOrAmbushPreferName', cg_src)
-        # Soft-lock gate delegates Elite/Ambush prefixes to the shared helper.
+        self.assertIn('def softLockPriorityTier', cg_src)
+        # Soft-lock subject gate delegates to the tier helper.
         gate_idx = cg_src.index('def isSoftLockPrioritySubject')
         next_def = cg_src.find('\ndef ', gate_idx + 1)
         gate_body = cg_src[gate_idx:next_def if next_def > 0 else gate_idx + 1600]
-        self.assertIn('isEliteOrAmbushPreferName', gate_body)
+        self.assertIn('softLockPriorityTier', gate_body)
         # No cream deepen / no KH branding in the gate.
         gate_snip = gate_body.lower()
         self.assertNotIn('cream', gate_snip)

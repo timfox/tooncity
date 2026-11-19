@@ -244,13 +244,19 @@ class SoftLockBossPriorityTest(unittest.TestCase):
             'toontown/hackslash/SoftTarget.py',
             'SoftTargetFinder',
             '_isPriorityTarget')
-        self.assertIn('isSoftLockPrioritySubject', names)
-        self.assertIn('getattr', names)
-        self.assertIn('HackSlashConfig', names)
+        self.assertIn('_priorityTier', names)
+        tier_names = _method_body_names(
+            'toontown/hackslash/SoftTarget.py',
+            'SoftTargetFinder',
+            '_priorityTier')
+        self.assertIn('softLockPriorityTier', tier_names)
+        self.assertIn('getattr', tier_names)
+        self.assertIn('HackSlashConfig', tier_names)
         # Tunable is read via getattr(..., 'TARGET_PRIORITY_ENABLED', ...).
         helper_src = _read('toontown/hackslash/SoftTarget.py')
         self.assertIn('TARGET_PRIORITY_ENABLED', helper_src)
         # Must not glue onto director street phase for every pack add.
+        self.assertNotIn('reclaimDirector', tier_names)
         self.assertNotIn('reclaimDirector', names)
 
     def test_package_exports_priority_helpers(self):

@@ -7,32 +7,45 @@ Includes manual soft-lock cycle (next/prev) so players can switch focus
 among sticky-range hostiles during stretch-punch melee — KH-feel targeting
 without KH branding / keyblades.
 
-Auto-acquire (and fresh Tab with no lock) prefers Ink Overlord /
-Corrupted Oswald / Elite / Ambush-prefixed pack hostiles over nearer
-fodder. Sticky hold also yields from glued adds when a priority subject
-enters the acquire cone so climax, twist, elite, and ambush fights do
-not stay stuck on trash. Manual Tab/` with an existing lock on a
-pack add jumps to Overlord/Oswald in the cycle cone (also Elite /
-Ambush) instead of yaw-orbiting through Smudge trash.
+Auto-acquire (and fresh Tab with no lock) prefers Overlord/Oswald >
+Elite > Ambush > nearer fodder (tiered rank, not binary). Sticky hold
+yields when a strictly higher-tier subject enters the acquire cone so
+climax/twist fights do not stay stuck on Elite/Ambush/trash. Manual
+Tab/` with an existing lock jumps to Overlord/Oswald (or a higher tier)
+in the cycle cone — a pack add jumps to Overlord/Oswald / Elite over
+Ambush instead of yaw-orbiting through lower-tier hostiles.
 
 Between-wave ambush also pulses soft-lock prefer on reclaimAmbushSpawn
 (expire sticky glue) so mid-fight flanks steal focus immediately; Ambush
-names stay permanent priority via isSoftLockPrioritySubject either way.
+names stay permanent Ambush-tier priority via softLockPriorityTier
+either way.
 """
 
 import math
 
 from . import HackSlashConfig
 
+# Mirror CorruptionGlobals fodder tier for SoftTarget helpers when the
+# corruption package is unavailable (headless SoftTarget-only loads).
+_SOFT_LOCK_PRIORITY_TIER_FODDER = 3
+
 
 def softLockAcquireRank(dist, priority=False):
     """Sort key for soft-lock acquire — lower wins.
 
-    Priority subjects (Overlord / Corrupted Oswald / Elite / Ambush)
-    sort before pack fodder; nearest wins within the same tier. Pure
-    helper for headless tests.
+    ``priority`` is either a bool (legacy binary: True → boss tier,
+    False → fodder) or an int tier from softLockPriorityTier
+    (Overlord/Oswald=0, Elite=1, Ambush=2, fodder=3). Nearest wins
+    within the same tier. Pure helper for headless tests.
     """
-    return (0 if priority else 1, float(dist))
+    if isinstance(priority, bool):
+        tier = 0 if priority else _SOFT_LOCK_PRIORITY_TIER_FODDER
+    else:
+        try:
+            tier = int(priority)
+        except (TypeError, ValueError):
+            tier = _SOFT_LOCK_PRIORITY_TIER_FODDER
+    return (tier, float(dist))
 
 
 def isAmbushPreferName(name, prefix=None):
@@ -69,8 +82,10 @@ def ambushPreferWindowActive(preferUntil, now, enabled=None):
 def pickSoftLockAcquire(scoredRows):
     """Pick best soft-lock candidate from scored rows.
 
-    ``scoredRows`` is an iterable of ``(priority, dist, payload)``. Empty
-    input → None. Priority beats non-priority; nearest wins within a tier.
+    ``scoredRows`` is an iterable of ``(tier_or_priority, dist, payload)``.
+    Empty input → None. Lower tier wins (boss > elite > ambush > fodder);
+    nearest wins within a tier. Bool ``True``/``False`` still accepted as
+    legacy binary priority.
     """
     best = None
     bestKey = None
@@ -78,7 +93,7 @@ def pickSoftLockAcquire(scoredRows):
         if row is None or len(row) < 3:
             continue
         priority, dist, payload = row[0], row[1], row[2]
-        key = softLockAcquireRank(dist, priority=bool(priority))
+        key = softLockAcquireRank(dist, priority=priority)
         if bestKey is None or key < bestKey:
             bestKey = key
             best = payload
@@ -86,38 +101,55 @@ def pickSoftLockAcquire(scoredRows):
 
 
 def shouldStickyYieldToPriority(
-        lockedIsPriority, hasPriorityCandidate, enabled=None):
-    """True when sticky hold on fodder should yield to a priority subject.
+        lockedIsPriority, hasPriorityCandidate, enabled=None,
+        lockedTier=None, candidateTier=None):
+    """True when sticky hold should yield to a better-tier subject.
 
-    Sticky still glues onto the current target when already on a priority
-    subject (Overlord / Oswald / Elite / Ambush), when no priority
-    candidate is in the acquire cone, or when TARGET_PRIORITY_ENABLED is
-    off. Pure helper for headless tests.
+    Tier path (``lockedTier`` / ``candidateTier``): yield when the
+    candidate tier is strictly lower (better) than the locked tier —
+    Ambush sticky yields to Elite/Overlord; Elite yields to Overlord/
+    Oswald; already on boss keeps sticky. Legacy binary path: yield
+    only from fodder when any priority subject is in cone. Pure helper
+    for headless tests.
     """
     if enabled is None:
         enabled = HackSlashConfig.TARGET_PRIORITY_ENABLED
     if not enabled:
         return False
+    if lockedTier is not None:
+        if candidateTier is None:
+            return False
+        try:
+            return int(candidateTier) < int(lockedTier)
+        except (TypeError, ValueError):
+            return False
     if lockedIsPriority:
         return False
     return bool(hasPriorityCandidate)
 
 
 def shouldCyclePreferPriority(
-        lockedIsPriority, hasPriorityCandidate, enabled=None):
-    """True when Tab/` with an existing lock should jump to priority.
+        lockedIsPriority, hasPriorityCandidate, enabled=None,
+        lockedTier=None, candidateTier=None):
+    """True when Tab/` with an existing lock should jump to a better tier.
 
-    Cycle still yaw-orbits when already locked on a priority subject
-    (Overlord / Oswald / Elite / Ambush), when no priority candidate is
-    in the cycle cone, or when TARGET_PRIORITY_ENABLED is off. Pure
-    helper for headless tests — pairs with sticky yield so manual
-    cycle-with-lock does not step through Smudge trash during climax /
-    twist / elite / ambush scrums.
+    Tier path matches sticky yield: jump when a strictly higher-tier
+    subject is in the cycle cone (Ambush → Elite/Overlord, Elite →
+    Overlord/Oswald). Already on boss, or no better tier in cone →
+    yaw-orbit. Legacy binary path: jump only from fodder. Pure helper
+    for headless tests.
     """
     if enabled is None:
         enabled = HackSlashConfig.TARGET_PRIORITY_ENABLED
     if not enabled:
         return False
+    if lockedTier is not None:
+        if candidateTier is None:
+            return False
+        try:
+            return int(candidateTier) < int(lockedTier)
+        except (TypeError, ValueError):
+            return False
     if lockedIsPriority:
         return False
     return bool(hasPriorityCandidate)
@@ -344,35 +376,42 @@ class SoftTargetFinder:
         scored.sort(key=lambda row: (row[0], row[1], str(row[2])))
         orderedKeys = [row[2] for row in scored]
         # Fresh Tab with nothing locked: land on preferred sticky hostile
-        # (Overlord / Oswald over nearer pack adds; direction still used
-        # once a lock exists for orbit next/prev when not jumping to boss).
+        # (Overlord/Oswald > Elite > Ambush > fodder; direction still used
+        # once a lock exists for orbit next/prev when not jumping tiers).
         if self._lockedKey not in byKey:
             ranked = []
             for yaw, dist, key in scored:
                 target = byKey.get(key)
                 ranked.append((
-                    self._isPriorityTarget(target),
+                    self._priorityTier(target),
                     dist,
                     key))
             newKey = pickSoftLockAcquire(ranked)
             snapped = newKey is not None
         else:
-            # Locked path: prefer jumping to Overlord / Oswald over
-            # yaw-orbit through pack adds when glued on trash and a
-            # priority subject is already in the cycle cone. Already on
-            # boss/Oswald, or no boss in cone → normal pickCycleChoice.
+            # Locked path: jump to a strictly higher tier (Ambush→Elite/
+            # Overlord, Elite→Overlord/Oswald, fodder→any prefer) over
+            # yaw-orbit. Already on boss, or no better tier in cone →
+            # normal pickCycleChoice.
             lockedTarget = byKey.get(self._lockedKey)
+            lockedTier = self._priorityTier(lockedTarget)
             lockedIsPriority = self._isPriorityTarget(lockedTarget)
-            priorityRanked = []
+            higherRanked = []
+            candidateTier = None
             for yaw, dist, key in scored:
                 if key == self._lockedKey:
                     continue
                 target = byKey.get(key)
-                if self._isPriorityTarget(target):
-                    priorityRanked.append((True, dist, key))
+                tier = self._priorityTier(target)
+                if tier < lockedTier:
+                    higherRanked.append((tier, dist, key))
+                    if candidateTier is None or tier < candidateTier:
+                        candidateTier = tier
             if shouldCyclePreferPriority(
-                    lockedIsPriority, bool(priorityRanked)):
-                newKey = pickSoftLockAcquire(priorityRanked)
+                    lockedIsPriority, bool(higherRanked),
+                    lockedTier=lockedTier,
+                    candidateTier=candidateTier):
+                newKey = pickSoftLockAcquire(higherRanked)
                 snapped = newKey is not None and newKey != self._lockedKey
             else:
                 newKey, snapped = pickCycleChoice(
@@ -395,31 +434,37 @@ class SoftTargetFinder:
 
         # Sticky soft-lock: keep the current target while alive and roughly
         # in front / in sticky range (wider than fresh acquisition cone).
-        # Yield sticky glue on pack adds when Overlord / Corrupted Oswald is
-        # already in the fresh-acquire cone so climax/twist do not stay
-        # stuck on Smudge trash after #339 fresh-acquire priority.
+        # Yield sticky glue when a strictly higher-tier subject is already
+        # in the fresh-acquire cone (Ambush→Elite/Overlord, Elite→
+        # Overlord/Oswald, fodder→any prefer) so climax/twist do not stay
+        # stuck on lower-tier hostiles after tiered soft-lock prefer.
         if self._lockedKey is not None and now < self._lockedUntil:
             locked = byKey.get(self._lockedKey)
             if locked is not None and self._isValid(locked) and self._inStickyCone(locked):
+                lockedTier = self._priorityTier(locked)
                 lockedIsPriority = self._isPriorityTarget(locked)
-                hasPriorityCandidate = False
-                if not lockedIsPriority:
-                    for target in candidates:
-                        if self._key(target) == self._lockedKey:
-                            continue
-                        if not self._isValid(target):
-                            continue
-                        if not self._inCone(target):
-                            continue
-                        if self._isPriorityTarget(target):
-                            hasPriorityCandidate = True
-                            break
+                candidateTier = None
+                for target in candidates:
+                    if self._key(target) == self._lockedKey:
+                        continue
+                    if not self._isValid(target):
+                        continue
+                    if not self._inCone(target):
+                        continue
+                    tier = self._priorityTier(target)
+                    if candidateTier is None or tier < candidateTier:
+                        candidateTier = tier
+                hasPriorityCandidate = (
+                    candidateTier is not None
+                    and candidateTier < lockedTier)
                 if not shouldStickyYieldToPriority(
-                        lockedIsPriority, hasPriorityCandidate):
+                        lockedIsPriority, hasPriorityCandidate,
+                        lockedTier=lockedTier,
+                        candidateTier=candidateTier):
                     # Refresh hold while the target remains sticky-valid.
                     self._lockedUntil = now + HackSlashConfig.TARGET_LOCK_HOLD_SEC
                     return locked
-                # Fall through to fresh priority scoring (snap onto boss).
+                # Fall through to fresh tier scoring (snap onto better tier).
             else:
                 self._lockedKey = None
 
@@ -430,7 +475,7 @@ class SoftTargetFinder:
             if not self._inCone(target):
                 continue
             scored.append((
-                self._isPriorityTarget(target),
+                self._priorityTier(target),
                 self._distance(target),
                 target))
         best = pickSoftLockAcquire(scored)
@@ -442,18 +487,18 @@ class SoftTargetFinder:
         self._snapped = newKey is not None and newKey != prevKey
         return best
 
-    def _isPriorityTarget(self, target):
-        """True for Overlord / Oswald / Elite / Ambush soft-lock preference.
+    def _priorityTier(self, target):
+        """Soft-lock prefer tier for ``target`` — lower wins.
 
-        Permanent prefer comes from CorruptionGlobals.isSoftLockPrioritySubject
-        (name prefixes + Overlord/Oswald gates). reclaimAmbushSpawn also
-        arms a brief Ambush prefer pulse that expires sticky glue so
-        mid-fight flanks can steal focus immediately.
+        Delegates to CorruptionGlobals.softLockPriorityTier (Overlord/
+        Oswald > Elite > Ambush > fodder). reclaimAmbushSpawn pulse keeps
+        Ambush names on the Ambush tier while sticky glue expires.
         """
+        fodder = _SOFT_LOCK_PRIORITY_TIER_FODDER
         if target is None:
-            return False
+            return fodder
         if not getattr(HackSlashConfig, 'TARGET_PRIORITY_ENABLED', True):
-            return False
+            return fodder
         name = ''
         try:
             if callable(getattr(target, 'getHackSlashName', None)):
@@ -464,15 +509,22 @@ class SoftTargetFinder:
                 name = str(getattr(target, 'name', '') or '')
         except Exception:
             name = ''
-        # Brief ambush prefer pulse — sticky expire + Ambush flank boost
-        # on reclaimAmbushSpawn. Permanent Elite/Ambush prefer also lives
-        # in isSoftLockPrioritySubject below (always-on name prefixes).
-        if self.isAmbushPreferActive() and isAmbushPreferName(name):
-            return True
         try:
             from toontown.corruption import CorruptionGlobals
+            fodder = int(getattr(
+                CorruptionGlobals, 'SOFT_LOCK_PRIORITY_TIER_FODDER', fodder))
+            ambushTier = int(getattr(
+                CorruptionGlobals, 'SOFT_LOCK_PRIORITY_TIER_AMBUSH', 2))
         except ImportError:
-            return False
+            CorruptionGlobals = None
+            ambushTier = 2
+        # Brief ambush prefer pulse — sticky expire + Ambush flank boost
+        # on reclaimAmbushSpawn. Permanent Ambush tier also lives in
+        # softLockPriorityTier below (always-on name prefixes).
+        if CorruptionGlobals is None:
+            if self.isAmbushPreferActive() and isAmbushPreferName(name):
+                return ambushTier
+            return fodder
         archetype = 0
         finalePhase = 0
         try:
@@ -489,10 +541,27 @@ class SoftTargetFinder:
         except Exception:
             finalePhase = 0
         try:
-            return bool(CorruptionGlobals.isSoftLockPrioritySubject(
+            return int(CorruptionGlobals.softLockPriorityTier(
                 archetype, name=name, finalePhase=finalePhase))
         except Exception:
-            return False
+            return fodder
+
+    def _isPriorityTarget(self, target):
+        """True for Overlord / Oswald / Elite / Ambush soft-lock preference.
+
+        Permanent prefer comes from CorruptionGlobals.softLockPriorityTier
+        (any non-fodder tier via isSoftLockPrioritySubject). reclaimAmbushSpawn
+        also arms a brief Ambush prefer pulse that expires sticky glue so
+        mid-fight flanks can steal focus immediately.
+        """
+        fodder = _SOFT_LOCK_PRIORITY_TIER_FODDER
+        try:
+            from toontown.corruption import CorruptionGlobals
+            fodder = int(getattr(
+                CorruptionGlobals, 'SOFT_LOCK_PRIORITY_TIER_FODDER', fodder))
+        except ImportError:
+            pass
+        return self._priorityTier(target) < fodder
 
     def _key(self, target):
         if target is None:

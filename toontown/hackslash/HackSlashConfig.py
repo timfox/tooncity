@@ -25,15 +25,16 @@ TARGET_CYCLE_COOLDOWN_SEC = 0.12
 TARGET_CYCLE_RANGE = 18.0
 TARGET_CYCLE_HALF_ANGLE_DEG = 95.0
 
-# Soft-lock priority — prefer Ink Overlord, Corrupted Oswald, and
-# Elite/Ambush-prefixed pack hostiles over nearer fodder (Silly P2 /
-# betrayal chase / elite last-wave / between-wave ambush). Auto-acquire,
-# fresh Tab, sticky hold yield, and Tab/` cycle-with-lock jump to those
-# subjects when one is in cone so pack adds do not glue auto or orbit
-# through trash. Sticky still holds / cycle still yaw-orbits when already
-# on a priority subject or when no priority hostile is in cone (Tab away
-# from boss can still focus trash). Toggle TARGET_PRIORITY_ENABLED =
-# False restores nearest-only soft-lock.
+# Soft-lock priority tiers — Overlord / Corrupted Oswald outrank Elite
+# outrank Ambush outrank nearer fodder (Silly P2 / betrayal chase /
+# elite last-wave / between-wave ambush). Auto-acquire, fresh Tab,
+# sticky hold yield, and Tab/` cycle-with-lock jump to a strictly
+# higher tier when one is in cone so lower-tier hostiles do not glue
+# auto or orbit through trash during climax. Sticky still holds /
+# cycle still yaw-orbits when already on the best available tier or
+# when no better-tier hostile is in cone (Tab away from boss can still
+# focus trash). Toggle TARGET_PRIORITY_ENABLED = False restores
+# nearest-only soft-lock.
 TARGET_PRIORITY_ENABLED = True
 
 # Ambush soft-lock prefer pulse — reclaimAmbushSpawn briefly prefers
