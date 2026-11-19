@@ -2,16 +2,16 @@
 """Headless behavioral deepen: explore → fight → reclaim → Oswald twist.
 
 Panda-free proof of the multi-hood loop already shipped on develop (through
-systems waves ending at PR #376 / wave H). Complements
+systems waves ending at PR #383 / wave I). Complements
 `test_headless_loop_smoke.py` (registration / juice AST) and the focused
 wave / act-param / kit suites by chaining the spiritual-sequel loop:
 
   explore — zone messengers, Oswald plaza NPC + reclaim cheer (#354) +
             first-meet tip / oswaldMet persist (#360) + oswaldCheered
             latch after reclaim cheer (#369) + soft-next greets from
-            cheer/unlocks (#373), Loopy unease, hub breadcrumb act-unlock
-            dim (#332) + progress-sync rehydrate (#357), chase-pending
-            hub tip (#342)
+            cheer/unlocks (#373) + ACTS street authored stands (#378),
+            Loopy unease, hub breadcrumb act-unlock dim (#332) +
+            progress-sync rehydrate (#357), chase-pending hub tip (#342)
   fight   — archetype kits, melee interrupt (#329/#348/#352/#363),
             Brute/Gagster counters (#343), Overlord rain/slam/ink_surge
             counters (#359), Smudge ink_dash/ink_splat interrupt+counters
@@ -21,21 +21,24 @@ wave / act-param / kit suites by chaining the spiritual-sequel loop:
             (#338), soft-lock boss priority (#339) + sticky yield (#347) +
             cycle-with-lock prefer (#356) + Elite/Ambush pack prefer
             (#375) + reclaimAmbushSpawn pressure/soft-lock cue (#372),
-            Overlord P1 rising slam (#334) + move-id telegraph (#340) +
-            rain linger sludge (#362), boss/chase HP bar (#331)
+            Smudge swarm orbit/weave (#379) + Oswald chase press/circle
+            (#383), Overlord P1 rising slam (#334) + move-id telegraph
+            (#340) + rain linger sludge (#362) + slam/ink_surge linger
+            (#381), boss/chase HP bar (#331)
   reclaim — soft-gate + R hydrate, Silly Overlord HP→P2, ink_surge, elite
             modifiers / earlier-wave ambush + Silly between-swell
             (#345/#358) + ACTS C path elite/ambush mirror (#365) +
-            finale C phase2 elite/ambush beside Unleashed adds (#376),
-            street-clear jellybean/laff reward (#361), campaign progress
-            client sync on login (#333), CampaignPower reclaimCount
-            rehydrate (#349) + sync/purity dedupe (#367), SECURED
-            purity-lock persist across AI restart (#368), campaignVictory
-            client relay (#351)
+            finale C phase2 elite/ambush beside Unleashed adds (#376) +
+            finalePhaseStingBanner plate (#380), street-clear
+            jellybean/laff reward (#361), campaign progress client sync
+            on login (#333), CampaignPower reclaimCount rehydrate (#349)
+            + sync/purity dedupe (#367), SECURED purity-lock persist
+            across AI restart (#368), campaignVictory client relay (#351)
   twist   — betrayal chase + kit + chase resume (#330) + false-clear gate
             (#341) + mid-chase HP persist (#350) + Oswald telegraph/hit AV
             (#344) + chase-clear epilogue + hub stain (#336) + hub-stain
             securedZones mirror (#374) + washed-plaza epilogue beat (#353)
+            + hubEpilogueBeatShown tip latch (#382)
 
 No Panda3D, no resources, no invented gameplay — only concrete symbols and
 pure helpers already on develop. Not a cream-FX deepen / no KH.
@@ -49,6 +52,7 @@ from __future__ import annotations
 
 import ast
 import importlib.util
+import math
 import sys
 import types
 import unittest
@@ -498,6 +502,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('_buildNpcSilhouette', presence_src)
         self.assertIn('_placeBodyAtPlaza', presence_src)
         self.assertIn('_placeBodyAtStreetStand', presence_src)
+        self.assertIn('_placeBodyAtAuthoredStand', presence_src)
         self.assertIn('streetStandPos', presence_src)
         self.assertIn('playReclaimCheer', presence_src)
         self.assertIn('npcCheerStub', presence_src)
@@ -518,6 +523,23 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         for act in camp.ACTS:
             self.assertIn(int(act['zoneId']), street_pos)
             self.assertEqual(len(street_pos[int(act['zoneId'])]), 4)
+        # Authored street stands (#378) — absolute landmarks, not SPAWN_*
+        # avatar-relative offsets; placement prefers plaza → street → near.
+        self.assertGreater(float(camp.OSWALD_PRESENCE_SPAWN_FORWARD), 0.0)
+        self.assertNotIn(int(camp.HUB_ZONE), street_pos)
+        for zid, stand in street_pos.items():
+            x, y = float(stand[0]), float(stand[1])
+            self.assertNotEqual((x, y), (0.0, 0.0), msg='zone %s' % zid)
+            self.assertNotEqual(
+                (x, y),
+                (0.0, float(camp.OSWALD_PRESENCE_SPAWN_FORWARD)),
+                msg='zone %s looks like SPAWN_FORWARD offset' % zid)
+        place_idx = presence_src.index('def _placeBody(')
+        plaza_idx = presence_src.index('_placeBodyAtPlaza', place_idx)
+        street_idx = presence_src.index('_placeBodyAtStreetStand', place_idx)
+        near_idx = presence_src.index('_placeBodyNearAvatar', place_idx)
+        self.assertLess(plaza_idx, street_idx)
+        self.assertLess(street_idx, near_idx)
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_CHEER_TIP)
         self.assertIn('clean', camp.OSWALD_PRESENCE_CHEER_TIP.lower())
         self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')
@@ -950,6 +972,71 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertEqual(
             cg.archetypeCombatRole(cg.ARCHETYPE_CORRUPT_OSWALD),
             cg.ROLE_PRESS)
+        # Smudge orbit/weave (#379) — pack circles dash ring instead of scrum.
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_ORBIT, 20.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, weave=4.0, orbitCloseDist=12.0,
+            flankSide=1)
+        self.assertEqual(action, 'approach')
+        self.assertAlmostEqual(gx, 6.0, places=5)
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_ORBIT, 8.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, weave=4.0, orbitCloseDist=12.0,
+            flankSide=1)
+        self.assertEqual(action, 'orbit')
+        self.assertAlmostEqual(math.hypot(gx, gy), 6.0, places=5)
+        self.assertGreater(gy, 0.0)
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_ORBIT, 2.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, weave=4.0, orbitCloseDist=12.0,
+            flankSide=1)
+        self.assertEqual(action, 'retreat')
+        self.assertAlmostEqual(math.hypot(gx, gy), 6.0, places=5)
+        self.assertGreater(
+            cg.roleMoveSpeedScale(cg.ROLE_ORBIT, 'orbit'), 1.0)
+        # Oswald press/circle (#383) — climax approach asymmetry vs orbit.
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_PRESS, 22.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, pressCircle=4.0, pressCloseDist=14.0,
+            flankSide=1)
+        self.assertEqual(action, 'press')
+        self.assertAlmostEqual(gx, 6.0, places=5)
+        gx, gy, action = cg.roleMoveGoal(
+            cg.ROLE_PRESS, 8.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, pressCircle=4.0, pressCloseDist=14.0,
+            flankSide=1)
+        self.assertEqual(action, 'circle')
+        self.assertAlmostEqual(math.hypot(gx, gy), 6.0, places=5)
+        self.assertGreater(gy, 0.0)
+        # Same close geometry: Smudge retreats; Oswald presses onto the toon.
+        gx_s, gy_s, act_s = cg.roleMoveGoal(
+            cg.ROLE_ORBIT, 2.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, weave=4.0, orbitCloseDist=12.0,
+            flankSide=1)
+        gx_o, gy_o, act_o = cg.roleMoveGoal(
+            cg.ROLE_PRESS, 2.0, 0.0, 0.0, 0.0,
+            preferred=6.0, band=1.0, pressCircle=4.0, pressCloseDist=14.0,
+            flankSide=1)
+        self.assertEqual(act_s, 'retreat')
+        self.assertEqual(act_o, 'press')
+        self.assertAlmostEqual(gx_o, 0.0, places=5)
+        self.assertAlmostEqual(gy_o, 0.0, places=5)
+        self.assertGreater(
+            cg.roleMoveSpeedScale(cg.ROLE_PRESS, 'press'), 1.0)
+        # AI role path wires orbit + press through archetypeCombatRole.
+        corrupt_ai_role = _read(
+            'toontown/corruption/DistributedCorruptToonAI.py')
+        self.assertIn('__roleMoveToward', corrupt_ai_role)
+        role_snip = corrupt_ai_role[
+            corrupt_ai_role.find('def __roleMoveToward'):]
+        role_end = role_snip.find('\n    def ', 1)
+        role_body = role_snip if role_end < 0 else role_snip[:role_end]
+        self.assertIn('archetypeCombatRole', role_body)
+        self.assertIn('roleMoveGoal', role_body)
+        self.assertIn('orbit', role_body.lower())
+        self.assertIn('press', role_body.lower())
+        self.assertIn('circle', role_body.lower())
+        self.assertIn('__chaseToward(target)', role_body)
         self.assertEqual(cg.oswaldPickAttackMove(8.0), 'betrayal_lunge')
         self.assertEqual(cg.oswaldPickAttackMove(2.0), 'stain_burst')
         self.assertTrue(cg.OSWALD_BETRAYAL_KIT_ENABLED)
