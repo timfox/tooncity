@@ -1154,6 +1154,23 @@ OSWALD_BETRAYAL_CHASE_NAME = 'Corrupted Oswald'
 OSWALD_BETRAYAL_CHASE_DELAY_SEC = 3.15
 # Optional override HP base (archetype defaultHp used when <= 0).
 OSWALD_BETRAYAL_CHASE_HP = 0
+# Authored chase spawn stands (x, y, z, h) keyed by zoneId — stable
+# landmarks for the Corrupted Oswald wash fight, not SPAWN_FORWARD
+# beside the local toon (last near-avatar holdout after HubStainConfront
+# / HubEpilogueBeat / OSWALD_PRESENCE_*_POS plaza stands). Hub entry
+# shares HubStainConfront plaza xy so resume-at-hub fills the stain
+# landmark instead of orphaning it. Silly finale street gets a distinct
+# wash-arena stand (not OSWALD_PRESENCE_STREET_POS). Stub coords (plaza /
+# street DNA not in-tree); tweak when DNA lands. Unmapped zones fall
+# back to SPAWN_FORWARD beside the toon. No cream / no KH.
+OSWALD_BETRAYAL_CHASE_POS = {
+    # Grounded at HUB_STAIN_CONFRONT_POS xy (label z≈1.15 → body z).
+    ToontownGlobals.ToontownCentral: (-38.0, 18.0, -0.55, -90.0),
+    # Finale street wash arena — distinct from trusted presence stand.
+    ToontownGlobals.SillyStreet: (14.0, 6.0, 0.025, 40.0),
+}
+# Fallback offset relative to the local toon when zone has no authored
+# OSWALD_BETRAYAL_CHASE_POS entry (and hub confront fallback misses).
 OSWALD_BETRAYAL_CHASE_SPAWN_FORWARD = 7.5
 OSWALD_BETRAYAL_CHASE_TIP = (
     'Oswald turns on you — betrayal lunge inbound!  |  '

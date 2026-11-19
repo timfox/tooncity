@@ -42,7 +42,8 @@ wave / act-param / kit suites by chaining the spiritual-sequel loop:
             (#344) + chase-clear epilogue + hub stain (#336) + hub-stain
             securedZones mirror (#374) + HubStainConfront plaza stand
             (#385) + washed-plaza epilogue beat (#353) + HubEpilogueBeat
-            plaza stand (#389) + hubEpilogueBeatShown tip latch (#382)
+            plaza stand (#389) + hubEpilogueBeatShown tip latch (#382) +
+            authored betrayal chase spawn stands / hub-resume-at-confront
 
 No Panda3D, no resources, no invented gameplay — only concrete symbols and
 pure helpers already on develop. Not a cream-FX deepen / no KH.
@@ -2308,19 +2309,38 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue((REPO_ROOT / chase_rel).is_file())
         chase_names = _class_and_func_names(_module_ast(chase_rel))
         for sym in (
-                'spawnCorruptOswald', 'OswaldBetrayalChaseClient',
+                'spawnCorruptOswald', 'chaseSpawnStand',
+                'OswaldBetrayalChaseClient',
                 'ensureOswaldBetrayalChaseClient', 'chaseAttackMove',
                 'chaseHp', 'resolveChaseSpawnHp', 'chaseCombatDefeated',
                 'epilogueEnabled', 'epilogueTitle', 'epilogueCue'):
             self.assertIn(sym, chase_names)
         chase_src = _read(chase_rel)
         self.assertIn('ARCHETYPE_CORRUPT_OSWALD', chase_src)
+        self.assertIn('OSWALD_BETRAYAL_CHASE_POS', chase_src)
+        self.assertIn('chaseSpawnStand', chase_src)
+        self.assertIn('HUB_STAIN_CONFRONT_POS', chase_src)
         self.assertIn('oswaldBetrayalChaseCleared', chase_src)
         self.assertIn('campaignEpilogue', chase_src)
         self.assertIn('_fireEpilogue', chase_src)
         self.assertIn("corrupt._stats['attackMove']", chase_src)
         self.assertIn('resolveChaseSpawnHp', chase_src)
         self.assertIn('announceCampaignVictory', chase_src)
+        # Authored chase stands — hub shares confront xy; not SPAWN_FORWARD.
+        chase_pos = camp.OSWALD_BETRAYAL_CHASE_POS
+        self.assertIn(int(camp.HUB_ZONE), chase_pos)
+        self.assertIn(SILLY, chase_pos)
+        hub_stand = chase_pos[int(camp.HUB_ZONE)]
+        confront_pos = camp.HUB_STAIN_CONFRONT_POS
+        self.assertEqual(float(hub_stand[0]), float(confront_pos[0]))
+        self.assertEqual(float(hub_stand[1]), float(confront_pos[1]))
+        self.assertNotEqual(
+            (float(hub_stand[0]), float(hub_stand[1])),
+            (0.0, float(camp.OSWALD_BETRAYAL_CHASE_SPAWN_FORWARD)))
+        spawn_fn = chase_src[chase_src.index('def spawnCorruptOswald'):]
+        spawn_fn = spawn_fn[:spawn_fn.index('\ndef ', 1)]
+        self.assertLess(
+            spawn_fn.index('chaseSpawnStand'), spawn_fn.index('getX()'))
 
         # Mid-chase HP persist (#350) — resume / relog must not full-heal.
         resolve = self.chase['resolveChaseSpawnHp']

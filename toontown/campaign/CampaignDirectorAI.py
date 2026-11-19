@@ -685,6 +685,8 @@ class CampaignDirectorAI(DirectObject):
         if toon is None:
             return Task.done
         # Prefer the toon's live zone so a hub hop still fields nearby.
+        # spawnCorruptOswald prefers authored OSWALD_BETRAYAL_CHASE_POS
+        # (hub → HubStainConfront plaza landmark) over near-toon FORWARD.
         liveZone = int(getattr(toon, 'zoneId', 0) or 0) or int(zoneId)
         # Mid-chase remaining HP from progress blob (0 / unset → full).
         remaining = int(getattr(self, 'chaseHp', 0) or 0)
