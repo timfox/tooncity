@@ -1,0 +1,23 @@
+#usda 1.0
+(
+    "Toon City USD spike fixture — smoke prop (TcProp). No KH content."
+)
+
+def Xform "SmokePropRoot" (
+    # Spike marker: TcProp — bake target for a reclaim street prop.
+    customData = {
+        string tc:kind = "TcProp"
+        string tc:bamPath = "phase_5/models/props/loopy_ink_banner.bam"
+        string tc:dnaCode = "loopy_ink_banner"
+        string tc:hood = "TT"
+    }
+)
+{
+    def Xform "geom" (
+        customData = {
+            string tc:purpose = "render"
+        }
+    )
+    {
+    }
+}
