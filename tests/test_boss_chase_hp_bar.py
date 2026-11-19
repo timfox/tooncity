@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Headless / AST tests: boss + chase HP bar for Overlord / Corrupted Oswald.
+"""Headless / AST tests: boss + chase + Elite/Ambush pack HP bar.
 
 Loads CorruptionGlobals with a ToontownGlobals stub — no Panda3D. BossHpBarHud
 and DistributedCorruptToon wiring are AST-checked (imports pull panda).
@@ -116,14 +116,18 @@ class BossChaseHpBarTests(unittest.TestCase):
         self.assertIn('Overlord', cg.BOSS_HP_BAR_DEFAULT_OVERLORD_LABEL)
         self.assertIn('Oswald', cg.BOSS_HP_BAR_DEFAULT_OSWALD_LABEL)
 
-    def test_subject_gate_overlord_and_oswald_only(self):
+    def test_subject_gate_overlord_oswald_and_elite_ambush(self):
         cg = self.cg
         subject = cg.isBossOrChaseHpBarSubject
-        # Street archetypes — never.
+        # Plain street archetypes — never.
         self.assertFalse(subject(cg.ARCHETYPE_INK))
         self.assertFalse(subject(cg.ARCHETYPE_BRUTE))
         self.assertFalse(subject(cg.ARCHETYPE_SNARE, name='Balloon Snare'))
         self.assertFalse(subject(cg.ARCHETYPE_GAGSTER))
+        self.assertFalse(subject(cg.ARCHETYPE_INK, name='Ink Smudge'))
+        # Bare tokens without the rename space prefix — not Elite/Ambush.
+        self.assertFalse(subject(cg.ARCHETYPE_INK, name='Elite'))
+        self.assertFalse(subject(cg.ARCHETYPE_INK, name='Ambush'))
         # Corrupted Oswald chase — always.
         self.assertTrue(subject(cg.ARCHETYPE_CORRUPT_OSWALD))
         self.assertTrue(subject(
@@ -135,7 +139,19 @@ class BossChaseHpBarTests(unittest.TestCase):
             cg.ARCHETYPE_INK, name='Ink Overlord Rising'))
         self.assertTrue(subject(
             cg.ARCHETYPE_INK, name='Ink Overlord Unleashed'))
-        self.assertFalse(subject(cg.ARCHETYPE_INK, name='Ink Smudge'))
+        # Elite / Ambush pack renames — soft-lock prefer parity (#375).
+        self.assertTrue(subject(cg.ARCHETYPE_INK, name='Elite Ink Smudge'))
+        self.assertTrue(subject(
+            cg.ARCHETYPE_BRUTE, name='Elite Sludge Brute'))
+        self.assertTrue(subject(
+            cg.ARCHETYPE_SNARE, name='Ambush Balloon Snare'))
+        self.assertTrue(subject(
+            cg.ARCHETYPE_GAGSTER, name='Ambush Gunk Gagster'))
+        self.assertTrue(subject(cg.ARCHETYPE_INK, name='elite ink smudge'))
+        self.assertTrue(subject(cg.ARCHETYPE_INK, name='AMBUSH Ink Smudge'))
+        self.assertTrue(cg.isEliteOrAmbushPreferName('Elite Ink Smudge'))
+        self.assertTrue(cg.isEliteOrAmbushPreferName('Ambush Sludge Brute'))
+        self.assertFalse(cg.isEliteOrAmbushPreferName('Ink Smudge'))
 
     def test_resolve_finale_phase_from_name(self):
         cg = self.cg
@@ -164,6 +180,12 @@ class BossChaseHpBarTests(unittest.TestCase):
             cg.bossHpBarLabel(name='Ink Overlord Rising'),
             'Ink Overlord Rising')
         self.assertEqual(
+            cg.bossHpBarLabel(name='Elite Ink Smudge'),
+            'Elite Ink Smudge')
+        self.assertEqual(
+            cg.bossHpBarLabel(name='Ambush Balloon Snare'),
+            'Ambush Balloon Snare')
+        self.assertEqual(
             cg.bossHpBarLabel(archetype=cg.ARCHETYPE_CORRUPT_OSWALD),
             cg.BOSS_HP_BAR_DEFAULT_OSWALD_LABEL)
         self.assertEqual(
@@ -179,8 +201,24 @@ class BossChaseHpBarTests(unittest.TestCase):
             cg.bossHpBarFillColor(0, finalePhase=2),
             cg.BOSS_HP_BAR_FILL_OVERLORD_P2)
         self.assertEqual(
+            cg.bossHpBarFillColor(
+                cg.ARCHETYPE_INK, name='Elite Ink Smudge'),
+            cg.BOSS_HP_BAR_FILL_ELITE)
+        self.assertEqual(
+            cg.bossHpBarFillColor(
+                cg.ARCHETYPE_SNARE, name='Ambush Balloon Snare'),
+            cg.BOSS_HP_BAR_FILL_AMBUSH)
+        self.assertEqual(
             cg.bossHpBarRimColor(0, name='Ink Overlord Unleashed'),
             cg.BOSS_HP_BAR_RIM_OVERLORD_P2)
+        self.assertEqual(
+            cg.bossHpBarRimColor(
+                cg.ARCHETYPE_BRUTE, name='Elite Sludge Brute'),
+            cg.BOSS_HP_BAR_RIM_ELITE)
+        self.assertEqual(
+            cg.bossHpBarRimColor(
+                cg.ARCHETYPE_INK, name='Ambush Ink Smudge'),
+            cg.BOSS_HP_BAR_RIM_AMBUSH)
 
     def test_disabled_gate(self):
         cg = self.cg

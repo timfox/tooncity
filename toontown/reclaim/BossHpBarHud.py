@@ -1,8 +1,9 @@
-"""Readable boss / chase life bar for Ink Overlord + Corrupted Oswald.
+"""Readable life bar for Overlord, Corrupted Oswald, and Elite/Ambush packs.
 
 Thin aspect2d HUD driven by DistributedCorruptToon client setHp/setMaxHp.
-Shows one active subject at a time (finale Overlord or betrayal chase).
-Rubber-hose Toontown spiritual-sequel tone only (not cream FX deepen).
+Shows one active subject at a time (finale Overlord, betrayal chase, or
+soft-lock-preferred Elite / Ambush rename). Rubber-hose Toontown
+spiritual-sequel tone only (not cream FX deepen; no KH).
 """
 
 from panda3d.core import CardMaker, TextNode, TransparencyAttrib

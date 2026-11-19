@@ -1234,7 +1234,7 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn('overlordPickRisingMove', corrupt_ai)
         self.assertIn("'rising'", corrupt_ai)
 
-        # Boss / chase HP bar subjects: Overlord phases + Corrupted Oswald.
+        # Boss / chase / Elite·Ambush HP bar subjects (soft-lock prefer parity).
         self.assertTrue(cg.BOSS_HP_BAR_ENABLED)
         self.assertGreater(float(cg.BOSS_HP_BAR_WIDTH), 0.5)
         self.assertIn('Overlord', cg.BOSS_HP_BAR_DEFAULT_OVERLORD_LABEL)
@@ -1246,6 +1246,19 @@ class HeadlessLoopFlowTest(unittest.TestCase):
             cg.ARCHETYPE_INK, finalePhase=1))
         self.assertTrue(cg.isBossOrChaseHpBarSubject(
             cg.ARCHETYPE_INK, finalePhase=2))
+        self.assertTrue(cg.isBossOrChaseHpBarSubject(
+            cg.ARCHETYPE_INK, name='Elite Ink Smudge'))
+        self.assertTrue(cg.isBossOrChaseHpBarSubject(
+            cg.ARCHETYPE_SNARE, name='Ambush Balloon Snare'))
+        self.assertTrue(cg.isEliteOrAmbushPreferName('Elite Ink Smudge'))
+        self.assertEqual(
+            cg.bossHpBarFillColor(
+                cg.ARCHETYPE_INK, name='Elite Ink Smudge'),
+            cg.BOSS_HP_BAR_FILL_ELITE)
+        self.assertEqual(
+            cg.bossHpBarFillColor(
+                cg.ARCHETYPE_INK, name='Ambush Ink Smudge'),
+            cg.BOSS_HP_BAR_FILL_AMBUSH)
         self.assertEqual(cg.bossHpBarRatio(50, 100), 0.5)
         self.assertEqual(cg.bossHpBarRatio(0, 100), 0.0)
         hud_rel = 'toontown/reclaim/BossHpBarHud.py'

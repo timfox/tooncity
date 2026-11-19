@@ -223,9 +223,14 @@ class SoftLockEliteAmbushPreferTest(unittest.TestCase):
         cg_src = _read('toontown/corruption/CorruptionGlobals.py')
         self.assertIn("startswith('elite ')", cg_src)
         self.assertIn("startswith('ambush ')", cg_src)
-        # No cream deepen / no KH branding in the gate.
+        self.assertIn('def isEliteOrAmbushPreferName', cg_src)
+        # Soft-lock gate delegates Elite/Ambush prefixes to the shared helper.
         gate_idx = cg_src.index('def isSoftLockPrioritySubject')
-        gate_snip = cg_src[gate_idx:gate_idx + 900].lower()
+        next_def = cg_src.find('\ndef ', gate_idx + 1)
+        gate_body = cg_src[gate_idx:next_def if next_def > 0 else gate_idx + 1600]
+        self.assertIn('isEliteOrAmbushPreferName', gate_body)
+        # No cream deepen / no KH branding in the gate.
+        gate_snip = gate_body.lower()
         self.assertNotIn('cream', gate_snip)
         self.assertNotIn('keyblade', gate_snip)
         self.assertNotIn('kingdom hearts', gate_snip)

@@ -4128,8 +4128,10 @@ def normalizeFinalePhase(phaseIndex):
 
 
 # ---------------------------------------------------------------------------
-# Boss / chase HP bar (client HUD) — Ink Overlord + Corrupted Oswald only.
-# Readable life bar from synced setHp/setMaxHp. Not cream FX deepen; no KH.
+# Boss / chase / Elite·Ambush HP bar (client HUD).
+# Ink Overlord + Corrupted Oswald + Elite/Ambush-prefixed pack hostiles
+# (same rename tokens soft-lock already prefers). Readable life bar from
+# synced setHp/setMaxHp. Not cream FX deepen; no KH.
 # BOSS_HP_BAR_ENABLED = False hides the bar without touching combat AI.
 # ---------------------------------------------------------------------------
 BOSS_HP_BAR_ENABLED = True
@@ -4146,13 +4148,17 @@ BOSS_HP_BAR_TRACK_COLOR = (0.10, 0.04, 0.12, 0.88)
 BOSS_HP_BAR_RIM_COLOR = (0.55, 0.22, 0.55, 0.72)
 BOSS_HP_BAR_LABEL_COLOR = (1.0, 0.92, 0.95, 1.0)
 BOSS_HP_BAR_PCT_COLOR = (1.0, 0.96, 0.9, 1.0)
-# Fill / rim by subject — Overlord phase look + Oswald betrayal stain.
+# Fill / rim by subject — Overlord phase, Oswald betrayal, Elite/Ambush pack.
 BOSS_HP_BAR_FILL_OVERLORD_P1 = (0.95, 0.28, 0.95, 0.96)
 BOSS_HP_BAR_FILL_OVERLORD_P2 = (0.95, 0.22, 0.16, 0.98)
 BOSS_HP_BAR_FILL_OSWALD = (0.92, 0.28, 0.22, 0.96)
+BOSS_HP_BAR_FILL_ELITE = (0.95, 0.58, 0.18, 0.96)  # ink-amber elite pack
+BOSS_HP_BAR_FILL_AMBUSH = (0.18, 0.72, 0.78, 0.96)  # flank-teal ambush
 BOSS_HP_BAR_RIM_OVERLORD_P1 = (1.0, 0.55, 1.0, 0.72)
 BOSS_HP_BAR_RIM_OVERLORD_P2 = (1.0, 0.32, 0.22, 0.78)
 BOSS_HP_BAR_RIM_OSWALD = (1.0, 0.42, 0.3, 0.75)
+BOSS_HP_BAR_RIM_ELITE = (1.0, 0.72, 0.28, 0.75)
+BOSS_HP_BAR_RIM_AMBUSH = (0.35, 0.88, 0.92, 0.75)
 BOSS_HP_BAR_DEFAULT_OVERLORD_LABEL = 'Ink Overlord'
 BOSS_HP_BAR_DEFAULT_OSWALD_LABEL = 'Corrupted Oswald'
 
@@ -4168,6 +4174,18 @@ def resolveBossHpBarFinalePhase(finalePhase=0, name=''):
     if 'overlord' in text:
         return 1
     return 0
+
+
+def isEliteOrAmbushPreferName(name=''):
+    """True for Elite / Ambush pack rename prefixes (soft-lock + HP bar).
+
+    Matches ReclaimGlobals.ELITE_NAME_PREFIX / AMBUSH_NAME_PREFIX without
+    importing reclaim (avoids CorruptionGlobals ↔ ReclaimGlobals cycle).
+    Bare ``Elite`` / ``Ambush`` tokens without the trailing space are not
+    pack renames.
+    """
+    text = (name or '').lower()
+    return text.startswith('elite ') or text.startswith('ambush ')
 
 
 def isSoftLockPrioritySubject(archetype=0, name='', finalePhase=0):
@@ -4190,16 +4208,18 @@ def isSoftLockPrioritySubject(archetype=0, name='', finalePhase=0):
     if 'overlord' in text or 'unleashed' in text:
         return True
     # Elite / Ambush pack rename prefixes — permanent soft-lock prefer so
-    # mid-wave elite/ambush scrums do not glue onto nearer fodder. Matches
-    # ReclaimGlobals.ELITE_NAME_PREFIX / AMBUSH_NAME_PREFIX without importing
-    # reclaim (avoids CorruptionGlobals ↔ ReclaimGlobals cycle).
-    if text.startswith('elite ') or text.startswith('ambush '):
+    # mid-wave elite/ambush scrums do not glue onto nearer fodder.
+    if isEliteOrAmbushPreferName(name):
         return True
     return normalizeFinalePhase(finalePhase) >= 1
 
 
 def isBossOrChaseHpBarSubject(archetype=0, name='', finalePhase=0):
-    """True for Ink Overlord (finale phase/name) or Corrupted Oswald chase."""
+    """True for Overlord, Corrupted Oswald, or Elite/Ambush pack hostiles.
+
+    Parity with soft-lock prefer (#375): mid-wave Elite / Ambush renames
+    that already steal Tab focus also drive the readable life bar.
+    """
     if not BOSS_HP_BAR_ENABLED:
         return False
     try:
@@ -4207,6 +4227,8 @@ def isBossOrChaseHpBarSubject(archetype=0, name='', finalePhase=0):
     except (TypeError, ValueError):
         aid = ARCHETYPE_INK
     if aid == ARCHETYPE_CORRUPT_OSWALD:
+        return True
+    if isEliteOrAmbushPreferName(name):
         return True
     return resolveBossHpBarFinalePhase(finalePhase, name) >= 1
 
@@ -4241,13 +4263,18 @@ def bossHpBarLabel(name='', archetype=0, finalePhase=0):
 
 
 def bossHpBarFillColor(archetype=0, finalePhase=0, name=''):
-    """Fill RGBA for the active boss/chase subject."""
+    """Fill RGBA for the active boss/chase/Elite·Ambush subject."""
     try:
         aid = int(archetype)
     except (TypeError, ValueError):
         aid = ARCHETYPE_INK
     if aid == ARCHETYPE_CORRUPT_OSWALD:
         return BOSS_HP_BAR_FILL_OSWALD
+    text = (name or '').lower()
+    if text.startswith('elite '):
+        return BOSS_HP_BAR_FILL_ELITE
+    if text.startswith('ambush '):
+        return BOSS_HP_BAR_FILL_AMBUSH
     phase = resolveBossHpBarFinalePhase(finalePhase, name)
     if phase >= 2:
         return BOSS_HP_BAR_FILL_OVERLORD_P2
@@ -4262,6 +4289,11 @@ def bossHpBarRimColor(archetype=0, finalePhase=0, name=''):
         aid = ARCHETYPE_INK
     if aid == ARCHETYPE_CORRUPT_OSWALD:
         return BOSS_HP_BAR_RIM_OSWALD
+    text = (name or '').lower()
+    if text.startswith('elite '):
+        return BOSS_HP_BAR_RIM_ELITE
+    if text.startswith('ambush '):
+        return BOSS_HP_BAR_RIM_AMBUSH
     phase = resolveBossHpBarFinalePhase(finalePhase, name)
     if phase >= 2:
         return BOSS_HP_BAR_RIM_OVERLORD_P2
