@@ -13,12 +13,19 @@ from typing import Any, Dict, Optional
 
 FIXTURES_DIR = Path(__file__).resolve().parent / 'fixtures'
 
-# Prim kind markers used in spike fixtures (customData / typeName comments).
+# Prim kind markers used in fixtures (customData tc:kind).
 _KIND_MARKERS = (
     'TcProp',
     'TcStreetRoot',
     'TcSpawnStand',
     'TcReclaimVolume',
+    'TcCharacterKit',
+    'TcLodGroup',
+    'TcMaterialLook',
+    'TcAnimClip',
+    'TcFxSocket',
+    'TcCameraShot',
+    'TcLightLook',
 )
 
 _CUSTOM_DATA_RE = re.compile(
@@ -32,6 +39,13 @@ _KV_RE = re.compile(
 )
 _DEF_RE = re.compile(
     r'\bdef\s+(?:Xform|Scope|Over|Prim)\s+"([^"]+)"',
+)
+# Prim def + optional metadata paren block (holds customData).
+_PRIM_META_RE = re.compile(
+    r'\bdef\s+(?:Xform|Scope|Over|Prim)\s+"(?P<name>[^"]+)"\s*'
+    r'(?:\((?P<meta>.*?)\)\s*)?'
+    r'\{',
+    re.DOTALL,
 )
 
 
@@ -78,23 +92,43 @@ def _coerce(raw: str) -> Any:
         return text
 
 
-def parse_usda_text(text: str) -> Dict[str, Any]:
-    """Pure-Python skim of ASCII USDA for spike metadata.
+def _parse_custom_body(body: str) -> Dict[str, Any]:
+    custom: Dict[str, Any] = {}
+    for kv in _KV_RE.finditer(body):
+        custom[kv.group('key')] = _coerce(kv.group('val'))
+    return custom
 
-    Collects prim def names, kind markers, and flattened customData keys
-    (``tc:`` prefix optional in source). Does not require ``pxr``.
+
+def parse_usda_text(text: str) -> Dict[str, Any]:
+    """Pure-Python skim of ASCII USDA for spike / schema metadata.
+
+    Collects prim def names, kind markers, flattened customData keys
+    (``tc:`` prefix optional in source), and per-prim records for
+    validators. Does not require ``pxr``.
     """
     kinds = [k for k in _KIND_MARKERS if k in text]
     prims = _DEF_RE.findall(text)
     custom: Dict[str, Any] = {}
     for match in _CUSTOM_DATA_RE.finditer(text):
-        body = match.group('body')
-        for kv in _KV_RE.finditer(body):
-            key = kv.group('key')
-            custom[key] = _coerce(kv.group('val'))
+        custom.update(_parse_custom_body(match.group('body')))
+
+    prim_records: list[Dict[str, Any]] = []
+    for match in _PRIM_META_RE.finditer(text):
+        name = match.group('name')
+        meta = match.group('meta') or ''
+        record_custom: Dict[str, Any] = {}
+        for cd in _CUSTOM_DATA_RE.finditer(meta):
+            record_custom.update(_parse_custom_body(cd.group('body')))
+        prim_records.append({
+            'name': name,
+            'kind': record_custom.get('kind'),
+            'customData': record_custom,
+        })
+
     return {
         'kinds': kinds,
         'prims': prims,
+        'primRecords': prim_records,
         'customData': custom,
         'ascii': True,
     }
