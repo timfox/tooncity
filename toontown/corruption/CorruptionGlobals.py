@@ -3664,6 +3664,11 @@ OVERLORD_PHASE_COMBAT = {
         'slamTelegraphDelay': 0.55,
         'slamCooldown': 1.65,
         'slamMeleeRange': 4.4,
+        # Tight linger sludge after close slam — rain parity, smaller footprint.
+        'slamLingerSec': 2.0,
+        'slamLingerTickSec': 0.5,
+        'slamLingerTickDamage': 1,
+        'slamLingerSlowFactor': 0.55,
     },
     2: {
         'id': 'unleashed-enrage',
@@ -3690,6 +3695,11 @@ OVERLORD_PHASE_COMBAT = {
         'slamTelegraphDelay': 0.38,
         'slamCooldown': 1.15,
         'slamMeleeRange': 5.2,
+        # Close slam linger — denser Unleashed foot-trap vs Rising.
+        'slamLingerSec': 2.5,
+        'slamLingerTickSec': 0.5,
+        'slamLingerTickDamage': 1,
+        'slamLingerSlowFactor': 0.5,
         # Mid-range ink surge — planar rush then landing AoE (third Unleashed
         # note between slam and rain). Longer than Smudge ink_dash.
         'surgeMaxRange': 8.0,
@@ -3700,6 +3710,11 @@ OVERLORD_PHASE_COMBAT = {
         'surgeDamage': 6,
         'surgeTelegraphDelay': 0.48,
         'surgeCooldown': 1.35,
+        # Mid surge linger — landing puddle owns the gap-close XY.
+        'surgeLingerSec': 2.75,
+        'surgeLingerTickSec': 0.5,
+        'surgeLingerTickDamage': 2,
+        'surgeLingerSlowFactor': 0.5,
     },
 }
 
@@ -3765,6 +3780,128 @@ def overlordRainLingerTickDamage(stats=None):
         stats = {}
     raw = stats.get(
         'rainLingerTickDamage', OVERLORD_RAIN_LINGER_TICK_DAMAGE)
+    return max(1, int(raw))
+
+
+# Lingering sludge hazard after Ink Overlord close slam resolve.
+# Slam was one-shot single-target; rain already owns floor (#362). Arm a
+# tight Gagster-like linger at the slam XY so Rising / Unleashed slam
+# leaves readable space control. OVERLORD_SLAM_LINGER_ENABLED = False
+# restores one-shot-only slam. No cream deepen / no KH.
+OVERLORD_SLAM_LINGER_ENABLED = True
+OVERLORD_SLAM_LINGER_SEC = 2.0
+OVERLORD_SLAM_LINGER_TICK_SEC = 0.5
+OVERLORD_SLAM_LINGER_TICK_DAMAGE = 1
+# Planar radius fallback when phase combat slamHitRange is missing (P1).
+OVERLORD_SLAM_LINGER_RADIUS = 4.6
+OVERLORD_SLAM_LINGER_SLOW_FACTOR = 0.55
+OVERLORD_SLAM_LINGER_SLOW_SEC = 0.65
+
+
+def overlordSlamLingerUntil(landAt, lingerSec=None):
+    """Absolute expiry for an Overlord slam linger sludge hazard."""
+    if lingerSec is None:
+        lingerSec = OVERLORD_SLAM_LINGER_SEC
+    return float(landAt) + max(0.0, float(lingerSec))
+
+
+def overlordSlamLingerTickCount(lingerSec=None, tickSec=None):
+    """How many DoT ticks fit inside a slam linger window (excludes land hit)."""
+    if lingerSec is None:
+        lingerSec = OVERLORD_SLAM_LINGER_SEC
+    if tickSec is None:
+        tickSec = OVERLORD_SLAM_LINGER_TICK_SEC
+    linger = max(0.0, float(lingerSec))
+    tick = max(0.05, float(tickSec))
+    if linger <= 0.0:
+        return 0
+    return int(linger // tick)
+
+
+def isInsideOverlordSlamLinger(dx, dy, radius):
+    """True when planar offset is inside the slam linger puddle radius."""
+    return isInsideOverlordRainLinger(dx, dy, radius)
+
+
+def isOverlordSlamSlowActive(until, now):
+    """True while an AI-stamped Overlord slam sludge slow window is live."""
+    return float(now) < float(until)
+
+
+def overlordSlamSlowUntil(now, slowSec=None):
+    """Absolute expiry for a slam-sludge-slow refresh stamped on a tick."""
+    if slowSec is None:
+        slowSec = OVERLORD_SLAM_LINGER_SLOW_SEC
+    return float(now) + max(0.0, float(slowSec))
+
+
+def overlordSlamLingerTickDamage(stats=None):
+    """Per-tick DoT while standing in slam linger sludge (min 1 when enabled)."""
+    if stats is None:
+        stats = {}
+    raw = stats.get(
+        'slamLingerTickDamage', OVERLORD_SLAM_LINGER_TICK_DAMAGE)
+    return max(1, int(raw))
+
+
+# Lingering sludge hazard after Ink Overlord ink_surge resolve.
+# Surge was hit + gap-close only; rain owns floor (#362). Arm a mid-band
+# linger at the post-dash XY so Unleashed three-note kit shares space
+# control. OVERLORD_INK_SURGE_LINGER_ENABLED = False restores one-shot
+# surge. No cream deepen / no KH.
+OVERLORD_INK_SURGE_LINGER_ENABLED = True
+OVERLORD_INK_SURGE_LINGER_SEC = 2.75
+OVERLORD_INK_SURGE_LINGER_TICK_SEC = 0.5
+OVERLORD_INK_SURGE_LINGER_TICK_DAMAGE = 1
+# Planar radius fallback when phase combat surgeHitRange is missing (P2).
+OVERLORD_INK_SURGE_LINGER_RADIUS = 7.0
+OVERLORD_INK_SURGE_LINGER_SLOW_FACTOR = 0.5
+OVERLORD_INK_SURGE_LINGER_SLOW_SEC = 0.7
+
+
+def overlordInkSurgeLingerUntil(landAt, lingerSec=None):
+    """Absolute expiry for an Overlord ink_surge linger sludge hazard."""
+    if lingerSec is None:
+        lingerSec = OVERLORD_INK_SURGE_LINGER_SEC
+    return float(landAt) + max(0.0, float(lingerSec))
+
+
+def overlordInkSurgeLingerTickCount(lingerSec=None, tickSec=None):
+    """How many DoT ticks fit inside an ink_surge linger window."""
+    if lingerSec is None:
+        lingerSec = OVERLORD_INK_SURGE_LINGER_SEC
+    if tickSec is None:
+        tickSec = OVERLORD_INK_SURGE_LINGER_TICK_SEC
+    linger = max(0.0, float(lingerSec))
+    tick = max(0.05, float(tickSec))
+    if linger <= 0.0:
+        return 0
+    return int(linger // tick)
+
+
+def isInsideOverlordInkSurgeLinger(dx, dy, radius):
+    """True when planar offset is inside the ink_surge linger puddle radius."""
+    return isInsideOverlordRainLinger(dx, dy, radius)
+
+
+def isOverlordInkSurgeSlowActive(until, now):
+    """True while an AI-stamped Overlord ink_surge sludge slow is live."""
+    return float(now) < float(until)
+
+
+def overlordInkSurgeSlowUntil(now, slowSec=None):
+    """Absolute expiry for an ink_surge-sludge-slow refresh stamped on a tick."""
+    if slowSec is None:
+        slowSec = OVERLORD_INK_SURGE_LINGER_SLOW_SEC
+    return float(now) + max(0.0, float(slowSec))
+
+
+def overlordInkSurgeLingerTickDamage(stats=None):
+    """Per-tick DoT while standing in ink_surge linger sludge (min 1)."""
+    if stats is None:
+        stats = {}
+    raw = stats.get(
+        'surgeLingerTickDamage', OVERLORD_INK_SURGE_LINGER_TICK_DAMAGE)
     return max(1, int(raw))
 
 

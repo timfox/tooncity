@@ -1695,6 +1695,50 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         for banned in ('keyblade', 'kingdom hearts', 'sora'):
             self.assertNotIn(banned, linger_blob)
 
+        # Overlord slam / ink_surge linger sludge — rain parity floor control.
+        self.assertTrue(cg.OVERLORD_SLAM_LINGER_ENABLED)
+        self.assertGreater(float(cg.OVERLORD_SLAM_LINGER_SEC), 1.0)
+        self.assertTrue(cg.OVERLORD_INK_SURGE_LINGER_ENABLED)
+        self.assertGreater(float(cg.OVERLORD_INK_SURGE_LINGER_SEC), 1.0)
+        self.assertLess(
+            float(cg.OVERLORD_SLAM_LINGER_RADIUS),
+            float(cg.OVERLORD_RAIN_LINGER_RADIUS))
+        self.assertAlmostEqual(
+            float(cg.OVERLORD_PHASE_COMBAT[1]['slamHitRange']),
+            float(cg.OVERLORD_SLAM_LINGER_RADIUS),
+            places=2)
+        self.assertAlmostEqual(
+            float(cg.OVERLORD_PHASE_COMBAT[2]['surgeHitRange']),
+            float(cg.OVERLORD_INK_SURGE_LINGER_RADIUS),
+            places=2)
+        for method in (
+                '__resolveOverlordSlam', '__armOverlordSlamLinger',
+                '__tickOverlordSlamLinger', '__clearOverlordSlamLinger',
+                '__armOverlordInkSurgeLinger',
+                '__tickOverlordInkSurgeLinger',
+                '__clearOverlordInkSurgeLinger'):
+            self.assertIn(method, ai_methods, msg='AI missing %s' % method)
+        slam_resolve = corrupt_ai[
+            corrupt_ai.find('def __resolveOverlordSlam'):
+            corrupt_ai.find(
+                '\n    def ',
+                corrupt_ai.find('def __resolveOverlordSlam') + 1)]
+        self.assertIn('__armOverlordSlamLinger', slam_resolve)
+        surge_resolve = corrupt_ai[
+            corrupt_ai.find('def __resolveOverlordInkSurge'):
+            corrupt_ai.find(
+                '\n    def ',
+                corrupt_ai.find('def __resolveOverlordInkSurge') + 1)]
+        self.assertIn('__armOverlordInkSurgeLinger', surge_resolve)
+        for method in (
+                '__playOverlordSlamLingerPuddle',
+                '__playOverlordInkSurgeLingerPuddle',
+                '__playOverlordLingerPuddleForMove'):
+            self.assertIn(
+                method, client_methods, msg='client missing %s' % method)
+        self.assertIn('OVERLORD_SLAM_LINGER_ENABLED', corrupt_client)
+        self.assertIn('OVERLORD_INK_SURGE_LINGER_ENABLED', corrupt_client)
+
     def test_campaign_progress_client_sync_loop(self):
         """Login sync mirrors victory / unlock / chase / reclaim so hub truth survives (#333/#349/#351)."""
         camp, save = self.camp, self.save

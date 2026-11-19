@@ -63,6 +63,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         self._juggleHangStunUntil = 0.0
         self._puddleLinger = None
         self._rainLinger = None
+        self._slamLinger = None
+        self._inkSurgeLinger = None
         self.finalePhase = 0
         self.setFinalePhase(finalePhase)
 
@@ -121,7 +123,11 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
                 'surgeNearMissRange', 'surgeDamage', 'surgeTelegraphDelay',
                 'surgeCooldown',
                 'rainLingerSec', 'rainLingerTickSec', 'rainLingerTickDamage',
-                'rainLingerSlowFactor'):
+                'rainLingerSlowFactor',
+                'slamLingerSec', 'slamLingerTickSec', 'slamLingerTickDamage',
+                'slamLingerSlowFactor',
+                'surgeLingerSec', 'surgeLingerTickSec', 'surgeLingerTickDamage',
+                'surgeLingerSlowFactor'):
             if key in combat:
                 merged[key] = combat[key]
         self._stats = merged
@@ -714,6 +720,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             return self.__resolveOverlordRain()
         if self._isOverlord() and move == 'ink_surge':
             return self.__resolveOverlordInkSurge()
+        if self._isOverlord() and move == 'slam':
+            return self.__resolveOverlordSlam()
         if move == 'gag_lob':
             return self.__resolveGagsterPuddle()
         if move == 'spit':
@@ -1145,8 +1153,10 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
         Third Unleashed note between close slam and far rain (gap scan #8).
         Boss closes a mid gap on resolve, then hits every toon inside the
         surge radius at the new position — distinct from stationary rain
-        and face-hug slam. Falls back to rain when surge is disabled.
-        Damage routes through ``__damageToonAndCheckReclaimKo`` only.
+        and face-hug slam. After the land tick, arm a mid-band linger
+        sludge hazard (rain parity) at the post-dash XY. Falls back to
+        rain when surge is disabled. Damage routes through
+        ``__damageToonAndCheckReclaimKo`` only.
         """
         if not getattr(CorruptionGlobals, 'OVERLORD_INK_SURGE_ENABLED', True):
             return self.__resolveOverlordRain()
@@ -1187,7 +1197,191 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
             self.sendUpdate('announceAttackHit', [])
         elif anyDodge:
             self.sendUpdate('announceAttackDodged', [])
+        # Arm linger sludge after surge resolve — mid-band arena trap.
+        self.__armOverlordInkSurgeLinger(ox, oy, hitRange)
         return Task.done
+
+    def __armOverlordInkSurgeLinger(self, ox, oy, hitRange=None):
+        """Leave a short-lived sludge hazard at the post-surge XY."""
+        self.__clearOverlordInkSurgeLinger()
+        if not getattr(
+                CorruptionGlobals, 'OVERLORD_INK_SURGE_LINGER_ENABLED', True):
+            return
+        lingerSec = float(self._stats.get(
+            'surgeLingerSec',
+            getattr(
+                CorruptionGlobals, 'OVERLORD_INK_SURGE_LINGER_SEC', 2.75)))
+        tickSec = float(self._stats.get(
+            'surgeLingerTickSec',
+            getattr(
+                CorruptionGlobals, 'OVERLORD_INK_SURGE_LINGER_TICK_SEC', 0.5)))
+        if lingerSec <= 0.0 or tickSec <= 0.0:
+            return
+        if hitRange is None:
+            hitRange, _near = self.__hitRangesForMove('ink_surge')
+        radius = float(hitRange or getattr(
+            CorruptionGlobals, 'OVERLORD_INK_SURGE_LINGER_RADIUS', 7.0))
+        tickDmg = CorruptionGlobals.overlordInkSurgeLingerTickDamage(
+            self._stats)
+        slowFactor = float(self._stats.get(
+            'surgeLingerSlowFactor',
+            getattr(
+                CorruptionGlobals,
+                'OVERLORD_INK_SURGE_LINGER_SLOW_FACTOR', 0.5)))
+        now = globalClock.getFrameTime()  # noqa: F821
+        self._inkSurgeLinger = {
+            'xy': (float(ox), float(oy)),
+            'until': CorruptionGlobals.overlordInkSurgeLingerUntil(
+                now, lingerSec),
+            'radius': radius,
+            'tickDamage': tickDmg,
+            'slowFactor': slowFactor,
+            'tickSec': max(0.1, tickSec),
+        }
+        taskMgr.doMethodLater(
+            self._inkSurgeLinger['tickSec'],
+            self.__tickOverlordInkSurgeLinger,
+            self.uniqueName('overlord-ink-surge-linger'))
+
+    def __tickOverlordInkSurgeLinger(self, task):
+        """Periodic DoT + slow stamp while toons stand in surge linger sludge."""
+        linger = getattr(self, '_inkSurgeLinger', None)
+        if linger is None or self.isDeleted():
+            self._inkSurgeLinger = None
+            return Task.done
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now >= float(linger['until']):
+            self._inkSurgeLinger = None
+            return Task.done
+        ox, oy = linger['xy']
+        radius = float(linger['radius'])
+        dmg = int(linger['tickDamage'])
+        slowFactor = float(linger['slowFactor'])
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - ox
+                dy = float(target.getY()) - oy
+            except Exception:
+                continue
+            if not CorruptionGlobals.isInsideOverlordInkSurgeLinger(
+                    dx, dy, radius):
+                continue
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            if now < iframeUntil:
+                continue
+            if not self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='overlord ink_surge linger'):
+                continue
+            target.hackSlashOverlordInkSurgeSludgeUntil = (
+                CorruptionGlobals.overlordInkSurgeSlowUntil(now))
+            target.hackSlashOverlordInkSurgeSludgeSlow = slowFactor
+        return Task.again
+
+    def __clearOverlordInkSurgeLinger(self):
+        self._inkSurgeLinger = None
+        try:
+            taskMgr.remove(self.uniqueName('overlord-ink-surge-linger'))
+        except Exception:
+            pass
+
+    def __resolveOverlordSlam(self):
+        """Close slam — single-target land, then tight linger sludge.
+
+        Rising / Unleashed slam was one-shot via ``__resolveSingleTargetHit``.
+        Arm a short linger at the boss XY (rain parity, smaller footprint)
+        so close-range notes also own floor space.
+        """
+        result = self.__resolveSingleTargetHit('slam')
+        try:
+            ox = float(self.getX())
+            oy = float(self.getY())
+        except Exception:
+            return result
+        hitRange, _near = self.__hitRangesForMove('slam')
+        self.__armOverlordSlamLinger(ox, oy, hitRange)
+        return result
+
+    def __armOverlordSlamLinger(self, ox, oy, hitRange=None):
+        """Leave a short-lived sludge hazard at the slam XY."""
+        self.__clearOverlordSlamLinger()
+        if not getattr(
+                CorruptionGlobals, 'OVERLORD_SLAM_LINGER_ENABLED', True):
+            return
+        lingerSec = float(self._stats.get(
+            'slamLingerSec',
+            getattr(CorruptionGlobals, 'OVERLORD_SLAM_LINGER_SEC', 2.0)))
+        tickSec = float(self._stats.get(
+            'slamLingerTickSec',
+            getattr(
+                CorruptionGlobals, 'OVERLORD_SLAM_LINGER_TICK_SEC', 0.5)))
+        if lingerSec <= 0.0 or tickSec <= 0.0:
+            return
+        if hitRange is None:
+            hitRange, _near = self.__hitRangesForMove('slam')
+        radius = float(hitRange or getattr(
+            CorruptionGlobals, 'OVERLORD_SLAM_LINGER_RADIUS', 4.6))
+        tickDmg = CorruptionGlobals.overlordSlamLingerTickDamage(self._stats)
+        slowFactor = float(self._stats.get(
+            'slamLingerSlowFactor',
+            getattr(
+                CorruptionGlobals, 'OVERLORD_SLAM_LINGER_SLOW_FACTOR', 0.55)))
+        now = globalClock.getFrameTime()  # noqa: F821
+        self._slamLinger = {
+            'xy': (float(ox), float(oy)),
+            'until': CorruptionGlobals.overlordSlamLingerUntil(
+                now, lingerSec),
+            'radius': radius,
+            'tickDamage': tickDmg,
+            'slowFactor': slowFactor,
+            'tickSec': max(0.1, tickSec),
+        }
+        taskMgr.doMethodLater(
+            self._slamLinger['tickSec'],
+            self.__tickOverlordSlamLinger,
+            self.uniqueName('overlord-slam-linger'))
+
+    def __tickOverlordSlamLinger(self, task):
+        """Periodic DoT + slow stamp while toons stand in slam linger sludge."""
+        linger = getattr(self, '_slamLinger', None)
+        if linger is None or self.isDeleted():
+            self._slamLinger = None
+            return Task.done
+        now = globalClock.getFrameTime()  # noqa: F821
+        if now >= float(linger['until']):
+            self._slamLinger = None
+            return Task.done
+        ox, oy = linger['xy']
+        radius = float(linger['radius'])
+        dmg = int(linger['tickDamage'])
+        slowFactor = float(linger['slowFactor'])
+        for target in self.__iterZoneToons():
+            try:
+                dx = float(target.getX()) - ox
+                dy = float(target.getY()) - oy
+            except Exception:
+                continue
+            if not CorruptionGlobals.isInsideOverlordSlamLinger(
+                    dx, dy, radius):
+                continue
+            iframeUntil = float(
+                getattr(target, 'hackSlashIFrameUntil', 0.0) or 0.0)
+            if now < iframeUntil:
+                continue
+            if not self.__damageToonAndCheckReclaimKo(
+                    target, dmg, context='overlord slam linger'):
+                continue
+            target.hackSlashOverlordSlamSludgeUntil = (
+                CorruptionGlobals.overlordSlamSlowUntil(now))
+            target.hackSlashOverlordSlamSludgeSlow = slowFactor
+        return Task.again
+
+    def __clearOverlordSlamLinger(self):
+        self._slamLinger = None
+        try:
+            taskMgr.remove(self.uniqueName('overlord-slam-linger'))
+        except Exception:
+            pass
 
     def __surgeOverlordTowardTarget(self, target):
         """Planar surge step for ink_surge — longer boss rush than Smudge dash."""
@@ -1519,6 +1713,8 @@ class DistributedCorruptToonAI(DistributedNodeAI, HackSlashTarget):
     def delete(self):
         self.__clearGagsterPuddleLinger()
         self.__clearOverlordRainLinger()
+        self.__clearOverlordSlamLinger()
+        self.__clearOverlordInkSurgeLinger()
         self.__clearBruteSpitProjectile()
         taskMgr.remove(self.uniqueName('corrupt-ai'))
         taskMgr.remove(self.uniqueName('corrupt-attack'))
