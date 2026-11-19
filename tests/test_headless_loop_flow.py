@@ -491,12 +491,14 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertIn("accept('localAvatarZoneChange'", presence_src)
         self.assertIn('oswaldRevealBanner', presence_src)
         self.assertIn('oswaldBetrayalChase', presence_src)
-        # Plaza NPC deepen (#354) — authored hub stand + reclaim cheer beyond
+        # Plaza NPC deepen (#354) + ACTS street authored stands — beyond
         # spawn-near-avatar CardMaker stub; still not a DistributedNPC.
         self.assertIn('full DistributedNPC', presence_src)
         self.assertIn('CardMaker', presence_src)
         self.assertIn('_buildNpcSilhouette', presence_src)
         self.assertIn('_placeBodyAtPlaza', presence_src)
+        self.assertIn('_placeBodyAtStreetStand', presence_src)
+        self.assertIn('streetStandPos', presence_src)
         self.assertIn('playReclaimCheer', presence_src)
         self.assertIn('npcCheerStub', presence_src)
         self.assertIn('_armInteract', presence_src)
@@ -511,6 +513,11 @@ class HeadlessLoopFlowTest(unittest.TestCase):
         self.assertTrue(camp.OSWALD_PRESENCE_CHEER_ON_RECLAIM)
         self.assertTrue(camp.OSWALD_PRESENCE_IDLE_BOB)
         self.assertEqual(len(camp.OSWALD_PRESENCE_HUB_POS), 4)
+        street_pos = camp.OSWALD_PRESENCE_STREET_POS
+        self.assertIsInstance(street_pos, dict)
+        for act in camp.ACTS:
+            self.assertIn(int(act['zoneId']), street_pos)
+            self.assertEqual(len(street_pos[int(act['zoneId'])]), 4)
         self.assertIn('Oswald', camp.OSWALD_PRESENCE_CHEER_TIP)
         self.assertIn('clean', camp.OSWALD_PRESENCE_CHEER_TIP.lower())
         self.assertEqual(camp.OSWALD_PRESENCE_CHEER_MSG, 'oswaldPresenceCheer')

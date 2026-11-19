@@ -1054,14 +1054,14 @@ CAMPAIGN_EPILOGUE_WATCH_SEC = 0.45
 
 # Trusted Oswald hub/street NPC-style presence (meet the trust face
 # before twist). Rubber-hose CardMaker body + nametag + short E-talk
-# greet interact — plaza-anchored deepen (beyond spawn-near-avatar
-# CardMaker stub) + reclaim cheer beat; still stub-shippable, not a
-# full DistributedNPC / DNA toon / companion AI. Complements tip/banner
-# copy + betrayal chase (#313); does not deepen cream FX. Hide after
-# finale reveal / chase (and on AI-persisted STATE_VICTORY sync) so the
-# trusted lead is gone once the twist lands. OSWALD_PRESENCE_ENABLED =
-# False drops world stub + greet + cheer only (HUB_TIP / ACTS tips /
-# betrayal chase remain). No keyblades / KH.
+# greet interact — plaza + ACTS street authored stands (beyond spawn-
+# near-avatar CardMaker stub) + reclaim cheer beat; still stub-
+# shippable, not a full DistributedNPC / DNA toon / companion AI.
+# Complements tip/banner copy + betrayal chase (#313); does not deepen
+# cream FX. Hide after finale reveal / chase (and on AI-persisted
+# STATE_VICTORY sync) so the trusted lead is gone once the twist lands.
+# OSWALD_PRESENCE_ENABLED = False drops world stub + greet + cheer only
+# (HUB_TIP / ACTS tips / betrayal chase remain). No keyblades / KH.
 OSWALD_PRESENCE_ENABLED = True
 OSWALD_PRESENCE_LABEL = 'Oswald'
 OSWALD_PRESENCE_PLATE = 'OSWALD'
@@ -1107,9 +1107,20 @@ OSWALD_PRESENCE_CHEER_MSG = 'oswaldPresenceCheer'
 OSWALD_PRESENCE_CHEERED_MSG = 'oswaldPresenceCheered'
 OSWALD_PRESENCE_CHEERED_SYNC_MSG = 'oswaldCheeredSync'
 # Authored TTC plaza lead stand (x, y, z, h) — near HQ plaza approach,
-# not spawn-relative to the local toon. Streets keep near-avatar offset.
+# not spawn-relative to the local toon. Hub plaza stays fixed.
 OSWALD_PRESENCE_HUB_POS = (-48.0, 28.0, -0.55, -100.0)
-# World stub placement relative to the local toon on street enter.
+# Authored ACTS street stands (x, y, z, h) keyed by zoneId — stable
+# landmarks beside each reclaim street's playground-tunnel approach,
+# not SPAWN_FORWARD beside the local toon (#373 left street stands out
+# of soft-next scope). Stub coords (street DNA not in-tree); tweak when
+# DNA lands. Unmapped presence zones fall back to near-avatar offset.
+OSWALD_PRESENCE_STREET_POS = {
+    ToontownGlobals.LoopyLane: (12.5, 18.0, 0.025, -150.0),
+    ToontownGlobals.PunchlinePlace: (-9.0, 22.0, 0.025, 170.0),
+    ToontownGlobals.SillyStreet: (7.5, 16.0, 0.025, -135.0),
+}
+# Fallback world stub placement relative to the local toon when a street
+# zone has no authored OSWALD_PRESENCE_STREET_POS entry.
 OSWALD_PRESENCE_SPAWN_FORWARD = 6.5
 OSWALD_PRESENCE_SPAWN_RIGHT = 2.25
 # Grounded NPC body (legacy MARKER_* kept as fallback aliases).
